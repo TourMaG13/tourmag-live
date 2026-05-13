@@ -1,0 +1,30 @@
+name: 📡 Sync RSS → Firestore
+
+on:
+  schedule:
+    # Toutes les 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    # Déclenchement manuel depuis l'onglet Actions
+
+jobs:
+  sync-rss:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: pip install feedparser firebase-admin
+
+      - name: 📡 Run RSS sync
+        env:
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+        run: python sync_rss.py
