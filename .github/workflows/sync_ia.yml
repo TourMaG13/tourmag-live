@@ -1,0 +1,32 @@
+name: 🧠 Sync IA → Points essentiels
+
+on:
+  schedule:
+    # Toutes les 4h de 6h à 18h (heure de Paris = UTC+2 en été, UTC+1 en hiver)
+    # 4h, 8h, 12h, 16h UTC ≈ 6h, 10h, 14h, 18h Paris (été)
+    - cron: '0 4,8,12,16 * * *'
+  workflow_dispatch:
+    # Déclenchement manuel depuis l'onglet Actions
+
+jobs:
+  sync-ia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: pip install feedparser firebase-admin requests
+
+      - name: 🧠 Generate essential points
+        env:
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python sync_ia.py
