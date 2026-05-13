@@ -19,6 +19,7 @@ import logging
 from datetime import datetime, timezone
 
 import feedparser
+import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -68,6 +69,37 @@ def extract_image(entry):
         if match:
             return match.group(1)
 
+    return ''
+
+# ── Fetch og:image depuis la page de l'article ──────────────────────
+def fetch_og_image(article_url):
+    """Fetch la page de l'article et extrait l'og:image."""
+    import re
+    try:
+        r = requests.get(article_url, timeout=8, headers={
+            'User-Agent': 'TourMaG-Live-RSS-Bot/1.0'
+        })
+        if r.status_code != 200:
+            return ''
+        html = r.text[:50000]  # Limiter la taille parsée
+
+        # og:image (property avant ou après content)
+        m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)', html, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html, re.IGNORECASE)
+        if m:
+            return m.group(1)
+
+        # twitter:image fallback
+        m = re.search(r'<meta[^>]+(?:name|property)=["\']twitter:image["\'][^>]+content=["\']([^"\']+)', html, re.IGNORECASE)
+        if m:
+            return m.group(1)
+        m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:name|property)=["\']twitter:image["\']', html, re.IGNORECASE)
+        if m:
+            return m.group(1)
+    except Exception as e:
+        log.debug(f"og:image fetch failed for {article_url}: {e}")
     return ''
 
 # ── Extraction auteur ────────────────────────────────────────────────
@@ -144,11 +176,16 @@ def process_event(db, event_ref, event_data):
                 if link in existing_links:
                     continue
 
+                image = extract_image(entry)
+                # Fallback : fetch og:image depuis la page
+                if not image and link:
+                    image = fetch_og_image(link)
+
                 article = {
                     'title': title.strip(),
                     'link': link.strip(),
                     'author': extract_author(entry, feed_label),
-                    'image': extract_image(entry),
+                    'image': image,
                     'date': format_date(entry),
                     'source': 'rss',
                     'rss_feed': feed_url,
