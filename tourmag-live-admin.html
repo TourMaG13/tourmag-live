@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TourMaG Live — Back-office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#1B1B2F;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--bg:#F8FAFC;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:12px;--shadow:0 2px 12px rgba(0,0,0,.06)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* AUTH */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--pri)}
+.auth-box{background:var(--card);border-radius:16px;padding:40px 36px;width:360px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-box h1{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:4px;text-align:center}
+.auth-box h1 span{color:var(--acc)}
+.auth-box .sub{font-size:11px;color:var(--text3);text-align:center;margin-bottom:24px}
+.auth-box .form-row{margin-bottom:14px}
+.auth-box .auth-err{font-size:11px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px}
+
+/* NAV */
+.topbar{background:var(--pri);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff}
+.topbar-logo span{color:var(--acc)}
+.topbar-event-select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:11px;color:#fff;font-family:'Poppins';cursor:pointer;max-width:220px}
+.topbar-event-select option{background:var(--pri);color:#fff}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.topbar-user{font-size:10px;color:rgba(255,255,255,.5)}
+.topbar-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite;margin-right:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar-btn{padding:6px 16px;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins';transition:all .15s}
+.topbar-btn.ghost{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}.topbar-btn.ghost:hover{background:rgba(255,255,255,.15)}
+
+.admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 48px)}
+@media(max-width:768px){.admin-layout{grid-template-columns:1fr}}
+
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:20px 0}
+.sidebar-section{font-family:'Josefin Sans';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);padding:16px 20px 8px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .1s;border-left:3px solid transparent}
+.sidebar-item:hover{background:#F1F5F9;color:var(--text)}
+.sidebar-item.active{background:#FFF7ED;color:var(--acc);border-left-color:var(--acc);font-weight:600}
+.sidebar-item .icon{width:20px;text-align:center;font-size:14px}
+.sidebar-item .badge{margin-left:auto;font-size:9px;font-weight:700;color:#fff;background:var(--acc);padding:1px 7px;border-radius:10px}
+@media(max-width:768px){.sidebar{display:none}}
+
+.admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
+@media(max-width:768px){.admin-main{padding:16px 12px}}
+.page-title{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:6px}
+.page-desc{font-size:12px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+.admin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.admin-card h3{font-family:'Josefin Sans';font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-row{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Poppins';color:var(--text);transition:border .15s;background:var(--bg)}
+.form-input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(232,132,44,.1)}
+textarea.form-input{resize:vertical;min-height:80px;line-height:1.6}
+select.form-input{cursor:pointer}
+.form-row-inline{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-row-inline{grid-template-columns:1fr}}
+
+.btn{padding:8px 20px;font-size:12px;font-weight:600;border:none;border-radius:8px;cursor:pointer;font-family:'Poppins';transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--acc);color:#fff}.btn-primary:hover:not(:disabled){background:var(--acc2)}
+.btn-success{background:var(--green);color:#fff}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover:not(:disabled){background:#B91C1C}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{background:#F1F5F9}
+.btn-sm{padding:5px 12px;font-size:10px}
+.btn-xs{padding:3px 8px;font-size:9px;border-radius:4px}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:#D1D5DB;border-radius:11px;transition:background .2s}
+.toggle input:checked+.toggle-track{background:var(--green)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle input:checked~.toggle-knob{transform:translateX(18px)}
+
+.list-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.list-item:last-child{border-bottom:none}
+.list-item-time{font-family:'IBM Plex Mono';font-size:11px;color:var(--acc);font-weight:500;flex-shrink:0;width:45px;padding-top:2px}
+.list-item-content{flex:1;min-width:0}
+.list-item-text{font-size:12px;color:var(--text);line-height:1.5}
+.list-item-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.list-item-tag{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;background:#F1F5F9;color:#475569;text-transform:uppercase;letter-spacing:.5px}
+.list-item-actions{flex-shrink:0;display:flex;gap:4px}
+
+.chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:2px solid transparent}
+.chip .chip-del{font-size:12px;opacity:.5;cursor:pointer}.chip .chip-del:hover{opacity:1}
+
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
+.media-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.media-thumb:hover{border-color:var(--acc)}
+.media-thumb.selected{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,132,44,.3)}
+.media-thumb img{width:100%;height:100%;object-fit:cover}
+.media-thumb .media-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.media-thumb:hover .media-del{opacity:1}
+.media-add{aspect-ratio:1;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
+.media-add:hover{border-color:var(--acc);color:var(--acc)}
+
+.cit-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.cit-item-text{font-size:12px;font-style:italic;color:var(--text);line-height:1.6;margin-bottom:8px}
+.cit-item-author{font-size:11px;font-weight:600;color:var(--acc)}
+.cit-item-role{font-size:10px;color:var(--text3)}
+
+.ess-item{display:flex;gap:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;align-items:flex-start}
+.ess-item-num{font-family:'Josefin Sans';font-size:18px;font-weight:700;color:var(--acc);flex-shrink:0;width:28px}
+.ess-item-body{flex:1;min-width:0}
+.ess-item-tag{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;background:#F1F5F9;color:#475569;text-transform:uppercase;letter-spacing:.5px;display:inline-block;margin-bottom:4px}
+.ess-item-text{font-size:12px;color:var(--text);line-height:1.5}
+.ess-item-source{font-size:9px;color:var(--text3);margin-top:3px}
+
+.event-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px}
+.event-card{background:var(--card);border:2px solid var(--border);border-radius:var(--rl);padding:16px;cursor:pointer;transition:all .15s}
+.event-card:hover{border-color:var(--acc);box-shadow:0 4px 16px rgba(232,132,44,.1)}
+.event-card.active{border-color:var(--acc);background:#FFF7ED}
+.event-card-title{font-family:'Josefin Sans';font-size:14px;font-weight:700;margin-bottom:4px}
+.event-card-meta{font-size:10px;color:var(--text3)}
+.status-badge{font-size:8px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
+.status-badge.live{background:#FEE2E2;color:#DC2626}
+.status-badge.ended{background:#F1F5F9;color:#475569}
+.status-badge.upcoming{background:#FEF3C7;color:#92400E}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--card);border-radius:var(--rl);padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-box h3{font-family:'Josefin Sans';font-size:16px;font-weight:700;margin-bottom:16px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--pri);color:#fff;padding:12px 24px;border-radius:10px;font-size:12px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s;z-index:1000;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid var(--green)}
+.toast.error{border-left:4px solid var(--red)}
+
+.empty{text-align:center;padding:32px;color:var(--text3)}
+.empty .icon{font-size:32px;margin-bottom:8px;opacity:.5}
+.empty .text{font-size:12px}
+
+.saving-indicator{position:fixed;top:60px;right:24px;font-size:10px;color:var(--acc);font-weight:600;opacity:0;transition:opacity .2s;z-index:101}
+.saving-indicator.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-box">
+    <h1>TourMaG <span>Live</span></h1>
+    <div class="sub">Back-office — Connexion</div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="auth-email" type="email" placeholder="votre@email.com"></div>
+    <div class="form-row"><label class="form-label">Mot de passe</label><input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()" id="auth-btn">Se connecter</button>
+  </div>
+</div>
+
+<!-- APP (hidden until auth) -->
+<div id="app-shell" style="display:none">
+  <div class="topbar">
+    <div class="topbar-logo">TourMaG <span>Live</span></div>
+    <select class="topbar-event-select" id="topbar-event-select" onchange="switchEvent(this.value)"></select>
+    <div class="topbar-right">
+      <span class="topbar-user"><span class="topbar-dot"></span><span id="topbar-user-email"></span></span>
+      <button class="topbar-btn ghost" onclick="window.open('index.html?event='+currentEventId,'_blank')">👁 Front</button>
+      <button class="topbar-btn ghost" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+  <div class="saving-indicator" id="saving">Enregistrement...</div>
+  <div class="admin-layout">
+    <div class="sidebar">
+      <div class="sidebar-section">Événements</div>
+      <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
+      <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
+      <div class="sidebar-section">Contenu</div>
+      <div class="sidebar-item" data-tab="live"><span class="icon">⚡</span>Fil live<span class="badge" id="badge-live">0</span></div>
+      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
+      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
+      <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
+      <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
+      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
+      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
+      <div class="sidebar-item" data-tab="timeline"><span class="icon">📍</span>Timeline</div>
+      <div class="sidebar-section">Système</div>
+      <div class="sidebar-item" data-tab="ia"><span class="icon">🤖</span>Synthèse IA</div>
+      <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
+    </div>
+    <div class="admin-main" id="admin-main"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script>
+// ============================================================
+// FIREBASE CONFIG — REMPLACER PAR VOS CLÉS
+// ============================================================
+firebase.initializeApp({
+  apiKey:"AIzaSyDtKWuGcF2MFI3Er9mRuL1qtzhbqsQP3PY",
+  authDomain:"tourmag-live.firebaseapp.com",
+  projectId:"tourmag-live"
+});
+const db=firebase.firestore();
+const auth=firebase.auth();
+
+// ============================================================
+// STATE — alimenté par onSnapshot (Firestore = source de vérité)
+// ============================================================
+let currentEventId='';
+let currentTab='events';
+let eventsData=[];    // [{id, ...data}]
+let liveData=[];
+let citationsData=[];
+let rubriquesData=[];
+let essentialData=[];
+let articlesData=[];
+let programmeData=[];
+let timelineData=[];
+let mediaData=[];
+let tagsData=[];      // Stocké dans event doc → tags[]
+
+// Listeners unsubscribe handles
+let unsubs=[];
+
+// ============================================================
+// AUTH
+// ============================================================
+function doLogin(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  const btn=document.getElementById('auth-btn');
+  const err=document.getElementById('auth-err');
+  if(!email||!pass){err.textContent='Remplissez les deux champs';return;}
+  btn.disabled=true; btn.textContent='Connexion...'; err.textContent='';
+  auth.signInWithEmailAndPassword(email,pass)
+    .then(cred=>db.collection('admins').doc(cred.user.uid).get())
+    .then(snap=>{
+      if(!snap.exists) throw new Error('not-admin');
+      // Auth OK + admin OK
+    })
+    .catch(e=>{
+      btn.disabled=false; btn.textContent='Se connecter';
+      if(e.message==='not-admin') err.textContent='Accès refusé — compte non autorisé';
+      else if(e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') err.textContent='Email ou mot de passe incorrect';
+      else err.textContent='Erreur : '+e.message;
+    });
+}
+
+function doLogout(){
+  auth.signOut();
+}
+
+// Listen for auth state
+auth.onAuthStateChanged(user=>{
+  if(user){
+    // Verify admin
+    db.collection('admins').doc(user.uid).get().then(snap=>{
+      if(snap.exists){
+        document.getElementById('auth-screen').style.display='none';
+        document.getElementById('app-shell').style.display='block';
+        document.getElementById('topbar-user-email').textContent=user.email;
+        initApp();
+      } else {
+        auth.signOut();
+        document.getElementById('auth-err').textContent='Compte non autorisé';
+      }
+    });
+  } else {
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app-shell').style.display='none';
+    // Cleanup listeners
+    unsubs.forEach(u=>u()); unsubs=[];
+  }
+});
+
+// ============================================================
+// HELPERS
+// ============================================================
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='success'?'✓ ':'⚠ ')+msg;
+  t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
+
+function evRef(){ return db.collection('events').doc(currentEventId); }
+function subCol(name){ return evRef().collection(name); }
+
+function autoStatus(timeStr){
+  const now=new Date();
+  const h=parseInt(timeStr.split(':')[0]),m=parseInt(timeStr.split(':')[1]||0);
+  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m);
+  const diff=(now-t)/60000;
+  if(diff>60)return 'past'; if(diff>=-5&&diff<=60)return 'active'; return 'upcoming';
+}
+
+// ============================================================
+// NAV
+// ============================================================
+document.querySelectorAll('.sidebar-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const tab=item.dataset.tab;if(!tab)return;
+    currentTab=tab;
+    document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    renderTab();
+  });
+});
+
+function switchEvent(id){
+  if(id===currentEventId)return;
+  currentEventId=id;
+  // Re-subscribe to sub-collections
+  subscribeSubCollections();
+  renderTab();
+  updateTopbarSelect();
+}
+
+function updateTopbarSelect(){
+  const sel=document.getElementById('topbar-event-select');
+  sel.innerHTML=eventsData.map(e=>`<option value="${e.id}"${e.id===currentEventId?' selected':''}>${e.title||'Sans titre'}</option>`).join('');
+}
+
+// ============================================================
+// FIRESTORE LISTENERS
+// ============================================================
+function initApp(){
+  // Listen to events collection
+  const u1=db.collection('events').onSnapshot(snap=>{
+    eventsData=[];
+    snap.forEach(d=>eventsData.push({id:d.id,...d.data()}));
+    if(!currentEventId && eventsData.length) currentEventId=eventsData[0].id;
+    updateTopbarSelect();
+    // Update tags from current event
+    const ev=eventsData.find(e=>e.id===currentEventId);
+    tagsData=ev&&ev.tags?ev.tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'];
+    renderTab();
+  });
+  unsubs.push(u1);
+
+  subscribeSubCollections();
+}
+
+function subscribeSubCollections(){
+  // Unsubscribe previous sub-collection listeners (indices 1+)
+  while(unsubs.length>1) unsubs.pop()();
+
+  if(!currentEventId)return;
+
+  const subs=[
+    {col:'live',orderBy:['time','desc'],target:'liveData'},
+    {col:'citations',orderBy:['created_at','desc'],target:'citationsData'},
+    {col:'rubriques',orderBy:['order','asc'],target:'rubriquesData'},
+    {col:'essential',orderBy:['order','asc'],target:'essentialData'},
+    {col:'articles',orderBy:['date','desc'],target:'articlesData'},
+    {col:'programme',orderBy:['time','asc'],target:'programmeData'},
+    {col:'timeline',orderBy:['order','asc'],target:'timelineData'},
+    {col:'media',target:'mediaData'}
+  ];
+
+  subs.forEach(s=>{
+    let q=subCol(s.col);
+    if(s.orderBy) q=q.orderBy(s.orderBy[0],s.orderBy[1]);
+    const u=q.onSnapshot(snap=>{
+      const arr=[];
+      snap.forEach(d=>arr.push({id:d.id,...d.data()}));
+      window[s.target]=arr;
+      updateBadges();
+      // Only re-render if this tab is relevant
+      if(currentTab===s.col||currentTab==='ia'&&s.col==='essential') renderTab();
+    });
+    unsubs.push(u);
+  });
+}
+
+function updateBadges(){
+  const bl=document.getElementById('badge-live');
+  const bc=document.getElementById('badge-cit');
+  if(bl) bl.textContent=liveData.length;
+  if(bc) bc.textContent=citationsData.length;
+}
+
+// ============================================================
+// RENDER DISPATCHER
+// ============================================================
+function renderTab(){
+  const main=document.getElementById('admin-main');
+  if(!main)return;
+  updateBadges();
+  switch(currentTab){
+    case 'events':renderEvents(main);break;
+    case 'modules':renderModules(main);break;
+    case 'live':renderLive(main);break;
+    case 'citations':renderCitations(main);break;
+    case 'rubriques':renderRubriques(main);break;
+    case 'tags':renderTags(main);break;
+    case 'media':renderMedia(main);break;
+    case 'programme':renderProgramme(main);break;
+    case 'articles':renderArticles(main);break;
+    case 'timeline':renderTimeline(main);break;
+    case 'ia':renderIA(main);break;
+    case 'widget':renderWidget(main);break;
+  }
+}
+
+// ==================== EVENTS ====================
+function renderEvents(el){
+  let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>
+  <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="createEvent()">＋ Nouvel événement</button></div>
+  <div class="event-cards">`;
+  eventsData.forEach(ev=>{
+    const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
+    h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
+      <div class="event-card-title">${ev.title||'Sans titre'}${st}</div>
+      <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEvent('${ev.id}')">✏️ Modifier</button>
+        ${eventsData.length>1?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteEvent('${ev.id}')">✕</button>`:''}
+      </div></div>`;
+  });
+  if(!eventsData.length) h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+async function createEvent(){
+  saving(true);
+  const ref=await db.collection('events').add({
+    title:'Nouvel événement',subtitle:'',location:'',dates:'',status:'upcoming',
+    color:'#2D1B4E',logo_url:'',flash_text:'',
+    tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true},
+    created_at:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  currentEventId=ref.id;
+  toast('Événement créé');
+}
+
+async function deleteEvent(id){
+  if(!confirm('Supprimer cet événement et tout son contenu ?'))return;
+  saving(true);
+  await db.collection('events').doc(id).delete();
+  if(currentEventId===id) currentEventId=eventsData.filter(e=>e.id!==id)[0]?.id||'';
+  toast('Événement supprimé');
+}
+
+function editEvent(id){
+  const ev=eventsData.find(e=>e.id===id);if(!ev)return;
+  openModal(`<h3>Modifier l'événement</h3>
+    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-title" value="${ev.title||''}"></div>
+    <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="m-ev-subtitle" value="${ev.subtitle||''}"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-ev-location" value="${ev.location||''}"></div>
+      <div class="form-row"><label class="form-label">Dates</label><input class="form-input" id="m-ev-dates" value="${ev.dates||''}"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Statut</label><select class="form-input" id="m-ev-status">
+        <option value="upcoming"${ev.status==='upcoming'?' selected':''}>À venir</option>
+        <option value="live"${ev.status==='live'?' selected':''}>En direct</option>
+        <option value="ended"${ev.status==='ended'?' selected':''}>Terminé</option></select></div>
+      <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}"></div>
+    <div class="form-row"><label class="form-label">Flash info</label><input class="form-input" id="m-ev-flash" value="${ev.flash_text||''}"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveEvent('${id}')">💾 Enregistrer</button></div>`);
+}
+
+async function saveEvent(id){
+  saving(true);
+  await db.collection('events').doc(id).update({
+    title:document.getElementById('m-ev-title').value,
+    subtitle:document.getElementById('m-ev-subtitle').value,
+    location:document.getElementById('m-ev-location').value,
+    dates:document.getElementById('m-ev-dates').value,
+    status:document.getElementById('m-ev-status').value,
+    color:document.getElementById('m-ev-color').value,
+    logo_url:document.getElementById('m-ev-logo').value,
+    flash_text:document.getElementById('m-ev-flash').value
+  });
+  closeModal();toast('Enregistré');
+}
+
+// ==================== MODULES ====================
+function renderModules(el){
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  const mod=ev?.modules||{};
+  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'programme',icon:'🗓',label:'Programme'}];
+  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules du front.</div><div class="admin-card"><h3>🧩 Visibilité</h3>`;
+  mods.forEach(m=>{
+    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${mod[m.key]!==false?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function toggleModule(key,val){
+  saving(true);
+  await evRef().update({[`modules.${key}`]:val});
+  toast(val?'Activé':'Désactivé');
+}
+
+// ==================== TAGS ====================
+function renderTags(el){
+  let h=`<div class="page-title">Tags live</div><div class="page-desc">Tags disponibles pour le fil live. Partagés entre tous les journalistes.</div>
+  <div class="admin-card"><h3>🏷 Tags personnalisés</h3><div class="chip-list">`;
+  tagsData.forEach((t,i)=>{
+    h+=`<div class="chip" style="background:#F1F5F9;color:#475569"><span>${t}</span><span class="chip-del" onclick="editTag(${i})" title="Modifier">✏️</span><span class="chip-del" onclick="deleteTag(${i})">✕</span></div>`;
+  });
+  h+=`</div><div style="display:flex;gap:8px"><input class="form-input" id="new-tag" placeholder="Nouveau tag..." style="max-width:200px" onkeydown="if(event.key==='Enter')addTag()"><button class="btn btn-primary btn-sm" onclick="addTag()">＋</button></div></div>`;
+  el.innerHTML=h;
+}
+async function addTag(){
+  const v=document.getElementById('new-tag').value.trim().toUpperCase();
+  if(!v||tagsData.includes(v)){toast(v?'Existe déjà':'Vide','error');return;}
+  tagsData.push(v);
+  saving(true);await evRef().update({tags:tagsData});toast('Tag ajouté');
+}
+async function deleteTag(i){
+  if(!confirm('Supprimer "'+tagsData[i]+'" ?'))return;
+  tagsData.splice(i,1);
+  saving(true);await evRef().update({tags:tagsData});toast('Supprimé');
+}
+function editTag(i){
+  const old=tagsData[i];
+  openModal(`<h3>Modifier le tag</h3><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-tag" value="${old}"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveTag(${i})">💾</button></div>`);
+}
+async function saveTag(i){
+  tagsData[i]=document.getElementById('m-tag').value.trim().toUpperCase();
+  saving(true);await evRef().update({tags:tagsData});closeModal();toast('Modifié');
+}
+
+// ==================== MEDIA ====================
+function renderMedia(el){
+  let h=`<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
+  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3><div class="media-grid">`;
+  mediaData.forEach(m=>{
+    h+=`<div class="media-thumb"><img src="${m.url}" alt="${m.name||''}" onerror="this.style.background='#E5E7EB'"><button class="media-del" onclick="deleteMedia('${m.id}')">✕</button></div>`;
+  });
+  h+=`<div class="media-add" onclick="addMedia()"><span style="font-size:20px">＋</span><span>Ajouter</span></div></div></div>`;
+  el.innerHTML=h;
+}
+function addMedia(){
+  openModal(`<h3>Ajouter une photo</h3>
+    <div class="form-row"><label class="form-label">URL</label><input class="form-input" id="m-media-url" placeholder="https://..."></div>
+    <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()">📷 Ajouter</button></div>`);
+}
+async function saveMedia(){
+  const url=document.getElementById('m-media-url').value.trim();
+  if(!url){toast('URL requise','error');return;}
+  saving(true);
+  await subCol('media').add({url,name:document.getElementById('m-media-name').value.trim()});
+  closeModal();toast('Photo ajoutée');
+}
+async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete();toast('Supprimé');}
+
+// ==================== LIVE ====================
+function renderLive(el){
+  const tagOpts=tagsData.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const mediaPicker=mediaData.length?`<div class="form-row"><label class="form-label">Ou choisir dans la médiathèque</label><div class="media-grid" id="media-picker">${mediaData.map(m=>`<div class="media-thumb" onclick="pickMedia('${m.url}',this)"><img src="${m.url}" alt=""></div>`).join('')}</div></div>`:'';
+
+  let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
+  <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
+    <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="live-text" rows="3"></textarea></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
+      <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="live-image"></div>
+    ${mediaPicker}
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
+  </div>
+  <div class="admin-card"><h3>📜 Entrées (${liveData.length})</h3><div style="max-height:500px;overflow-y:auto">`;
+  if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée</div></div>`;
+  else liveData.forEach(e=>{
+    const t=e.time?.toDate?e.time.toDate():new Date(e.time);
+    const ts=t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    h+=`<div class="list-item"><div class="list-item-time">${ts}</div><div class="list-item-content"><div class="list-item-text">${e.text||''}</div><div class="list-item-meta"><span class="list-item-tag">${e.tag||''}</span><span>${e.journalist||''}</span>${e.image?'<span>📷</span>':''}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteLive('${e.id}')">✕</button></div></div>`;
+  });
+  h+=`</div></div>`; el.innerHTML=h;
+}
+window.pickMedia=function(url,el){
+  document.getElementById('live-image').value=url;
+  document.querySelectorAll('#media-picker .media-thumb').forEach(t=>t.classList.remove('selected'));
+  el.classList.add('selected');
+};
+async function addLive(){
+  const text=document.getElementById('live-text').value.trim();
+  if(!text){toast('Texte requis','error');return;}
+  saving(true);
+  await subCol('live').add({
+    text,tag:document.getElementById('live-tag').value,
+    journalist:document.getElementById('live-journalist').value||'La Rédaction',
+    image:document.getElementById('live-image').value||'',
+    time:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('live-text').value='';
+  document.getElementById('live-image').value='';
+  toast('Publié !');
+}
+async function deleteLive(id){saving(true);await subCol('live').doc(id).delete();toast('Supprimé');}
+
+// ==================== RUBRIQUES ====================
+function renderRubriques(el){
+  let h=`<div class="page-title">Rubriques</div><div class="page-desc">Cliquez sur une rubrique pour la modifier.</div>
+  <div class="admin-card"><h3>➕ Nouvelle</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="rub-name"></div><div class="form-row"><label class="form-label">Emoji</label><input class="form-input" id="rub-icon" placeholder="🤖" maxlength="4"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="rub-color" value="#7C3AED" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Fond</label><input type="color" class="form-input" id="rub-bg" value="#EDE9FE" style="height:42px;padding:4px"></div></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addRubrique()">📁 Créer</button></div></div>
+  <div class="admin-card"><h3>📂 Existantes</h3><div class="chip-list">`;
+  if(!rubriquesData.length) h+=`<div class="empty"><div class="text">Aucune rubrique</div></div>`;
+  else rubriquesData.forEach(r=>{
+    h+=`<div class="chip" style="background:${r.bg};color:${r.color}" onclick="editRubrique('${r.id}')"><span>${r.icon} ${r.name}</span><span class="chip-del" onclick="event.stopPropagation();deleteRubrique('${r.id}')">&times;</span></div>`;
+  });
+  h+=`</div></div>`; el.innerHTML=h;
+}
+async function addRubrique(){
+  const name=document.getElementById('rub-name').value.trim();
+  if(!name){toast('Nom requis','error');return;}
+  saving(true);
+  await subCol('rubriques').add({name,icon:document.getElementById('rub-icon').value||'📌',color:document.getElementById('rub-color').value,bg:document.getElementById('rub-bg').value,order:rubriquesData.length});
+  document.getElementById('rub-name').value='';toast('Créée');
+}
+async function deleteRubrique(id){if(!confirm('Supprimer ?'))return;saving(true);await subCol('rubriques').doc(id).delete();toast('Supprimé');}
+function editRubrique(id){
+  const r=rubriquesData.find(x=>x.id===id);if(!r)return;
+  openModal(`<h3>Modifier</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-rub-name" value="${r.name}"></div><div class="form-row"><label class="form-label">Emoji</label><input class="form-input" id="m-rub-icon" value="${r.icon}" maxlength="4"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-rub-color" value="${r.color}" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Fond</label><input type="color" class="form-input" id="m-rub-bg" value="${r.bg}" style="height:42px;padding:4px"></div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveRubrique('${id}')">💾</button></div>`);
+}
+async function saveRubrique(id){
+  saving(true);
+  await subCol('rubriques').doc(id).update({name:document.getElementById('m-rub-name').value,icon:document.getElementById('m-rub-icon').value,color:document.getElementById('m-rub-color').value,bg:document.getElementById('m-rub-bg').value});
+  closeModal();toast('Modifié');
+}
+
+// ==================== CITATIONS ====================
+function renderCitations(el){
+  const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+  let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
+  <div class="admin-card"><h3>🎤 Nouvelle</h3>
+    <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><input class="form-input" id="cit-avatar"></div></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter</button></div></div>
+  <div class="admin-card"><h3>📋 Citations (${citationsData.length})</h3>`;
+  if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
+  else citationsData.forEach(c=>{
+    const rub=rubriquesData.find(r=>r.id===c.rubrique);
+    h+=`<div class="cit-item"><div class="cit-item-text">« ${c.text} »</div><div class="cit-item-author">${c.name}</div><div class="cit-item-role">${c.role||''}${rub?' · '+rub.icon+' '+rub.name:''}</div><div style="margin-top:8px;display:flex;gap:6px"><button class="btn btn-danger btn-xs" onclick="deleteCitation('${c.id}')">✕</button></div></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function addCitation(){
+  const text=document.getElementById('cit-text').value.trim(),name=document.getElementById('cit-name').value.trim();
+  if(!text||!name){toast('Citation et nom requis','error');return;}
+  saving(true);
+  await subCol('citations').add({text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,created_at:firebase.firestore.FieldValue.serverTimestamp()});
+  ['cit-text','cit-name','cit-role','cit-avatar'].forEach(x=>document.getElementById(x).value='');toast('Ajoutée');
+}
+async function deleteCitation(id){saving(true);await subCol('citations').doc(id).delete();toast('Supprimé');}
+
+// ==================== PROGRAMME ====================
+function renderProgramme(el){
+  let h=`<div class="page-title">Programme</div><div class="page-desc">Le statut se calcule automatiquement selon l'heure.</div>
+  <div class="admin-card"><h3>➕ Ajouter</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="prog-time" type="time"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="prog-label"></div></div>
+    <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="prog-desc"></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addProgramme()">🗓 Ajouter</button></div></div>
+  <div class="admin-card"><h3>📋 Programme</h3>`;
+  if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
+  else programmeData.forEach(p=>{
+    const st=autoStatus(p.time);
+    const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
+    const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
+    h+=`<div class="list-item"><div class="list-item-time">${p.time}</div><div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button></div></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function addProgramme(){
+  const time=document.getElementById('prog-time').value,label=document.getElementById('prog-label').value.trim();
+  if(!time||!label){toast('Heure et intitulé requis','error');return;}
+  saving(true);
+  await subCol('programme').add({time,label,desc:document.getElementById('prog-desc').value});
+  document.getElementById('prog-label').value='';document.getElementById('prog-desc').value='';toast('Ajouté');
+}
+async function deleteProgramme(id){saving(true);await subCol('programme').doc(id).delete();toast('Supprimé');}
+
+// ==================== ARTICLES ====================
+function renderArticles(el){
+  let h=`<div class="page-title">Articles liés</div>
+  <div class="admin-card"><h3>➕ Ajouter</h3>
+    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="art-image"></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
+  <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
+  if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun</div></div>`;
+  else articlesData.forEach(a=>{
+    h+=`<div class="list-item"><div class="list-item-content"><div class="list-item-text"><strong>${a.title}</strong></div><div class="list-item-meta">${a.author||''} · ${a.date||''}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteArticle('${a.id}')">✕</button></div></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function addArticle(){
+  const title=document.getElementById('art-title').value.trim();
+  if(!title){toast('Titre requis','error');return;}
+  saving(true);
+  await subCol('articles').add({title,link:document.getElementById('art-link').value||'#',author:document.getElementById('art-author').value||'La Rédaction',image:document.getElementById('art-image').value,date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})});
+  ['art-title','art-link','art-author','art-image'].forEach(x=>document.getElementById(x).value='');toast('Ajouté');
+}
+async function deleteArticle(id){saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');}
+
+// ==================== TIMELINE ====================
+function renderTimeline(el){
+  let h=`<div class="page-title">Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
+  <div class="admin-card"><h3>➕ Jalon</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Date</label><input class="form-input" id="tl-date" placeholder="30 sept."></div><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="tl-link"></div></div>
+    <div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="tl-text"></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addTimeline()">📍 Ajouter</button></div></div>
+  <div class="admin-card"><h3>📋 Jalons (${timelineData.length})</h3>`;
+  if(!timelineData.length) h+=`<div class="empty"><div class="text">Aucun jalon</div></div>`;
+  else timelineData.forEach(t=>{
+    h+=`<div class="list-item"><div class="list-item-time" style="width:60px">${t.date}</div><div class="list-item-content"><div class="list-item-text">${t.text}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteTimeline('${t.id}')">✕</button></div></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function addTimeline(){
+  const date=document.getElementById('tl-date').value.trim(),text=document.getElementById('tl-text').value.trim();
+  if(!date||!text){toast('Date et texte requis','error');return;}
+  saving(true);
+  await subCol('timeline').add({date,text,link:document.getElementById('tl-link').value||'',order:timelineData.length});
+  document.getElementById('tl-date').value='';document.getElementById('tl-text').value='';document.getElementById('tl-link').value='';toast('Ajouté');
+}
+async function deleteTimeline(id){saving(true);await subCol('timeline').doc(id).delete();toast('Supprimé');}
+
+// ==================== SYNTHÈSE IA ====================
+function renderIA(el){
+  const ia=essentialData.filter(p=>p.source==='ia');
+  const manual=essentialData.filter(p=>p.source==='manual');
+  let h=`<div class="page-title">Points essentiels</div><div class="page-desc">IA + manuels — tous affichés dans le hero.</div>
+  <div class="admin-card"><h3>🤖 Points IA (${ia.length})</h3>
+    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn btn-primary" onclick="toast('Déclenchez via GitHub Actions')">🔄 Régénérer</button></div>`;
+  ia.forEach((p,i)=>{
+    h+=`<div class="ess-item"><div class="ess-item-num">${String(i+1).padStart(2,'0')}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">🤖 IA</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+  });
+  h+=`</div><div class="admin-card"><h3>✏️ Points manuels (${manual.length})</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Tag</label><input class="form-input" id="ess-tag" placeholder="DISTRIBUTION"></div><div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="ess-text"></div></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addEssential()">＋ Ajouter</button></div>`;
+  manual.forEach((p,i)=>{
+    h+=`<div class="ess-item" style="margin-top:12px"><div class="ess-item-num">M${i+1}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">✏️ Manuel</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+  });
+  h+=`</div>`; el.innerHTML=h;
+}
+async function addEssential(){
+  const tag=document.getElementById('ess-tag').value.trim().toUpperCase(),text=document.getElementById('ess-text').value.trim();
+  if(!tag||!text){toast('Tag et texte requis','error');return;}
+  saving(true);
+  await subCol('essential').add({tag,text,source:'manual',order:essentialData.length});
+  document.getElementById('ess-tag').value='';document.getElementById('ess-text').value='';toast('Ajouté');
+}
+async function deleteEssential(id){saving(true);await subCol('essential').doc(id).delete();toast('Supprimé');}
+
+// ==================== WIDGET ====================
+function renderWidget(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let h=`<div class="page-title">Widget homepage</div><div class="page-desc">Encart compact pour le CMS TourMaG.</div>
+  <div class="admin-card"><h3>📋 Code d'intégration</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:12px">Copiez ce code iframe dans votre CMS.</p>
+    <div style="position:relative"><textarea class="form-input" rows="5" id="widget-code" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E">&lt;iframe src="https://VOTRE-DOMAINE.github.io/tourmag-live/widget.html?event=${currentEventId}" style="width:100%;border:none;min-height:280px" id="tmg-live-widget"&gt;&lt;/iframe&gt;
+&lt;script&gt;window.addEventListener('message',function(e){if(e.data&amp;&amp;e.data.type==='tourmag-live-resize')document.getElementById('tmg-live-widget').style.height=e.data.height+'px'})&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="document.getElementById('widget-code').select();document.execCommand('copy');toast('Copié !')">📋 Copier</button></div></div>`;
+  el.innerHTML=h;
+}
+</script>
+</body>
+</html>

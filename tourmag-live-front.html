@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TourMaG Live — Couverture événementielle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#1B1B2F;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 12px rgba(0,0,0,.06);--hero-color:#2D1B4E;--live:#DC2626}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* LOADER */
+.ld{text-align:center;padding:80px}
+.ld .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld .tx{font-size:14px;color:var(--text3)}
+
+/* FADE IN */
+.fi{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}.fi.vis{opacity:1;transform:translateY(0)}
+
+/* UPDATE BAR */
+.upd-bar{display:flex;justify-content:flex-end;padding:8px 28px 0;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
+@media(max-width:768px){.upd-bar{padding:6px 8px 0}}
+
+/* CONTAINER */
+.dash{max-width:1200px;margin:0 auto;padding:24px 28px}
+@media(max-width:768px){.dash{padding:12px 8px}}
+
+/* SECTION LABELS */
+.sl{font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--text3);margin:36px 0 14px;display:flex;align-items:center;gap:8px}
+.sl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* BADGES */
+.bdg-live{display:inline-flex;align-items:center;gap:6px;font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:var(--live);padding:5px 14px;border-radius:6px}
+.bdg-live::before{content:'';width:8px;height:8px;border-radius:50%;background:#fff;animation:livepulse 1.5s infinite}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* ==================== HERO ==================== */
+.hero{background:linear-gradient(135deg,#1B1B2F 0%,#2D1B4E 40%,#1B1B2F 100%);border-radius:var(--rl);padding:28px 36px 24px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:340px;height:340px;background:radial-gradient(circle,rgba(232,132,44,.12) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-30px;left:-30px;width:240px;height:240px;background:radial-gradient(circle,rgba(220,38,38,.08) 0%,transparent 70%);pointer-events:none}
+.hero-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;position:relative;flex-wrap:wrap;gap:12px}
+.hero-left{flex:1;display:flex;align-items:center;gap:16px}
+.hero-logo{max-height:56px;max-width:120px;object-fit:contain;border-radius:8px;flex-shrink:0}
+.hero-text{flex:1}
+.hero-title{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
+.hero-subtitle{font-size:12px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hero-subtitle span{display:flex;align-items:center;gap:4px}
+.hero-subtitle svg{width:14px;height:14px;stroke:rgba(255,255,255,.45)}
+.hero-meta{display:flex;align-items:center;gap:16px;flex-shrink:0}
+@media(max-width:768px){.hero{padding:20px 14px 18px;border-radius:12px}.hero-title{font-size:18px}.hero-logo{max-height:40px;max-width:80px}}
+
+/* HERO ESSENTIAL CARDS (IA) */
+.hero-ess-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;position:relative}
+@media(max-width:768px){.hero-ess-grid{grid-template-columns:1fr}}
+.hero-ess-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border-left:3px solid transparent}
+.hero-ess-card:nth-child(1){border-left-color:#3B82F6}
+.hero-ess-card:nth-child(2){border-left-color:#DC2626}
+.hero-ess-card:nth-child(3){border-left-color:#D97706}
+.hero-ess-card:nth-child(4){border-left-color:#059669}
+.hero-ess-card:nth-child(5){border-left-color:#7C3AED}
+.hero-ess-card:nth-child(6){border-left-color:#0891B2}
+.hero-ess-top{display:flex;align-items:center;gap:8px}
+.hero-ess-num{font-family:'Josefin Sans';font-size:20px;font-weight:700;line-height:1}
+.hero-ess-card:nth-child(1) .hero-ess-num{color:#60A5FA}
+.hero-ess-card:nth-child(2) .hero-ess-num{color:#F87171}
+.hero-ess-card:nth-child(3) .hero-ess-num{color:#FBBF24}
+.hero-ess-card:nth-child(4) .hero-ess-num{color:#34D399}
+.hero-ess-card:nth-child(5) .hero-ess-num{color:#A78BFA}
+.hero-ess-card:nth-child(6) .hero-ess-num{color:#22D3EE}
+.hero-ess-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:3px;white-space:nowrap;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.hero-ess-txt{font-size:11px;line-height:1.55;color:rgba(255,255,255,.7)}
+.hero-ess-txt strong{font-weight:700;color:#fff}
+.hero-ess-ia{font-family:'IBM Plex Mono';font-size:8px;color:rgba(255,255,255,.25);margin-top:12px;text-align:right;letter-spacing:.5px}
+
+/* HERO TIMELINE (frise articles) */
+.hero-tl{position:relative;margin-top:18px;padding-top:8px}
+.hero-tl-track{display:grid;grid-template-columns:repeat(var(--tl-cols,5),1fr);gap:0;position:relative}
+.hero-tl-track::before{content:'';position:absolute;top:14px;left:0;right:0;height:2px;background:rgba(255,255,255,.12)}
+.hero-tl-item{display:flex;flex-direction:column;align-items:center;padding:0 4px;cursor:pointer;transition:opacity .15s}
+.hero-tl-item:hover{opacity:.8}
+.hero-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--acc);border:2.5px solid rgba(27,27,47,.85);box-shadow:0 0 0 1.5px var(--acc);z-index:1;margin-bottom:8px}
+.hero-tl-date{font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);font-weight:600;margin-bottom:3px}
+.hero-tl-ev{font-size:10px;color:rgba(255,255,255,.55);text-align:center;line-height:1.4;font-weight:400;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:768px){.hero-tl-track{grid-template-columns:1fr;gap:8px}.hero-tl-track::before{display:none}.hero-tl-item{flex-direction:row;gap:10px;align-items:flex-start}.hero-tl-dot{margin-bottom:0;margin-top:4px;flex-shrink:0}.hero-tl-ev{text-align:left}}
+
+/* ==================== LAYOUT ==================== */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr;gap:20px}}
+.main-col{min-width:0;max-width:100%;overflow:hidden}
+.side-col{min-width:0}
+@media(max-width:960px){.side-col{order:10}}
+
+/* ==================== LIVE FEED ==================== */
+.live-feed{position:relative}
+
+.live-entry{position:relative;display:flex;gap:16px;padding:0 0 24px 0}
+.live-entry::before{content:'';position:absolute;left:19px;top:32px;bottom:0;width:2px;background:var(--border)}
+.live-entry:last-child::before{display:none}
+
+.live-time-col{flex-shrink:0;width:40px;display:flex;flex-direction:column;align-items:center;padding-top:2px}
+.live-dot{width:12px;height:12px;border-radius:50%;background:var(--acc);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--acc);z-index:1;margin-bottom:6px}
+.live-entry:first-child .live-dot{background:var(--live);box-shadow:0 0 0 2px var(--live);animation:livepulse 1.5s infinite}
+
+.live-content{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);transition:transform .15s}
+.live-content:hover{transform:translateY(-1px)}
+.live-entry:first-child .live-content{border-color:rgba(220,38,38,.2);box-shadow:0 2px 12px rgba(220,38,38,.06)}
+
+.live-content-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.live-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:#F1F5F9;color:#475569}
+.live-timestamp{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
+.live-journalist{font-size:9px;color:var(--acc);font-weight:600}
+.live-text{font-size:13px;line-height:1.6;color:var(--text)}
+.live-text strong{font-weight:600}
+
+.live-img{margin-top:10px;border-radius:8px;overflow:hidden;max-height:200px}
+.live-img img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* LIVE EXPAND (accordéon) */
+.live-expand{display:none}
+.live-expand.open{display:block}
+.voir-plus-live{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;font-size:11px;font-weight:600;color:var(--acc2);cursor:pointer;transition:color .15s;margin-top:-8px}
+.voir-plus-live:hover{color:var(--acc)}
+.voir-plus-live svg{width:14px;height:14px;transition:transform .2s}
+.voir-plus-live.open-state svg{transform:rotate(180deg)}
+
+@media(max-width:768px){.live-entry{gap:10px}.live-time-col{width:30px}}
+
+/* ==================== CITATIONS / RUBRIQUES ==================== */
+.rubrique-block{margin-bottom:24px}
+.rubrique-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+.rubrique-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.rubrique-name{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:var(--text)}
+.rubrique-count{font-size:9px;font-weight:700;color:#fff;padding:2px 8px;border-radius:20px;margin-left:auto}
+
+.citation-card{background:var(--pri);border-radius:12px;padding:20px 22px;margin-bottom:12px;position:relative;overflow:hidden}
+.citation-card::before{content:'«';position:absolute;top:-5px;left:12px;font-family:'Playfair Display',serif;font-size:80px;color:rgba(255,255,255,.05);line-height:1;pointer-events:none}
+.citation-text{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85);font-style:italic;position:relative;z-index:1;margin-bottom:14px}
+.citation-text strong{color:#FDBA74;font-weight:600;font-style:normal}
+.citation-author{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.citation-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.15)}
+.citation-avatar-placeholder{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.citation-avatar-placeholder svg{width:20px;height:20px}
+.citation-info{flex:1}
+.citation-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#fff}
+.citation-role{font-size:10px;color:rgba(255,255,255,.45)}
+
+/* ==================== SIDEBAR CARDS ==================== */
+.cd{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--hero-color);margin-bottom:14px}
+.cd .hd{display:flex;align-items:center;gap:8px;padding:12px 14px}
+.cd .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FEF3C7;color:#92400E}
+.cd .ci svg{width:16px;height:16px}
+.cd .ct{font-family:'Josefin Sans';font-size:15px;font-weight:700}
+.cd .cc{font-size:9px;font-weight:700;color:#fff;padding:2px 8px;border-radius:20px;margin-left:auto;background:var(--hero-color)}
+
+/* ARTICLES LIÉS — images grosses style cfg-a du dashboard crise */
+.ni{padding:10px 14px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;display:flex;gap:12px;align-items:center}
+.ni:first-of-type{border-top:none}
+.ni:hover{background:#F8FAFC}
+.ni-img{width:100px;height:75px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#F1F5F9}
+.ni-body{flex:1;min-width:0}
+.ni .nt{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
+.ni .nm{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* Accordéon voir plus (identique dashboard crise) */
+.voir-plus{display:block;padding:8px 14px;font-size:10px;font-weight:600;color:var(--acc2);text-align:center;cursor:pointer;border-top:1px solid var(--border);transition:background .1s}
+.voir-plus:hover{background:#FFF7ED}
+.cd-expand{max-height:400px;overflow-y:auto;border-top:1px solid var(--border);display:none}
+.cd-expand.open{display:block}
+.cd-expand::-webkit-scrollbar{width:4px}
+.cd-expand::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:2px}
+
+/* ==================== PROGRAMME — clean, sans pastilles ==================== */
+.prog-list{padding:10px 14px}
+.prog-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.prog-item:last-child{border-bottom:none}
+.prog-time{font-family:'IBM Plex Mono';font-size:11px;font-weight:500;color:var(--acc);flex-shrink:0;width:42px;padding-top:2px}
+.prog-body{flex:1}
+.prog-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
+.prog-desc{font-size:10px;color:var(--text2);margin-top:2px;line-height:1.5}
+.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-top:3px}
+.prog-status.past{background:#F1F5F9;color:#64748B}
+.prog-status.active{background:#FEE2E2;color:#DC2626}
+.prog-status.upcoming{background:#FEF3C7;color:#92400E}
+
+/* ==================== FLASH ==================== */
+.flash{display:flex;align-items:center;gap:12px;padding:12px 20px;background:linear-gradient(90deg,#7F1D1D,#991B1B);border-radius:var(--rl);margin-bottom:14px;overflow:hidden}
+.flash-badge{display:flex;align-items:center;gap:5px;font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:var(--red);padding:4px 12px;border-radius:6px;flex-shrink:0;white-space:nowrap;animation:fpls 2s infinite}
+.flash-badge svg{width:12px;height:12px;stroke:#fff}
+@keyframes fpls{0%,100%{opacity:1}50%{opacity:.6}}
+.flash-text{font-size:14px;font-weight:500;color:rgba(255,255,255,.9);flex:1;line-height:1.4}
+@media(max-width:768px){.flash{flex-wrap:wrap;gap:8px;padding:10px 12px}.flash-text{font-size:12px;order:3;flex-basis:100%}}
+
+/* ==================== FOOTER ==================== */
+.ft{font-size:10px;color:var(--text3);text-align:center;padding:20px 0;border-top:1px solid var(--border);margin-top:24px}
+.ft a{color:var(--acc2);text-decoration:none}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="upd-bar" id="upd-bar"></div>
+<div class="dash" id="app">
+  <div class="ld"><div class="spinner"></div><div class="tx">Chargement du live...</div></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyDtKWuGcF2MFI3Er9mRuL1qtzhbqsQP3PY",authDomain:"tourmag-live.firebaseapp.com",projectId:"tourmag-live"});
+const db = firebase.firestore();
+
+// ============================================================
+// SVG ICONS — pictos professionnels inline
+// ============================================================
+const ICO = {
+  mapPin:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  calendar:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  zap:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>',
+  newspaper:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>',
+  clipboard:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
+  user:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  chevDown:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+};
+
+// ============================================================
+// DEMO DATA
+// ============================================================
+const DEMO = false;
+
+const DEMO_EVENT = {
+  title:"IFTM Top Resa 2026",subtitle:"Le salon mondial du tourisme",
+  location:"Paris — Porte de Versailles",dates:"30 sept. — 2 oct. 2026",
+  status:"live",color:"#2D1B4E",
+  logo_url:"", // optionnel : URL du logo événement
+  modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true},
+  flash_text:"Le ministre du Tourisme annonce un plan de relance de 500 M€ pour le tourisme durable"
+};
+
+const DEMO_ESSENTIAL = [
+  {tag:"DISTRIBUTION",text:"<strong>Orchestra / Amadeus</strong> annoncent une intégration NDC complète pour les agences de voyages d'ici début 2027."},
+  {tag:"AÉRIEN",text:"<strong>Air France</strong> dévoile 12 nouvelles routes moyen-courrier pour l'été 2027, axées sur la Méditerranée orientale."},
+  {tag:"DURABILITÉ",text:"Le label <strong>ATR Agir pour un Tourisme Responsable</strong> franchit la barre des 100 tour-opérateurs certifiés."},
+  {tag:"DESTINATIONS",text:"L'<strong>Ouzbékistan</strong> et la <strong>Géorgie</strong> émergent comme destinations phares 2027 selon les professionnels."},
+  {tag:"HÔTELLERIE",text:"<strong>Accor</strong> annonce 45 nouvelles adresses lifestyle sous la marque Ennismore en Europe du Sud."},
+  {tag:"ÉCONOMIE",text:"Le secteur tourisme français dépasse les <strong>200 milliards € de CA</strong> pour la première fois, +8% vs 2025."}
+];
+
+const DEMO_LIVE = [
+  {id:"l1",time:"2026-09-30T16:42:00Z",text:"<strong>Clôture de la première journée.</strong> Affluence record avec plus de 12 000 visiteurs professionnels. Les allées du salon sont restées bondées jusqu'à la fermeture.",journalist:"Camille Le Guilloux",tag:"GÉNÉRAL"},
+  {id:"l2",time:"2026-09-30T16:15:00Z",text:"Table ronde passionnante sur l'impact de l'IA générative sur la distribution touristique. Les TO présents reconnaissent être en phase d'expérimentation active.",journalist:"Rémi Duchange",tag:"TECH"},
+  {id:"l3",time:"2026-09-30T15:30:00Z",text:"Le stand de l'Ouzbékistan pris d'assaut par les agents de voyages. Le pays confirme la suppression du visa pour les Français à partir de janvier 2027.",journalist:"Camille Le Guilloux",tag:"DESTINATIONS",image:"https://images.unsplash.com/photo-1580654843061-c35e845ab5ae?w=600&q=80"},
+  {id:"l4",time:"2026-09-30T14:45:00Z",text:"<strong>Amadeus</strong> présente son nouvel outil de tarification dynamique alimenté par IA. Démonstration impressionnante sur le stand avec des cas concrets d'agences.",journalist:"Rémi Duchange",tag:"TECH"},
+  {id:"l5",time:"2026-09-30T13:20:00Z",text:"Pause déjeuner. L'ambiance est excellente, beaucoup de networking dans les espaces restauration. Les professionnels sont optimistes pour la saison 2027.",journalist:"Camille Le Guilloux",tag:"GÉNÉRAL"},
+  {id:"l6",time:"2026-09-30T11:50:00Z",text:"Le ministre du Tourisme prend la parole sur la grande scène. Annonce d'un <strong>plan de 500 M€</strong> pour accompagner la transition durable du secteur. Standing ovation.",journalist:"Rémi Duchange",tag:"POLITIQUE",image:"https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=600&q=80"},
+  {id:"l7",time:"2026-09-30T10:30:00Z",text:"<strong>Conférence d'ouverture</strong> par le président du SETO. Le marché français du voyage organisé a progressé de 14% sur les 9 premiers mois de 2026.",journalist:"Camille Le Guilloux",tag:"ÉCONOMIE"},
+  {id:"l8",time:"2026-09-30T09:00:00Z",text:"Ouverture des portes ! L'équipe TourMaG est en place. Nous vous ferons vivre cette première journée minute par minute.",journalist:"La Rédaction",tag:"GÉNÉRAL"}
+];
+
+const DEMO_RUBRIQUES = [
+  {id:"r1",name:"Intelligence Artificielle & Tech",icon:"🤖",color:"#7C3AED",bg:"#EDE9FE"},
+  {id:"r2",name:"Distribution & Agences",icon:"🏪",color:"#0C6CA1",bg:"#DBEAFE"},
+  {id:"r3",name:"Destinations tendances",icon:"🌍",color:"#059669",bg:"#D1FAE5"},
+  {id:"r4",name:"Tourisme durable",icon:"🌱",color:"#16A34A",bg:"#DCFCE7"}
+];
+
+const DEMO_CITATIONS = [
+  {id:"c1",rubrique:"r1",text:"L'IA ne remplacera pas les agents de voyages, mais les agents qui utilisent l'IA remplaceront ceux qui ne l'utilisent pas. C'est aussi simple que ça.",name:"Sophie Lacroix",role:"Directrice Innovation, Amadeus France",avatar:""},
+  {id:"c2",rubrique:"r1",text:"Nous avons réduit de 40% le temps de création des devis grâce à notre assistant IA. Nos conseillers peuvent enfin se concentrer sur la relation client.",name:"Marc Dufresne",role:"CEO, TravelSoft",avatar:""},
+  {id:"c3",rubrique:"r2",text:"Le modèle de l'agence physique n'est pas mort, il se réinvente. Nos agences qui ont adopté le conseil premium affichent +22% de marge.",name:"Philippe Sangouard",role:"Président, Selectour",avatar:""},
+  {id:"c4",rubrique:"r2",text:"NDC va enfin devenir une réalité opérationnelle pour les agences en 2027. Nous avons travaillé deux ans avec les compagnies pour y arriver.",name:"Elena Marchand",role:"DG, Orchestra",avatar:""},
+  {id:"c5",rubrique:"r3",text:"L'Ouzbékistan est la surprise de l'année. Nous enregistrons +180% de demandes par rapport à 2025. La suppression du visa va encore accélérer la tendance.",name:"Karim Benamara",role:"Directeur Produit, Voyageurs du Monde",avatar:""},
+  {id:"c6",rubrique:"r3",text:"La Géorgie s'impose comme le nouveau Portugal. Gastronomie exceptionnelle, patrimoine unique, prix accessibles : tous les ingrédients sont réunis.",name:"Anne-Laure Dupont",role:"Responsable Programmation, Comptoir des Voyages",avatar:""},
+  {id:"c7",rubrique:"r4",text:"200 milliards d'euros de chiffre d'affaires, c'est formidable. Mais nous devons maintenant mesurer notre impact aussi rigoureusement que notre croissance.",name:"Julien Buot",role:"Directeur, ATR",avatar:""},
+  {id:"c8",rubrique:"r4",text:"Le train de nuit vers Barcelone affiche complet tous les week-ends. Le slow travel n'est plus une niche, c'est un segment de marché à part entière.",name:"Isabelle Fortier",role:"Directrice Commerciale, Midnight Trains",avatar:""}
+];
+
+const DEMO_ARTICLES = [
+  {title:"IFTM 2026 : les 10 tendances qui vont marquer la saison",link:"#",author:"Camille Le Guilloux",date:"30 sept. 2026",image:"https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&q=80"},
+  {title:"Air France mise sur la Méditerranée orientale pour l'été 2027",link:"#",author:"Rémi Duchange",date:"30 sept. 2026",image:"https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=300&q=80"},
+  {title:"Amadeus dévoile son outil de tarification dynamique par IA",link:"#",author:"La Rédaction",date:"30 sept. 2026",image:"https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=300&q=80"},
+  {title:"Ouzbékistan : la destination qui monte en flèche chez les TO",link:"#",author:"Camille Le Guilloux",date:"30 sept. 2026",image:"https://images.unsplash.com/photo-1580654843061-c35e845ab5ae?w=300&q=80"},
+  {title:"Plan tourisme durable : 500 M€ pour transformer le secteur",link:"#",author:"Rémi Duchange",date:"30 sept. 2026",image:"https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=300&q=80"},
+  {title:"Selectour accélère sur le conseil premium en agence",link:"#",author:"La Rédaction",date:"29 sept. 2026",image:"https://images.unsplash.com/photo-1556745757-8d76bdb6984b?w=300&q=80"},
+  {title:"Les croisières fluviales séduisent une clientèle rajeunie",link:"#",author:"Camille Le Guilloux",date:"29 sept. 2026",image:"https://images.unsplash.com/photo-1548574505-5e239809ee19?w=300&q=80"},
+  {title:"Géorgie : le nouveau Portugal des tour-opérateurs français",link:"#",author:"La Rédaction",date:"29 sept. 2026",image:"https://images.unsplash.com/photo-1565008576549-57569a49371d?w=300&q=80"}
+];
+
+const DEMO_PROGRAMME = [
+  {time:"09:00",label:"Ouverture officielle",desc:"Discours d'ouverture par le Président du SETO",status:"past"},
+  {time:"10:00",label:"Conférence plénière — Bilan saison 2026",desc:"Chiffres clés et perspectives du tourisme français",status:"past"},
+  {time:"11:30",label:"Keynote — Le ministre du Tourisme",desc:"Plan de relance 500 M€ pour le tourisme durable",status:"past"},
+  {time:"14:00",label:"Table ronde — IA et distribution",desc:"Comment l'IA transforme le métier d'agent de voyages",status:"past"},
+  {time:"15:30",label:"Workshop — Destinations émergentes 2027",desc:"Focus Ouzbékistan, Géorgie, Albanie",status:"active"},
+  {time:"17:00",label:"Networking cocktail",desc:"Espace Partenaires, Hall 1",status:"upcoming"}
+];
+
+const DEMO_TIMELINE = [
+  {date:"28 sept.",text:"Pré-ouverture : les exposants s'installent. Record de 1 200 stands."},
+  {date:"29 sept.",text:"Workshop presse : les TO dévoilent les brochures hiver 2026-27."},
+  {date:"30 sept.",text:"J1 — Ouverture officielle. Plan 500 M€ tourisme durable annoncé."},
+  {date:"1 oct.",text:"J2 — Journée distribution. Tables rondes IA et NDC."},
+  {date:"2 oct.",text:"J3 — Clôture et remise des Trophées IFTM."}
+];
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+const LIVE_VISIBLE = 5;
+const ART_VISIBLE = 6;
+
+function fmtTime(iso){ return new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDT(iso){ const d=new Date(iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+
+function mkLiveEntry(e){
+  return `<div class="live-entry"><div class="live-time-col"><div class="live-dot"></div></div><div class="live-content"><div class="live-content-head"><span class="live-tag">${e.tag}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist}</span></div><div class="live-text">${e.text}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
+}
+
+function mkArticle(a){
+  const img = a.image ? `<img class="ni-img" src="${a.image}" alt="" onerror="this.remove()">` : '';
+  return `<div class="ni" onclick="window.open('${a.link}','_blank')">${img}<div class="ni-body"><div class="nt">${a.title}</div><div class="nm">${a.author} · ${a.date}</div></div></div>`;
+}
+
+// TOGGLE FUNCTIONS (global)
+window.toggleLive = function(){
+  const el=document.getElementById('live-expand'), btn=document.getElementById('live-btn');
+  if(!el||!btn)return;
+  const open=el.classList.toggle('open');
+  btn.classList.toggle('open-state',open);
+  const n=parseInt(btn.dataset.extra);
+  btn.innerHTML = open ? `Réduire ${ICO.chevDown}` : `Voir les ${n} entrées précédentes ${ICO.chevDown}`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+window.toggleArticles = function(){
+  const el=document.getElementById('art-expand'), btn=document.getElementById('art-btn');
+  if(!el||!btn)return;
+  const open=el.classList.toggle('open');
+  const n=parseInt(btn.dataset.extra);
+  btn.textContent = open ? 'Réduire ▴' : `Voir les ${n} autres articles ▾`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+
+function render(data){
+  const {event, essential, live, rubriques, citations, articles, programme, timeline} = data;
+  const mod = event.modules || {};
+  let h = '';
+
+  // FLASH
+  if(mod.flash && event.flash_text){
+    h += `<div class="flash fi"><span class="flash-badge">${ICO.zap} FLASH</span><span class="flash-text">${event.flash_text}</span></div>`;
+  }
+
+  // ===== HERO =====
+  h += `<div class="hero fi"><div class="hero-header"><div class="hero-left">`;
+  if(event.logo_url) h += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
+  h += `<div class="hero-text"><div class="hero-title">${event.title}</div><div class="hero-subtitle"><span>${ICO.mapPin} ${event.location}</span><span>${ICO.calendar} ${event.dates}</span></div></div></div>`;
+  h += `<div class="hero-meta">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}</div></div>`;
+
+  // Essential (IA)
+  if(mod.essential && essential && essential.length){
+    h += `<div class="hero-ess-grid">`;
+    essential.forEach((p,i) => {
+      h += `<div class="hero-ess-card"><div class="hero-ess-top"><div class="hero-ess-num">${String(i+1).padStart(2,'0')}</div><span class="hero-ess-tag">${p.tag}</span></div><div class="hero-ess-txt">${p.text}</div></div>`;
+    });
+    h += `</div><div class="hero-ess-ia">✦ Synthèse générée par IA à partir du fil live</div>`;
+  }
+
+  // Timeline articles/événements
+  if(timeline && timeline.length){
+    const tlCount = Math.min(timeline.length, 6);
+    h += `<div class="hero-tl"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
+    timeline.slice(0, 6).forEach(t => {
+      const link = t.link ? ` onclick="window.open('${t.link}','_blank')"` : '';
+      h += `<div class="hero-tl-item"${link}><div class="hero-tl-dot"></div><div class="hero-tl-date">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
+    });
+    h += `</div></div>`;
+  }
+
+  h += `</div>`; // end hero
+
+  // ===== LAYOUT =====
+  h += `<div class="layout"><div class="main-col">`;
+
+  // LIVE FEED — 5 visibles, accordéon pour le reste
+  if(mod.live && live && live.length){
+    h += `<div class="sl fi">Fil live — Minute par minute</div><div class="live-feed fi">`;
+    const vis = live.slice(0, LIVE_VISIBLE);
+    const ext = live.slice(LIVE_VISIBLE);
+    vis.forEach(e => { h += mkLiveEntry(e); });
+    if(ext.length){
+      h += `<div class="live-expand" id="live-expand">`;
+      ext.forEach(e => { h += mkLiveEntry(e); });
+      h += `</div>`;
+      h += `<div class="voir-plus-live" id="live-btn" data-extra="${ext.length}" onclick="toggleLive()">Voir les ${ext.length} entrées précédentes ${ICO.chevDown}</div>`;
+    }
+    h += `</div>`;
+  }
+
+  // CITATIONS PAR RUBRIQUE
+  if(mod.citations && rubriques && rubriques.length){
+    h += `<div class="sl fi">Ce qu'ils ont dit</div>`;
+    rubriques.forEach(rub => {
+      const rc = citations.filter(c => c.rubrique === rub.id);
+      if(!rc.length) return;
+      h += `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rub.bg};color:${rub.color}">${rub.icon}</div><div class="rubrique-name">${rub.name}</div><span class="rubrique-count" style="background:${rub.color}">${rc.length}</span></div>`;
+      rc.forEach(c => {
+        h += `<div class="citation-card"><div class="citation-text">${c.text}</div><div class="citation-author">`;
+        h += c.avatar
+          ? `<img class="citation-avatar" src="${c.avatar}" alt="" onerror="this.outerHTML='<div class=\\'citation-avatar-placeholder\\'>${ICO.user}</div>'">`
+          : `<div class="citation-avatar-placeholder">${ICO.user}</div>`;
+        h += `<div class="citation-info"><div class="citation-name">${c.name}</div><div class="citation-role">${c.role}</div></div></div></div>`;
+      });
+      h += `</div>`;
+    });
+  }
+  h += `</div>`; // end main-col
+
+  // ===== SIDEBAR =====
+  h += `<div class="side-col">`;
+
+  // PROGRAMME — clean list, sans pastilles
+  if(mod.programme && programme && programme.length){
+    h += `<div class="cd fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
+    programme.forEach(p => {
+      const sl = p.status==='past'?'Terminé':p.status==='active'?'En cours':'À venir';
+      h += `<div class="prog-item"><div class="prog-time">${p.time}</div><div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${p.status}">${sl}</span></div></div>`;
+    });
+    h += `</div></div>`;
+  }
+
+  // ARTICLES LIÉS — 6 visibles, accordéon pour le reste, images grosses
+  if(mod.articles && articles && articles.length){
+    const va = articles.slice(0, ART_VISIBLE);
+    const ea = articles.slice(ART_VISIBLE);
+    h += `<div class="cd fi"><div class="hd"><div class="ci">${ICO.newspaper}</div><span class="ct">Articles liés</span><span class="cc">${articles.length}</span></div>`;
+    va.forEach(a => { h += mkArticle(a); });
+    if(ea.length){
+      h += `<div class="cd-expand" id="art-expand">`;
+      ea.forEach(a => { h += mkArticle(a); });
+      h += `</div>`;
+      h += `<div class="voir-plus" id="art-btn" data-extra="${ea.length}" onclick="toggleArticles()">Voir les ${ea.length} autres articles ▾</div>`;
+    }
+    h += `</div>`;
+  }
+
+  h += `</div></div>`; // end side-col + layout
+  h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Synthèse IA par Claude</div>`;
+
+  document.getElementById('app').innerHTML = h;
+  document.getElementById('upd-bar').innerHTML = `Dernière mise à jour : ${fmtDT(new Date().toISOString())}`;
+
+  // Fade-in observer
+  const obs = new IntersectionObserver(es => {
+    es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('vis'); obs.unobserve(e.target); }});
+  },{threshold:.08});
+  document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init(){
+  if(DEMO){
+    await new Promise(r => setTimeout(r, 600));
+    render({event:DEMO_EVENT,essential:DEMO_ESSENTIAL,live:DEMO_LIVE,rubriques:DEMO_RUBRIQUES,citations:DEMO_CITATIONS,articles:DEMO_ARTICLES,programme:DEMO_PROGRAMME,timeline:DEMO_TIMELINE});
+    return;
+  }
+  const eventId = new URLSearchParams(window.location.search).get('event');
+  if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
+  const [evS,esS,liS,ruS,ciS,arS,prS,tlS] = await Promise.all([
+    db.collection('events').doc(eventId).get(),
+    db.collection('events').doc(eventId).collection('essential').orderBy('order').get(),
+    db.collection('events').doc(eventId).collection('live').orderBy('time','desc').get(),
+    db.collection('events').doc(eventId).collection('rubriques').orderBy('order').get(),
+    db.collection('events').doc(eventId).collection('citations').orderBy('created_at','desc').get(),
+    db.collection('events').doc(eventId).collection('articles').orderBy('date','desc').get(),
+    db.collection('events').doc(eventId).collection('programme').orderBy('time').get(),
+    db.collection('events').doc(eventId).collection('timeline').orderBy('order').get()
+  ]);
+  if(!evS.exists){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Événement introuvable</div></div>'; return; }
+  const ev=evS.data(), ess=[], li=[], ru=[], ci=[], ar=[], pr=[], tl=[];
+  esS.forEach(d=>ess.push({id:d.id,...d.data()}));
+  liS.forEach(d=>li.push({id:d.id,...d.data()}));
+  ruS.forEach(d=>ru.push({id:d.id,...d.data()}));
+  ciS.forEach(d=>ci.push({id:d.id,...d.data()}));
+  arS.forEach(d=>ar.push({id:d.id,...d.data()}));
+  prS.forEach(d=>pr.push({id:d.id,...d.data()}));
+  tlS.forEach(d=>tl.push({id:d.id,...d.data()}));
+  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl});
+  // Real-time on live
+  db.collection('events').doc(eventId).collection('live').orderBy('time','desc')
+    .onSnapshot(snap => {
+      const ul=[]; snap.forEach(d=>ul.push({id:d.id,...d.data()}));
+      render({event:ev,essential:ess,live:ul,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl});
+    });
+}
+init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
+
+// IFRAME RESIZE
+function sendHeight(){
+  const h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,document.documentElement.offsetHeight);
+  window.parent.postMessage({type:'tourmag-live-resize',height:h},'*');
+  window.parent.postMessage({type:'setHeight',height:h},'*');
+}
+window.addEventListener('load',()=>{
+  document.documentElement.style.overflow='visible';document.body.style.overflow='visible';
+  sendHeight();
+  new MutationObserver(sendHeight).observe(document.body,{childList:true,subtree:true});
+  new ResizeObserver(sendHeight).observe(document.body);
+  setInterval(sendHeight,1500);
+});
+</script>
+</body>
+</html>

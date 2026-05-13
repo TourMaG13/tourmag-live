@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+.er{max-width:1200px;margin:0 auto;font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#1B1B2F 0%,#2D1B4E 40%,#1B1B2F 100%);border-radius:16px;overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
+.er::before{content:'';position:absolute;top:-40px;right:-40px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,132,44,.1) 0%,transparent 70%);pointer-events:none}
+
+/* HEADER */
+.er-h{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;position:relative;z-index:2;flex-wrap:wrap;gap:10px}
+.er-h-left{display:flex;align-items:center;gap:12px}
+.er-h-logo{max-height:36px;max-width:80px;object-fit:contain;border-radius:6px}
+.er-h-text{}
+.er-h-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff}
+.er-h-sub{font-size:10px;color:rgba(255,255,255,.4)}
+.er-cta{display:flex;align-items:center;gap:6px;padding:8px 20px;background:#E8842C;color:#fff;font-family:'Josefin Sans';font-size:11px;font-weight:700;border-radius:8px;text-decoration:none;transition:background .15s;letter-spacing:.3px;flex-shrink:0;animation:er-pulse 2.5s infinite}
+.er-cta:hover{background:#D4731D}
+@keyframes er-pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,132,44,.4)}50%{box-shadow:0 0 0 8px rgba(232,132,44,0)}}
+
+/* FLASH */
+.er-flash{display:flex;align-items:center;gap:10px;padding:8px 24px;background:rgba(220,38,38,.12);border-top:1px solid rgba(220,38,38,.15);position:relative;z-index:2;overflow:hidden}
+.er-flash-badge{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:#DC2626;padding:3px 10px;border-radius:5px;flex-shrink:0;animation:er-fpls 2s infinite}
+@keyframes er-fpls{0%,100%{opacity:1}50%{opacity:.5}}
+.er-flash-text{font-size:12px;font-weight:500;color:rgba(255,255,255,.85);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* MID: ESSENTIEL + CITATION */
+.er-mid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 24px;position:relative;z-index:2}
+
+/* ESSENTIEL CAROUSEL */
+.er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;position:relative;border-left:3px solid #3B82F6}
+.er-ess-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.er-ess-label{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.er-ess-pag{font-family:'IBM Plex Mono';font-size:9px;color:rgba(255,255,255,.3)}
+.er-ess-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:3px;display:inline-block;margin-bottom:6px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.er-ess-text{font-size:11px;line-height:1.6;color:rgba(255,255,255,.75)}
+.er-ess-text strong{color:#fff;font-weight:700}
+.er-ess-dots{display:flex;gap:4px;margin-top:10px}
+.er-ess-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .2s}
+.er-ess-dot.active{background:#E8842C}
+
+/* CITATION */
+.er-cit{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;display:flex;gap:12px;align-items:center}
+.er-cit-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.12);flex-shrink:0;background:rgba(255,255,255,.06)}
+.er-cit-avatar-ph{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.er-cit-avatar-ph svg{width:22px;height:22px;stroke:rgba(255,255,255,.25)}
+.er-cit-body{flex:1;min-width:0}
+.er-cit-name{font-family:'Josefin Sans';font-size:11px;font-weight:700;color:#fff;margin-bottom:1px}
+.er-cit-role{font-size:9px;color:rgba(255,255,255,.35);margin-bottom:6px}
+.er-cit-text{font-size:10px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* FRISE */
+.er-frise{display:grid;grid-template-columns:repeat(var(--frise-cols,3),1fr);gap:0;padding:12px 24px 16px;position:relative;z-index:2}
+.er-frise::before{content:'';position:absolute;top:20px;left:24px;right:24px;height:1.5px;background:rgba(255,255,255,.08)}
+.er-fe{display:flex;flex-direction:column;align-items:center;padding:0 6px}
+.er-fe-d{width:8px;height:8px;border-radius:50%;background:#E8842C;border:2px solid rgba(27,27,47,.9);box-shadow:0 0 0 1.5px #E8842C;margin-bottom:7px;z-index:1}
+.er-fe-date{font-family:'IBM Plex Mono';font-size:9px;color:#E8842C;font-weight:600;margin-bottom:3px}
+.er-fe-txt{font-size:10px;color:rgba(255,255,255,.5);text-align:center;line-height:1.4}
+
+.er-loading{padding:40px;text-align:center;font-size:12px;color:rgba(255,255,255,.3)}
+
+@media(max-width:560px){
+  .er-h{flex-direction:column;align-items:flex-start;gap:8px}
+  .er-cta{width:100%;justify-content:center}
+  .er-mid{grid-template-columns:1fr}
+  .er-frise{grid-template-columns:1fr;gap:8px}
+  .er-frise::before{display:none}
+  .er-fe{flex-direction:row;gap:10px;align-items:flex-start}
+  .er-fe-d{margin-bottom:0;margin-top:4px;flex-shrink:0}
+  .er-fe-txt{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div class="er" id="encart"><div class="er-loading">Chargement...</div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script>
+// CONFIG — À remplacer par le vrai projet Firebase
+firebase.initializeApp({
+  apiKey:"AIzaSyDtKWuGcF2MFI3Er9mRuL1qtzhbqsQP3PY",
+  authDomain:"tourmag-live.firebaseapp.com",
+  projectId:"tourmag-live"
+});
+const db=firebase.firestore();
+
+const DEMO=false;
+const DEMO_DATA={
+  event:{title:"IFTM Top Resa 2026",location:"Paris — Porte de Versailles",dates:"30 sept. — 2 oct. 2026",status:"live",logo_url:"",flash_text:"Le ministre annonce un plan de 500 M€ pour le tourisme durable"},
+  essential:[
+    {tag:"DISTRIBUTION",text:"<strong>Orchestra / Amadeus</strong> annoncent une intégration NDC complète pour 2027."},
+    {tag:"AÉRIEN",text:"<strong>Air France</strong> dévoile 12 nouvelles routes moyen-courrier."},
+    {tag:"DURABILITÉ",text:"Le label <strong>ATR</strong> franchit 100 TO certifiés."},
+    {tag:"DESTINATIONS",text:"L'<strong>Ouzbékistan</strong> et la <strong>Géorgie</strong> émergent comme destinations phares."},
+    {tag:"HÔTELLERIE",text:"<strong>Accor</strong> annonce 45 nouvelles adresses lifestyle Ennismore."},
+    {tag:"ÉCONOMIE",text:"Le tourisme français dépasse <strong>200 Mds € de CA</strong>, +8% vs 2025."}
+  ],
+  citation:{text:"L'IA ne remplacera pas les agents de voyages, mais les agents qui utilisent l'IA remplaceront ceux qui ne l'utilisent pas.",name:"Sophie Lacroix",role:"Directrice Innovation, Amadeus France",avatar:""},
+  timeline:[
+    {date:"29 sept.",text:"Workshop presse — brochures hiver 2027"},
+    {date:"30 sept.",text:"J1 — Plan 500 M€ tourisme durable annoncé"},
+    {date:"1 oct.",text:"J2 — Tables rondes IA et NDC"}
+  ]
+};
+
+const TAG_BORDERS={"DISTRIBUTION":"#3B82F6","AÉRIEN":"#60A5FA","DURABILITÉ":"#34D399","DESTINATIONS":"#60A5FA","HÔTELLERIE":"#FB923C","ÉCONOMIE":"#94A3B8","TECH":"#2DD4BF","POLITIQUE":"#F87171","GÉNÉRAL":"rgba(255,255,255,.2)"};
+
+let essIdx=0, essTimer=null;
+
+function renderEncart(data){
+  const {event,essential,citation,timeline}=data;
+  const ctaUrl=new URLSearchParams(window.location.search).get('cta')||'index.html?event='+new URLSearchParams(window.location.search).get('event')||'#';
+  let h='';
+
+  // HEADER
+  h+=`<div class="er-h"><div class="er-h-left">`;
+  if(event.logo_url) h+=`<img class="er-h-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
+  h+=`<div class="er-h-text"><div class="er-h-title">${event.title}</div><div class="er-h-sub">${event.location||''} · ${event.dates||''}</div></div></div>`;
+  h+=`<a class="er-cta" href="${ctaUrl}" target="_blank">Accéder au Live →</a></div>`;
+
+  // FLASH
+  if(event.flash_text){
+    h+=`<div class="er-flash"><span class="er-flash-badge">DERNIÈRE INFO</span><span class="er-flash-text">${event.flash_text}</span></div>`;
+  }
+
+  // MID: ESSENTIEL + CITATION
+  if(essential&&essential.length || citation){
+    h+=`<div class="er-mid">`;
+    // ESSENTIEL CAROUSEL
+    if(essential&&essential.length){
+      const bc=TAG_BORDERS[essential[0].tag]||'#3B82F6';
+      h+=`<div class="er-ess" id="er-ess" style="border-left-color:${bc}">`;
+      h+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel du live</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
+      h+=`<div id="er-ess-tag"></div><div class="er-ess-text" id="er-ess-text"></div>`;
+      h+=`<div class="er-ess-dots" id="er-ess-dots">`;
+      essential.forEach((_,i)=>{ h+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goEss(${i})"></div>`; });
+      h+=`</div></div>`;
+    }
+    // CITATION
+    if(citation){
+      h+=`<div class="er-cit">`;
+      if(citation.avatar){
+        h+=`<img class="er-cit-avatar" src="${citation.avatar}" alt="" onerror="this.outerHTML='<div class=er-cit-avatar-ph><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'rgba(255,255,255,.25)\\' stroke-width=\\'2\\'><path d=\\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\\'/><circle cx=\\'12\\' cy=\\'7\\' r=\\'4\\'/></svg></div>'">`;
+      } else {
+        h+=`<div class="er-cit-avatar-ph"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
+      }
+      h+=`<div class="er-cit-body"><div class="er-cit-name">${citation.name}</div><div class="er-cit-role">${citation.role}</div><div class="er-cit-text">« ${citation.text} »</div></div></div>`;
+    }
+    h+=`</div>`;
+  }
+
+  // FRISE
+  if(timeline&&timeline.length){
+    const cols=Math.min(timeline.length,5);
+    h+=`<div class="er-frise" style="--frise-cols:${cols}">`;
+    timeline.slice(0,5).forEach(t=>{
+      h+=`<div class="er-fe"><div class="er-fe-d"></div><div class="er-fe-date">${t.date}</div><div class="er-fe-txt">${t.text}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  document.getElementById('encart').innerHTML=h;
+
+  // Start carousel
+  if(essential&&essential.length>1){
+    showEss(0, essential);
+    essTimer=setInterval(()=>{
+      essIdx=(essIdx+1)%essential.length;
+      showEss(essIdx, essential);
+    },5000);
+  } else if(essential&&essential.length===1){
+    showEss(0, essential);
+  }
+}
+
+function showEss(idx, pts){
+  essIdx=idx;
+  const tag=document.getElementById('er-ess-tag');
+  const text=document.getElementById('er-ess-text');
+  const pag=document.getElementById('er-ess-pag');
+  const ess=document.getElementById('er-ess');
+  const dots=document.querySelectorAll('.er-ess-dot');
+  if(!tag||!text||!pts[idx])return;
+  const p=pts[idx];
+  const bc=TAG_BORDERS[p.tag]||'#3B82F6';
+  tag.innerHTML=`<span class="er-ess-tag">${p.tag}</span>`;
+  text.innerHTML=p.text;
+  if(pag) pag.textContent=`${idx+1}/${pts.length}`;
+  if(ess) ess.style.borderLeftColor=bc;
+  dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+
+window.goEss=function(idx){
+  if(essTimer){clearInterval(essTimer);essTimer=null;}
+  showEss(idx, DEMO?DEMO_DATA.essential:[]);
+  essTimer=setInterval(()=>{
+    essIdx=(essIdx+1)%(DEMO?DEMO_DATA.essential.length:1);
+    showEss(essIdx, DEMO?DEMO_DATA.essential:[]);
+  },5000);
+};
+
+// INIT
+async function init(){
+  if(DEMO){
+    renderEncart(DEMO_DATA);
+    return;
+  }
+  const eventId=new URLSearchParams(window.location.search).get('event');
+  if(!eventId){document.getElementById('encart').innerHTML='<div class="er-loading">?event= manquant</div>';return;}
+  try{
+    const [evS,esS,ciS,tlS]=await Promise.all([
+      db.collection('events').doc(eventId).get(),
+      db.collection('events').doc(eventId).collection('essential').orderBy('order').get(),
+      db.collection('events').doc(eventId).collection('citations').orderBy('created_at','desc').limit(1).get(),
+      db.collection('events').doc(eventId).collection('timeline').orderBy('order').get()
+    ]);
+    if(!evS.exists){document.getElementById('encart').innerHTML='<div class="er-loading">Événement introuvable</div>';return;}
+    const ess=[]; esS.forEach(d=>ess.push(d.data()));
+    let cit=null; ciS.forEach(d=>{if(!cit)cit=d.data();});
+    const tl=[]; tlS.forEach(d=>tl.push(d.data()));
+    const essAll=ess; // IA + manual combined
+    renderEncart({event:evS.data(),essential:essAll,citation:cit,timeline:tl});
+  }catch(e){
+    console.error(e);
+    document.getElementById('encart').innerHTML='<div class="er-loading">Erreur de chargement</div>';
+  }
+}
+init();
+
+// IFRAME RESIZE
+function sendHeight(){
+  const h=document.getElementById('encart');
+  if(!h)return;
+  const height=h.offsetHeight;
+  window.parent.postMessage({type:'tourmag-live-resize',height},'*');
+  window.parent.postMessage({type:'setHeight',height},'*');
+}
+window.addEventListener('load',()=>{sendHeight();setInterval(sendHeight,1500);new ResizeObserver(sendHeight).observe(document.getElementById('encart'));});
+</script>
+</body>
+</html>
