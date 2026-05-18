@@ -115,8 +115,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .live-text{font-size:13px;line-height:1.6;color:var(--text)}
 .live-text strong{font-weight:600}
 
-.live-img{margin-top:10px;border-radius:8px;overflow:hidden;max-height:200px}
-.live-img img{width:100%;height:100%;object-fit:cover;display:block}
+.live-img{margin-top:10px;border-radius:8px;overflow:hidden}
+.live-img img{width:100%;display:block;object-fit:cover}
 
 /* LIVE EXPAND (accordéon) */
 .live-expand{display:none}
@@ -135,17 +135,21 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .rubrique-name{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:var(--text)}
 .rubrique-count{font-size:9px;font-weight:700;color:#fff;padding:2px 8px;border-radius:20px;margin-left:auto}
 
-.citation-card{background:var(--pri);border-radius:12px;padding:20px 22px;margin-bottom:12px;position:relative;overflow:hidden}
-.citation-card::before{content:'«';position:absolute;top:-5px;left:12px;font-family:'Playfair Display',serif;font-size:80px;color:rgba(255,255,255,.05);line-height:1;pointer-events:none}
-.citation-text{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85);font-style:italic;position:relative;z-index:1;margin-bottom:14px}
+.citation-card{background:var(--pri);border-radius:14px;padding:28px 26px;margin-bottom:14px;position:relative;overflow:hidden;border-left:4px solid var(--acc)}
+.citation-card::before{content:'\201C';position:absolute;top:10px;left:18px;font-family:'Playfair Display',Georgia,serif;font-size:120px;color:rgba(232,132,44,.15);line-height:1;pointer-events:none}
+.citation-card::after{content:'\201D';position:absolute;bottom:-20px;right:20px;font-family:'Playfair Display',Georgia,serif;font-size:120px;color:rgba(232,132,44,.08);line-height:1;pointer-events:none}
+.citation-text{font-size:15px;line-height:1.75;color:rgba(255,255,255,.9);font-style:italic;position:relative;z-index:1;margin-bottom:14px;padding-left:16px}
 .citation-text strong{color:#FDBA74;font-weight:600;font-style:normal}
-.citation-author{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-.citation-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.15)}
-.citation-avatar-placeholder{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.citation-avatar-placeholder svg{width:20px;height:20px}
+.citation-author{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.citation-avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(232,132,44,.35);box-shadow:0 4px 16px rgba(0,0,0,.25);flex-shrink:0}
+.citation-avatar-placeholder{width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.citation-avatar-placeholder svg{width:40px;height:40px}
 .citation-info{flex:1}
-.citation-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#fff}
-.citation-role{font-size:10px;color:rgba(255,255,255,.45)}
+.citation-name{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:#fff}
+.citation-role{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.citation-sep{border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0}
+.citation-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:768px){.citation-grid{grid-template-columns:1fr}}
 
 /* ==================== SIDEBAR CARDS ==================== */
 .cd{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--hero-color);margin-bottom:14px}
@@ -167,23 +171,27 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Accordéon voir plus (identique dashboard crise) */
 .voir-plus{display:block;padding:8px 14px;font-size:10px;font-weight:600;color:var(--acc2);text-align:center;cursor:pointer;border-top:1px solid var(--border);transition:background .1s}
 .voir-plus:hover{background:#FFF7ED}
-.cd-expand{max-height:400px;overflow-y:auto;border-top:1px solid var(--border);display:none}
+.cd-expand{display:none}
 .cd-expand.open{display:block}
-.cd-expand::-webkit-scrollbar{width:4px}
-.cd-expand::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:2px}
 
-/* ==================== PROGRAMME — clean, sans pastilles ==================== */
+/* ==================== PROGRAMME — style warm gradient ==================== */
+.prog-card{background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FDE68A 100%);border:1.5px solid #F59E0B40;border-radius:var(--rl);overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,.08);margin-bottom:14px}
+.prog-card .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #F59E0B25}
+.prog-card .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
+.prog-card .ci svg{width:16px;height:16px}
+.prog-card .ct{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:#78350F}
 .prog-list{padding:10px 14px}
-.prog-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
-.prog-item:last-child{border-bottom:none}
-.prog-time{font-family:'IBM Plex Mono';font-size:11px;font-weight:500;color:var(--acc);flex-shrink:0;width:42px;padding-top:2px}
+.prog-item{display:flex;gap:12px;padding:10px 12px;margin-bottom:6px;border:1px solid #F59E0B20;border-radius:10px;background:rgba(255,255,255,.55);align-items:flex-start;transition:background .15s}
+.prog-item:hover{background:rgba(255,255,255,.8)}
+.prog-item:last-child{margin-bottom:0}
+.prog-time{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#B45309;flex-shrink:0;width:42px;padding-top:2px}
 .prog-body{flex:1}
-.prog-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
-.prog-desc{font-size:10px;color:var(--text2);margin-top:2px;line-height:1.5}
-.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-top:3px}
-.prog-status.past{background:#F1F5F9;color:#64748B}
-.prog-status.active{background:#FEE2E2;color:#DC2626}
-.prog-status.upcoming{background:#FEF3C7;color:#92400E}
+.prog-label{font-size:12px;font-weight:600;color:#1C1917;line-height:1.4}
+.prog-desc{font-size:10px;color:#57534E;margin-top:2px;line-height:1.5}
+.prog-status{display:inline-block;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:5px;margin-top:4px}
+.prog-status.past{background:#E7E5E4;color:#78716C}
+.prog-status.active{background:#DC2626;color:#fff;animation:pulse 1.5s infinite}
+.prog-status.upcoming{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B50}
 
 /* ==================== FLASH ==================== */
 .flash{display:flex;align-items:center;gap:12px;padding:12px 20px;background:linear-gradient(90deg,#7F1D1D,#991B1B);border-radius:var(--rl);margin-bottom:14px;overflow:hidden}
@@ -313,11 +321,24 @@ const DEMO_TIMELINE = [
 const LIVE_VISIBLE = 5;
 const ART_VISIBLE = 6;
 
-function fmtTime(iso){ return new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
-function fmtDT(iso){ const d=new Date(iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtTime(v){ try{ const d=v?.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'--:--'; }catch(e){return '--:--';} }
+function fmtDT(v){ try{ const d=v?.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''; }catch(e){return '';} }
+function autoStatus(timeStr){
+  if(!timeStr) return 'upcoming';
+  const now=new Date();
+  const parts=timeStr.split(':');
+  const h=parseInt(parts[0])||0, m=parseInt(parts[1])||0;
+  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m);
+  const diff=(now-t)/60000;
+  if(diff>60) return 'past';
+  if(diff>=-5&&diff<=60) return 'active';
+  return 'upcoming';
+}
 
+var _tagColorMap = {};
 function mkLiveEntry(e){
-  return `<div class="live-entry"><div class="live-time-col"><div class="live-dot"></div></div><div class="live-content"><div class="live-content-head"><span class="live-tag">${e.tag}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist}</span></div><div class="live-text">${e.text}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
+  const tc = e.tag_color || _tagColorMap[(e.tag||'').toUpperCase()] || '';
+  return `<div class="live-entry"><div class="live-time-col"><div class="live-dot"></div></div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist}</span></div><div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||200}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
 }
 
 function mkArticle(a){
@@ -343,111 +364,224 @@ window.toggleArticles = function(){
   btn.textContent = open ? 'Réduire ▴' : `Voir les ${n} autres articles ▾`;
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
+window.toggleCitAccordion = function(accId){
+  const el=document.getElementById(accId), btn=document.getElementById(accId+'-btn');
+  if(!el||!btn)return;
+  const open=el.classList.toggle('open');
+  const n=parseInt(btn.dataset.extra);
+  btn.textContent = open ? 'Réduire ▴' : `Voir les ${n} autres citations ▾`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
 
 function render(data){
   const {event, essential, live, rubriques, citations, articles, programme, timeline} = data;
   const mod = event.modules || {};
   let h = '';
 
-  // FLASH
-  if(mod.flash && event.flash_text){
-    h += `<div class="flash fi"><span class="flash-badge">${ICO.zap} FLASH</span><span class="flash-text">${event.flash_text}</span></div>`;
+  // Build tag color lookup from event tags
+  const eventTags = event.tags || [];
+  const tagColorMap = {};
+  eventTags.forEach(t => {
+    if(typeof t === 'string') return;
+    if(t && t.name && t.color) tagColorMap[t.name.toUpperCase()] = t.color;
+  });
+  _tagColorMap = tagColorMap;
+
+  // ===== BLOCS RÉORDONNABLES =====
+  function mkHero(){
+    // Hero = titre + points essentiels + timeline — un seul bloc cohérent
+    let o = `<div class="hero fi"><div class="hero-header"><div class="hero-left">`;
+    if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
+    o += `<div class="hero-text"><div class="hero-title">${event.title}</div><div class="hero-subtitle"><span>${ICO.mapPin} ${event.location}</span><span>${ICO.calendar} ${event.dates}</span></div></div></div>`;
+    o += `<div class="hero-meta">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}</div></div>`;
+
+    // Essential (IA + manuels)
+    if(mod.essential!==false && essential && essential.length){
+      o += `<div class="hero-ess-grid">`;
+      essential.forEach((p,i) => {
+        const tc = tagColorMap[(p.tag||'').toUpperCase()] || '';
+        const tagStyle = tc ? `style="background:${tc}25;color:${tc}"` : '';
+        o += `<div class="hero-ess-card"${tc?` style="border-left-color:${tc}"`:''}><div class="hero-ess-top"><div class="hero-ess-num"${tc?` style="color:${tc}"`:''}>${String(i+1).padStart(2,'0')}</div><span class="hero-ess-tag" ${tagStyle}>${p.tag}</span></div><div class="hero-ess-txt">${p.text}</div></div>`;
+      });
+      const hasIA = essential.some(p => p.source === 'ia');
+      const hasManual = essential.some(p => p.source === 'manual' || !p.source);
+      o += `</div>`;
+      if(hasIA && !hasManual) o += `<div class="hero-ess-ia">✦ Synthèse générée par IA à partir des articles liés</div>`;
+      else if(hasIA && hasManual) o += `<div class="hero-ess-ia">✦ Points essentiels — IA + rédaction</div>`;
+    }
+
+    // Timeline
+    if(mod.timeline!==false && timeline && timeline.length){
+      const tlCount = Math.min(timeline.length, 6);
+      o += `<div class="hero-tl"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
+      timeline.slice(0, 6).forEach(t => {
+        const link = t.link ? ` onclick="window.open('${t.link}','_blank')"` : '';
+        o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot"></div><div class="hero-tl-date">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
+      });
+      o += `</div></div>`;
+    }
+
+    o += `</div>`; // end hero
+    return o;
   }
 
-  // ===== HERO =====
-  h += `<div class="hero fi"><div class="hero-header"><div class="hero-left">`;
-  if(event.logo_url) h += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
-  h += `<div class="hero-text"><div class="hero-title">${event.title}</div><div class="hero-subtitle"><span>${ICO.mapPin} ${event.location}</span><span>${ICO.calendar} ${event.dates}</span></div></div></div>`;
-  h += `<div class="hero-meta">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}</div></div>`;
-
-  // Essential (IA)
-  if(mod.essential && essential && essential.length){
-    h += `<div class="hero-ess-grid">`;
-    essential.forEach((p,i) => {
-      h += `<div class="hero-ess-card"><div class="hero-ess-top"><div class="hero-ess-num">${String(i+1).padStart(2,'0')}</div><span class="hero-ess-tag">${p.tag}</span></div><div class="hero-ess-txt">${p.text}</div></div>`;
-    });
-    h += `</div><div class="hero-ess-ia">✦ Synthèse générée par IA à partir du fil live</div>`;
+  function mkFlash(){
+    if(!mod.flash || !event.flash_text) return '';
+    const flashLink = event.flash_link ? ` onclick="window.open('${event.flash_link}','_blank')" style="cursor:pointer"` : '';
+    return `<div class="flash fi"${flashLink}><span class="flash-badge">${ICO.zap} FLASH</span><span class="flash-text">${event.flash_text}</span>${event.flash_link?'<span style="margin-left:auto;flex-shrink:0;font-size:11px;color:rgba(255,255,255,.6)">→</span>':''}</div>`;
   }
 
-  // Timeline articles/événements
-  if(timeline && timeline.length){
-    const tlCount = Math.min(timeline.length, 6);
-    h += `<div class="hero-tl"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
-    timeline.slice(0, 6).forEach(t => {
-      const link = t.link ? ` onclick="window.open('${t.link}','_blank')"` : '';
-      h += `<div class="hero-tl-item"${link}><div class="hero-tl-dot"></div><div class="hero-tl-date">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
-    });
-    h += `</div></div>`;
-  }
-
-  h += `</div>`; // end hero
-
-  // ===== LAYOUT =====
-  h += `<div class="layout"><div class="main-col">`;
-
-  // LIVE FEED — 5 visibles, accordéon pour le reste
-  if(mod.live && live && live.length){
-    h += `<div class="sl fi">Fil live — Minute par minute</div><div class="live-feed fi">`;
+  function mkLive(){
+    if(mod.live===false || !live || !live.length) return '';
+    let o = `<div class="sl fi">Fil live — Minute par minute</div><div class="live-feed fi">`;
     const vis = live.slice(0, LIVE_VISIBLE);
     const ext = live.slice(LIVE_VISIBLE);
-    vis.forEach(e => { h += mkLiveEntry(e); });
+    vis.forEach(e => { o += mkLiveEntry(e); });
     if(ext.length){
-      h += `<div class="live-expand" id="live-expand">`;
-      ext.forEach(e => { h += mkLiveEntry(e); });
-      h += `</div>`;
-      h += `<div class="voir-plus-live" id="live-btn" data-extra="${ext.length}" onclick="toggleLive()">Voir les ${ext.length} entrées précédentes ${ICO.chevDown}</div>`;
+      o += `<div class="live-expand" id="live-expand">`;
+      ext.forEach(e => { o += mkLiveEntry(e); });
+      o += `</div>`;
+      o += `<div class="voir-plus-live" id="live-btn" data-extra="${ext.length}" onclick="toggleLive()">Voir les ${ext.length} entrées précédentes ${ICO.chevDown}</div>`;
     }
-    h += `</div>`;
+    o += `</div>`;
+    return o;
   }
 
-  // CITATIONS PAR RUBRIQUE
-  if(mod.citations && rubriques && rubriques.length){
-    h += `<div class="sl fi">Ce qu'ils ont dit</div>`;
-    rubriques.forEach(rub => {
-      const rc = citations.filter(c => c.rubrique === rub.id);
-      if(!rc.length) return;
-      h += `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rub.bg};color:${rub.color}">${rub.icon}</div><div class="rubrique-name">${rub.name}</div><span class="rubrique-count" style="background:${rub.color}">${rc.length}</span></div>`;
-      rc.forEach(c => {
-        h += `<div class="citation-card"><div class="citation-text">${c.text}</div><div class="citation-author">`;
-        h += c.avatar
-          ? `<img class="citation-avatar" src="${c.avatar}" alt="" onerror="this.outerHTML='<div class=\\'citation-avatar-placeholder\\'>${ICO.user}</div>'">`
-          : `<div class="citation-avatar-placeholder">${ICO.user}</div>`;
-        h += `<div class="citation-info"><div class="citation-name">${c.name}</div><div class="citation-role">${c.role}</div></div></div></div>`;
+  const CIT_VISIBLE = event.citVisibleCount || 6;
+  var _citAccordionCounter = 0;
+
+  function mkCitations(){
+    if(mod.citations===false || !citations || !citations.length) return '';
+    let o = `<div class="sl fi">Ce qu'ils ont dit</div>`;
+    function mkCitGroup(group){
+      let out = '';
+      const c0 = group[0];
+      out += `<div class="citation-card"><div class="citation-author" style="margin-bottom:14px">`;
+      if(c0.avatar){
+        out += `<img class="citation-avatar" src="${c0.avatar}" alt="" onerror="this.style.display='none'">`;
+      } else {
+        out += `<div class="citation-avatar-placeholder">${ICO.user}</div>`;
+      }
+      out += `<div class="citation-info"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div></div>`;
+      group.forEach((c,i) => {
+        if(i>0) out += `<hr class="citation-sep">`;
+        out += `<div class="citation-text">${c.text}</div>`;
       });
-      h += `</div>`;
-    });
+      out += `</div>`;
+      return out;
+    }
+    function groupByPerson(arr){
+      const groups=[];const seen=new Map();
+      arr.forEach(c=>{const key=(c.name||'').toLowerCase().trim();if(seen.has(key)){groups[seen.get(key)].push(c);}else{seen.set(key,groups.length);groups.push([c]);}});
+      return groups;
+    }
+    function renderCitBlock(rc, rubName, rubIcon, rubColor, rubBg){
+      if(!rc.length) return '';
+      const groups = groupByPerson(rc);
+      const accId = 'cit-acc-' + (_citAccordionCounter++);
+      let out = `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rubBg};color:${rubColor}">${rubIcon}</div><div class="rubrique-name">${rubName}</div><span class="rubrique-count" style="background:${rubColor}">${rc.length}</span></div><div class="citation-grid">`;
+      // Flatten groups into cards, count total citation cards
+      const cards = groups.map(g => mkCitGroup(g));
+      const visCards = cards.slice(0, CIT_VISIBLE);
+      const extraCards = cards.slice(CIT_VISIBLE);
+      visCards.forEach(c => { out += c; });
+      if(extraCards.length){
+        out += `</div><div class="cd-expand" id="${accId}"><div class="citation-grid">`;
+        extraCards.forEach(c => { out += c; });
+        out += `</div></div>`;
+        out += `<div class="voir-plus" id="${accId}-btn" data-extra="${extraCards.length}" onclick="toggleCitAccordion('${accId}')">Voir les ${extraCards.length} autres citations ▾</div>`;
+      } else {
+        out += `</div>`;
+      }
+      out += `</div>`;
+      return out;
+    }
+    if(rubriques && rubriques.length){
+      rubriques.forEach(rub => {
+        const rc = citations.filter(c => c.rubrique === rub.id);
+        if(!rc.length) return;
+        o += renderCitBlock(rc, rub.name, rub.icon, rub.color, rub.bg);
+      });
+    }
+    const rubIds = new Set((rubriques||[]).map(r=>r.id));
+    const orphans = citations.filter(c => !c.rubrique || !rubIds.has(c.rubrique));
+    if(orphans.length){
+      o += renderCitBlock(orphans, 'Verbatims', '💬', '#475569', '#F1F5F9');
+    }
+    return o;
   }
-  h += `</div>`; // end main-col
 
-  // ===== SIDEBAR =====
-  h += `<div class="side-col">`;
-
-  // PROGRAMME — clean list, sans pastilles
-  if(mod.programme && programme && programme.length){
-    h += `<div class="cd fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
+  function mkProgramme(){
+    if(mod.programme===false || !programme || !programme.length) return '';
+    // Group by day
+    const grouped={};
+    const dayOrder=[];
     programme.forEach(p => {
-      const sl = p.status==='past'?'Terminé':p.status==='active'?'En cours':'À venir';
-      h += `<div class="prog-item"><div class="prog-time">${p.time}</div><div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${p.status}">${sl}</span></div></div>`;
+      const d=p.day||'';
+      if(!grouped[d]){grouped[d]=[];dayOrder.push(d);}
+      grouped[d].push(p);
     });
-    h += `</div></div>`;
+    const hasMultipleDays=dayOrder.length>1 || (dayOrder.length===1 && dayOrder[0]!=='');
+    let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
+    dayOrder.forEach(day => {
+      if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:11px;font-weight:700;color:#B45309;margin:10px 0 6px;padding:5px 10px;background:rgba(245,158,11,.1);border-radius:6px;display:inline-block">📅 ${day}</div>`;
+      grouped[day].forEach(p => {
+        const st = autoStatus(p.time);
+        const sl = st==='past'?'Terminé':st==='active'?'● En cours':'À venir';
+        o += `<div class="prog-item"><div class="prog-time">${p.time}</div><div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${st}">${sl}</span></div></div>`;
+      });
+    });
+    o += `</div></div>`;
+    return o;
   }
 
-  // ARTICLES LIÉS — 6 visibles, accordéon pour le reste, images grosses
-  if(mod.articles && articles && articles.length){
+  function mkArticles(){
+    if(mod.articles===false || !articles || !articles.length) return '';
     const va = articles.slice(0, ART_VISIBLE);
     const ea = articles.slice(ART_VISIBLE);
-    h += `<div class="cd fi"><div class="hd"><div class="ci">${ICO.newspaper}</div><span class="ct">Articles liés</span><span class="cc">${articles.length}</span></div>`;
-    va.forEach(a => { h += mkArticle(a); });
+    let o = `<div class="cd fi"><div class="hd"><div class="ci">${ICO.newspaper}</div><span class="ct">Articles liés</span><span class="cc">${articles.length}</span></div>`;
+    va.forEach(a => { o += mkArticle(a); });
     if(ea.length){
-      h += `<div class="cd-expand" id="art-expand">`;
-      ea.forEach(a => { h += mkArticle(a); });
-      h += `</div>`;
-      h += `<div class="voir-plus" id="art-btn" data-extra="${ea.length}" onclick="toggleArticles()">Voir les ${ea.length} autres articles ▾</div>`;
+      o += `<div class="cd-expand" id="art-expand">`;
+      ea.forEach(a => { o += mkArticle(a); });
+      o += `</div>`;
+      o += `<div class="voir-plus" id="art-btn" data-extra="${ea.length}" onclick="toggleArticles()">Voir les ${ea.length} autres articles ▾</div>`;
     }
-    h += `</div>`;
+    o += `</div>`;
+    return o;
   }
 
-  h += `</div></div>`; // end side-col + layout
+  const blockRenderers = {hero:mkHero,flash:mkFlash,live:mkLive,citations:mkCitations,programme:mkProgramme,articles:mkArticles};
+
+  // Use stored zone assignments or defaults
+  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'};
+  const blockZones=event.blockZones||defaultZones;
+  const allBlockKeys=['hero','flash','live','citations','programme','articles'];
+
+  // Build ordered lists per zone from blockOrder
+  const fullBlockOrder = event.blockOrder || ['hero','flash','live','citations','programme','articles'];
+  const orderedKeys=[...fullBlockOrder];
+  // Migration: if old format had essential/timeline separately, merge them into hero
+  const migIdx=orderedKeys.indexOf('essential');
+  if(migIdx>=0){
+    orderedKeys.splice(migIdx,1);
+    const tlIdx=orderedKeys.indexOf('timeline');
+    if(tlIdx>=0) orderedKeys.splice(tlIdx,1);
+    if(!orderedKeys.includes('hero')) orderedKeys.unshift('hero');
+  }
+  allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
+  const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
+
+  const mainBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])!=='side');
+  const sideBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
+
+  h += `<div class="layout"><div class="main-col">`;
+  mainBlocks.forEach(key=>{
+    const fn=blockRenderers[key];if(fn)h+=fn();
+  });
+  h += `</div><div class="side-col">`;
+  sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+  h += `</div></div>`;
   h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Synthèse IA par Claude</div>`;
 
   document.getElementById('app').innerHTML = h;
@@ -471,32 +605,66 @@ async function init(){
   }
   const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
+  const ec=db.collection('events').doc(eventId);
   const [evS,esS,liS,ruS,ciS,arS,prS,tlS] = await Promise.all([
-    db.collection('events').doc(eventId).get(),
-    db.collection('events').doc(eventId).collection('essential').orderBy('order').get(),
-    db.collection('events').doc(eventId).collection('live').orderBy('time','desc').get(),
-    db.collection('events').doc(eventId).collection('rubriques').orderBy('order').get(),
-    db.collection('events').doc(eventId).collection('citations').orderBy('created_at','desc').get(),
-    db.collection('events').doc(eventId).collection('articles').orderBy('date','desc').get(),
-    db.collection('events').doc(eventId).collection('programme').orderBy('time').get(),
-    db.collection('events').doc(eventId).collection('timeline').orderBy('order').get()
+    ec.get(),
+    ec.collection('essential').get(),
+    ec.collection('live').get(),
+    ec.collection('rubriques').get(),
+    ec.collection('citations').get(),
+    ec.collection('articles').get(),
+    ec.collection('programme').get(),
+    ec.collection('timeline').get()
   ]);
   if(!evS.exists){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Événement introuvable</div></div>'; return; }
-  const ev=evS.data(), ess=[], li=[], ru=[], ci=[], ar=[], pr=[], tl=[];
-  esS.forEach(d=>ess.push({id:d.id,...d.data()}));
-  liS.forEach(d=>li.push({id:d.id,...d.data()}));
-  ruS.forEach(d=>ru.push({id:d.id,...d.data()}));
-  ciS.forEach(d=>ci.push({id:d.id,...d.data()}));
-  arS.forEach(d=>ar.push({id:d.id,...d.data()}));
-  prS.forEach(d=>pr.push({id:d.id,...d.data()}));
-  tlS.forEach(d=>tl.push({id:d.id,...d.data()}));
+  const ev=evS.data();
+  function toArr(s){ const a=[]; s.forEach(d=>a.push({id:d.id,...d.data()})); return a; }
+  function tsVal(v){ try{ return v?.toDate?v.toDate().getTime():(v?new Date(v).getTime():0); }catch(e){return 0;} }
+  const ess=toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0));
+  const li=toArr(liS).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
+  const ru=toArr(ruS).sort((a,b)=>(a.order||0)-(b.order||0));
+  const ci=toArr(ciS).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));
+  const ar=toArr(arS);
+  const pr=toArr(prS).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
+  const tl=toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0));
   render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl});
-  // Real-time on live
-  db.collection('events').doc(eventId).collection('live').orderBy('time','desc')
-    .onSnapshot(snap => {
-      const ul=[]; snap.forEach(d=>ul.push({id:d.id,...d.data()}));
-      render({event:ev,essential:ess,live:ul,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl});
-    });
+
+  // Real-time listeners — le front se met à jour dès qu'un contenu est publié depuis le back-office
+  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl};
+  function rtRender(){ render(rtState); }
+
+  ec.collection('live').onSnapshot(snap => {
+    rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
+    rtRender();
+  });
+  ec.collection('rubriques').onSnapshot(snap => {
+    rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
+    rtRender();
+  });
+  ec.collection('articles').onSnapshot(snap => {
+    rtState.articles=toArr(snap);
+    rtRender();
+  });
+  ec.collection('citations').onSnapshot(snap => {
+    rtState.citations=toArr(snap).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));
+    rtRender();
+  });
+  ec.collection('essential').onSnapshot(snap => {
+    rtState.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
+    rtRender();
+  });
+  ec.collection('programme').onSnapshot(snap => {
+    rtState.programme=toArr(snap).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
+    rtRender();
+  });
+  ec.collection('timeline').onSnapshot(snap => {
+    rtState.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
+    rtRender();
+  });
+  // Event doc (flash, modules, status)
+  ec.onSnapshot(snap => {
+    if(snap.exists){ rtState.event=snap.data(); rtRender(); }
+  });
 }
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
 
