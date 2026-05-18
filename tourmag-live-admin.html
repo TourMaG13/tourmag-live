@@ -114,12 +114,12 @@ select.form-input{cursor:pointer}
 .ess-item-text{font-size:12px;color:var(--text);line-height:1.5}
 .ess-item-source{font-size:9px;color:var(--text3);margin-top:3px}
 
-.event-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px}
-.event-card{background:var(--card);border:2px solid var(--border);border-radius:var(--rl);padding:16px;cursor:pointer;transition:all .15s}
+.event-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:20px}
+.event-card{background:var(--card);border:2px solid var(--border);border-radius:var(--rl);padding:24px;cursor:pointer;transition:all .15s}
 .event-card:hover{border-color:var(--acc);box-shadow:0 4px 16px rgba(232,132,44,.1)}
 .event-card.active{border-color:var(--acc);background:#FFF7ED}
-.event-card-title{font-family:'Josefin Sans';font-size:14px;font-weight:700;margin-bottom:4px}
-.event-card-meta{font-size:10px;color:var(--text3)}
+.event-card-title{font-family:'Josefin Sans';font-size:17px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.event-card-meta{font-size:12px;color:var(--text2)}
 .status-badge{font-size:8px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
 .status-badge.live{background:#FEE2E2;color:#DC2626}
 .status-badge.ended{background:#F1F5F9;color:#475569}
@@ -142,6 +142,27 @@ select.form-input{cursor:pointer}
 
 .saving-indicator{position:fixed;top:60px;right:24px;font-size:10px;color:var(--acc);font-weight:600;opacity:0;transition:opacity .2s;z-index:101}
 .saving-indicator.show{opacity:1}
+
+/* BLOCK LAYOUT PREVIEW — DRAG & DROP */
+.block-layout-preview{border:2px solid var(--border);border-radius:12px;overflow:hidden;background:#F8FAFC}
+.block-layout-title{background:linear-gradient(135deg,#1B1B2F,#2D1B4E);padding:12px 16px}
+.block-layout-title-inner{display:flex;align-items:center;gap:8px;font-family:'Josefin Sans';font-size:12px;font-weight:700;color:rgba(255,255,255,.6)}
+.bdg-demo{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;background:var(--red);padding:3px 8px;border-radius:4px;margin-left:auto}
+.block-layout-zone-label{font-family:'Josefin Sans';font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px}
+.block-layout-body{display:grid;grid-template-columns:1fr 200px;gap:0;min-height:180px}
+@media(max-width:600px){.block-layout-body{grid-template-columns:1fr}}
+.block-layout-col{padding:10px}
+.block-layout-main{border-right:1px solid var(--border)}
+.block-drop-zone{min-height:80px;display:flex;flex-direction:column;gap:4px;border:2px dashed transparent;border-radius:8px;padding:4px;transition:all .2s}
+.block-drop-zone.block-drag-over{border-color:var(--acc);background:rgba(232,132,44,.04)}
+.block-drag-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:grab;user-select:none;transition:all .15s;font-size:11px}
+.block-drag-item:hover{border-color:var(--acc);box-shadow:0 2px 8px rgba(232,132,44,.1)}
+.block-drag-item:active,.block-drag-item.dragging{cursor:grabbing;opacity:.5;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.block-drag-item.disabled{opacity:.4}
+.block-drag-handle{font-size:14px;color:var(--text3);cursor:grab;line-height:1;letter-spacing:-1px}
+.block-drag-icon{font-size:13px}
+.block-drag-label{flex:1;font-weight:500;color:var(--text)}
+.block-drag-off{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -165,27 +186,26 @@ select.form-input{cursor:pointer}
     <select class="topbar-event-select" id="topbar-event-select" onchange="switchEvent(this.value)"></select>
     <div class="topbar-right">
       <span class="topbar-user"><span class="topbar-dot"></span><span id="topbar-user-email"></span></span>
-      <button class="topbar-btn ghost" onclick="window.open('index.html?event='+currentEventId,'_blank')">👁 Front</button>
       <button class="topbar-btn ghost" onclick="doLogout()">Déconnexion</button>
     </div>
   </div>
   <div class="saving-indicator" id="saving">Enregistrement...</div>
   <div class="admin-layout">
     <div class="sidebar">
-      <div class="sidebar-section">Événements</div>
       <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
-      <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-section">Contenu</div>
-      <div class="sidebar-item" data-tab="live"><span class="icon">⚡</span>Fil live<span class="badge" id="badge-live">0</span></div>
+      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
+      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
+      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
+      <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
       <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
+      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
+      <div class="sidebar-section">Outils</div>
+      <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
-      <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
-      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
-      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
-      <div class="sidebar-item" data-tab="timeline"><span class="icon">📍</span>Timeline</div>
       <div class="sidebar-section">Système</div>
-      <div class="sidebar-item" data-tab="ia"><span class="icon">🤖</span>Synthèse IA</div>
+      <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
     </div>
     <div class="admin-main" id="admin-main"></div>
@@ -215,21 +235,21 @@ const auth=firebase.auth();
 // ============================================================
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
 // ============================================================
-let currentEventId='';
-let currentTab='events';
-let eventsData=[];    // [{id, ...data}]
-let liveData=[];
-let citationsData=[];
-let rubriquesData=[];
-let essentialData=[];
-let articlesData=[];
-let programmeData=[];
-let timelineData=[];
-let mediaData=[];
-let tagsData=[];      // Stocké dans event doc → tags[]
+var currentEventId='';
+var currentTab='events';
+var eventsData=[];    // [{id, ...data}]
+var liveData=[];
+var citationsData=[];
+var rubriquesData=[];
+var essentialData=[];
+var articlesData=[];
+var programmeData=[];
+var timelineData=[];
+var mediaData=[];
+var tagsData=[];      // Stocké dans event doc → tags[]
 
 // Listeners unsubscribe handles
-let unsubs=[];
+var unsubs=[];
 
 // ============================================================
 // AUTH
@@ -333,6 +353,14 @@ function updateTopbarSelect(){
   sel.innerHTML=eventsData.map(e=>`<option value="${e.id}"${e.id===currentEventId?' selected':''}>${e.title||'Sans titre'}</option>`).join('');
 }
 
+var subCollectionsEventId=''; // track which event's subcollections we're listening to
+var renderPending=null; // debounce handle
+
+function scheduleRender(){
+  if(renderPending) clearTimeout(renderPending);
+  renderPending=setTimeout(()=>{ renderPending=null; renderTab(); },50);
+}
+
 // ============================================================
 // FIRESTORE LISTENERS
 // ============================================================
@@ -343,43 +371,51 @@ function initApp(){
     snap.forEach(d=>eventsData.push({id:d.id,...d.data()}));
     if(!currentEventId && eventsData.length) currentEventId=eventsData[0].id;
     updateTopbarSelect();
-    // Update tags from current event
     const ev=eventsData.find(e=>e.id===currentEventId);
     tagsData=ev&&ev.tags?ev.tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'];
-    renderTab();
+    // Subscribe to sub-collections if not yet done for this event
+    if(currentEventId && subCollectionsEventId!==currentEventId){
+      subscribeSubCollections();
+    }
+    scheduleRender();
   });
   unsubs.push(u1);
-
-  subscribeSubCollections();
 }
 
 function subscribeSubCollections(){
   // Unsubscribe previous sub-collection listeners (indices 1+)
   while(unsubs.length>1) unsubs.pop()();
 
-  if(!currentEventId)return;
+  if(!currentEventId){ subCollectionsEventId=''; return; }
+  subCollectionsEventId=currentEventId;
+  console.log('[TourMaG Live] Subscribing to subcollections for event:', currentEventId);
 
   const subs=[
-    {col:'live',orderBy:['time','desc'],target:'liveData'},
-    {col:'citations',orderBy:['created_at','desc'],target:'citationsData'},
-    {col:'rubriques',orderBy:['order','asc'],target:'rubriquesData'},
-    {col:'essential',orderBy:['order','asc'],target:'essentialData'},
-    {col:'articles',orderBy:['date','desc'],target:'articlesData'},
-    {col:'programme',orderBy:['time','asc'],target:'programmeData'},
-    {col:'timeline',orderBy:['order','asc'],target:'timelineData'},
+    {col:'live',target:'liveData'},
+    {col:'citations',target:'citationsData'},
+    {col:'rubriques',target:'rubriquesData'},
+    {col:'essential',target:'essentialData'},
+    {col:'articles',target:'articlesData'},
+    {col:'programme',target:'programmeData'},
+    {col:'timeline',target:'timelineData'},
     {col:'media',target:'mediaData'}
   ];
 
   subs.forEach(s=>{
-    let q=subCol(s.col);
-    if(s.orderBy) q=q.orderBy(s.orderBy[0],s.orderBy[1]);
-    const u=q.onSnapshot(snap=>{
+    const u=subCol(s.col).onSnapshot(snap=>{
       const arr=[];
       snap.forEach(d=>arr.push({id:d.id,...d.data()}));
+      console.log('[TourMaG Live] onSnapshot',s.col,'→',arr.length,'docs');
+      // Tri côté JS (robuste même si serverTimestamp pas encore résolu)
+      if(s.col==='live') arr.sort((a,b)=>{ const ta=a.time?.toDate?a.time.toDate():new Date(a.time||0); const tb=b.time?.toDate?b.time.toDate():new Date(b.time||0); return tb-ta; });
+      if(s.col==='citations') arr.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate():new Date(a.created_at||0); const tb=b.created_at?.toDate?b.created_at.toDate():new Date(b.created_at||0); return tb-ta; });
+      if(s.col==='rubriques'||s.col==='essential'||s.col==='timeline') arr.sort((a,b)=>(a.order||0)-(b.order||0));
+      if(s.col==='programme') arr.sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
       window[s.target]=arr;
       updateBadges();
-      // Only re-render if this tab is relevant
-      if(currentTab===s.col||currentTab==='ia'&&s.col==='essential') renderTab();
+      scheduleRender();
+    },err=>{
+      console.error('onSnapshot error on',s.col,err);
     });
     unsubs.push(u);
   });
@@ -409,8 +445,8 @@ function renderTab(){
     case 'media':renderMedia(main);break;
     case 'programme':renderProgramme(main);break;
     case 'articles':renderArticles(main);break;
-    case 'timeline':renderTimeline(main);break;
-    case 'ia':renderIA(main);break;
+    case 'flash':renderFlash(main);break;
+    case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
   }
 }
@@ -418,16 +454,23 @@ function renderTab(){
 // ==================== EVENTS ====================
 function renderEvents(el){
   let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>
-  <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="createEvent()">＋ Nouvel événement</button></div>
+  <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="newEvent()">＋ Nouvel événement</button></div>
   <div class="event-cards">`;
   eventsData.forEach(ev=>{
     const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
+    const baseUrl=window.location.origin+window.location.pathname.replace('admin.html','');
+    const widgetUrl=baseUrl+'widget.html?event='+ev.id;
     h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
       <div class="event-card-title">${ev.title||'Sans titre'}${st}</div>
       <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
-      <div style="margin-top:10px;display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEvent('${ev.id}')">✏️ Modifier</button>
-        ${eventsData.length>1?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteEvent('${ev.id}')">✕</button>`:''}
+      <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${widgetUrl}');toast('URL widget copiée')">📦 URL widget</button>
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${ev.id}');toast('ID copié')">🔑 Copier ID</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();modifyEvent('${ev.id}')">✏️ Modifier</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmRemoveEvent('${ev.id}','${(ev.title||'').replace(/'/g,"\\'")}')">🗑 Supprimer</button>
       </div></div>`;
   });
   if(!eventsData.length) h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
@@ -435,28 +478,55 @@ function renderEvents(el){
   el.innerHTML=h;
 }
 
-async function createEvent(){
+async function newEvent(){
   saving(true);
   const ref=await db.collection('events').add({
     title:'Nouvel événement',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true},
+    blockOrder:['hero','flash','live','citations','programme','articles'],
+    blockZones:{hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
   currentEventId=ref.id;
   toast('Événement créé');
 }
 
-async function deleteEvent(id){
-  if(!confirm('Supprimer cet événement et tout son contenu ?'))return;
+function confirmRemoveEvent(id,title){
+  openModal(`<h3 style="color:var(--red)">⚠️ Supprimer l'événement</h3>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Vous êtes sur le point de supprimer l'événement <strong>« ${title} »</strong>.</p>
+    <p style="font-size:12px;line-height:1.7;color:var(--red);background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;margin-bottom:12px">
+      <strong>Cette action est irréversible.</strong> Tout le contenu associé sera définitivement perdu : fil live, citations, rubriques, programme, articles, timeline, médiathèque et points essentiels.
+    </p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:4px">Pour confirmer, tapez le nom de l'événement :</p>
+    <input class="form-input" id="m-confirm-name" placeholder="${title}" style="margin-bottom:4px">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger" id="m-confirm-btn" onclick="executeRemoveEvent('${id}','${title}')" disabled>🗑 Supprimer définitivement</button>
+    </div>
+    <script>document.getElementById('m-confirm-name').addEventListener('input',function(){document.getElementById('m-confirm-btn').disabled=this.value.trim()!=='${title}';})<\/script>`);
+}
+
+async function executeRemoveEvent(id,title){
+  const typed=document.getElementById('m-confirm-name').value.trim();
+  if(typed!==title){toast('Le nom ne correspond pas','error');return;}
+  closeModal();
   saving(true);
+  // Supprimer les sous-collections connues
+  const subs=['live','citations','rubriques','essential','articles','programme','timeline','media'];
+  for(const sub of subs){
+    const snap=await db.collection('events').doc(id).collection(sub).get();
+    const batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    if(!snap.empty) await batch.commit();
+  }
   await db.collection('events').doc(id).delete();
   if(currentEventId===id) currentEventId=eventsData.filter(e=>e.id!==id)[0]?.id||'';
   toast('Événement supprimé');
 }
 
-function editEvent(id){
+function modifyEvent(id){
   const ev=eventsData.find(e=>e.id===id);if(!ev)return;
   openModal(`<h3>Modifier l'événement</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-title" value="${ev.title||''}"></div>
@@ -473,11 +543,10 @@ function editEvent(id){
       <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
     </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}"></div>
-    <div class="form-row"><label class="form-label">Flash info</label><input class="form-input" id="m-ev-flash" value="${ev.flash_text||''}"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveEvent('${id}')">💾 Enregistrer</button></div>`);
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
 }
 
-async function saveEvent(id){
+async function updateEvent(id){
   saving(true);
   await db.collection('events').doc(id).update({
     title:document.getElementById('m-ev-title').value,
@@ -486,22 +555,201 @@ async function saveEvent(id){
     dates:document.getElementById('m-ev-dates').value,
     status:document.getElementById('m-ev-status').value,
     color:document.getElementById('m-ev-color').value,
-    logo_url:document.getElementById('m-ev-logo').value,
-    flash_text:document.getElementById('m-ev-flash').value
+    logo_url:document.getElementById('m-ev-logo').value
   });
   closeModal();toast('Enregistré');
+}
+
+// ==================== MODULES ====================
+// ==================== FLASH INFO ====================
+function renderFlash(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let h=`<div class="page-title">Flash info</div><div class="page-desc">Bandeau rouge en haut du front. Laissez le texte vide pour le masquer.</div>
+  <div class="admin-card"><h3>⚡ Paramétrage</h3>
+    <div class="form-row"><label class="form-label">Texte du flash</label><input class="form-input" id="flash-text" value="${(ev.flash_text||'').replace(/"/g,'&quot;')}" placeholder="Ex: Ouverture officielle du salon à 9h30"></div>
+    <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="flash-link" value="${ev.flash_link||''}" placeholder="https://www.tourmag.com/..."></div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveFlash()">💾 Enregistrer</button></div>
+  </div>
+  ${ev.flash_text?`<div class="admin-card"><h3>👁 Aperçu</h3><div style="background:linear-gradient(90deg,#7F1D1D,#991B1B);border-radius:8px;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <span style="font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:#DC2626;padding:4px 12px;border-radius:6px;white-space:nowrap">⚡ FLASH</span>
+    <span style="font-size:14px;color:rgba(255,255,255,.9);flex:1">${ev.flash_text}</span>
+    ${ev.flash_link?'<span style="color:rgba(255,255,255,.5);font-size:11px">→ lien</span>':''}
+  </div></div>`:''}`;
+  el.innerHTML=h;
+}
+async function saveFlash(){
+  saving(true);
+  await evRef().update({
+    flash_text:document.getElementById('flash-text').value.trim(),
+    flash_link:document.getElementById('flash-link').value.trim()
+  });
+  toast('Flash enregistré');
 }
 
 // ==================== MODULES ====================
 function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
-  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'programme',icon:'🗓',label:'Programme'}];
-  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules du front.</div><div class="admin-card"><h3>🧩 Visibilité</h3>`;
+  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
+
+  const defaultOrder=['hero','flash','live','citations','programme','articles'];
+  const blockOrder=ev?.blockOrder||defaultOrder;
+  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'};
+  const blockZones=ev?.blockZones||defaultZones;
+
+  // All draggable blocks
+  const allBlocks=[
+    {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
+    {key:'flash',icon:'⚡',label:'Bandeau Flash'},
+    {key:'live',icon:'📡',label:'Fil live'},
+    {key:'citations',icon:'💬',label:'Citations'},
+    {key:'programme',icon:'🗓',label:'Programme'},
+    {key:'articles',icon:'📰',label:'Articles liés'}
+  ];
+  const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
+
+  // Build ordered lists per zone from blockOrder
+  const orderedKeys=[...blockOrder];
+  // Migration: old format may have essential/timeline separately
+  const migIdx=orderedKeys.indexOf('essential');
+  if(migIdx>=0){
+    orderedKeys.splice(migIdx,1);
+    const tlIdx=orderedKeys.indexOf('timeline');
+    if(tlIdx>=0) orderedKeys.splice(tlIdx,1);
+    if(!orderedKeys.includes('hero')) orderedKeys.unshift('hero');
+  }
+  allBlocks.forEach(b=>{if(!orderedKeys.includes(b.key))orderedKeys.push(b.key);});
+  const validKeys=orderedKeys.filter(k=>blockMap[k]);
+
+  const mainItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])!=='side');
+  const sideItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
+
+  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs par glisser-déposer.</div>
+
+  <div class="admin-card"><h3>🧩 Visibilité</h3>`;
   mods.forEach(m=>{
     h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${mod[m.key]!==false?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
-  h+=`</div>`; el.innerHTML=h;
+  h+=`</div>
+
+  <div class="admin-card"><h3>↕️ Structure de la page — glisser-déposer</h3>
+    <div class="page-desc" style="margin-bottom:12px">Glissez les blocs pour réordonner la page. Vous pouvez déplacer n'importe quel bloc d'une colonne à l'autre.</div>
+    <div class="block-layout-preview">
+      <div class="block-layout-title">
+        <div class="block-layout-title-inner">
+          <span style="font-size:14px">📡</span>
+          <span>Titre de l'événement</span>
+          <span class="bdg-demo">EN DIRECT</span>
+        </div>
+      </div>
+      <div class="block-layout-body">
+        <div class="block-layout-col block-layout-main">
+          <div class="block-layout-zone-label">Colonne principale</div>
+          <div class="block-drop-zone" id="drop-main" data-zone="main">`;
+
+  mainItems.forEach(key=>{
+    const b=blockMap[key];if(!b)return;
+    const disabled=mod[b.key]===false;
+    h+=`<div class="block-drag-item${disabled?' disabled':''}" draggable="true" data-key="${key}">
+      <span class="block-drag-handle">⠿</span>
+      <span class="block-drag-icon">${b.icon}</span>
+      <span class="block-drag-label">${b.label}</span>
+      ${disabled?'<span class="block-drag-off">OFF</span>':''}
+    </div>`;
+  });
+
+  h+=`</div></div>
+        <div class="block-layout-col block-layout-side">
+          <div class="block-layout-zone-label">Sidebar</div>
+          <div class="block-drop-zone" id="drop-side" data-zone="side">`;
+
+  sideItems.forEach(key=>{
+    const b=blockMap[key];if(!b)return;
+    const disabled=mod[b.key]===false;
+    h+=`<div class="block-drag-item${disabled?' disabled':''}" draggable="true" data-key="${key}">
+      <span class="block-drag-handle">⠿</span>
+      <span class="block-drag-icon">${b.icon}</span>
+      <span class="block-drag-label">${b.label}</span>
+      ${disabled?'<span class="block-drag-off">OFF</span>':''}
+    </div>`;
+  });
+
+  h+=`</div></div>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=h;
+
+  // Init drag and drop
+  initBlockDragDrop();
+}
+
+function initBlockDragDrop(){
+  let dragEl=null;
+  const zones=document.querySelectorAll('.block-drop-zone');
+
+  document.querySelectorAll('.block-drag-item').forEach(item=>{
+    item.addEventListener('dragstart',e=>{
+      dragEl=item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',item.dataset.key);
+    });
+    item.addEventListener('dragend',()=>{
+      if(dragEl)dragEl.classList.remove('dragging');
+      dragEl=null;
+      document.querySelectorAll('.block-drag-over').forEach(z=>z.classList.remove('block-drag-over'));
+    });
+  });
+
+  zones.forEach(zone=>{
+    zone.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      zone.classList.add('block-drag-over');
+      if(!dragEl)return;
+      const afterEl=getDragAfterElement(zone,e.clientY);
+      if(afterEl){zone.insertBefore(dragEl,afterEl);}
+      else{zone.appendChild(dragEl);}
+    });
+    zone.addEventListener('dragleave',e=>{
+      if(!zone.contains(e.relatedTarget))zone.classList.remove('block-drag-over');
+    });
+    zone.addEventListener('drop',e=>{
+      e.preventDefault();
+      zone.classList.remove('block-drag-over');
+      saveBlockOrder();
+    });
+  });
+}
+
+function getDragAfterElement(zone,y){
+  const items=[...zone.querySelectorAll('.block-drag-item:not(.dragging)')];
+  return items.reduce((closest,child)=>{
+    const box=child.getBoundingClientRect();
+    const offset=y-box.top-box.height/2;
+    if(offset<0&&offset>closest.offset) return {offset,element:child};
+    return closest;
+  },{offset:Number.NEGATIVE_INFINITY}).element||null;
+}
+
+async function saveBlockOrder(){
+  // Read order from DOM
+  const mainItems=[...document.querySelectorAll('#drop-main .block-drag-item')].map(el=>el.dataset.key);
+  const sideItems=[...document.querySelectorAll('#drop-side .block-drag-item')].map(el=>el.dataset.key);
+  const newOrder=[...mainItems,...sideItems];
+  if(!newOrder.length)return;
+
+  // Update zone assignments
+  const newZones={};
+  mainItems.forEach(k=>newZones[k]='main');
+  sideItems.forEach(k=>newZones[k]='side');
+
+  saving(true);
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;}
+  await evRef().update({blockOrder:newOrder,blockZones:newZones});
+  toast('Ordre mis à jour');
 }
 async function toggleModule(key,val){
   saving(true);
@@ -510,33 +758,51 @@ async function toggleModule(key,val){
 }
 
 // ==================== TAGS ====================
+// Tags peuvent être des strings (ancien format) ou des objets {name,color}
+function tagName(t){ return typeof t==='string'?t:(t?.name||''); }
+function tagColor(t){ return typeof t==='string'?'':(t?.color||''); }
+function tagObj(t){ return typeof t==='string'?{name:t,color:''}:t; }
+
 function renderTags(el){
-  let h=`<div class="page-title">Tags live</div><div class="page-desc">Tags disponibles pour le fil live. Partagés entre tous les journalistes.</div>
+  const defaultColors=['#475569','#DC2626','#059669','#2563EB','#7C3AED','#D97706','#0891B2','#DB2777'];
+  let h=`<div class="page-title">Tags live</div><div class="page-desc">Tags disponibles pour le fil live avec couleur personnalisable.</div>
   <div class="admin-card"><h3>🏷 Tags personnalisés</h3><div class="chip-list">`;
   tagsData.forEach((t,i)=>{
-    h+=`<div class="chip" style="background:#F1F5F9;color:#475569"><span>${t}</span><span class="chip-del" onclick="editTag(${i})" title="Modifier">✏️</span><span class="chip-del" onclick="deleteTag(${i})">✕</span></div>`;
+    const n=tagName(t), c=tagColor(t)||defaultColors[i%defaultColors.length];
+    h+=`<div class="chip" style="background:${c}18;color:${c};border:1.5px solid ${c}40"><span>${n}</span><span class="chip-del" onclick="editTag(${i})" title="Modifier">✏️</span><span class="chip-del" onclick="deleteTag(${i})">✕</span></div>`;
   });
-  h+=`</div><div style="display:flex;gap:8px"><input class="form-input" id="new-tag" placeholder="Nouveau tag..." style="max-width:200px" onkeydown="if(event.key==='Enter')addTag()"><button class="btn btn-primary btn-sm" onclick="addTag()">＋</button></div></div>`;
+  h+=`</div>
+  <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div class="form-row" style="margin-bottom:0;flex:1;min-width:140px"><label class="form-label">Nom</label><input class="form-input" id="new-tag" placeholder="AÉRIEN" onkeydown="if(event.key==='Enter')addTag()"></div>
+    <div class="form-row" style="margin-bottom:0;width:60px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="new-tag-color" value="#475569" style="height:42px;padding:4px"></div>
+    <button class="btn btn-primary btn-sm" style="height:42px" onclick="addTag()">＋</button>
+  </div></div>`;
   el.innerHTML=h;
 }
 async function addTag(){
   const v=document.getElementById('new-tag').value.trim().toUpperCase();
-  if(!v||tagsData.includes(v)){toast(v?'Existe déjà':'Vide','error');return;}
-  tagsData.push(v);
+  const c=document.getElementById('new-tag-color').value||'';
+  if(!v){toast('Nom requis','error');return;}
+  if(tagsData.some(t=>tagName(t)===v)){toast('Existe déjà','error');return;}
+  tagsData.push({name:v,color:c});
   saving(true);await evRef().update({tags:tagsData});toast('Tag ajouté');
 }
 async function deleteTag(i){
-  if(!confirm('Supprimer "'+tagsData[i]+'" ?'))return;
+  if(!confirm('Supprimer "'+tagName(tagsData[i])+'" ?'))return;
   tagsData.splice(i,1);
   saving(true);await evRef().update({tags:tagsData});toast('Supprimé');
 }
 function editTag(i){
-  const old=tagsData[i];
-  openModal(`<h3>Modifier le tag</h3><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-tag" value="${old}"></div>
+  const t=tagObj(tagsData[i]);
+  openModal(`<h3>Modifier le tag</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-tag" value="${t.name}"></div>
+      <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-tag-color" value="${t.color||'#475569'}" style="height:42px;padding:4px"></div>
+    </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveTag(${i})">💾</button></div>`);
 }
 async function saveTag(i){
-  tagsData[i]=document.getElementById('m-tag').value.trim().toUpperCase();
+  tagsData[i]={name:document.getElementById('m-tag').value.trim().toUpperCase(),color:document.getElementById('m-tag-color').value};
   saving(true);await evRef().update({tags:tagsData});closeModal();toast('Modifié');
 }
 
@@ -566,8 +832,26 @@ async function saveMedia(){
 async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete();toast('Supprimé');}
 
 // ==================== LIVE ====================
+// Preserve form values across re-renders
+var _liveDraft={text:'',tag:'',journalist:'',image:''};
+function _saveLiveDraft(){
+  const t=document.getElementById('live-text');
+  if(t){_liveDraft={text:t.value,tag:document.getElementById('live-tag')?.value||'',journalist:document.getElementById('live-journalist')?.value||'',image:document.getElementById('live-image')?.value||''};}
+}
+function _restoreLiveDraft(){
+  const t=document.getElementById('live-text');
+  if(t&&_liveDraft.text){t.value=_liveDraft.text;}
+  const tag=document.getElementById('live-tag');
+  if(tag&&_liveDraft.tag){tag.value=_liveDraft.tag;}
+  const j=document.getElementById('live-journalist');
+  if(j&&_liveDraft.journalist){j.value=_liveDraft.journalist;}
+  const img=document.getElementById('live-image');
+  if(img&&_liveDraft.image){img.value=_liveDraft.image;}
+}
+
 function renderLive(el){
-  const tagOpts=tagsData.map(t=>`<option value="${t}">${t}</option>`).join('');
+  _saveLiveDraft();
+  const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}">${n}</option>`;}).join('');
   const mediaPicker=mediaData.length?`<div class="form-row"><label class="form-label">Ou choisir dans la médiathèque</label><div class="media-grid" id="media-picker">${mediaData.map(m=>`<div class="media-thumb" onclick="pickMedia('${m.url}',this)"><img src="${m.url}" alt=""></div>`).join('')}</div></div>`:'';
 
   let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
@@ -578,17 +862,42 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
     <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="live-image"></div>
+    <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     ${mediaPicker}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
   </div>
-  <div class="admin-card"><h3>📜 Entrées (${liveData.length})</h3><div style="max-height:500px;overflow-y:auto">`;
-  if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée</div></div>`;
+  <div class="admin-card"><h3>📜 Historique (${liveData.length})</h3><div style="max-height:600px;overflow-y:auto">`;
+  if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée publiée</div></div>`;
   else liveData.forEach(e=>{
-    const t=e.time?.toDate?e.time.toDate():new Date(e.time);
-    const ts=t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    h+=`<div class="list-item"><div class="list-item-time">${ts}</div><div class="list-item-content"><div class="list-item-text">${e.text||''}</div><div class="list-item-meta"><span class="list-item-tag">${e.tag||''}</span><span>${e.journalist||''}</span>${e.image?'<span>📷</span>':''}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteLive('${e.id}')">✕</button></div></div>`;
+    let ts='…';
+    let fullDate='';
+    try{
+      const t=e.time?.toDate?e.time.toDate():(e.time?new Date(e.time):null);
+      if(t&&!isNaN(t)){
+        ts=t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        fullDate=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})+' à '+ts;
+      }
+    }catch(x){}
+    h+=`<div class="list-item">
+      <div class="list-item-time">${ts}</div>
+      <div class="list-item-content">
+        <div class="list-item-text">${e.text||''}</div>
+        <div class="list-item-meta">
+          <span class="list-item-tag">${e.tag||''}</span>
+          <span>${e.journalist||''}</span>
+          ${e.image?'<span>📷</span>':''}
+          ${e.url?`<span><a href="${e.url}" target="_blank" style="color:var(--blue)">🔗</a></span>`:''}
+          ${fullDate?`<span style="opacity:.5">${fullDate}</span>`:''}
+        </div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editLive('${e.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteLive('${e.id}')">✕</button>
+      </div>
+    </div>`;
   });
   h+=`</div></div>`; el.innerHTML=h;
+  _restoreLiveDraft();
 }
 window.pickMedia=function(url,el){
   document.getElementById('live-image').value=url;
@@ -599,17 +908,69 @@ async function addLive(){
   const text=document.getElementById('live-text').value.trim();
   if(!text){toast('Texte requis','error');return;}
   saving(true);
+  const journalist=document.getElementById('live-journalist').value||'La Rédaction';
+  const tag=document.getElementById('live-tag').value;
+  const image=document.getElementById('live-image').value||'';
+  const url=document.getElementById('live-url').value.trim()||'';
+  const tagData=tagsData.find(t=>tagName(t)===tag);
   await subCol('live').add({
-    text,tag:document.getElementById('live-tag').value,
-    journalist:document.getElementById('live-journalist').value||'La Rédaction',
-    image:document.getElementById('live-image').value||'',
+    text,tag,journalist,image,url,
+    tag_color:tagData?tagColor(tagData):'',
     time:firebase.firestore.FieldValue.serverTimestamp()
   });
+  _liveDraft={text:'',tag:'',journalist:journalist,image:''};
   document.getElementById('live-text').value='';
   document.getElementById('live-image').value='';
+  document.getElementById('live-url').value='';
   toast('Publié !');
 }
-async function deleteLive(id){saving(true);await subCol('live').doc(id).delete();toast('Supprimé');}
+function editLive(id){
+  const e=liveData.find(x=>x.id===id);if(!e)return;
+  const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}"${n===e.tag?' selected':''}>${n}</option>`;}).join('');
+  const posOpts=['center center','center top','center bottom','left center','right center'].map(p=>`<option value="${p}"${(e.image_position||'center center')===p?' selected':''}>${p}</option>`).join('');
+  openModal(`<h3>Modifier l'entrée</h3>
+    <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-live-text" rows="3">${e.text||''}</textarea></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
+      <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="m-live-journalist" value="${e.journalist||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="m-live-image" value="${e.image||''}"></div>
+    <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="m-live-url" value="${e.url||''}"></div>
+    ${e.image?`<div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="m-live-imgpos">${posOpts}</select></div>
+      <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="80" max="500" step="10"></div>
+    </div>
+    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>
+    <script>
+      document.getElementById('m-live-imgpos').onchange=function(){document.getElementById('m-live-imgpreview').style.objectPosition=this.value};
+      document.getElementById('m-live-imgheight').oninput=function(){document.getElementById('m-live-imgpreview').style.height=this.value+'px'};
+    <\/script>`:''}
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveLiveEdit('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+async function saveLiveEdit(id){
+  saving(true);
+  const update={
+    text:document.getElementById('m-live-text').value.trim(),
+    tag:document.getElementById('m-live-tag').value,
+    journalist:document.getElementById('m-live-journalist').value,
+    image:document.getElementById('m-live-image').value,
+    url:document.getElementById('m-live-url')?.value?.trim()||''
+  };
+  const posEl=document.getElementById('m-live-imgpos');
+  if(posEl) update.image_position=posEl.value;
+  const hEl=document.getElementById('m-live-imgheight');
+  if(hEl) update.image_height=parseInt(hEl.value)||200;
+  // Stocker la couleur du tag
+  const tagVal=update.tag;
+  const tagData=tagsData.find(t=>tagName(t)===tagVal);
+  if(tagData) update.tag_color=tagColor(tagData)||'';
+  await subCol('live').doc(id).update(update);
+  closeModal();toast('Modifié');
+}
+async function deleteLive(id){if(!confirm('Supprimer cette entrée ?'))return;saving(true);await subCol('live').doc(id).delete();toast('Supprimé');}
 
 // ==================== RUBRIQUES ====================
 function renderRubriques(el){
@@ -647,94 +1008,554 @@ async function saveRubrique(id){
 }
 
 // ==================== CITATIONS ====================
+var _citDraft={text:'',name:'',role:'',rub:'',avatar:''};
+function _saveCitDraft(){
+  const t=document.getElementById('cit-text');
+  if(t){_citDraft={text:t.value,name:document.getElementById('cit-name')?.value||'',role:document.getElementById('cit-role')?.value||'',rub:document.getElementById('cit-rub')?.value||'',avatar:document.getElementById('cit-avatar')?.value||''};}
+}
+function _restoreCitDraft(){
+  const t=document.getElementById('cit-text');
+  if(t&&_citDraft.text){t.value=_citDraft.text;}
+  const n=document.getElementById('cit-name');if(n&&_citDraft.name)n.value=_citDraft.name;
+  const r=document.getElementById('cit-role');if(r&&_citDraft.role)r.value=_citDraft.role;
+  const rb=document.getElementById('cit-rub');if(rb&&_citDraft.rub)rb.value=_citDraft.rub;
+  const a=document.getElementById('cit-avatar');if(a&&_citDraft.avatar)a.value=_citDraft.avatar;
+}
+
 function renderCitations(el){
+  _saveCitDraft();
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const citVisible=ev.citVisibleCount||6;
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
+
+  <div class="admin-card"><h3>⚙️ Affichage</h3>
+    <div class="form-row" style="max-width:340px"><label class="form-label">Citations visibles par rubrique avant accordéon</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="1" max="20" value="${citVisible}" id="cit-visible-range" oninput="document.getElementById('cit-visible-val').textContent=this.value" style="flex:1">
+        <span id="cit-visible-val" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${citVisible}</span>
+        <button class="btn btn-primary btn-sm" onclick="saveCitVisible()">💾</button>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">Au-delà de ce nombre, un bouton « Voir plus » pliera les citations suivantes.</div>
+    </div>
+  </div>
+
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><input class="form-input" id="cit-avatar"></div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter</button></div></div>
-  <div class="admin-card"><h3>📋 Citations (${citationsData.length})</h3>`;
+  <div class="admin-card"><h3>📋 Historique (${citationsData.length})</h3>`;
   if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
   else citationsData.forEach(c=>{
     const rub=rubriquesData.find(r=>r.id===c.rubrique);
-    h+=`<div class="cit-item"><div class="cit-item-text">« ${c.text} »</div><div class="cit-item-author">${c.name}</div><div class="cit-item-role">${c.role||''}${rub?' · '+rub.icon+' '+rub.name:''}</div><div style="margin-top:8px;display:flex;gap:6px"><button class="btn btn-danger btn-xs" onclick="deleteCitation('${c.id}')">✕</button></div></div>`;
+    let dateStr='';
+    try{
+      const t=c.created_at?.toDate?c.created_at.toDate():(c.created_at?new Date(c.created_at):null);
+      if(t&&!isNaN(t)) dateStr=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }catch(x){}
+    h+=`<div class="cit-item">
+      <div class="cit-item-text">« ${c.text} »</div>
+      <div class="cit-item-author">${c.name}</div>
+      <div class="cit-item-role">${c.role||''}${rub?' · '+rub.icon+' '+rub.name:''}${dateStr?' · <span style="opacity:.5">'+dateStr+'</span>':''}</div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="editCitation('${c.id}')">✏️ Modifier</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteCitation('${c.id}')">✕</button>
+      </div>
+    </div>`;
   });
   h+=`</div>`; el.innerHTML=h;
+  _restoreCitDraft();
 }
 async function addCitation(){
   const text=document.getElementById('cit-text').value.trim(),name=document.getElementById('cit-name').value.trim();
   if(!text||!name){toast('Citation et nom requis','error');return;}
   saving(true);
   await subCol('citations').add({text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,created_at:firebase.firestore.FieldValue.serverTimestamp()});
+  _citDraft={text:'',name:'',role:'',rub:'',avatar:''};
   ['cit-text','cit-name','cit-role','cit-avatar'].forEach(x=>document.getElementById(x).value='');toast('Ajoutée');
 }
-async function deleteCitation(id){saving(true);await subCol('citations').doc(id).delete();toast('Supprimé');}
+function editCitation(id){
+  const c=citationsData.find(x=>x.id===id);if(!c)return;
+  const rubOpts=rubriquesData.map(r=>`<option value="${r.id}"${r.id===c.rubrique?' selected':''}>${r.icon} ${r.name}</option>`).join('');
+  openModal(`<h3>Modifier la citation</h3>
+    <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveCitEdit('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+async function saveCitEdit(id){
+  saving(true);
+  await subCol('citations').doc(id).update({
+    text:document.getElementById('m-cit-text').value.trim(),
+    name:document.getElementById('m-cit-name').value.trim(),
+    role:document.getElementById('m-cit-role').value,
+    rubrique:document.getElementById('m-cit-rub').value,
+    avatar:document.getElementById('m-cit-avatar').value
+  });
+  closeModal();toast('Modifié');
+}
+async function deleteCitation(id){if(!confirm('Supprimer cette citation ?'))return;saving(true);await subCol('citations').doc(id).delete();toast('Supprimé');}
+async function saveCitVisible(){
+  const val=parseInt(document.getElementById('cit-visible-range').value)||6;
+  saving(true);
+  await evRef().update({citVisibleCount:val});
+  toast('Seuil mis à jour : '+val+' citations');
+}
 
 // ==================== PROGRAMME ====================
 function renderProgramme(el){
-  let h=`<div class="page-title">Programme</div><div class="page-desc">Le statut se calcule automatiquement selon l'heure.</div>
+  // Detect existing days from data
+  const days=new Set();
+  programmeData.forEach(p=>{if(p.day)days.add(p.day);});
+  const daysList=[...days].sort();
+  const dayOpts=daysList.map(d=>`<option value="${d}">${d}</option>`).join('');
+
+  let h=`<div class="page-title">Programme</div><div class="page-desc">Le statut se calcule automatiquement selon l'heure. Vous pouvez organiser le programme sur plusieurs jours.</div>
   <div class="admin-card"><h3>➕ Ajouter</h3>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="prog-time" type="time"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="prog-label"></div></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="prog-day-select" style="flex:1"><option value="">— Choisir —</option>${dayOpts}</select><input class="form-input" id="prog-day-new" placeholder="Ex: Jour 1, Mardi 30 sept." style="flex:1.5"></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Sélectionnez un jour existant ou saisissez-en un nouveau</div></div>
+      <div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="prog-time" type="time"></div>
+    </div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="prog-label"></div></div>
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="prog-desc"></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addProgramme()">🗓 Ajouter</button></div></div>
   <div class="admin-card"><h3>📋 Programme</h3>`;
   if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
-  else programmeData.forEach(p=>{
-    const st=autoStatus(p.time);
-    const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
-    const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
-    h+=`<div class="list-item"><div class="list-item-time">${p.time}</div><div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button></div></div>`;
-  });
+  else{
+    // Group by day
+    const grouped={};
+    programmeData.forEach(p=>{
+      const d=p.day||'(sans jour)';
+      if(!grouped[d])grouped[d]=[];
+      grouped[d].push(p);
+    });
+    Object.keys(grouped).forEach(day=>{
+      h+=`<div style="margin-bottom:16px"><div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px;padding:6px 10px;background:rgba(232,132,44,.08);border-radius:6px;display:inline-block">📅 ${day}</div>`;
+      grouped[day].forEach(p=>{
+        const st=autoStatus(p.time);
+        const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
+        const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
+        h+=`<div class="list-item"><div class="list-item-time">${p.time}</div><div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editProgramme('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button></div></div>`;
+      });
+      h+=`</div>`;
+    });
+  }
   h+=`</div>`; el.innerHTML=h;
+}
+function getProgDay(){
+  const sel=document.getElementById('prog-day-select').value;
+  const nw=document.getElementById('prog-day-new').value.trim();
+  return nw||sel||'';
 }
 async function addProgramme(){
   const time=document.getElementById('prog-time').value,label=document.getElementById('prog-label').value.trim();
+  const day=getProgDay();
   if(!time||!label){toast('Heure et intitulé requis','error');return;}
   saving(true);
-  await subCol('programme').add({time,label,desc:document.getElementById('prog-desc').value});
-  document.getElementById('prog-label').value='';document.getElementById('prog-desc').value='';toast('Ajouté');
+  await subCol('programme').add({time,label,desc:document.getElementById('prog-desc').value,day});
+  document.getElementById('prog-label').value='';document.getElementById('prog-desc').value='';document.getElementById('prog-day-new').value='';toast('Ajouté');
+}
+function editProgramme(id){
+  const p=programmeData.find(x=>x.id===id);if(!p)return;
+  const days=new Set();programmeData.forEach(x=>{if(x.day)days.add(x.day);});
+  const dayOpts=[...days].sort().map(d=>`<option value="${d}"${d===p.day?' selected':''}>${d}</option>`).join('');
+  openModal(`<h3>Modifier</h3>
+    <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="m-prog-day-select"><option value="">—</option>${dayOpts}</select><input class="form-input" id="m-prog-day-new" placeholder="Nouveau jour" value="${(!p.day||[...days].includes(p.day))?'':p.day}"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="m-prog-time" type="time" value="${p.time||''}"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="m-prog-label" value="${(p.label||'').replace(/"/g,'&quot;')}"></div></div>
+    <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="m-prog-desc" value="${(p.desc||'').replace(/"/g,'&quot;')}"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveProgrammeEdit('${id}')">💾 Enregistrer</button></div>`);
+}
+async function saveProgrammeEdit(id){
+  saving(true);
+  const dayNew=document.getElementById('m-prog-day-new').value.trim();
+  const daySel=document.getElementById('m-prog-day-select').value;
+  await subCol('programme').doc(id).update({
+    time:document.getElementById('m-prog-time').value,
+    label:document.getElementById('m-prog-label').value.trim(),
+    desc:document.getElementById('m-prog-desc').value,
+    day:dayNew||daySel||''
+  });
+  closeModal();toast('Modifié');
 }
 async function deleteProgramme(id){saving(true);await subCol('programme').doc(id).delete();toast('Supprimé');}
 
 // ==================== ARTICLES ====================
+var rssFeeds=[]; // [{url, label}] stocké dans event doc → rssFeeds[]
+var rssFetchedArticles=[]; // articles récupérés via RSS (non persistés, fetch à la volée)
+var rssFetching=false;
+
 function renderArticles(el){
-  let h=`<div class="page-title">Articles liés</div>
-  <div class="admin-card"><h3>➕ Ajouter</h3>
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  rssFeeds=ev?.rssFeeds||[];
+
+  let h=`<div class="page-title">Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
+
+  <!-- AJOUT MANUEL -->
+  <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
     <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="art-image"></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
+
+  <!-- FLUX RSS -->
+  <div class="admin-card"><h3>📡 Flux RSS</h3>
+    <div class="page-desc" style="margin-bottom:12px">Les articles importés via RSS sont ajoutés à Firestore comme les articles manuels.</div>
+    <div class="chip-list" id="rss-chips">`;
+  rssFeeds.forEach((f,i)=>{
+    h+=`<div class="chip" style="background:#EFF6FF;color:#1D4ED8"><span style="font-size:10px">📡 ${f.label||f.url}</span><span class="chip-del" onclick="removeRssFeed(${i})">✕</span></div>`;
+  });
+  h+=`</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-row" style="flex:1;min-width:200px;margin-bottom:0"><label class="form-label">URL du flux</label><input class="form-input" id="rss-url" placeholder="https://www.tourmag.com/xml/syndication.rss"></div>
+      <div class="form-row" style="width:150px;margin-bottom:0"><label class="form-label">Label (optionnel)</label><input class="form-input" id="rss-label" placeholder="TourMaG"></div>
+      <button class="btn btn-primary btn-sm" style="height:42px" onclick="addRssFeed()">＋ Ajouter</button>
+    </div>
+    ${rssFeeds.length?`<div style="margin-top:14px"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button></div>`:''}
+    <div id="rss-preview" style="margin-top:12px"></div>
+  </div>
+
+  <!-- HISTORIQUE -->
   <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
-  if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun</div></div>`;
+  if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun article</div></div>`;
   else articlesData.forEach(a=>{
-    h+=`<div class="list-item"><div class="list-item-content"><div class="list-item-text"><strong>${a.title}</strong></div><div class="list-item-meta">${a.author||''} · ${a.date||''}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteArticle('${a.id}')">✕</button></div></div>`;
+    const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
+    h+=`<div class="list-item">
+      ${a.image?`<div style="flex-shrink:0;width:56px;height:56px;border-radius:6px;overflow:hidden;background:#F1F5F9"><img src="${a.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='📰'"></div>`:''}
+      <div class="list-item-content">
+        <div class="list-item-text"><strong>${a.title}</strong>${source}</div>
+        <div class="list-item-meta">${a.author||''} · ${a.date||''}${a.link&&a.link!=='#'?` · <a href="${a.link}" target="_blank" style="color:var(--blue)">Lire</a>`:''}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editArticle('${a.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteArticle('${a.id}')">✕</button>
+      </div>
+    </div>`;
   });
   h+=`</div>`; el.innerHTML=h;
 }
+
 async function addArticle(){
   const title=document.getElementById('art-title').value.trim();
   if(!title){toast('Titre requis','error');return;}
   saving(true);
-  await subCol('articles').add({title,link:document.getElementById('art-link').value||'#',author:document.getElementById('art-author').value||'La Rédaction',image:document.getElementById('art-image').value,date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})});
+  await subCol('articles').add({
+    title,
+    link:document.getElementById('art-link').value||'#',
+    author:document.getElementById('art-author').value||'La Rédaction',
+    image:document.getElementById('art-image').value,
+    date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),
+    source:'manual'
+  });
   ['art-title','art-link','art-author','art-image'].forEach(x=>document.getElementById(x).value='');toast('Ajouté');
 }
-async function deleteArticle(id){saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');}
+
+function editArticle(id){
+  const a=articlesData.find(x=>x.id===id);if(!a)return;
+  openModal(`<h3>Modifier l'article</h3>
+    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-art-title" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="m-art-image" value="${a.image||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveArticleEdit('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+async function saveArticleEdit(id){
+  saving(true);
+  await subCol('articles').doc(id).update({
+    title:document.getElementById('m-art-title').value.trim(),
+    link:document.getElementById('m-art-link').value,
+    author:document.getElementById('m-art-author').value,
+    image:document.getElementById('m-art-image').value
+  });
+  closeModal();toast('Modifié');
+}
+async function deleteArticle(id){if(!confirm('Supprimer cet article ?'))return;saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');}
+
+// --- RSS ---
+async function addRssFeed(){
+  const url=document.getElementById('rss-url').value.trim();
+  if(!url){toast('URL requise','error');return;}
+  if(rssFeeds.find(f=>f.url===url)){toast('Flux déjà ajouté','error');return;}
+  rssFeeds.push({url,label:document.getElementById('rss-label').value.trim()||''});
+  saving(true);
+  await evRef().update({rssFeeds});
+  document.getElementById('rss-url').value='';document.getElementById('rss-label').value='';
+  toast('Flux ajouté');
+}
+async function removeRssFeed(i){
+  if(!confirm('Supprimer le flux "'+( rssFeeds[i].label||rssFeeds[i].url)+'" ?'))return;
+  rssFeeds.splice(i,1);
+  saving(true);
+  await evRef().update({rssFeeds});
+  toast('Flux supprimé');
+}
+
+async function fetchAllRss(){
+  if(!rssFeeds.length){toast('Aucun flux configuré','error');return;}
+  rssFetching=true;
+  const btn=document.getElementById('rss-fetch-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Import en cours...';}
+  const preview=document.getElementById('rss-preview');
+  if(preview) preview.innerHTML='<div style="font-size:11px;color:var(--text3)">Récupération des flux...</div>';
+
+  const existingLinks=new Set(articlesData.map(a=>a.link));
+  let imported=0, skipped=0;
+
+  for(const feed of rssFeeds){
+    try{
+      const xml=await fetchRssXml(feed.url);
+      if(!xml) continue;
+      const parser=new DOMParser();
+      const doc=parser.parseFromString(xml,'text/xml');
+      const items=doc.querySelectorAll('item');
+
+      for(const item of items){
+        const title=item.querySelector('title')?.textContent?.trim()||'';
+        const link=item.querySelector('link')?.textContent?.trim()||'';
+        if(!title||!link||existingLinks.has(link)){skipped++;continue;}
+
+        const author=item.querySelector('author')?.textContent?.trim()||
+                     item.querySelector('dc\\:creator,creator')?.textContent?.trim()||
+                     feed.label||'RSS';
+        const pubDate=item.querySelector('pubDate')?.textContent?.trim();
+        let dateStr='';
+        if(pubDate){try{dateStr=new Date(pubDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}catch(e){}}
+
+        // Chercher image : enclosure, media:content, ou media:thumbnail
+        let image='';
+        const enclosure=item.querySelector('enclosure[type^="image"]');
+        if(enclosure) image=enclosure.getAttribute('url')||'';
+        if(!image){
+          // enclosure sans type (certains flux omettent le type)
+          const encAny=item.querySelector('enclosure');
+          if(encAny){const eu=encAny.getAttribute('url')||'';if(/\.(jpe?g|png|webp|gif)/i.test(eu))image=eu;}
+        }
+        if(!image){const mc=item.querySelector('media\\:content,content');if(mc)image=mc.getAttribute('url')||'';}
+        if(!image){const mt=item.querySelector('media\\:thumbnail,thumbnail');if(mt)image=mt.getAttribute('url')||'';}
+        // Chercher <img> dans la description
+        if(!image){
+          const desc=item.querySelector('description')?.textContent||'';
+          const imgMatch=desc.match(/<img[^>]+src=["']([^"']+)/i);
+          if(imgMatch) image=imgMatch[1];
+        }
+        // Dernier recours : fetch la page pour récupérer og:image
+        if(!image && link){
+          try{ image = await fetchOgImage(link); }catch(e){}
+        }
+
+        await subCol('articles').add({title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss'});
+        existingLinks.add(link);
+        imported++;
+      }
+    }catch(e){
+      console.error('RSS fetch error for',feed.url,e);
+    }
+  }
+
+  rssFetching=false;
+  if(preview) preview.innerHTML=`<div style="font-size:11px;padding:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;color:#15803D">✓ ${imported} article${imported>1?'s':''} importé${imported>1?'s':''}, ${skipped} doublon${skipped>1?'s':''} ignoré${skipped>1?'s':''}.</div>`;
+  if(btn){btn.disabled=false;btn.textContent='🔄 Importer les articles RSS';}
+  if(imported) toast(imported+' article'+(imported>1?'s':'')+' importé'+(imported>1?'s':''));
+}
+
+async function fetchRssXml(url){
+  // Essai direct, puis CORS proxies
+  const proxies=[
+    url,
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+    'https://corsproxy.io/?'+encodeURIComponent(url)
+  ];
+  for(const p of proxies){
+    try{
+      const r=await fetch(p,{signal:AbortSignal.timeout(8000)});
+      if(r.ok){const t=await r.text();if(t.includes('<item')||t.includes('<entry'))return t;}
+    }catch(e){console.warn('RSS proxy fail:',p,e.message);}
+  }
+  return null;
+}
+
+async function fetchOgImage(articleUrl){
+  // Fetch la page via CORS proxy et extraire og:image
+  const proxies=[
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(articleUrl),
+    'https://corsproxy.io/?'+encodeURIComponent(articleUrl)
+  ];
+  for(const p of proxies){
+    try{
+      const r=await fetch(p,{signal:AbortSignal.timeout(6000)});
+      if(!r.ok) continue;
+      const html=await r.text();
+      // og:image
+      let m=html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i);
+      if(m) return m[1];
+      // Autre format : content avant property
+      m=html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      if(m) return m[1];
+      // twitter:image comme fallback
+      m=html.match(/<meta[^>]+(?:name|property)=["']twitter:image["'][^>]+content=["']([^"']+)/i);
+      if(m) return m[1];
+      m=html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']twitter:image["']/i);
+      if(m) return m[1];
+    }catch(e){/* next proxy */}
+  }
+  return '';
+}
+
+// ==================== L'ESSENTIEL (Points essentiels + Timeline) ====================
+function renderEssentiel(el){
+  let h='';
+  // ── Points essentiels ──
+  h+=renderIAHTML();
+  // ── Timeline ──
+  h+=renderTimelineHTML();
+  el.innerHTML=h;
+}
 
 // ==================== TIMELINE ====================
-function renderTimeline(el){
-  let h=`<div class="page-title">Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
-  <div class="admin-card"><h3>➕ Jalon</h3>
+function renderTimelineHTML(){
+  let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title">📍 Timeline</div><div class="page-desc">Frise chronologique dans le hero du front. Ajoutez manuellement ou générez automatiquement via IA.</div>
+
+  <div class="admin-card"><h3>🤖 Génération IA</h3>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">Génère automatiquement une frise à partir des articles liés et du fil live. Les jalons existants ne sont pas supprimés — la génération vient <strong>compléter</strong> ou peut <strong>remplacer</strong> l'existant.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="generateTimelineIA('append')" id="tl-ia-btn">🤖 Générer (compléter)</button>
+      <button class="btn btn-danger" onclick="generateTimelineIA('replace')" id="tl-ia-replace-btn">🔄 Générer (remplacer tout)</button>
+    </div>
+    <div id="tl-ia-status" style="margin-top:10px"></div>
+  </div>
+
+  <div class="admin-card"><h3>➕ Jalon manuel</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Date</label><input class="form-input" id="tl-date" placeholder="30 sept."></div><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="tl-link"></div></div>
     <div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="tl-text"></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addTimeline()">📍 Ajouter</button></div></div>
   <div class="admin-card"><h3>📋 Jalons (${timelineData.length})</h3>`;
   if(!timelineData.length) h+=`<div class="empty"><div class="text">Aucun jalon</div></div>`;
   else timelineData.forEach(t=>{
-    h+=`<div class="list-item"><div class="list-item-time" style="width:60px">${t.date}</div><div class="list-item-content"><div class="list-item-text">${t.text}</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteTimeline('${t.id}')">✕</button></div></div>`;
+    const src=t.source==='ia'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">IA</span>':'';
+    h+=`<div class="list-item">
+      <div class="list-item-time" style="width:60px">${t.date}</div>
+      <div class="list-item-content">
+        <div class="list-item-text">${t.text}${src}</div>
+        ${t.link?`<div class="list-item-meta"><a href="${t.link}" target="_blank" style="color:var(--blue);font-size:10px">${t.link}</a></div>`:''}
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editTimeline('${t.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteTimeline('${t.id}')">✕</button>
+      </div>
+    </div>`;
   });
-  h+=`</div>`; el.innerHTML=h;
+  h+=`</div></div>`;
+  return h;
+}
+
+async function generateTimelineIA(mode){
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(!ev){toast('Aucun événement sélectionné','error');return;}
+
+  const status=document.getElementById('tl-ia-status');
+  const btnAppend=document.getElementById('tl-ia-btn');
+  const btnReplace=document.getElementById('tl-ia-replace-btn');
+  if(btnAppend)btnAppend.disabled=true;
+  if(btnReplace)btnReplace.disabled=true;
+  if(status) status.innerHTML='<div style="font-size:11px;color:var(--violet);display:flex;align-items:center;gap:6px"><span class="topbar-dot" style="background:var(--violet)"></span>Collecte des données pour l\'IA…</div>';
+
+  // Collecter les données contextuelles
+  const liveTexts=liveData.slice(0,30).map(e=>{
+    let ts='';
+    try{const t=e.time?.toDate?e.time.toDate():(e.time?new Date(e.time):null);if(t&&!isNaN(t))ts=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(x){}
+    return `[${ts}] ${(e.text||'').replace(/<[^>]+>/g,'')}`;
+  }).join('\n');
+
+  const articleTitles=articlesData.slice(0,20).map(a=>`- ${a.title} (${a.date||''})`).join('\n');
+  const essentialTexts=essentialData.map(p=>`[${p.tag}] ${(p.text||'').replace(/<[^>]+>/g,'')}`).join('\n');
+
+  const existingTimeline=timelineData.map(t=>`${t.date}: ${t.text}`).join('\n');
+
+  const prompt=`Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com. Tu dois créer une frise chronologique (timeline) pour l'événement "${ev.title}" (${ev.location}, ${ev.dates}).
+
+Voici les données disponibles :
+
+--- FIL LIVE (dernières entrées) ---
+${liveTexts||'(vide)'}
+
+--- ARTICLES LIÉS ---
+${articleTitles||'(vide)'}
+
+--- POINTS ESSENTIELS ---
+${essentialTexts||'(vide)'}
+
+${mode==='append'&&existingTimeline?`--- TIMELINE EXISTANTE (ne pas dupliquer) ---\n${existingTimeline}\n`:''}\
+Génère entre 4 et 7 jalons chronologiques synthétiques pour la frise. Chaque jalon doit avoir une date courte (ex: "28 sept.", "30 sept. AM", "1 oct.") et un texte bref (max 20 mots) résumant un fait marquant.
+
+Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
+[{"date":"28 sept.","text":"Pré-ouverture : installation des 1 200 exposants."},{"date":"29 sept.","text":"..."}]`;
+
+  if(status) status.innerHTML='<div style="font-size:11px;color:var(--violet);display:flex;align-items:center;gap:6px"><span class="topbar-dot" style="background:var(--violet)"></span>Appel à l\'IA en cours…</div>';
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    const text=(data.content||[]).map(c=>c.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    let jalons;
+    try{ jalons=JSON.parse(clean); }catch(e){
+      if(status) status.innerHTML=`<div style="font-size:11px;color:var(--red)">❌ Erreur de parsing JSON. Réponse brute : <code style="font-size:9px">${clean.slice(0,200)}</code></div>`;
+      if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+      return;
+    }
+
+    if(!Array.isArray(jalons)||!jalons.length){
+      if(status) status.innerHTML='<div style="font-size:11px;color:var(--red)">❌ L\'IA n\'a retourné aucun jalon.</div>';
+      if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+      return;
+    }
+
+    // Mode remplacer : supprimer tous les jalons existants d'abord
+    if(mode==='replace'){
+      if(!confirm('Supprimer les '+timelineData.length+' jalons existants et les remplacer par '+jalons.length+' jalons IA ?')){
+        if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+        if(status) status.innerHTML='';
+        return;
+      }
+      const batch=db.batch();
+      timelineData.forEach(t=>batch.delete(subCol('timeline').doc(t.id)));
+      await batch.commit();
+    }
+
+    if(status) status.innerHTML='<div style="font-size:11px;color:var(--violet)">✍️ Écriture de '+jalons.length+' jalons…</div>';
+    saving(true);
+    const startOrder=mode==='replace'?0:timelineData.length;
+    for(let i=0;i<jalons.length;i++){
+      const j=jalons[i];
+      await subCol('timeline').add({
+        date:j.date||'',
+        text:j.text||'',
+        link:j.link||'',
+        source:'ia',
+        order:startOrder+i,
+        generated_at:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    if(status) status.innerHTML=`<div style="font-size:11px;padding:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;color:#15803D">✓ ${jalons.length} jalons générés par IA</div>`;
+    toast(jalons.length+' jalons IA créés');
+  }catch(e){
+    console.error('Timeline IA error:',e);
+    if(status) status.innerHTML=`<div style="font-size:11px;color:var(--red)">❌ Erreur : ${e.message}</div>`;
+  }
+  if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
 }
 async function addTimeline(){
   const date=document.getElementById('tl-date').value.trim(),text=document.getElementById('tl-text').value.trim();
@@ -743,25 +1564,67 @@ async function addTimeline(){
   await subCol('timeline').add({date,text,link:document.getElementById('tl-link').value||'',order:timelineData.length});
   document.getElementById('tl-date').value='';document.getElementById('tl-text').value='';document.getElementById('tl-link').value='';toast('Ajouté');
 }
-async function deleteTimeline(id){saving(true);await subCol('timeline').doc(id).delete();toast('Supprimé');}
+function editTimeline(id){
+  const t=timelineData.find(x=>x.id===id);if(!t)return;
+  openModal(`<h3>Modifier le jalon</h3>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Date</label><input class="form-input" id="m-tl-date" value="${t.date||''}"></div><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-tl-link" value="${t.link||''}"></div></div>
+    <div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="m-tl-text" value="${t.text||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveTimelineEdit('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+async function saveTimelineEdit(id){
+  saving(true);
+  await subCol('timeline').doc(id).update({
+    date:document.getElementById('m-tl-date').value.trim(),
+    text:document.getElementById('m-tl-text').value.trim(),
+    link:document.getElementById('m-tl-link').value||''
+  });
+  closeModal();toast('Modifié');
+}
+async function deleteTimeline(id){if(!confirm('Supprimer ce jalon ?'))return;saving(true);await subCol('timeline').doc(id).delete();toast('Supprimé');}
 
-// ==================== SYNTHÈSE IA ====================
-function renderIA(el){
+// ==================== POINTS ESSENTIELS ====================
+function renderIAHTML(){
   const ia=essentialData.filter(p=>p.source==='ia');
   const manual=essentialData.filter(p=>p.source==='manual');
-  let h=`<div class="page-title">Points essentiels</div><div class="page-desc">IA + manuels — tous affichés dans le hero.</div>
-  <div class="admin-card"><h3>🤖 Points IA (${ia.length})</h3>
-    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn btn-primary" onclick="toast('Déclenchez via GitHub Actions')">🔄 Régénérer</button></div>`;
-  ia.forEach((p,i)=>{
-    h+=`<div class="ess-item"><div class="ess-item-num">${String(i+1).padStart(2,'0')}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">🤖 IA</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+
+  let lastGen='—';
+  ia.forEach(p=>{
+    if(p.generated_at){
+      try{
+        const d=p.generated_at?.toDate?p.generated_at.toDate():new Date(p.generated_at);
+        if(!isNaN(d)) lastGen=d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      }catch(e){}
+    }
   });
+
+  let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
+
+  <div class="admin-card"><h3>🤖 Points IA (${ia.length})</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span>Dernière génération : <strong style="color:var(--text2)">${lastGen}</strong></span>
+      <span style="opacity:.4">·</span>
+      <span>Cron : 6h · 10h · 14h · 18h</span>
+    </div>`;
+  if(!ia.length) h+=`<div class="empty"><div class="icon">🤖</div><div class="text">Aucun point IA — la prochaine génération automatique les créera à partir des articles liés</div></div>`;
+  else{
+    h+=`<div style="margin-bottom:12px"><button class="btn btn-danger btn-sm" onclick="clearIAPoints()">🗑 Supprimer tous les points IA</button></div>`;
+    ia.forEach((p,i)=>{
+      h+=`<div class="ess-item"><div class="ess-item-num">${String(i+1).padStart(2,'0')}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">🤖 IA</div></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editEssential('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+    });
+  }
+
   h+=`</div><div class="admin-card"><h3>✏️ Points manuels (${manual.length})</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Tag</label><input class="form-input" id="ess-tag" placeholder="DISTRIBUTION"></div><div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="ess-text"></div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addEssential()">＋ Ajouter</button></div>`;
-  manual.forEach((p,i)=>{
-    h+=`<div class="ess-item" style="margin-top:12px"><div class="ess-item-num">M${i+1}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">✏️ Manuel</div></div><div class="list-item-actions"><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+  if(!manual.length) h+=`<div class="empty" style="padding:16px"><div class="text">Aucun point manuel</div></div>`;
+  else manual.forEach((p,i)=>{
+    h+=`<div class="ess-item" style="margin-top:12px"><div class="ess-item-num">M${i+1}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">✏️ Manuel</div></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editEssential('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
   });
-  h+=`</div>`; el.innerHTML=h;
+  h+=`</div>`;
+  return h;
 }
 async function addEssential(){
   const tag=document.getElementById('ess-tag').value.trim().toUpperCase(),text=document.getElementById('ess-text').value.trim();
@@ -770,18 +1633,102 @@ async function addEssential(){
   await subCol('essential').add({tag,text,source:'manual',order:essentialData.length});
   document.getElementById('ess-tag').value='';document.getElementById('ess-text').value='';toast('Ajouté');
 }
-async function deleteEssential(id){saving(true);await subCol('essential').doc(id).delete();toast('Supprimé');}
+function editEssential(id){
+  const p=essentialData.find(x=>x.id===id);if(!p)return;
+  openModal(`<h3>Modifier le point</h3>
+    <div class="form-row"><label class="form-label">Tag</label><input class="form-input" id="m-ess-tag" value="${p.tag||''}"></div>
+    <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-ess-text" rows="3">${p.text||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEssentialEdit('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+async function saveEssentialEdit(id){
+  saving(true);
+  await subCol('essential').doc(id).update({
+    tag:document.getElementById('m-ess-tag').value.trim().toUpperCase(),
+    text:document.getElementById('m-ess-text').value.trim()
+  });
+  closeModal();toast('Modifié');
+}
+async function clearIAPoints(){
+  const ia=essentialData.filter(p=>p.source==='ia');
+  if(!ia.length){toast('Rien à supprimer','error');return;}
+  if(!confirm('Supprimer les '+ia.length+' points IA ? Ils seront régénérés au prochain cron.'))return;
+  saving(true);
+  const batch=db.batch();
+  ia.forEach(p=>batch.delete(subCol('essential').doc(p.id)));
+  await batch.commit();
+  toast(ia.length+' points IA supprimés');
+}
+async function deleteEssential(id){if(!confirm('Supprimer ce point ?'))return;saving(true);await subCol('essential').doc(id).delete();toast('Supprimé');}
 
 // ==================== WIDGET ====================
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  let h=`<div class="page-title">Widget homepage</div><div class="page-desc">Encart compact pour le CMS TourMaG.</div>
-  <div class="admin-card"><h3>📋 Code d'intégration</h3>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:12px">Copiez ce code iframe dans votre CMS.</p>
-    <div style="position:relative"><textarea class="form-input" rows="5" id="widget-code" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E">&lt;iframe src="https://VOTRE-DOMAINE.github.io/tourmag-live/widget.html?event=${currentEventId}" style="width:100%;border:none;min-height:280px" id="tmg-live-widget"&gt;&lt;/iframe&gt;
-&lt;script&gt;window.addEventListener('message',function(e){if(e.data&amp;&amp;e.data.type==='tourmag-live-resize')document.getElementById('tmg-live-widget').style.height=e.data.height+'px'})&lt;/script&gt;</textarea>
-    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="document.getElementById('widget-code').select();document.execCommand('copy');toast('Copié !')">📋 Copier</button></div></div>`;
+  const baseUrl='https://tourmag13.github.io/tourmag-live';
+  const frontUrl=baseUrl+'/index.html?event='+currentEventId;
+  const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
+  const iframeId='tmg-live-'+currentEventId.slice(0,8);
+
+  let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Deux méthodes pour intégrer la page live sur TourMaG.com, comme le dashboard crise au Moyen-Orient.</div>
+
+  <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe)</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live complète dans un iframe avec auto-resize. <strong>Recommandé</strong> — isolation CSS totale, aucun conflit avec le CMS.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px" id="${iframeId}"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
+    document.getElementById('${iframeId}').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📦 Option 2 — Widget encart compact (iframe)</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Encart compact pour la homepage, identique au widget du dashboard crise. Auto-resize via postMessage.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
+    document.getElementById('${iframeId}-w').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-widget')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>🔗 URLs directes</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:80px">Page live :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${frontUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${frontUrl}');toast('URL copiée')">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:80px">Widget :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${widgetUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${widgetUrl}');toast('URL copiée')">📋</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>💡 Déploiement</h3>
+    <div style="font-size:11px;color:var(--text2);line-height:1.7">
+      <p><strong>1.</strong> Hébergez les fichiers <code>index.html</code> et <code>widget.html</code> sur GitHub Pages (<code>tourmag13.github.io/tourmag-live/</code>).</p>
+      <p style="margin-top:6px"><strong>2.</strong> Collez le code d'intégration (option 1 ou 2) dans un encart HTML de votre CMS TourMaG.</p>
+      <p style="margin-top:6px"><strong>3.</strong> Le postMessage auto-resize ajuste la hauteur de l'iframe automatiquement — aucune hauteur fixe requise.</p>
+      <p style="margin-top:10px;padding:8px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;color:#92400E">⚠️ Remplacez <code>tourmag13.github.io/tourmag-live</code> par votre vrai domaine si différent.</p>
+    </div>
+  </div>`;
   el.innerHTML=h;
+}
+function copyEmbed(id){
+  const el=document.getElementById(id);
+  el.select();
+  document.execCommand('copy');
+  toast('Code copié !');
 }
 </script>
 </body>
