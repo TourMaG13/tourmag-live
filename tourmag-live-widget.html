@@ -111,9 +111,19 @@ const DEMO_DATA={
 const TAG_BORDERS={"DISTRIBUTION":"#3B82F6","AÉRIEN":"#60A5FA","DURABILITÉ":"#34D399","DESTINATIONS":"#60A5FA","HÔTELLERIE":"#FB923C","ÉCONOMIE":"#94A3B8","TECH":"#2DD4BF","POLITIQUE":"#F87171","GÉNÉRAL":"rgba(255,255,255,.2)"};
 
 let essIdx=0, essTimer=null;
+var _essPts=[]; // points essentiels courants (pour goEss en prod)
+var _tagColors={}; // couleurs dynamiques depuis event.tags
 
 function renderEncart(data){
   const {event,essential,citation,timeline}=data;
+  _essPts=essential||[];
+  // Build dynamic tag colors from event.tags (overrides static TAG_BORDERS)
+  _tagColors={...TAG_BORDERS};
+  (event.tags||[]).forEach(t=>{
+    if(typeof t==='string')return;
+    if(t&&t.name&&t.color) _tagColors[t.name.toUpperCase()]=t.color;
+  });
+
   const ctaUrl=new URLSearchParams(window.location.search).get('cta')||'index.html?event='+new URLSearchParams(window.location.search).get('event')||'#';
   let h='';
 
@@ -133,7 +143,7 @@ function renderEncart(data){
     h+=`<div class="er-mid">`;
     // ESSENTIEL CAROUSEL
     if(essential&&essential.length){
-      const bc=TAG_BORDERS[essential[0].tag]||'#3B82F6';
+      const bc=_tagColors[(essential[0].tag||'').toUpperCase()]||'#3B82F6';
       h+=`<div class="er-ess" id="er-ess" style="border-left-color:${bc}">`;
       h+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel du live</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
       h+=`<div id="er-ess-tag"></div><div class="er-ess-text" id="er-ess-text"></div>`;
@@ -187,8 +197,8 @@ function showEss(idx, pts){
   const dots=document.querySelectorAll('.er-ess-dot');
   if(!tag||!text||!pts[idx])return;
   const p=pts[idx];
-  const bc=TAG_BORDERS[p.tag]||'#3B82F6';
-  tag.innerHTML=`<span class="er-ess-tag">${p.tag}</span>`;
+  const bc=_tagColors[(p.tag||'').toUpperCase()]||'#3B82F6';
+  tag.innerHTML=`<span class="er-ess-tag" style="${bc!=='#3B82F6'?'background:'+bc+'20;color:'+bc:''}">${p.tag}</span>`;
   text.innerHTML=p.text;
   if(pag) pag.textContent=`${idx+1}/${pts.length}`;
   if(ess) ess.style.borderLeftColor=bc;
@@ -197,10 +207,10 @@ function showEss(idx, pts){
 
 window.goEss=function(idx){
   if(essTimer){clearInterval(essTimer);essTimer=null;}
-  showEss(idx, DEMO?DEMO_DATA.essential:[]);
+  showEss(idx, _essPts);
   essTimer=setInterval(()=>{
-    essIdx=(essIdx+1)%(DEMO?DEMO_DATA.essential.length:1);
-    showEss(essIdx, DEMO?DEMO_DATA.essential:[]);
+    essIdx=(essIdx+1)%_essPts.length;
+    showEss(essIdx, _essPts);
   },5000);
 };
 
@@ -213,18 +223,23 @@ async function init(){
   const eventId=new URLSearchParams(window.location.search).get('event');
   if(!eventId){document.getElementById('encart').innerHTML='<div class="er-loading">?event= manquant</div>';return;}
   try{
+    const ec=db.collection('events').doc(eventId);
     const [evS,esS,ciS,tlS]=await Promise.all([
-      db.collection('events').doc(eventId).get(),
-      db.collection('events').doc(eventId).collection('essential').orderBy('order').get(),
-      db.collection('events').doc(eventId).collection('citations').orderBy('created_at','desc').limit(1).get(),
-      db.collection('events').doc(eventId).collection('timeline').orderBy('order').get()
+      ec.get(),
+      ec.collection('essential').get(),
+      ec.collection('citations').get(),
+      ec.collection('timeline').get()
     ]);
     if(!evS.exists){document.getElementById('encart').innerHTML='<div class="er-loading">Événement introuvable</div>';return;}
     const ess=[]; esS.forEach(d=>ess.push(d.data()));
-    let cit=null; ciS.forEach(d=>{if(!cit)cit=d.data();});
+    ess.sort((a,b)=>(a.order||0)-(b.order||0));
+    let cit=null;
+    const allCit=[]; ciS.forEach(d=>allCit.push(d.data()));
+    allCit.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0; const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0; return tb-ta; });
+    if(allCit.length) cit=allCit[0];
     const tl=[]; tlS.forEach(d=>tl.push(d.data()));
-    const essAll=ess; // IA + manual combined
-    renderEncart({event:evS.data(),essential:essAll,citation:cit,timeline:tl});
+    tl.sort((a,b)=>(a.order||0)-(b.order||0));
+    renderEncart({event:evS.data(),essential:ess,citation:cit,timeline:tl});
   }catch(e){
     console.error(e);
     document.getElementById('encart').innerHTML='<div class="er-loading">Erreur de chargement</div>';
