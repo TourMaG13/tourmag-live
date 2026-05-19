@@ -63,10 +63,18 @@
 .er-loading{padding:40px;text-align:center;font-size:12px;color:rgba(255,255,255,.3)}
 
 /* FOOTER ZONE */
-.er-footer{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
-.er-footer-text{font-size:11px;color:rgba(255,255,255,.6);line-height:1.5;flex:1;min-width:0}
-.er-footer-btn{display:inline-flex;align-items:center;gap:4px;padding:7px 18px;background:rgba(255,255,255,.1);color:#fff;font-family:'Josefin Sans';font-size:10px;font-weight:700;border-radius:6px;text-decoration:none;transition:background .15s;flex-shrink:0;letter-spacing:.3px}
-.er-footer-btn:hover{background:rgba(255,255,255,.18)}
+.er-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.06)}
+.er-footer.lay-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.er-footer.lay-col{display:flex;flex-direction:column;gap:12px}
+.er-footer.lay-center{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.er-footer.lay-btn-only{display:flex;justify-content:center;gap:12px}
+.er-footer-text{font-size:14px;color:rgba(255,255,255,.75);line-height:1.6;flex:1;min-width:0}
+.er-footer-text strong{color:#fff}
+.er-footer-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:10px 24px;background:rgba(255,255,255,.12);color:#fff;font-family:'Josefin Sans';font-size:13px;font-weight:700;border-radius:8px;text-decoration:none;transition:background .15s;letter-spacing:.3px}
+.er-footer-btn:hover{background:rgba(255,255,255,.2)}
+.lay-btn-only .er-footer-btn{width:100%;padding:12px 24px;font-size:14px}
+.lay-col .er-footer-btn,.lay-center .er-footer-btn{align-self:flex-start}
+.lay-center .er-footer-btn{align-self:center}
 
 @media(max-width:560px){
   .er-h{flex-direction:column;align-items:flex-start;gap:8px}
@@ -188,9 +196,10 @@ function renderEncart(data){
   const fBtnLabel=event.widgetFooterBtnLabel||'';
   const fBtnUrl=event.widgetFooterBtnUrl||'';
   const fColor=event.widgetFooterColor||'#1B1B2F';
+  const fLayout=event.widgetFooterLayout||'row';
   if(fText||fBtnLabel){
-    h+=`<div class="er-footer" style="background:${fColor}">`;
-    if(fText) h+=`<div class="er-footer-text">${fText}</div>`;
+    h+=`<div class="er-footer lay-${fLayout}" style="background:${fColor}">`;
+    if(fLayout!=='btn-only' && fText) h+=`<div class="er-footer-text">${fText}</div>`;
     if(fBtnLabel&&fBtnUrl) h+=`<a class="er-footer-btn" href="${fBtnUrl}" target="_blank">${fBtnLabel} →</a>`;
     h+=`</div>`;
   }
