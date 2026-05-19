@@ -62,6 +62,12 @@
 
 .er-loading{padding:40px;text-align:center;font-size:12px;color:rgba(255,255,255,.3)}
 
+/* FOOTER ZONE */
+.er-footer{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+.er-footer-text{font-size:11px;color:rgba(255,255,255,.6);line-height:1.5;flex:1;min-width:0}
+.er-footer-btn{display:inline-flex;align-items:center;gap:4px;padding:7px 18px;background:rgba(255,255,255,.1);color:#fff;font-family:'Josefin Sans';font-size:10px;font-weight:700;border-radius:6px;text-decoration:none;transition:background .15s;flex-shrink:0;letter-spacing:.3px}
+.er-footer-btn:hover{background:rgba(255,255,255,.18)}
+
 @media(max-width:560px){
   .er-h{flex-direction:column;align-items:flex-start;gap:8px}
   .er-cta{width:100%;justify-content:center}
@@ -124,7 +130,10 @@ function renderEncart(data){
     if(t&&t.name&&t.color) _tagColors[t.name.toUpperCase()]=t.color;
   });
 
-  const ctaUrl=new URLSearchParams(window.location.search).get('cta')||'index.html?event='+new URLSearchParams(window.location.search).get('event')||'#';
+  // CTA URL: use event.widgetCtaUrl, fallback to ?cta= param, then default
+  const paramCta=new URLSearchParams(window.location.search).get('cta');
+  const eventId=new URLSearchParams(window.location.search).get('event')||'';
+  const ctaUrl=event.widgetCtaUrl||paramCta||('index.html?event='+eventId);
   let h='';
 
   // HEADER
@@ -171,6 +180,18 @@ function renderEncart(data){
     timeline.slice(0,5).forEach(t=>{
       h+=`<div class="er-fe"><div class="er-fe-d"></div><div class="er-fe-date">${t.date}</div><div class="er-fe-txt">${t.text}</div></div>`;
     });
+    h+=`</div>`;
+  }
+
+  // FOOTER ZONE (personnalisable depuis l'admin)
+  const fText=event.widgetFooterText||'';
+  const fBtnLabel=event.widgetFooterBtnLabel||'';
+  const fBtnUrl=event.widgetFooterBtnUrl||'';
+  const fColor=event.widgetFooterColor||'#1B1B2F';
+  if(fText||fBtnLabel){
+    h+=`<div class="er-footer" style="background:${fColor}">`;
+    if(fText) h+=`<div class="er-footer-text">${fText}</div>`;
+    if(fBtnLabel&&fBtnUrl) h+=`<a class="er-footer-btn" href="${fBtnUrl}" target="_blank">${fBtnLabel} →</a>`;
     h+=`</div>`;
   }
 
