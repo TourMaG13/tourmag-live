@@ -431,7 +431,7 @@ def main():
             continue
 
         print(f"\n📡 Événement: {event_data.get('title', event_id)} (status: {event_data.get('status','?')})", flush=True)
-        event_ref = db.collection("events").doc(event_id)
+        event_ref = db.collection("events").document(event_id)
 
         # 1. Import RSS
         rss_count = 0
