@@ -229,19 +229,25 @@ def generate_timeline(db, event_ref, event_data, ctx):
     essential_block = "\n".join(ctx["essential_texts"]) or "(vide)"
 
     prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
-À partir des articles ci-dessous, crée une frise chronologique pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
+À partir UNIQUEMENT des articles ci-dessous, crée une frise chronologique pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
+
+RÈGLES STRICTES :
+- Ne génère des jalons QUE pour des faits déjà survenus et mentionnés dans les articles
+- N'anticipe JAMAIS des événements futurs, même si les dates sont connues
+- N'invente aucune information qui n'est pas dans les articles
+- Chaque jalon doit correspondre à un fait précis issu d'un article
 
 --- ARTICLES ---
 {articles_block}
 
 {f"--- POINTS ESSENTIELS (contexte) ---{chr(10)}{essential_block}" if ctx["essential_texts"] else ""}
 
-Génère entre 4 et 7 jalons chronologiques basés sur les faits marquants des articles. Chaque jalon :
-- date courte (ex: "28 sept.", "30 sept. AM", "1 oct.")
-- texte bref (max 20 mots) résumant un fait marquant
+Génère entre 3 et 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Chaque jalon :
+- date courte (ex: "16 avr.", "11 mai")
+- texte bref (max 20 mots) résumant le fait tel que rapporté dans l'article
 
 Réponds UNIQUEMENT en JSON, sans backticks :
-[{{"date":"28 sept.","text":"Pré-ouverture : installation des exposants."}}, ...]"""
+[{{"date":"16 avr.","text":"Annonce officielle du Forum des Pionniers 2026."}}, ...]"""
 
     print("  🤖 Génération de la timeline...", flush=True)
     response = call_claude(prompt)
