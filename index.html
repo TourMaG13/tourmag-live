@@ -83,7 +83,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .hero-tl-item:hover{opacity:.8}
 .hero-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--acc);border:2.5px solid rgba(27,27,47,.85);box-shadow:0 0 0 1.5px var(--acc);z-index:1;margin-bottom:8px}
 .hero-tl-date{font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);font-weight:600;margin-bottom:3px}
-.hero-tl-ev{font-size:10px;color:rgba(255,255,255,.55);text-align:center;line-height:1.4;font-weight:400;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hero-tl-ev{font-size:10px;color:rgba(255,255,255,.55);text-align:center;line-height:1.4;font-weight:400}
 @media(max-width:768px){.hero-tl-track{grid-template-columns:1fr;gap:8px}.hero-tl-track::before{display:none}.hero-tl-item{flex-direction:row;gap:10px;align-items:flex-start}.hero-tl-dot{margin-bottom:0;margin-top:4px;flex-shrink:0}.hero-tl-ev{text-align:left}}
 
 /* ==================== LAYOUT ==================== */
@@ -176,19 +176,44 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 /* ==================== PROGRAMME — style warm gradient ==================== */
 .prog-card{background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FDE68A 100%);border:1.5px solid #F59E0B40;border-radius:var(--rl);overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,.08);margin-bottom:14px}
+
+/* ==================== VIDÉOS ==================== */
+.vid-block{background:var(--card);border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.vid-hd{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.vid-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(220,38,38,.08)}
+.vid-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--text)}
+.vid-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:14px 18px}
+.vid-grid-shorts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px}
+@media(max-width:768px){.vid-grid{grid-template-columns:1fr}.vid-grid-shorts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.vid-grid-shorts{grid-template-columns:1fr}}
+.vid-frame{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000}
+.vid-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%}
+.vid-frame-short{padding-top:177.78%}
+.vid-caption{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.4}
+.vid-carousel{position:relative;padding:14px 18px}
+.vid-carousel-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0}
+.vid-carousel-track::-webkit-scrollbar{display:none}
+.vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
+.vid-carousel-item.vid-classic{width:320px}
+.vid-carousel-item.vid-short{width:200px}
+@media(max-width:560px){.vid-carousel-item.vid-classic{width:260px}.vid-carousel-item.vid-short{width:160px}}
+.vid-nav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;z-index:2}
+.vid-nav:hover{background:rgba(0,0,0,.75)}
+.vid-nav-l{left:6px}
+.vid-nav-r{right:6px}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #F59E0B25}
 .prog-card .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
 .prog-card .ci svg{width:16px;height:16px}
 .prog-card .ct{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:#78350F}
-.prog-list{padding:10px 14px}
-.prog-item{display:flex;gap:12px;padding:10px 12px;margin-bottom:6px;border:1px solid #F59E0B20;border-radius:10px;background:rgba(255,255,255,.55);align-items:flex-start;transition:background .15s}
+.prog-list{padding:8px 12px}
+.prog-item{display:flex;gap:10px;padding:7px 10px;margin-bottom:4px;border:1px solid #F59E0B20;border-radius:8px;background:rgba(255,255,255,.55);align-items:flex-start;transition:background .15s}
 .prog-item:hover{background:rgba(255,255,255,.8)}
 .prog-item:last-child{margin-bottom:0}
-.prog-time{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#B45309;flex-shrink:0;width:42px;padding-top:2px}
+.prog-time{font-family:'IBM Plex Mono';font-size:10px;font-weight:600;color:#B45309;flex-shrink:0;width:38px;padding-top:1px}
 .prog-body{flex:1}
-.prog-label{font-size:12px;font-weight:600;color:#1C1917;line-height:1.4}
-.prog-desc{font-size:10px;color:#57534E;margin-top:2px;line-height:1.5}
-.prog-status{display:inline-block;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:5px;margin-top:4px}
+.prog-label{font-size:11px;font-weight:600;color:#1C1917;line-height:1.4}
+.prog-desc{font-size:9px;color:#57534E;margin-top:1px;line-height:1.4}
+.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;margin-top:3px}
 .prog-status.past{background:#E7E5E4;color:#78716C}
 .prog-status.active{background:#DC2626;color:#fff;animation:pulse 1.5s infinite}
 .prog-status.upcoming{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B50}
@@ -232,7 +257,8 @@ const ICO = {
   newspaper:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>',
   clipboard:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
   user:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-  chevDown:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+  chevDown:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
 };
 
 // ============================================================
@@ -314,6 +340,7 @@ const DEMO_TIMELINE = [
   {date:"1 oct.",text:"J2 — Journée distribution. Tables rondes IA et NDC."},
   {date:"2 oct.",text:"J3 — Clôture et remise des Trophées IFTM."}
 ];
+const DEMO_VIDEOS = [];
 
 // ============================================================
 // RENDER ENGINE
@@ -323,9 +350,42 @@ const ART_VISIBLE = 6;
 
 function fmtTime(v){ try{ const d=v?.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'--:--'; }catch(e){return '--:--';} }
 function fmtDT(v){ try{ const d=v?.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''; }catch(e){return '';} }
-function autoStatus(timeStr){
+function autoStatus(timeStr, dayStr){
   if(!timeStr) return 'upcoming';
   const now=new Date();
+
+  // Parse day string to a real date
+  // Handles: "Mardi 1er juin", "2 juin 2026", "1er sept.", "30 septembre", "Mercredi 2 juin"
+  let targetDate=null;
+  if(dayStr){
+    const monthMap={'janvier':0,'février':1,'fevrier':1,'mars':2,'avril':3,'mai':4,'juin':5,
+      'juillet':6,'août':7,'aout':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11,'decembre':11,
+      'janv':0,'févr':1,'fevr':1,'mars':2,'avr':3,'juil':7,'sept':8,'oct':9,'nov':10,'déc':11,'dec':11};
+    // Match: optional day name + day number (with optional ordinal) + month name + optional year
+    const m=dayStr.match(/(\d{1,2})(?:er|e|ème|eme|nd)?\s+([a-zéûôàèê]+)\.?\s*(\d{4})?/i);
+    if(m){
+      const d=parseInt(m[1]);
+      const mon=monthMap[m[2].toLowerCase()];
+      const y=m[3]?parseInt(m[3]):now.getFullYear();
+      if(mon!==undefined){
+        targetDate=new Date(y,mon,d);
+        // If date is more than 6 months in the past, assume next year
+        if(!m[3] && (now-targetDate)>180*86400000) targetDate=new Date(y+1,mon,d);
+      }
+    }
+  }
+
+  if(targetDate){
+    const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const targetDayStart=new Date(targetDate.getFullYear(),targetDate.getMonth(),targetDate.getDate());
+    if(targetDayStart>todayStart) return 'upcoming';
+    if(targetDayStart<todayStart) return 'past';
+    // Same day — fall through to time-based check
+  }
+
+  // No parseable date → if no dayStr was given, use time-only logic; if dayStr exists but unparseable, assume upcoming
+  if(dayStr && !targetDate) return 'upcoming';
+
   const parts=timeStr.split(':');
   const h=parseInt(parts[0])||0, m=parseInt(parts[1])||0;
   const t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m);
@@ -372,9 +432,22 @@ window.toggleCitAccordion = function(accId){
   btn.textContent = open ? 'Réduire ▴' : `Voir les ${n} autres citations ▾`;
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
+window.toggleVidAcc = function(accId){
+  const el=document.getElementById(accId), btn=document.getElementById(accId+'-btn');
+  if(!el||!btn)return;
+  const open=el.classList.toggle('open');
+  const n=parseInt(btn.dataset.extra);
+  btn.textContent = open ? 'Réduire ▴' : `Voir les ${n} autres vidéos ▾`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+window.scrollVidCar = function(carId,dir){
+  const track=document.querySelector('#'+carId+' .vid-carousel-track');
+  if(!track)return;
+  track.scrollBy({left:dir*track.clientWidth*0.7,behavior:'smooth'});
+};
 
 function render(data){
-  const {event, essential, live, rubriques, citations, articles, programme, timeline} = data;
+  const {event, essential, live, rubriques, citations, articles, programme, timeline, videos} = data;
   const mod = event.modules || {};
   let h = '';
 
@@ -513,22 +586,23 @@ function render(data){
 
   function mkProgramme(){
     if(mod.programme===false || !programme || !programme.length) return '';
-    // Group by day
-    const grouped={};
-    const dayOrder=[];
+    const grouped={};const dayOrder=[];
     programme.forEach(p => {
       const d=p.day||'';
       if(!grouped[d]){grouped[d]=[];dayOrder.push(d);}
       grouped[d].push(p);
     });
+    // Sort within each day by order then time
+    Object.values(grouped).forEach(items=>items.sort((a,b)=>(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||'')));
     const hasMultipleDays=dayOrder.length>1 || (dayOrder.length===1 && dayOrder[0]!=='');
     let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
     dayOrder.forEach(day => {
-      if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:11px;font-weight:700;color:#B45309;margin:10px 0 6px;padding:5px 10px;background:rgba(245,158,11,.1);border-radius:6px;display:inline-block">📅 ${day}</div>`;
+      if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;color:#B45309;margin:6px 0 4px;padding:3px 8px;background:rgba(245,158,11,.1);border-radius:5px;display:inline-block">📅 ${day}</div>`;
       grouped[day].forEach(p => {
-        const st = autoStatus(p.time);
+        const st = autoStatus(p.time, day);
         const sl = st==='past'?'Terminé':st==='active'?'● En cours':'À venir';
-        o += `<div class="prog-item"><div class="prog-time">${p.time}</div><div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${st}">${sl}</span></div></div>`;
+        const hasTime = p.time && p.time.trim();
+        o += `<div class="prog-item">${hasTime?`<div class="prog-time">${p.time}</div>`:''}<div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${st}">${sl}</span></div></div>`;
       });
     });
     o += `</div></div>`;
@@ -551,12 +625,77 @@ function render(data){
     return o;
   }
 
-  const blockRenderers = {hero:mkHero,flash:mkFlash,live:mkLive,citations:mkCitations,programme:mkProgramme,articles:mkArticles};
+  function mkVideos(){
+    if(mod.videos===false || !videos || !videos.length) return '';
+    const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
+    var _vidAccCounter=0;
+    let o='';
+
+    sections.forEach(sec=>{
+      const secVids=videos.filter(v=>v.section===sec.id);
+      // Include orphan videos in default section
+      const orphans=sec.id==='default'?videos.filter(v=>!v.section||!sections.find(s=>s.id===v.section)):[];
+      const allVids=[...secVids,...orphans.filter(v=>!secVids.find(sv=>sv.id===v.id))].sort((a,b)=>(a.order||0)-(b.order||0));
+      if(!allVids.length) return;
+
+      const isCarousel=sec.display==='carousel';
+      const visCount=sec.visibleCount||6;
+      const hasShorts=allVids.some(v=>v.type==='short');
+      const allShorts=allVids.every(v=>v.type==='short');
+      const accId='vid-acc-'+(_vidAccCounter++);
+
+      o+=`<div class="vid-block fi"><div class="vid-hd"><span class="vid-icon">${ICO.play}</span><span class="vid-title">${sec.title||'Vidéos'}</span></div>`;
+
+      if(isCarousel){
+        o+=`<div class="vid-carousel" id="vid-car-${accId}"><div class="vid-carousel-track">`;
+        allVids.forEach(v=>{
+          const isShort=v.type==='short';
+          const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+          o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">
+            <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+            ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
+          </div>`;
+        });
+        o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
+      } else {
+        // Grid mode — adapt columns: 3 cols for shorts, 2 for classic, auto-detect
+        const gridClass=allShorts?'vid-grid vid-grid-shorts':'vid-grid';
+        const visible=allVids.slice(0,visCount);
+        const extra=allVids.slice(visCount);
+        o+=`<div class="${gridClass}">`;
+        visible.forEach(v=>{
+          const isShort=v.type==='short';
+          const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+          o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
+            <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+            ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
+          </div>`;
+        });
+        o+=`</div>`;
+        if(extra.length){
+          o+=`<div class="cd-expand" id="${accId}"><div class="${gridClass}">`;
+          extra.forEach(v=>{
+            const isShort=v.type==='short';
+            const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+            o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
+              <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+              ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
+            </div>`;
+          });
+          o+=`</div></div><div class="voir-plus" id="${accId}-btn" data-extra="${extra.length}" onclick="toggleVidAcc('${accId}')">Voir les ${extra.length} autres vidéos ▾</div>`;
+        }
+      }
+      o+=`</div>`;
+    });
+    return o;
+  }
+
+  const blockRenderers = {hero:mkHero,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles};
 
   // Use stored zone assignments or defaults
-  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'};
+  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
   const blockZones=event.blockZones||defaultZones;
-  const allBlockKeys=['hero','flash','live','citations','programme','articles'];
+  const allBlockKeys=['hero','flash','live','citations','videos','programme','articles'];
 
   // Build ordered lists per zone from blockOrder
   const fullBlockOrder = event.blockOrder || ['hero','flash','live','citations','programme','articles'];
@@ -600,13 +739,13 @@ function render(data){
 async function init(){
   if(DEMO){
     await new Promise(r => setTimeout(r, 600));
-    render({event:DEMO_EVENT,essential:DEMO_ESSENTIAL,live:DEMO_LIVE,rubriques:DEMO_RUBRIQUES,citations:DEMO_CITATIONS,articles:DEMO_ARTICLES,programme:DEMO_PROGRAMME,timeline:DEMO_TIMELINE});
+    render({event:DEMO_EVENT,essential:DEMO_ESSENTIAL,live:DEMO_LIVE,rubriques:DEMO_RUBRIQUES,citations:DEMO_CITATIONS,articles:DEMO_ARTICLES,programme:DEMO_PROGRAMME,timeline:DEMO_TIMELINE,videos:DEMO_VIDEOS});
     return;
   }
   const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
   const ec=db.collection('events').doc(eventId);
-  const [evS,esS,liS,ruS,ciS,arS,prS,tlS] = await Promise.all([
+  const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS] = await Promise.all([
     ec.get(),
     ec.collection('essential').get(),
     ec.collection('live').get(),
@@ -614,23 +753,36 @@ async function init(){
     ec.collection('citations').get(),
     ec.collection('articles').get(),
     ec.collection('programme').get(),
-    ec.collection('timeline').get()
+    ec.collection('timeline').get(),
+    ec.collection('videos').get()
   ]);
   if(!evS.exists){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Événement introuvable</div></div>'; return; }
   const ev=evS.data();
   function toArr(s){ const a=[]; s.forEach(d=>a.push({id:d.id,...d.data()})); return a; }
-  function tsVal(v){ try{ return v?.toDate?v.toDate().getTime():(v?new Date(v).getTime():0); }catch(e){return 0;} }
+  const _mois={'janv':0,'févr':1,'mars':2,'avr':3,'mai':4,'juin':5,'juil':6,'août':7,'sept':8,'oct':9,'nov':10,'déc':11,'janvier':0,'février':1,'avril':3,'juillet':6,'septembre':8,'octobre':9,'novembre':10,'décembre':11};
+  function tsVal(v){
+    try{
+      if(v?.toDate) return v.toDate().getTime();
+      if(typeof v==='number') return v;
+      if(!v) return 0;
+      const d=new Date(v);
+      if(!isNaN(d)&&d.getFullYear()>2000) return d.getTime();
+      const m=String(v).match(/(\d{1,2})\s+([a-zéûô]+)\.?\s*(\d{4})?/i);
+      if(m){const mon=_mois[m[2].toLowerCase()];if(mon!==undefined) return new Date(m[3]?parseInt(m[3]):new Date().getFullYear(),mon,parseInt(m[1])).getTime();}
+      return 0;
+    }catch(e){return 0;}
+  }
   const ess=toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0));
   const li=toArr(liS).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
   const ru=toArr(ruS).sort((a,b)=>(a.order||0)-(b.order||0));
   const ci=toArr(ciS).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));
-  const ar=toArr(arS);
-  const pr=toArr(prS).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
+  const ar=toArr(arS).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));
+  const pr=toArr(prS).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||''));
   const tl=toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0));
-  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl});
+  const vi=toArr(viS).sort((a,b)=>(a.order||0)-(b.order||0));
+  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi});
 
-  // Real-time listeners — le front se met à jour dès qu'un contenu est publié depuis le back-office
-  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl};
+  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi};
   function rtRender(){ render(rtState); }
 
   ec.collection('live').onSnapshot(snap => {
@@ -642,7 +794,7 @@ async function init(){
     rtRender();
   });
   ec.collection('articles').onSnapshot(snap => {
-    rtState.articles=toArr(snap);
+    rtState.articles=toArr(snap).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));
     rtRender();
   });
   ec.collection('citations').onSnapshot(snap => {
@@ -654,11 +806,15 @@ async function init(){
     rtRender();
   });
   ec.collection('programme').onSnapshot(snap => {
-    rtState.programme=toArr(snap).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
+    rtState.programme=toArr(snap).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||''));
     rtRender();
   });
   ec.collection('timeline').onSnapshot(snap => {
     rtState.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
+    rtRender();
+  });
+  ec.collection('videos').onSnapshot(snap => {
+    rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
     rtRender();
   });
   // Event doc (flash, modules, status)
