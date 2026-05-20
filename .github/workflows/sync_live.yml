@@ -1,0 +1,30 @@
+name: TourMaG Live — Sync IA + RSS
+
+on:
+  schedule:
+    # Toutes les 4 heures : 6h, 10h, 14h, 18h heure Paris (UTC+2)
+    - cron: '0 4,8,12,16 * * *'
+  workflow_dispatch:  # Lancement manuel depuis l'interface GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run sync_live.py
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python sync_live.py
