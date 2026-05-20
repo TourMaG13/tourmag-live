@@ -200,6 +200,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
       <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
       <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
+      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
@@ -246,6 +247,7 @@ var articlesData=[];
 var programmeData=[];
 var timelineData=[];
 var mediaData=[];
+var videosData=[];
 var tagsData=[];      // Stocké dans event doc → tags[]
 
 // Listeners unsubscribe handles
@@ -318,10 +320,30 @@ function saving(show){document.getElementById('saving').classList.toggle('show',
 function evRef(){ return db.collection('events').doc(currentEventId); }
 function subCol(name){ return evRef().collection(name); }
 
-function autoStatus(timeStr){
+function autoStatus(timeStr,dayStr){
   const now=new Date();
-  const h=parseInt(timeStr.split(':')[0]),m=parseInt(timeStr.split(':')[1]||0);
-  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m);
+  if(dayStr){
+    const monthMap={'janvier':0,'février':1,'fevrier':1,'mars':2,'avril':3,'mai':4,'juin':5,
+      'juillet':6,'août':7,'aout':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11,'decembre':11,
+      'janv':0,'févr':1,'fevr':1,'mars':2,'avr':3,'juil':7,'sept':8,'oct':9,'nov':10,'déc':11,'dec':11};
+    const m=dayStr.match(/(\d{1,2})(?:er|e|ème|eme|nd)?\s+([a-zéûôàèê]+)\.?\s*(\d{4})?/i);
+    if(m){
+      const d=parseInt(m[1]);const mon=monthMap[m[2].toLowerCase()];const y=m[3]?parseInt(m[3]):now.getFullYear();
+      if(mon!==undefined){
+        let target=new Date(y,mon,d);
+        if(!m[3]&&(now-target)>180*86400000) target=new Date(y+1,mon,d);
+        const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+        if(target>today)return 'upcoming';
+        if(target<today)return 'past';
+        // same day — fall through to time check
+      }
+    } else {
+      // dayStr exists but unparseable (e.g. "Jour 1") — assume upcoming
+      return 'upcoming';
+    }
+  }
+  const h=parseInt(timeStr.split(':')[0]),m2=parseInt(timeStr.split(':')[1]||0);
+  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m2);
   const diff=(now-t)/60000;
   if(diff>60)return 'past'; if(diff>=-5&&diff<=60)return 'active'; return 'upcoming';
 }
@@ -398,7 +420,8 @@ function subscribeSubCollections(){
     {col:'articles',target:'articlesData'},
     {col:'programme',target:'programmeData'},
     {col:'timeline',target:'timelineData'},
-    {col:'media',target:'mediaData'}
+    {col:'media',target:'mediaData'},
+    {col:'videos',target:'videosData'}
   ];
 
   subs.forEach(s=>{
@@ -410,7 +433,9 @@ function subscribeSubCollections(){
       if(s.col==='live') arr.sort((a,b)=>{ const ta=a.time?.toDate?a.time.toDate():new Date(a.time||0); const tb=b.time?.toDate?b.time.toDate():new Date(b.time||0); return tb-ta; });
       if(s.col==='citations') arr.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate():new Date(a.created_at||0); const tb=b.created_at?.toDate?b.created_at.toDate():new Date(b.created_at||0); return tb-ta; });
       if(s.col==='rubriques'||s.col==='essential'||s.col==='timeline') arr.sort((a,b)=>(a.order||0)-(b.order||0));
-      if(s.col==='programme') arr.sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.time||'').localeCompare(b.time||''));
+      if(s.col==='programme') arr.sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||''));
+      if(s.col==='articles') arr.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate().getTime():(a.created_at?new Date(a.created_at).getTime():0); const tb=b.created_at?.toDate?b.created_at.toDate().getTime():(b.created_at?new Date(b.created_at).getTime():0); return tb-ta; });
+      if(s.col==='videos') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       window[s.target]=arr;
       updateBadges();
       scheduleRender();
@@ -445,6 +470,7 @@ function renderTab(){
     case 'media':renderMedia(main);break;
     case 'programme':renderProgramme(main);break;
     case 'articles':renderArticles(main);break;
+    case 'videos':renderVideos(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
@@ -484,9 +510,9 @@ async function newEvent(){
     title:'Nouvel événement',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true},
-    blockOrder:['hero','flash','live','citations','programme','articles'],
-    blockZones:{hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true},
+    blockOrder:['hero','flash','live','citations','videos','programme','articles'],
+    blockZones:{hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
   currentEventId=ref.id;
@@ -503,9 +529,14 @@ function confirmRemoveEvent(id,title){
     <input class="form-input" id="m-confirm-name" placeholder="${title}" style="margin-bottom:4px">
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-danger" id="m-confirm-btn" onclick="executeRemoveEvent('${id}','${title}')" disabled>🗑 Supprimer définitivement</button>
-    </div>
-    <script>document.getElementById('m-confirm-name').addEventListener('input',function(){document.getElementById('m-confirm-btn').disabled=this.value.trim()!=='${title}';})<\/script>`);
+      <button class="btn btn-danger" id="m-confirm-btn" onclick="executeRemoveEvent('${id}','${title.replace(/'/g,"\\'")}')" disabled>🗑 Supprimer définitivement</button>
+    </div>`);
+  // Attach listener after modal is rendered
+  setTimeout(()=>{
+    const inp=document.getElementById('m-confirm-name');
+    const btn=document.getElementById('m-confirm-btn');
+    if(inp&&btn) inp.addEventListener('input',()=>{btn.disabled=inp.value.trim()!==title;});
+  },50);
 }
 
 async function executeRemoveEvent(id,title){
@@ -514,7 +545,7 @@ async function executeRemoveEvent(id,title){
   closeModal();
   saving(true);
   // Supprimer les sous-collections connues
-  const subs=['live','citations','rubriques','essential','articles','programme','timeline','media'];
+  const subs=['live','citations','rubriques','essential','articles','programme','timeline','media','videos'];
   for(const sub of subs){
     const snap=await db.collection('events').doc(id).collection(sub).get();
     const batch=db.batch();
@@ -590,11 +621,11 @@ async function saveFlash(){
 function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
-  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
+  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
 
-  const defaultOrder=['hero','flash','live','citations','programme','articles'];
+  const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',programme:'side',articles:'side'};
+  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
   const blockZones=ev?.blockZones||defaultZones;
 
   // All draggable blocks
@@ -603,6 +634,7 @@ function renderModules(el){
     {key:'flash',icon:'⚡',label:'Bandeau Flash'},
     {key:'live',icon:'📡',label:'Fil live'},
     {key:'citations',icon:'💬',label:'Citations'},
+    {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'articles',icon:'📰',label:'Articles liés'}
   ];
@@ -1108,17 +1140,29 @@ async function saveCitVisible(){
 
 // ==================== PROGRAMME ====================
 function renderProgramme(el){
-  // Detect existing days from data
-  const days=new Set();
-  programmeData.forEach(p=>{if(p.day)days.add(p.day);});
-  const daysList=[...days].sort();
-  const dayOpts=daysList.map(d=>`<option value="${d}">${d}</option>`).join('');
+  // Collect unique days
+  const days=[];const daySet=new Set();
+  programmeData.forEach(p=>{const d=p.day||'';if(!daySet.has(d)){daySet.add(d);days.push(d);}});
+  const dayOpts=days.filter(d=>d).map(d=>`<option value="${d}">${d}</option>`).join('');
 
-  let h=`<div class="page-title">Programme</div><div class="page-desc">Le statut se calcule automatiquement selon l'heure. Vous pouvez organiser le programme sur plusieurs jours.</div>
+  let h=`<div class="page-title">Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
+
+  <div class="admin-card"><h3>📅 Jours</h3>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px" id="prog-days-list">`;
+  days.filter(d=>d).forEach((day,i)=>{
+    const count=programmeData.filter(p=>p.day===day).length;
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:12px;font-weight:600;flex:1">${day}</span>
+      <span style="font-size:9px;color:var(--text3)">${count} élément${count>1?'s':''}</span>
+      <button class="btn btn-ghost btn-xs" onclick="renameDay('${day.replace(/'/g,"\\'")}')">✏️</button>
+    </div>`;
+  });
+  h+=`</div></div>
+
   <div class="admin-card"><h3>➕ Ajouter</h3>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="prog-day-select" style="flex:1"><option value="">— Choisir —</option>${dayOpts}</select><input class="form-input" id="prog-day-new" placeholder="Ex: Jour 1, Mardi 30 sept." style="flex:1.5"></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Sélectionnez un jour existant ou saisissez-en un nouveau</div></div>
-      <div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="prog-time" type="time"></div>
+      <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="prog-day-select" style="flex:1"><option value="">— Choisir —</option>${dayOpts}</select><input class="form-input" id="prog-day-new" placeholder="Ex: Mardi 1er juin" style="flex:1.5"></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Sélectionnez un jour existant ou saisissez-en un nouveau</div></div>
+      <div class="form-row"><label class="form-label">Heure (optionnel)</label><input class="form-input" id="prog-time" type="time"></div>
     </div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="prog-label"></div></div>
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="prog-desc"></div>
@@ -1126,20 +1170,26 @@ function renderProgramme(el){
   <div class="admin-card"><h3>📋 Programme</h3>`;
   if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
   else{
-    // Group by day
-    const grouped={};
+    const grouped={};const groupOrder=[];
     programmeData.forEach(p=>{
       const d=p.day||'(sans jour)';
-      if(!grouped[d])grouped[d]=[];
+      if(!grouped[d]){grouped[d]=[];groupOrder.push(d);}
       grouped[d].push(p);
     });
-    Object.keys(grouped).forEach(day=>{
-      h+=`<div style="margin-bottom:16px"><div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px;padding:6px 10px;background:rgba(232,132,44,.08);border-radius:6px;display:inline-block">📅 ${day}</div>`;
-      grouped[day].forEach(p=>{
-        const st=autoStatus(p.time);
+    groupOrder.forEach(day=>{
+      const items=grouped[day];
+      h+=`<div style="margin-bottom:16px"><div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px;padding:6px 10px;background:rgba(232,132,44,.08);border-radius:6px;display:inline-flex;align-items:center;gap:8px">📅 ${day}<button class="btn btn-ghost btn-xs" onclick="renameDay('${day.replace(/'/g,"\\'")}')" style="font-size:8px;padding:2px 6px">✏️</button></div>`;
+      items.forEach((p,i)=>{
+        const st=autoStatus(p.time, p.day);
         const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
         const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
-        h+=`<div class="list-item"><div class="list-item-time">${p.time}</div><div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editProgramme('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button></div></div>`;
+        const timeDisplay=p.time?`<div class="list-item-time">${p.time}</div>`:'';
+        h+=`<div class="list-item">${timeDisplay}<div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions" style="display:flex;gap:3px;align-items:center">
+          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}','${day.replace(/'/g,"\\'")}',-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}','${day.replace(/'/g,"\\'")}',1)" ${i===items.length-1?'disabled':''}>▼</button>
+          <button class="btn btn-ghost btn-xs" onclick="editProgramme('${p.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button>
+        </div></div>`;
       });
       h+=`</div>`;
     });
@@ -1154,9 +1204,10 @@ function getProgDay(){
 async function addProgramme(){
   const time=document.getElementById('prog-time').value,label=document.getElementById('prog-label').value.trim();
   const day=getProgDay();
-  if(!time||!label){toast('Heure et intitulé requis','error');return;}
+  if(!label){toast('Intitulé requis','error');return;}
   saving(true);
-  await subCol('programme').add({time,label,desc:document.getElementById('prog-desc').value,day});
+  const dayItems=programmeData.filter(p=>(p.day||'')===(day||''));
+  await subCol('programme').add({time:time||'',label,desc:document.getElementById('prog-desc').value,day,order:dayItems.length});
   document.getElementById('prog-label').value='';document.getElementById('prog-desc').value='';document.getElementById('prog-day-new').value='';toast('Ajouté');
 }
 function editProgramme(id){
@@ -1165,7 +1216,7 @@ function editProgramme(id){
   const dayOpts=[...days].sort().map(d=>`<option value="${d}"${d===p.day?' selected':''}>${d}</option>`).join('');
   openModal(`<h3>Modifier</h3>
     <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="m-prog-day-select"><option value="">—</option>${dayOpts}</select><input class="form-input" id="m-prog-day-new" placeholder="Nouveau jour" value="${(!p.day||[...days].includes(p.day))?'':p.day}"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure</label><input class="form-input" id="m-prog-time" type="time" value="${p.time||''}"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="m-prog-label" value="${(p.label||'').replace(/"/g,'&quot;')}"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure (optionnel)</label><input class="form-input" id="m-prog-time" type="time" value="${p.time||''}"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="m-prog-label" value="${(p.label||'').replace(/"/g,'&quot;')}"></div></div>
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="m-prog-desc" value="${(p.desc||'').replace(/"/g,'&quot;')}"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveProgrammeEdit('${id}')">💾 Enregistrer</button></div>`);
 }
@@ -1174,7 +1225,7 @@ async function saveProgrammeEdit(id){
   const dayNew=document.getElementById('m-prog-day-new').value.trim();
   const daySel=document.getElementById('m-prog-day-select').value;
   await subCol('programme').doc(id).update({
-    time:document.getElementById('m-prog-time').value,
+    time:document.getElementById('m-prog-time').value||'',
     label:document.getElementById('m-prog-label').value.trim(),
     desc:document.getElementById('m-prog-desc').value,
     day:dayNew||daySel||''
@@ -1182,6 +1233,36 @@ async function saveProgrammeEdit(id){
   closeModal();toast('Modifié');
 }
 async function deleteProgramme(id){saving(true);await subCol('programme').doc(id).delete();toast('Supprimé');}
+
+function renameDay(oldDay){
+  openModal(`<h3>Renommer le jour</h3>
+    <div class="form-row"><label class="form-label">Nom actuel : <strong>${oldDay}</strong></label><input class="form-input" id="m-rename-day" value="${oldDay.replace(/"/g,'&quot;')}" placeholder="Nouveau nom"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="executeRenameDay('${oldDay.replace(/'/g,"\\'")}')">💾 Renommer</button></div>`);
+}
+async function executeRenameDay(oldDay){
+  const newDay=document.getElementById('m-rename-day').value.trim();
+  if(!newDay){toast('Nom requis','error');return;}
+  if(newDay===oldDay){closeModal();return;}
+  saving(true);
+  const items=programmeData.filter(p=>p.day===oldDay);
+  for(const p of items){
+    await subCol('programme').doc(p.id).update({day:newDay});
+  }
+  closeModal();toast(items.length+' éléments mis à jour');
+}
+async function moveProgInDay(id,day,dir){
+  const items=programmeData.filter(p=>(p.day||'(sans jour)')===day).sort((a,b)=>(a.order||0)-(b.order||0));
+  const idx=items.findIndex(p=>p.id===id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=items.length)return;
+  saving(true);
+  await Promise.all([
+    subCol('programme').doc(items[idx].id).update({order:newIdx}),
+    subCol('programme').doc(items[newIdx].id).update({order:idx})
+  ]);
+  toast('Ordre modifié');
+}
 
 // ==================== ARTICLES ====================
 var rssFeeds=[]; // [{url, label}] stocké dans event doc → rssFeeds[]
@@ -1324,31 +1405,57 @@ async function fetchAllRss(){
                      feed.label||'RSS';
         const pubDate=item.querySelector('pubDate')?.textContent?.trim();
         let dateStr='';
-        if(pubDate){try{dateStr=new Date(pubDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}catch(e){}}
+        let dateObj=null;
+        if(pubDate){try{dateObj=new Date(pubDate);if(!isNaN(dateObj))dateStr=dateObj.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}catch(e){}}
 
-        // Chercher image : enclosure, media:content, ou media:thumbnail
+        // Chercher image — plusieurs stratégies
         let image='';
-        const enclosure=item.querySelector('enclosure[type^="image"]');
-        if(enclosure) image=enclosure.getAttribute('url')||'';
+
+        // Sérialiser le XML brut de l'item pour chercher les URLs directement
+        const itemXml=new XMLSerializer().serializeToString(item);
+
+        // 1. PRIORITÉ : URL contenant "imagette" (TourMaG)
+        const imagetteMatch=itemXml.match(/https?:\/\/[^"'\s<>]*imagette[^"'\s<>]*/i);
+        if(imagetteMatch) image=imagetteMatch[0];
+
+        // 2. Balise photo:imgsrc (TourMaG custom tag)
         if(!image){
-          // enclosure sans type (certains flux omettent le type)
-          const encAny=item.querySelector('enclosure');
-          if(encAny){const eu=encAny.getAttribute('url')||'';if(/\.(jpe?g|png|webp|gif)/i.test(eu))image=eu;}
-        }
-        if(!image){const mc=item.querySelector('media\\:content,content');if(mc)image=mc.getAttribute('url')||'';}
-        if(!image){const mt=item.querySelector('media\\:thumbnail,thumbnail');if(mt)image=mt.getAttribute('url')||'';}
-        // Chercher <img> dans la description
-        if(!image){
-          const desc=item.querySelector('description')?.textContent||'';
-          const imgMatch=desc.match(/<img[^>]+src=["']([^"']+)/i);
-          if(imgMatch) image=imgMatch[1];
-        }
-        // Dernier recours : fetch la page pour récupérer og:image
-        if(!image && link){
-          try{ image = await fetchOgImage(link); }catch(e){}
+          const photoMatch=itemXml.match(/<photo:imgsrc[^>]*>([^<]+)<\/photo:imgsrc>/i);
+          if(photoMatch) image=photoMatch[1].trim();
+          if(!image){
+            // Aussi chercher via namespace
+            const photoEls=item.getElementsByTagNameNS('*','imgsrc');
+            for(let pi=0;pi<photoEls.length;pi++){
+              const pu=photoEls[pi].textContent?.trim();
+              if(pu&&pu.startsWith('http')){image=pu;break;}
+            }
+          }
         }
 
-        await subCol('articles').add({title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss'});
+        // 3. enclosure avec type image
+        if(!image){const enclosure=item.querySelector('enclosure[type^="image"]');if(enclosure) image=enclosure.getAttribute('url')||'';}
+
+        // 4. enclosure sans type
+        if(!image){const encAny=item.querySelector('enclosure');if(encAny){const eu=encAny.getAttribute('url')||'';if(/\.(jpe?g|png|webp|gif)/i.test(eu))image=eu;}}
+
+        // 5. Toute URL d'image dans le XML brut (jpg, png, webp)
+        if(!image){
+          const imgUrls=itemXml.match(/https?:\/\/[^"'\s<>]+\.(jpe?g|png|webp)/gi);
+          if(imgUrls&&imgUrls.length) image=imgUrls[0];
+        }
+
+        // 6. Chercher <img> dans description
+        if(!image){const desc=item.querySelector('description')?.textContent||'';const m=desc.match(/<img[^>]+src=["']([^"']+)/i);if(m) image=m[1];}
+
+        // 7. Dernier recours : fetch og:image
+        if(!image && link){try{ image = await fetchOgImage(link); }catch(e){}}
+
+        // Sauvegarder avec created_at timestamp pour le tri chronologique
+        const articleData={title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss'};
+        if(dateObj&&!isNaN(dateObj)) articleData.created_at=firebase.firestore.Timestamp.fromDate(dateObj);
+        else articleData.created_at=firebase.firestore.FieldValue.serverTimestamp();
+
+        await subCol('articles').add(articleData);
         existingLinks.add(link);
         imported++;
       }
@@ -1418,15 +1525,13 @@ function renderEssentiel(el){
 
 // ==================== TIMELINE ====================
 function renderTimelineHTML(){
-  let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title">📍 Timeline</div><div class="page-desc">Frise chronologique dans le hero du front. Ajoutez manuellement ou générez automatiquement via IA.</div>
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const iaTimelineEnabled=ev.iaTimeline!==false;
+  let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title">📍 Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
 
-  <div class="admin-card"><h3>🤖 Génération IA</h3>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">Génère automatiquement une frise à partir des articles liés et du fil live. Les jalons existants ne sont pas supprimés — la génération vient <strong>compléter</strong> ou peut <strong>remplacer</strong> l'existant.</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="generateTimelineIA('append')" id="tl-ia-btn">🤖 Générer (compléter)</button>
-      <button class="btn btn-danger" onclick="generateTimelineIA('replace')" id="tl-ia-replace-btn">🔄 Générer (remplacer tout)</button>
-    </div>
-    <div id="tl-ia-status" style="margin-top:10px"></div>
+  <div class="admin-card"><h3>🤖 IA Timeline</h3>
+    <div class="toggle-row"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique de la timeline</span><label class="toggle"><input type="checkbox" ${iaTimelineEnabled?'checked':''} onchange="toggleIATimeline(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">Quand activé, le cron génère automatiquement les jalons à partir des articles et du fil live.</div>
   </div>
 
   <div class="admin-card"><h3>➕ Jalon manuel</h3>
@@ -1453,15 +1558,13 @@ function renderTimelineHTML(){
   return h;
 }
 
-async function generateTimelineIA(mode){
+async function generateTimelineIA(){
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){toast('Aucun événement sélectionné','error');return;}
 
   const status=document.getElementById('tl-ia-status');
-  const btnAppend=document.getElementById('tl-ia-btn');
-  const btnReplace=document.getElementById('tl-ia-replace-btn');
-  if(btnAppend)btnAppend.disabled=true;
-  if(btnReplace)btnReplace.disabled=true;
+  const btn=document.getElementById('tl-ia-btn');
+  if(btn)btn.disabled=true;
   if(status) status.innerHTML='<div style="font-size:11px;color:var(--violet);display:flex;align-items:center;gap:6px"><span class="topbar-dot" style="background:var(--violet)"></span>Collecte des données pour l\'IA…</div>';
 
   // Collecter les données contextuelles
@@ -1473,8 +1576,6 @@ async function generateTimelineIA(mode){
 
   const articleTitles=articlesData.slice(0,20).map(a=>`- ${a.title} (${a.date||''})`).join('\n');
   const essentialTexts=essentialData.map(p=>`[${p.tag}] ${(p.text||'').replace(/<[^>]+>/g,'')}`).join('\n');
-
-  const existingTimeline=timelineData.map(t=>`${t.date}: ${t.text}`).join('\n');
 
   const prompt=`Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com. Tu dois créer une frise chronologique (timeline) pour l'événement "${ev.title}" (${ev.location}, ${ev.dates}).
 
@@ -1489,7 +1590,6 @@ ${articleTitles||'(vide)'}
 --- POINTS ESSENTIELS ---
 ${essentialTexts||'(vide)'}
 
-${mode==='append'&&existingTimeline?`--- TIMELINE EXISTANTE (ne pas dupliquer) ---\n${existingTimeline}\n`:''}\
 Génère entre 4 et 7 jalons chronologiques synthétiques pour la frise. Chaque jalon doit avoir une date courte (ex: "28 sept.", "30 sept. AM", "1 oct.") et un texte bref (max 20 mots) résumant un fait marquant.
 
 Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
@@ -1513,23 +1613,18 @@ Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
     let jalons;
     try{ jalons=JSON.parse(clean); }catch(e){
       if(status) status.innerHTML=`<div style="font-size:11px;color:var(--red)">❌ Erreur de parsing JSON. Réponse brute : <code style="font-size:9px">${clean.slice(0,200)}</code></div>`;
-      if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+      if(btn)btn.disabled=false;
       return;
     }
 
     if(!Array.isArray(jalons)||!jalons.length){
       if(status) status.innerHTML='<div style="font-size:11px;color:var(--red)">❌ L\'IA n\'a retourné aucun jalon.</div>';
-      if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+      if(btn)btn.disabled=false;
       return;
     }
 
-    // Mode remplacer : supprimer tous les jalons existants d'abord
-    if(mode==='replace'){
-      if(!confirm('Supprimer les '+timelineData.length+' jalons existants et les remplacer par '+jalons.length+' jalons IA ?')){
-        if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
-        if(status) status.innerHTML='';
-        return;
-      }
+    // Supprimer les jalons existants
+    if(timelineData.length){
       const batch=db.batch();
       timelineData.forEach(t=>batch.delete(subCol('timeline').doc(t.id)));
       await batch.commit();
@@ -1537,7 +1632,6 @@ Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
 
     if(status) status.innerHTML='<div style="font-size:11px;color:var(--violet)">✍️ Écriture de '+jalons.length+' jalons…</div>';
     saving(true);
-    const startOrder=mode==='replace'?0:timelineData.length;
     for(let i=0;i<jalons.length;i++){
       const j=jalons[i];
       await subCol('timeline').add({
@@ -1545,7 +1639,7 @@ Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
         text:j.text||'',
         link:j.link||'',
         source:'ia',
-        order:startOrder+i,
+        order:i,
         generated_at:firebase.firestore.FieldValue.serverTimestamp()
       });
     }
@@ -1555,7 +1649,7 @@ Réponds UNIQUEMENT en JSON, sans backticks, sous cette forme :
     console.error('Timeline IA error:',e);
     if(status) status.innerHTML=`<div style="font-size:11px;color:var(--red)">❌ Erreur : ${e.message}</div>`;
   }
-  if(btnAppend)btnAppend.disabled=false;if(btnReplace)btnReplace.disabled=false;
+  if(btn)btn.disabled=false;
 }
 async function addTimeline(){
   const date=document.getElementById('tl-date').value.trim(),text=document.getElementById('tl-text').value.trim();
@@ -1587,8 +1681,11 @@ async function deleteTimeline(id){if(!confirm('Supprimer ce jalon ?'))return;sav
 
 // ==================== POINTS ESSENTIELS ====================
 function renderIAHTML(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const iaEssentialEnabled=ev.iaEssential!==false;
   const ia=essentialData.filter(p=>p.source==='ia');
-  const manual=essentialData.filter(p=>p.source==='manual');
+  const manual=essentialData.filter(p=>p.source==='manual'||!p.source);
+  const allPts=[...essentialData].sort((a,b)=>(a.order||0)-(b.order||0));
 
   let lastGen='—';
   ia.forEach(p=>{
@@ -1602,26 +1699,34 @@ function renderIAHTML(){
 
   let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
 
-  <div class="admin-card"><h3>🤖 Points IA (${ia.length})</h3>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <div class="admin-card"><h3>🤖 Génération IA</h3>
+    <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
+    <div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span>Dernière génération : <strong style="color:var(--text2)">${lastGen}</strong></span>
       <span style="opacity:.4">·</span>
       <span>Cron : 6h · 10h · 14h · 18h</span>
-    </div>`;
-  if(!ia.length) h+=`<div class="empty"><div class="icon">🤖</div><div class="text">Aucun point IA — la prochaine génération automatique les créera à partir des articles liés</div></div>`;
-  else{
-    h+=`<div style="margin-bottom:12px"><button class="btn btn-danger btn-sm" onclick="clearIAPoints()">🗑 Supprimer tous les points IA</button></div>`;
-    ia.forEach((p,i)=>{
-      h+=`<div class="ess-item"><div class="ess-item-num">${String(i+1).padStart(2,'0')}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">🤖 IA</div></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editEssential('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
-    });
-  }
+      <span style="opacity:.4">·</span>
+      <span>Points IA : <strong style="color:var(--violet)">${ia.length}</strong></span>
+    </div>
+    ${ia.length?`<div style="margin-top:10px"><button class="btn btn-danger btn-sm" onclick="clearIAPoints()">🗑 Supprimer les points IA</button></div>`:''}
+  </div>
 
-  h+=`</div><div class="admin-card"><h3>✏️ Points manuels (${manual.length})</h3>
+  <div class="admin-card"><h3>✏️ Ajouter un point manuel</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Tag</label><input class="form-input" id="ess-tag" placeholder="DISTRIBUTION"></div><div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="ess-text"></div></div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addEssential()">＋ Ajouter</button></div>`;
-  if(!manual.length) h+=`<div class="empty" style="padding:16px"><div class="text">Aucun point manuel</div></div>`;
-  else manual.forEach((p,i)=>{
-    h+=`<div class="ess-item" style="margin-top:12px"><div class="ess-item-num">M${i+1}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span><div class="ess-item-text">${p.text}</div><div class="ess-item-source">✏️ Manuel</div></div><div class="list-item-actions"><button class="btn btn-ghost btn-xs" onclick="editEssential('${p.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button></div></div>`;
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addEssential()">＋ Ajouter</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📋 Tous les points (${allPts.length})</h3>
+    <div class="page-desc" style="margin-bottom:10px">Utilisez les flèches pour réordonner. L'ordre affiché ici est celui de la page live.</div>`;
+  if(!allPts.length) h+=`<div class="empty"><div class="text">Aucun point</div></div>`;
+  else allPts.forEach((p,i)=>{
+    const src=p.source==='ia'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">IA</span>':'<span style="font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">MANUEL</span>';
+    h+=`<div class="ess-item"><div class="ess-item-num">${String(i+1).padStart(2,'0')}</div><div class="ess-item-body"><span class="ess-item-tag">${p.tag}</span>${src}<div class="ess-item-text">${p.text}</div></div><div class="list-item-actions" style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-ghost btn-xs" onclick="moveEssential('${p.id}',-1)" ${i===0?'disabled':''}>▲</button>
+      <button class="btn btn-ghost btn-xs" onclick="moveEssential('${p.id}',1)" ${i===allPts.length-1?'disabled':''}>▼</button>
+      <button class="btn btn-ghost btn-xs" onclick="editEssential('${p.id}')">✏️</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteEssential('${p.id}')">✕</button>
+    </div></div>`;
   });
   h+=`</div>`;
   return h;
@@ -1662,6 +1767,232 @@ async function clearIAPoints(){
   toast(ia.length+' points IA supprimés');
 }
 async function deleteEssential(id){if(!confirm('Supprimer ce point ?'))return;saving(true);await subCol('essential').doc(id).delete();toast('Supprimé');}
+async function moveEssential(id,dir){
+  const sorted=[...essentialData].sort((a,b)=>(a.order||0)-(b.order||0));
+  const idx=sorted.findIndex(p=>p.id===id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=sorted.length)return;
+  saving(true);
+  await Promise.all([
+    subCol('essential').doc(sorted[idx].id).update({order:newIdx}),
+    subCol('essential').doc(sorted[newIdx].id).update({order:idx})
+  ]);
+  toast('Ordre modifié');
+}
+async function toggleIAEssential(val){
+  saving(true);
+  await evRef().update({iaEssential:val});
+  toast(val?'IA essentiel activée':'IA essentiel désactivée');
+}
+async function toggleIATimeline(val){
+  saving(true);
+  await evRef().update({iaTimeline:val});
+  toast(val?'IA timeline activée':'IA timeline désactivée');
+}
+
+// ==================== VIDÉOS ====================
+function parseYoutubeUrl(url){
+  let m;
+  m=url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+  if(m) return {id:m[1],type:'short'};
+  m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if(m) return {id:m[1],type:'video'};
+  m=url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if(m) return {id:m[1],type:'video'};
+  return null;
+}
+
+function renderVideos(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const sections=ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
+
+  let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos YouTube en sections. Chaque section a son propre titre et mode d'affichage.</div>
+
+  <div class="admin-card"><h3>📂 Sections</h3>
+    <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
+  sections.forEach((s,i)=>{
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:11px;font-weight:600;flex:1">${s.title||'Sans titre'}</span>
+      <span style="font-size:9px;color:var(--text3)">${s.display==='carousel'?'Carrousel':'Grille'} · ${videosData.filter(v=>v.section===s.id).length} vidéos</span>
+      <button class="btn btn-ghost btn-xs" onclick="editVideoSection(${i})">✏️</button>
+      ${sections.length>1?`<button class="btn btn-danger btn-xs" onclick="deleteVideoSection(${i})">✕</button>`:''}
+    </div>`;
+  });
+  h+=`</div>
+    <button class="btn btn-primary btn-sm" onclick="addVideoSection()">+ Nouvelle section</button>
+  </div>
+
+  <div class="admin-card"><h3>➕ Ajouter une vidéo</h3>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:2"><label class="form-label">URL YouTube</label><input class="form-input" id="vid-url" placeholder="https://www.youtube.com/watch?v=... ou /shorts/..."></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
+    </div>
+    <div class="form-row" style="max-width:300px"><label class="form-label">Section</label><select class="form-input" id="vid-section">${sections.map(s=>`<option value="${s.id}">${s.title}</option>`).join('')}</select></div>
+    <div id="vid-preview" style="margin-top:8px"></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addVideo()">🎬 Ajouter</button></div>
+  </div>`;
+
+  // Liste par section
+  sections.forEach(sec=>{
+    const secVids=videosData.filter(v=>v.section===sec.id).sort((a,b)=>(a.order||0)-(b.order||0));
+    // Also include orphan videos in default section
+    const orphans=sec.id==='default'?videosData.filter(v=>!v.section||!sections.find(s=>s.id===v.section)):[];
+    const allVids=[...secVids,...orphans.filter(v=>!secVids.find(sv=>sv.id===v.id))];
+
+    h+=`<div class="admin-card"><h3>🎬 ${sec.title} (${allVids.length})</h3>`;
+    if(!allVids.length) h+=`<div class="empty"><div class="text">Aucune vidéo</div></div>`;
+    else allVids.forEach((v,i)=>{
+      const thumb=`https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg`;
+      const typeLabel=v.type==='short'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">SHORT</span>':'<span style="font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">VIDÉO</span>';
+      h+=`<div class="list-item" style="align-items:center">
+        <img src="${thumb}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">
+        <div class="list-item-content" style="flex:1">
+          <div class="list-item-text">${v.caption||'Sans titre'}${typeLabel}</div>
+          <div class="list-item-meta"><a href="https://youtube.com/watch?v=${v.ytId}" target="_blank" style="color:var(--blue);font-size:10px">${v.ytId}</a></div>
+        </div>
+        <div class="list-item-actions" style="display:flex;gap:4px;align-items:center">
+          <button class="btn btn-ghost btn-xs" onclick="moveVideo('${v.id}','${sec.id}',-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveVideo('${v.id}','${sec.id}',1)" ${i===allVids.length-1?'disabled':''}>▼</button>
+          <button class="btn btn-ghost btn-xs" onclick="editVideo('${v.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteVideo('${v.id}')">✕</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+
+  el.innerHTML=h;
+
+  // URL preview
+  const urlInput=document.getElementById('vid-url');
+  if(urlInput) urlInput.addEventListener('input',()=>{
+    const p=parseYoutubeUrl(urlInput.value);
+    const prev=document.getElementById('vid-preview');
+    if(p&&prev){
+      const thumb=`https://img.youtube.com/vi/${p.id}/mqdefault.jpg`;
+      prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:11px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short (9:16)':'Vidéo classique (16:9)'}</div></div></div>`;
+    } else if(prev){ prev.innerHTML=''; }
+  });
+}
+
+function getVideoSections(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  return ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
+}
+
+function addVideoSection(){
+  const sections=getVideoSections();
+  const newId='sec_'+Date.now();
+  openModal(`<h3>Nouvelle section vidéo</h3>
+    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-vsec-title" placeholder="Ex: Shorts du salon, Interviews..."></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid">Grille</option><option value="carousel">Carrousel</option></select></div>
+      <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="6"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveNewVideoSection('${newId}')">✅ Créer</button></div>`);
+}
+async function saveNewVideoSection(newId){
+  const sections=getVideoSections();
+  sections.push({
+    id:newId,
+    title:document.getElementById('m-vsec-title').value.trim()||'Nouvelle section',
+    display:document.getElementById('m-vsec-display').value,
+    visibleCount:parseInt(document.getElementById('m-vsec-count').value)||6
+  });
+  saving(true);
+  await evRef().update({videoSections:sections});
+  closeModal();toast('Section créée');
+}
+
+function editVideoSection(idx){
+  const sections=getVideoSections();
+  const s=sections[idx];if(!s)return;
+  openModal(`<h3>Modifier la section</h3>
+    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-vsec-title" value="${(s.title||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid"${s.display==='grid'?' selected':''}>Grille</option><option value="carousel"${s.display==='carousel'?' selected':''}>Carrousel</option></select></div>
+      <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="${s.visibleCount||6}"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveEditVideoSection(${idx})">💾 Enregistrer</button></div>`);
+}
+async function saveEditVideoSection(idx){
+  const sections=getVideoSections();
+  sections[idx].title=document.getElementById('m-vsec-title').value.trim();
+  sections[idx].display=document.getElementById('m-vsec-display').value;
+  sections[idx].visibleCount=parseInt(document.getElementById('m-vsec-count').value)||6;
+  saving(true);
+  await evRef().update({videoSections:sections});
+  closeModal();toast('Section modifiée');
+}
+async function deleteVideoSection(idx){
+  const sections=getVideoSections();
+  if(!confirm('Supprimer la section "'+sections[idx].title+'" ? Les vidéos seront déplacées dans la première section.'))return;
+  const delId=sections[idx].id;
+  const firstId=sections[0].id!==delId?sections[0].id:(sections[1]?sections[1].id:'default');
+  // Move videos to first section
+  const orphans=videosData.filter(v=>v.section===delId);
+  for(const v of orphans){await subCol('videos').doc(v.id).update({section:firstId});}
+  sections.splice(idx,1);
+  saving(true);
+  await evRef().update({videoSections:sections});
+  toast('Section supprimée');
+}
+
+async function addVideo(){
+  const url=document.getElementById('vid-url').value.trim();
+  const caption=document.getElementById('vid-caption').value.trim();
+  const section=document.getElementById('vid-section').value;
+  const parsed=parseYoutubeUrl(url);
+  if(!parsed){toast('URL YouTube invalide','error');return;}
+  if(videosData.find(v=>v.ytId===parsed.id)){toast('Vidéo déjà ajoutée','error');return;}
+  const secVids=videosData.filter(v=>v.section===section);
+  saving(true);
+  await subCol('videos').add({
+    ytId:parsed.id,type:parsed.type,url:url,caption:caption,section:section,
+    order:secVids.length,
+    created_at:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('vid-url').value='';document.getElementById('vid-caption').value='';
+  document.getElementById('vid-preview').innerHTML='';
+  toast('Vidéo ajoutée');
+}
+
+function editVideo(id){
+  const v=videosData.find(x=>x.id===id);if(!v)return;
+  const sections=getVideoSections();
+  const secOpts=sections.map(s=>`<option value="${s.id}"${v.section===s.id?' selected':''}>${s.title}</option>`).join('');
+  openModal(`<h3>Modifier la vidéo</h3>
+    <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-vid-caption" value="${(v.caption||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Type</label><select class="form-input" id="m-vid-type"><option value="video"${v.type==='video'?' selected':''}>Vidéo (16:9)</option><option value="short"${v.type==='short'?' selected':''}>Short (9:16)</option></select></div>
+      <div class="form-row"><label class="form-label">Section</label><select class="form-input" id="m-vid-section">${secOpts}</select></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveVideoEdit('${id}')">💾 Enregistrer</button></div>`);
+}
+async function saveVideoEdit(id){
+  saving(true);
+  await subCol('videos').doc(id).update({
+    caption:document.getElementById('m-vid-caption').value.trim(),
+    type:document.getElementById('m-vid-type').value,
+    section:document.getElementById('m-vid-section').value
+  });
+  closeModal();toast('Modifié');
+}
+async function deleteVideo(id){if(!confirm('Supprimer cette vidéo ?'))return;saving(true);await subCol('videos').doc(id).delete();toast('Supprimé');}
+async function moveVideo(id,secId,dir){
+  const secVids=videosData.filter(v=>v.section===secId||(secId==='default'&&!v.section)).sort((a,b)=>(a.order||0)-(b.order||0));
+  const idx=secVids.findIndex(v=>v.id===id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=secVids.length)return;
+  saving(true);
+  await Promise.all([
+    subCol('videos').doc(secVids[idx].id).update({order:newIdx}),
+    subCol('videos').doc(secVids[newIdx].id).update({order:idx})
+  ]);
+  toast('Ordre modifié');
+}
 
 // ==================== WIDGET ====================
 function renderWidget(el){
@@ -1671,7 +2002,33 @@ function renderWidget(el){
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
 
-  let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Deux méthodes pour intégrer la page live sur TourMaG.com, comme le dashboard crise au Moyen-Orient.</div>
+  let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
+
+  <div class="admin-card"><h3>🎛️ Paramétrage du widget compact</h3>
+    <div class="form-row"><label class="form-label">URL du bouton « Accéder au Live »</label><input class="form-input" id="w-cta-url" value="${(ev.widgetCtaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages par défaut.</div></div>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)"><label class="form-label" style="margin-bottom:10px;display:block">Zone personnalisable (sous la frise)</label>
+      <div class="form-row"><label class="form-label">Texte (optionnel)</label><textarea class="form-input" id="w-footer-text" rows="3" placeholder="Ex: Retrouvez toute l'actualité du salon en direct sur TourMaG.com…" style="resize:vertical">${(ev.widgetFooterText||'').replace(/</g,'&lt;')}</textarea></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Bouton — Libellé</label><textarea class="form-input" id="w-footer-btn-label" rows="2" placeholder="Ex: Lire le dossier complet sur TourMaG" style="resize:vertical">${(ev.widgetFooterBtnLabel||'').replace(/</g,'&lt;')}</textarea></div>
+        <div class="form-row"><label class="form-label">Bouton — URL</label><input class="form-input" id="w-footer-btn-url" value="${(ev.widgetFooterBtnUrl||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Disposition</label>
+          <select class="form-input" id="w-footer-layout">
+            <option value="row"${(ev.widgetFooterLayout||'row')==='row'?' selected':''}>Côte à côte (texte à gauche, bouton à droite)</option>
+            <option value="col"${ev.widgetFooterLayout==='col'?' selected':''}>Empilé (texte au-dessus, bouton en dessous)</option>
+            <option value="center"${ev.widgetFooterLayout==='center'?' selected':''}>Centré (tout centré)</option>
+            <option value="btn-only"${ev.widgetFooterLayout==='btn-only'?' selected':''}>Bouton seul (pleine largeur, centré)</option>
+          </select>
+        </div>
+        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur de fond</label>
+          <div style="display:flex;align-items:center;gap:10px"><input type="color" id="w-footer-color" value="${ev.widgetFooterColor||'#1B1B2F'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"><span id="w-footer-color-val" style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text2)">${ev.widgetFooterColor||'#1B1B2F'}</span></div></div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:6px">Si aucun texte ni bouton n'est renseigné, la zone ne s'affiche pas.</div>
+    </div>
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetConfig()">💾 Enregistrer la configuration</button></div>
+  </div>
 
   <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe)</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live complète dans un iframe avec auto-resize. <strong>Recommandé</strong> — isolation CSS totale, aucun conflit avec le CMS.</p>
@@ -1712,17 +2069,23 @@ window.addEventListener('message',function(e){
         <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${widgetUrl}');toast('URL copiée')">📋</button>
       </div>
     </div>
-  </div>
-
-  <div class="admin-card"><h3>💡 Déploiement</h3>
-    <div style="font-size:11px;color:var(--text2);line-height:1.7">
-      <p><strong>1.</strong> Hébergez les fichiers <code>index.html</code> et <code>widget.html</code> sur GitHub Pages (<code>tourmag13.github.io/tourmag-live/</code>).</p>
-      <p style="margin-top:6px"><strong>2.</strong> Collez le code d'intégration (option 1 ou 2) dans un encart HTML de votre CMS TourMaG.</p>
-      <p style="margin-top:6px"><strong>3.</strong> Le postMessage auto-resize ajuste la hauteur de l'iframe automatiquement — aucune hauteur fixe requise.</p>
-      <p style="margin-top:10px;padding:8px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;color:#92400E">⚠️ Remplacez <code>tourmag13.github.io/tourmag-live</code> par votre vrai domaine si différent.</p>
-    </div>
   </div>`;
   el.innerHTML=h;
+  // Live update color label
+  const cInput=document.getElementById('w-footer-color');
+  if(cInput) cInput.addEventListener('input',()=>{document.getElementById('w-footer-color-val').textContent=cInput.value;});
+}
+async function saveWidgetConfig(){
+  saving(true);
+  await evRef().update({
+    widgetCtaUrl:document.getElementById('w-cta-url').value.trim(),
+    widgetFooterText:document.getElementById('w-footer-text').value.trim(),
+    widgetFooterBtnLabel:document.getElementById('w-footer-btn-label').value.trim(),
+    widgetFooterBtnUrl:document.getElementById('w-footer-btn-url').value.trim(),
+    widgetFooterColor:document.getElementById('w-footer-color').value,
+    widgetFooterLayout:document.getElementById('w-footer-layout').value
+  });
+  toast('Configuration widget enregistrée');
 }
 function copyEmbed(id){
   const el=document.getElementById(id);
