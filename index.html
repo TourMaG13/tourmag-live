@@ -586,17 +586,24 @@ function render(data){
 
   function mkProgramme(){
     if(mod.programme===false || !programme || !programme.length) return '';
-    const grouped={};const dayOrder=[];
+    const storedOrder=event.programmeDayOrder||[];
+    const grouped={};const seenDays=new Set();const allDays=[];
     programme.forEach(p => {
       const d=p.day||'';
-      if(!grouped[d]){grouped[d]=[];dayOrder.push(d);}
+      if(!grouped[d])grouped[d]=[];
       grouped[d].push(p);
+      if(d&&!seenDays.has(d)){seenDays.add(d);allDays.push(d);}
     });
+    // Day order: stored first, then any new days
+    const dayOrder=[...storedOrder.filter(d=>seenDays.has(d))];
+    allDays.forEach(d=>{if(!dayOrder.includes(d))dayOrder.push(d);});
+    if(grouped['']) dayOrder.push(''); // items without day at the end
     // Sort within each day by order then time
     Object.values(grouped).forEach(items=>items.sort((a,b)=>(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||'')));
-    const hasMultipleDays=dayOrder.length>1 || (dayOrder.length===1 && dayOrder[0]!=='');
+    const hasMultipleDays=dayOrder.filter(d=>d).length>0;
     let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
     dayOrder.forEach(day => {
+      if(!grouped[day]||!grouped[day].length) return;
       if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;color:#B45309;margin:6px 0 4px;padding:3px 8px;background:rgba(245,158,11,.1);border-radius:5px;display:inline-block">📅 ${day}</div>`;
       grouped[day].forEach(p => {
         const st = autoStatus(p.time, day);
@@ -716,14 +723,20 @@ function render(data){
   // Full-width blocks first
   fullBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
 
-  // Then 2-column layout
-  h += `<div class="layout"><div class="main-col">`;
-  mainBlocks.forEach(key=>{
-    const fn=blockRenderers[key];if(fn)h+=fn();
-  });
-  h += `</div><div class="side-col">`;
-  sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
-  h += `</div></div>`;
+  // Then 2-column layout (skip sidebar if empty)
+  const hasMain=mainBlocks.some(k=>{const fn=blockRenderers[k];return fn;});
+  const hasSide=sideBlocks.some(k=>{const fn=blockRenderers[k];return fn;});
+  if(hasMain && hasSide){
+    h += `<div class="layout"><div class="main-col">`;
+    mainBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+    h += `</div><div class="side-col">`;
+    sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+    h += `</div></div>`;
+  } else if(hasMain){
+    mainBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+  } else if(hasSide){
+    sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+  }
   h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Synthèse IA par Claude</div>`;
 
   document.getElementById('app').innerHTML = h;
