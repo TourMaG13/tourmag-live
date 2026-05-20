@@ -169,21 +169,21 @@ def generate_essential(db, event_ref, event_data, ctx):
     articles_block = "\n".join(ctx["article_titles"][:20]) or "(vide)"
 
     prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
-Analyse les données suivantes et génère 4 à 6 points essentiels synthétiques pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
+À partir des articles ci-dessous liés à l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}), génère 4 à 6 points essentiels de synthèse.
 
---- FIL LIVE ---
-{live_block}
-
---- ARTICLES LIÉS ---
+--- ARTICLES À SYNTHÉTISER ---
 {articles_block}
+
+{f"--- FIL LIVE (contexte complémentaire) ---{chr(10)}{live_block}" if ctx["live_texts"] else ""}
 
 Tags disponibles : {', '.join(tag_names)}
 
 Chaque point doit :
 - Avoir un tag parmi ceux disponibles
-- Avoir un texte bref et percutant (1-2 phrases, max 30 mots)
+- Synthétiser un fait marquant issu des articles
+- Être bref et percutant (1-2 phrases, max 30 mots)
 - Utiliser <strong>nom propre</strong> pour les entités clés
-- Couvrir des aspects différents de l'événement
+- Couvrir des aspects différents
 
 Réponds UNIQUEMENT en JSON, sans backticks :
 [{{"tag":"TAG","text":"Texte avec <strong>entité</strong> en gras."}}, ...]"""
@@ -229,18 +229,14 @@ def generate_timeline(db, event_ref, event_data, ctx):
     essential_block = "\n".join(ctx["essential_texts"]) or "(vide)"
 
     prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
-Crée une frise chronologique (timeline) pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
+À partir des articles ci-dessous, crée une frise chronologique pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
 
---- FIL LIVE ---
-{live_block}
-
---- ARTICLES LIÉS ---
+--- ARTICLES ---
 {articles_block}
 
---- POINTS ESSENTIELS ---
-{essential_block}
+{f"--- POINTS ESSENTIELS (contexte) ---{chr(10)}{essential_block}" if ctx["essential_texts"] else ""}
 
-Génère entre 4 et 7 jalons chronologiques. Chaque jalon :
+Génère entre 4 et 7 jalons chronologiques basés sur les faits marquants des articles. Chaque jalon :
 - date courte (ex: "28 sept.", "30 sept. AM", "1 oct.")
 - texte bref (max 20 mots) résumant un fait marquant
 
@@ -417,41 +413,52 @@ def main():
 
     db = init_firebase()
 
-    # Récupérer tous les événements actifs (status == 'live')
-    events = db.collection("events").where("status", "==", "live").stream()
+    # Récupérer TOUS les événements (pas seulement live)
+    events = db.collection("events").stream()
     event_list = [(doc.id, doc.to_dict()) for doc in events]
 
     if not event_list:
-        print("ℹ️ Aucun événement live actif", flush=True)
+        print("ℹ️ Aucun événement trouvé", flush=True)
         return
 
     for event_id, event_data in event_list:
-        print(f"\n📡 Événement: {event_data.get('title', event_id)}", flush=True)
+        has_rss = bool(event_data.get("rssFeeds"))
+        has_ia_ess = event_data.get("iaEssential") is not False and event_data.get("iaEssential") is not None
+        has_ia_tl = event_data.get("iaTimeline") is not False and event_data.get("iaTimeline") is not None
+
+        # Skip events with nothing to do
+        if not has_rss and not has_ia_ess and not has_ia_tl:
+            continue
+
+        print(f"\n📡 Événement: {event_data.get('title', event_id)} (status: {event_data.get('status','?')})", flush=True)
         event_ref = db.collection("events").doc(event_id)
 
-        # Collecter le contexte
+        # 1. Import RSS
+        rss_count = 0
+        if has_rss:
+            rss_count = import_rss(db, event_ref, event_data)
+
+        # Collecter le contexte (après import RSS pour inclure les nouveaux articles)
         ctx = collect_context(db, event_ref, event_data)
 
-        # 1. Import RSS
-        rss_count = import_rss(db, event_ref, event_data)
-        if rss_count:
-            # Re-collecter le contexte après l'import RSS (nouveaux articles)
-            time.sleep(1)
-            ctx = collect_context(db, event_ref, event_data)
-
-        # 2. Points essentiels IA
-        if event_data.get("iaEssential") is not False:
-            ess_count = generate_essential(db, event_ref, event_data, ctx)
-            if ess_count:
-                time.sleep(AI_PAUSE)
-                # Re-collecter pour la timeline (avec les nouveaux points)
-                ctx = collect_context(db, event_ref, event_data)
+        # 2. Points essentiels IA (synthèse des articles)
+        if has_ia_ess:
+            if ctx["article_titles"]:
+                ess_count = generate_essential(db, event_ref, event_data, ctx)
+                if ess_count:
+                    time.sleep(AI_PAUSE)
+                    ctx = collect_context(db, event_ref, event_data)
+            else:
+                print("  ⏭ Aucun article à synthétiser", flush=True)
         else:
             print("  ⏭ IA Essentiel désactivée", flush=True)
 
         # 3. Timeline IA
-        if event_data.get("iaTimeline") is not False:
-            generate_timeline(db, event_ref, event_data, ctx)
+        if has_ia_tl:
+            if ctx["article_titles"]:
+                generate_timeline(db, event_ref, event_data, ctx)
+            else:
+                print("  ⏭ Aucun article pour la timeline", flush=True)
         else:
             print("  ⏭ IA Timeline désactivée", flush=True)
 
