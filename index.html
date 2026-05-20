@@ -206,14 +206,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .prog-card .ci svg{width:16px;height:16px}
 .prog-card .ct{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:#78350F}
 .prog-list{padding:8px 12px}
-.prog-item{display:flex;gap:10px;padding:7px 10px;margin-bottom:4px;border:1px solid #F59E0B20;border-radius:8px;background:rgba(255,255,255,.55);align-items:flex-start;transition:background .15s}
+.prog-item{display:flex;gap:10px;padding:7px 10px;margin-bottom:4px;border:1px solid #F59E0B20;border-radius:8px;background:rgba(255,255,255,.55);align-items:center;transition:background .15s}
 .prog-item:hover{background:rgba(255,255,255,.8)}
 .prog-item:last-child{margin-bottom:0}
 .prog-time{font-family:'IBM Plex Mono';font-size:10px;font-weight:600;color:#B45309;flex-shrink:0;width:38px;padding-top:1px}
 .prog-body{flex:1}
 .prog-label{font-size:11px;font-weight:600;color:#1C1917;line-height:1.4}
 .prog-desc{font-size:9px;color:#57534E;margin-top:1px;line-height:1.4}
-.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;margin-top:3px}
+.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
 .prog-status.past{background:#E7E5E4;color:#78716C}
 .prog-status.active{background:#DC2626;color:#fff;animation:pulse 1.5s infinite}
 .prog-status.upcoming{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B50}
@@ -602,7 +602,7 @@ function render(data){
         const st = autoStatus(p.time, day);
         const sl = st==='past'?'Terminé':st==='active'?'● En cours':'À venir';
         const hasTime = p.time && p.time.trim();
-        o += `<div class="prog-item">${hasTime?`<div class="prog-time">${p.time}</div>`:''}<div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}<span class="prog-status ${st}">${sl}</span></div></div>`;
+        o += `<div class="prog-item">${hasTime?`<div class="prog-time">${p.time}</div>`:''}<div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}</div><span class="prog-status ${st}">${sl}</span></div>`;
       });
     });
     o += `</div></div>`;
@@ -697,10 +697,8 @@ function render(data){
   const blockZones=event.blockZones||defaultZones;
   const allBlockKeys=['hero','flash','live','citations','videos','programme','articles'];
 
-  // Build ordered lists per zone from blockOrder
   const fullBlockOrder = event.blockOrder || ['hero','flash','live','citations','programme','articles'];
   const orderedKeys=[...fullBlockOrder];
-  // Migration: if old format had essential/timeline separately, merge them into hero
   const migIdx=orderedKeys.indexOf('essential');
   if(migIdx>=0){
     orderedKeys.splice(migIdx,1);
@@ -711,9 +709,14 @@ function render(data){
   allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
   const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
 
-  const mainBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])!=='side');
+  const fullBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
+  const mainBlocks=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
   const sideBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
 
+  // Full-width blocks first
+  fullBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+
+  // Then 2-column layout
   h += `<div class="layout"><div class="main-col">`;
   mainBlocks.forEach(key=>{
     const fn=blockRenderers[key];if(fn)h+=fn();
