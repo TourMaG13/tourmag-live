@@ -321,7 +321,7 @@ def import_rss(db, event_ref, event_data):
                     except:
                         pass
 
-                # Image : chercher "imagette" d'abord, puis enclosures, puis og:image
+                # Image : chercher "imagette" d'abord, puis photo:imgsrc, enclosures, puis og:image
                 image = ""
                 # Chercher dans le contenu brut
                 raw_content = ""
@@ -331,10 +331,22 @@ def import_rss(db, event_ref, event_data):
                 raw_content += getattr(entry, "summary", "")
                 raw_content += getattr(entry, "description", "")
 
-                # Priorité : URL contenant "imagette"
+                # Priorité 1 : URL contenant "imagette"
                 imagette_match = re.search(r'https?://[^"\'\s<>]*imagette[^"\'\s<>]*', raw_content, re.IGNORECASE)
                 if imagette_match:
                     image = imagette_match.group(0)
+
+                # Priorité 2 : balise photo:imgsrc (TourMaG custom RSS tag)
+                if not image:
+                    # feedparser expose les tags custom dans le namespace
+                    photo_imgsrc = getattr(entry, "photo_imgsrc", None)
+                    if photo_imgsrc:
+                        image = photo_imgsrc.strip()
+                    # Aussi chercher dans le raw XML via regex sur la description/summary
+                    if not image:
+                        photo_match = re.search(r'<photo:imgsrc[^>]*>([^<]+)</photo:imgsrc>', raw_content, re.IGNORECASE)
+                        if photo_match:
+                            image = photo_match.group(1).strip()
 
                 # Enclosures
                 if not image:
