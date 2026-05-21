@@ -144,6 +144,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .citation-avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(232,132,44,.35);box-shadow:0 4px 16px rgba(0,0,0,.25);flex-shrink:0}
 .citation-avatar-placeholder{width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .citation-avatar-placeholder svg{width:40px;height:40px}
+
+/* Citation grand format photo */
+.citation-card-large{display:flex;flex-direction:column}
+.citation-photo-large{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:14px}
 .citation-info{flex:1}
 .citation-name{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:#fff}
 .citation-role{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
@@ -528,13 +532,22 @@ function render(data){
     function mkCitGroup(group){
       let out = '';
       const c0 = group[0];
-      out += `<div class="citation-card"><div class="citation-author" style="margin-bottom:14px">`;
-      if(c0.avatar){
-        out += `<img class="citation-avatar" src="${c0.avatar}" alt="" onerror="this.style.display='none'">`;
+      const isLarge = c0.photoFormat === 'large';
+      if(isLarge && c0.avatar){
+        // Grand format: photo rectangle au-dessus
+        out += `<div class="citation-card citation-card-large">`;
+        out += `<img class="citation-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()">`;
+        out += `<div class="citation-info" style="margin-bottom:14px"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div>`;
       } else {
-        out += `<div class="citation-avatar-placeholder">${ICO.user}</div>`;
+        // Médaillon: photo ronde à gauche (comportement actuel)
+        out += `<div class="citation-card"><div class="citation-author" style="margin-bottom:14px">`;
+        if(c0.avatar){
+          out += `<img class="citation-avatar" src="${c0.avatar}" alt="" onerror="this.style.display='none'">`;
+        } else {
+          out += `<div class="citation-avatar-placeholder">${ICO.user}</div>`;
+        }
+        out += `<div class="citation-info"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div></div>`;
       }
-      out += `<div class="citation-info"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div></div>`;
       group.forEach((c,i) => {
         if(i>0) out += `<hr class="citation-sep">`;
         out += `<div class="citation-text">${c.text}</div>`;
