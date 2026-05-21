@@ -364,13 +364,15 @@ async function init(){
 }
 init();
 
-// IFRAME RESIZE
+// IFRAME RESIZE — envoie toujours la hauteur maximale observée (ne rétrécit jamais)
+var _maxHeight=0;
 function sendHeight(){
   const h=document.getElementById('encart');
   if(!h)return;
-  const height=h.offsetHeight;
-  window.parent.postMessage({type:'tourmag-live-resize',height},'*');
-  window.parent.postMessage({type:'setHeight',height},'*');
+  const height=h.scrollHeight;
+  if(height>_maxHeight) _maxHeight=height;
+  window.parent.postMessage({type:'tourmag-live-resize',height:_maxHeight},'*');
+  window.parent.postMessage({type:'setHeight',height:_maxHeight},'*');
 }
 window.addEventListener('load',()=>{sendHeight();setInterval(sendHeight,1500);new ResizeObserver(sendHeight).observe(document.getElementById('encart'));});
 </script>
