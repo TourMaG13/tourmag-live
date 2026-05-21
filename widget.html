@@ -51,7 +51,7 @@
 .er-cit-body{flex:1;min-width:0}
 .er-cit-name{font-family:'Josefin Sans';font-size:11px;font-weight:700;color:#fff;margin-bottom:1px}
 .er-cit-role{font-size:9px;color:rgba(255,255,255,.35);margin-bottom:6px}
-.er-cit-text{font-size:10px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.er-cit-text{font-size:10px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5}
 .er-cit-nav{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
 .er-cit-pag{font-family:'IBM Plex Mono';font-size:9px;color:rgba(255,255,255,.3)}
 
@@ -214,6 +214,40 @@ function renderEncart(data){
   }
 
   document.getElementById('encart').innerHTML=h;
+
+  // Measure max heights for carousels to prevent layout shifts
+  requestAnimationFrame(()=>{
+    // Fix essential block height
+    const essEl=document.getElementById('er-ess');
+    if(essEl && essential && essential.length>1){
+      let maxH=0;
+      for(let i=0;i<essential.length;i++){
+        showEss(i, essential);
+        maxH=Math.max(maxH, essEl.scrollHeight);
+      }
+      essEl.style.minHeight=maxH+'px';
+      showEss(0, essential);
+    }
+
+    // Fix citation block height
+    const citEl=document.getElementById('er-cit');
+    if(citEl && citations && citations.length>1){
+      let maxH=0;
+      for(let i=0;i<citations.length;i++){
+        showCit(i);
+        maxH=Math.max(maxH, citEl.scrollHeight);
+      }
+      citEl.style.minHeight=maxH+'px';
+      showCit(0);
+    }
+
+    // Fix total widget height after measuring
+    requestAnimationFrame(()=>{
+      const encart=document.getElementById('encart');
+      if(encart) encart.style.minHeight=encart.scrollHeight+'px';
+      sendHeight();
+    });
+  });
 
   // Start essential carousel (8s per slide)
   if(essential&&essential.length>1){
