@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow:hidden!important;scrollbar-width:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er{max-width:1200px;margin:0 auto;font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#1B1B2F 0%,#2D1B4E 40%,#1B1B2F 100%);border-radius:16px;overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
 .er::before{content:'';position:absolute;top:-40px;right:-40px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,132,44,.1) 0%,transparent 70%);pointer-events:none}
 
@@ -215,61 +217,64 @@ function renderEncart(data){
 
   document.getElementById('encart').innerHTML=h;
 
-  // Measure max heights for carousels to prevent layout shifts
+  // After rendering, measure max heights then lock everything
   requestAnimationFrame(()=>{
-    // Fix essential block height
     const essEl=document.getElementById('er-ess');
+    const citEl=document.getElementById('er-cit');
+
+    // Measure max essential height
     if(essEl && essential && essential.length>1){
       let maxH=0;
       for(let i=0;i<essential.length;i++){
         showEss(i, essential);
         maxH=Math.max(maxH, essEl.scrollHeight);
       }
-      essEl.style.minHeight=maxH+'px';
+      essEl.style.height=maxH+'px';
+      essEl.style.overflow='hidden';
+      showEss(0, essential);
+    } else if(essential&&essential.length===1){
       showEss(0, essential);
     }
 
-    // Fix citation block height
-    const citEl=document.getElementById('er-cit');
+    // Measure max citation height
     if(citEl && citations && citations.length>1){
       let maxH=0;
       for(let i=0;i<citations.length;i++){
         showCit(i);
         maxH=Math.max(maxH, citEl.scrollHeight);
       }
-      citEl.style.minHeight=maxH+'px';
+      citEl.style.height=maxH+'px';
+      citEl.style.overflow='hidden';
+      showCit(0);
+    } else if(citations&&citations.length){
       showCit(0);
     }
 
-    // Fix total widget height after measuring
+    // Lock total widget height after one more frame
     requestAnimationFrame(()=>{
       const encart=document.getElementById('encart');
-      if(encart) encart.style.minHeight=encart.scrollHeight+'px';
+      if(encart){
+        _maxHeight=encart.scrollHeight;
+        encart.style.height=_maxHeight+'px';
+        encart.style.overflow='hidden';
+      }
       sendHeight();
+
+      // NOW start the carousels (after height is locked)
+      if(essential&&essential.length>1){
+        essTimer=setInterval(()=>{
+          essIdx=(essIdx+1)%essential.length;
+          showEss(essIdx, essential);
+        },8000);
+      }
+      if(citations&&citations.length>1){
+        citTimer=setInterval(()=>{
+          citIdx=(citIdx+1)%citations.length;
+          showCit(citIdx);
+        },10000);
+      }
     });
   });
-
-  // Start essential carousel (8s per slide)
-  if(essential&&essential.length>1){
-    showEss(0, essential);
-    essTimer=setInterval(()=>{
-      essIdx=(essIdx+1)%essential.length;
-      showEss(essIdx, essential);
-    },8000);
-  } else if(essential&&essential.length===1){
-    showEss(0, essential);
-  }
-
-  // Start citations carousel (10s per slide)
-  if(citations&&citations.length){
-    showCit(0);
-    if(citations.length>1){
-      citTimer=setInterval(()=>{
-        citIdx=(citIdx+1)%citations.length;
-        showCit(citIdx);
-      },10000);
-    }
-  }
 }
 
 function showEss(idx, pts){
