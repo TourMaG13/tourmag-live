@@ -214,7 +214,7 @@ select.form-input{cursor:pointer}
   </div>
 </div>
 
-<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="modal-overlay" id="modal">
   <div class="modal-box" id="modal-box"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -316,6 +316,47 @@ function toast(msg,type='success'){
 }
 function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('show');}
 function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+// ==================== IMAGE UPLOAD ====================
+function getUploadUrl(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  return ev.uploadUrl||'';
+}
+function mkUploadBtn(targetInputId){
+  return `<button type="button" class="btn btn-ghost btn-sm" onclick="uploadImageTo('${targetInputId}')" title="Upload depuis l'appareil" style="flex-shrink:0">📷</button>`;
+}
+function imgFieldHtml(id, value, placeholder){
+  return `<div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="${id}" value="${(value||'').replace(/"/g,'&quot;')}" placeholder="${placeholder||'https://...'}" style="flex:1">${mkUploadBtn(id)}</div>`;
+}
+async function uploadImageTo(targetInputId){
+  const url=getUploadUrl();
+  if(!url){toast('Configurez l\'URL d\'upload dans l\'onglet Intégration','error');return;}
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+  input.capture='environment'; // ouvre la caméra sur mobile
+  input.onchange=async function(){
+    const file=input.files[0];
+    if(!file)return;
+    if(file.size>10*1024*1024){toast('Image trop volumineuse (max 10 Mo)','error');return;}
+    const target=document.getElementById(targetInputId);
+    if(target){target.value='⏳ Upload en cours...';target.disabled=true;}
+    try{
+      const fd=new FormData();
+      fd.append('image',file);
+      const resp=await fetch(url,{method:'POST',body:fd});
+      const data=await resp.json();
+      if(data.error){toast('Erreur: '+data.error,'error');if(target){target.value='';target.disabled=false;}return;}
+      if(target){target.value=data.url;target.disabled=false;}
+      toast('Image uploadée');
+    }catch(e){
+      console.error('Upload error:',e);
+      toast('Erreur d\'upload: '+e.message,'error');
+      if(target){target.value='';target.disabled=false;}
+    }
+  };
+  input.click();
+}
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
 function evRef(){ return db.collection('events').doc(currentEventId); }
@@ -574,7 +615,7 @@ function modifyEvent(id){
         <option value="ended"${ev.status==='ended'?' selected':''}>Terminé</option></select></div>
       <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
     </div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}"></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkUploadBtn('m-ev-logo')}</div></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
 }
 
@@ -800,7 +841,7 @@ function renderMedia(el){
 }
 function addMedia(){
   openModal(`<h3>Ajouter une photo</h3>
-    <div class="form-row"><label class="form-label">URL</label><input class="form-input" id="m-media-url" placeholder="https://..."></div>
+    <div class="form-row"><label class="form-label">URL</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}</div></div>
     <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()">📷 Ajouter</button></div>`);
 }
@@ -843,7 +884,7 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="live-image"></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkUploadBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     ${mediaPicker}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
@@ -1025,7 +1066,7 @@ function renderCitations(el){
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><input class="form-input" id="cit-avatar"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkUploadBtn('cit-avatar')}</div></div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter</button></div></div>
   <div class="admin-card"><h3>📋 Historique (${citationsData.length})</h3>`;
   if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
@@ -1063,7 +1104,7 @@ function editCitation(id){
   openModal(`<h3>Modifier la citation</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}"></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkUploadBtn('m-cit-avatar')}</div></div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveCitEdit('${id}')">💾 Enregistrer</button>
@@ -1305,7 +1346,7 @@ function renderArticles(el){
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="art-image"></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkUploadBtn('art-image')}</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
 
   <!-- FLUX RSS -->
@@ -2151,8 +2192,16 @@ function renderWidget(el){
 
   let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
 
-  <div class="admin-card"><h3>🎛️ Paramétrage du widget compact</h3>
+  <div class="admin-card"><h3>🔧 Configuration générale</h3>
     <div class="form-row"><label class="form-label">URL du bouton « Accéder au Live »</label><input class="form-input" id="w-cta-url" value="${(ev.widgetCtaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages par défaut.</div></div>
+
+    <div class="form-row" style="margin-top:14px"><label class="form-label">📷 URL du serveur d'upload d'images</label>
+      <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:11px">
+      <div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script <code>upload.php</code> hébergé sur votre serveur. Active les boutons 📷 dans les champs image (fil live, citations, médiathèque, articles, logo). ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré — upload indisponible</span>'}</div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>🎛️ Paramétrage du widget compact</h3>
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)"><label class="form-label" style="margin-bottom:10px;display:block">Zone personnalisable (sous la frise)</label>
       <div class="form-row"><label class="form-label">Texte (optionnel)</label><textarea class="form-input" id="w-footer-text" rows="3" placeholder="Ex: Retrouvez toute l'actualité du salon en direct sur TourMaG.com…" style="resize:vertical">${(ev.widgetFooterText||'').replace(/</g,'&lt;')}</textarea></div>
@@ -2229,13 +2278,14 @@ async function saveWidgetConfig(){
   saving(true);
   await evRef().update({
     widgetCtaUrl:document.getElementById('w-cta-url').value.trim(),
+    uploadUrl:document.getElementById('w-upload-url').value.trim(),
     widgetFooterText:document.getElementById('w-footer-text').value.trim(),
     widgetFooterBtnLabel:document.getElementById('w-footer-btn-label').value.trim(),
     widgetFooterBtnUrl:document.getElementById('w-footer-btn-url').value.trim(),
     widgetFooterColor:document.getElementById('w-footer-color').value,
     widgetFooterLayout:document.getElementById('w-footer-layout').value
   });
-  toast('Configuration widget enregistrée');
+  toast('Configuration enregistrée');
 }
 function copyEmbed(id){
   const el=document.getElementById(id);
