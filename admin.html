@@ -323,10 +323,10 @@ function getUploadUrl(){
   return ev.uploadUrl||'';
 }
 function mkUploadBtn(targetInputId){
-  return `<button type="button" class="btn btn-ghost btn-sm" onclick="uploadImageTo('${targetInputId}')" title="Upload depuis l'appareil" style="flex-shrink:0">📷</button>`;
+  return `<button type="button" class="btn btn-ghost btn-sm" onclick="uploadImageTo('${targetInputId}')" title="Upload depuis l'appareil" style="flex-shrink:0">📷 Upload</button>`;
 }
-function imgFieldHtml(id, value, placeholder){
-  return `<div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="${id}" value="${(value||'').replace(/"/g,'&quot;')}" placeholder="${placeholder||'https://...'}" style="flex:1">${mkUploadBtn(id)}</div>`;
+function mkMediaPickerBtn(targetInputId){
+  return `<button type="button" class="btn btn-ghost btn-sm" onclick="openMediaPicker('${targetInputId}')" title="Choisir dans la médiathèque" style="flex-shrink:0">📂 Médiathèque</button>`;
 }
 async function uploadImageTo(targetInputId){
   const url=getUploadUrl();
@@ -334,7 +334,7 @@ async function uploadImageTo(targetInputId){
   const input=document.createElement('input');
   input.type='file';
   input.accept='image/*';
-  input.capture='environment'; // ouvre la caméra sur mobile
+  input.capture='environment';
   input.onchange=async function(){
     const file=input.files[0];
     if(!file)return;
@@ -356,6 +356,28 @@ async function uploadImageTo(targetInputId){
     }
   };
   input.click();
+}
+function openMediaPicker(targetInputId){
+  let h=`<h3>📂 Médiathèque</h3>`;
+  if(!mediaData.length){
+    h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
+  } else {
+    h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
+    mediaData.forEach(m=>{
+      h+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickMedia('${targetInputId}','${(m.url||'').replace(/'/g,"\\'")}')" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
+        <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()">
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>`;
+  openModal(h);
+}
+function pickMedia(targetInputId,url){
+  const target=document.getElementById(targetInputId);
+  if(target) target.value=url;
+  closeModal();
+  toast('Image sélectionnée');
 }
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
@@ -615,7 +637,7 @@ function modifyEvent(id){
         <option value="ended"${ev.status==='ended'?' selected':''}>Terminé</option></select></div>
       <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
     </div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkUploadBtn('m-ev-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
 }
 
@@ -841,7 +863,7 @@ function renderMedia(el){
 }
 function addMedia(){
   openModal(`<h3>Ajouter une photo</h3>
-    <div class="form-row"><label class="form-label">URL</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}</div></div>
+    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}</div></div>
     <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()">📷 Ajouter</button></div>`);
 }
@@ -884,7 +906,7 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkUploadBtn('live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     ${mediaPicker}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
@@ -1066,7 +1088,8 @@ function renderCitations(el){
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkUploadBtn('cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}</div></div></div>
+    <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="cit-photo-format"><option value="round">Médaillon (rond)</option><option value="large">Photo grand format (rectangle)</option></select></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter</button></div></div>
   <div class="admin-card"><h3>📋 Historique (${citationsData.length})</h3>`;
   if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
@@ -1094,7 +1117,7 @@ async function addCitation(){
   const text=document.getElementById('cit-text').value.trim(),name=document.getElementById('cit-name').value.trim();
   if(!text||!name){toast('Citation et nom requis','error');return;}
   saving(true);
-  await subCol('citations').add({text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,created_at:firebase.firestore.FieldValue.serverTimestamp()});
+  await subCol('citations').add({text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,photoFormat:document.getElementById('cit-photo-format').value,created_at:firebase.firestore.FieldValue.serverTimestamp()});
   _citDraft={text:'',name:'',role:'',rub:'',avatar:''};
   ['cit-text','cit-name','cit-role','cit-avatar'].forEach(x=>document.getElementById(x).value='');toast('Ajoutée');
 }
@@ -1104,7 +1127,8 @@ function editCitation(id){
   openModal(`<h3>Modifier la citation</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkUploadBtn('m-cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}</div></div></div>
+    <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="m-cit-photo-format"><option value="round"${(c.photoFormat||'round')==='round'?' selected':''}>Médaillon (rond)</option><option value="large"${c.photoFormat==='large'?' selected':''}>Photo grand format (rectangle)</option></select></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveCitEdit('${id}')">💾 Enregistrer</button>
@@ -1117,7 +1141,8 @@ async function saveCitEdit(id){
     name:document.getElementById('m-cit-name').value.trim(),
     role:document.getElementById('m-cit-role').value,
     rubrique:document.getElementById('m-cit-rub').value,
-    avatar:document.getElementById('m-cit-avatar').value
+    avatar:document.getElementById('m-cit-avatar').value,
+    photoFormat:document.getElementById('m-cit-photo-format').value
   });
   closeModal();toast('Modifié');
 }
@@ -1346,7 +1371,7 @@ function renderArticles(el){
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkUploadBtn('art-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
 
   <!-- FLUX RSS -->
