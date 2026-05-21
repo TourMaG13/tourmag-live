@@ -230,9 +230,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .ft{font-size:10px;color:var(--text3);text-align:center;padding:20px 0;border-top:1px solid var(--border);margin-top:24px}
 .ft a{color:var(--acc2);text-decoration:none}
 
-/* SCROLLBAR */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
+/* SCROLLBAR — masquer */
+html,body{overflow-x:hidden}
+::-webkit-scrollbar{width:0;display:none}
+*{scrollbar-width:none}
 </style>
 </head>
 <body>
@@ -479,8 +480,6 @@ function render(data){
       const hasIA = essential.some(p => p.source === 'ia');
       const hasManual = essential.some(p => p.source === 'manual' || !p.source);
       o += `</div>`;
-      if(hasIA && !hasManual) o += `<div class="hero-ess-ia">✦ Synthèse générée par IA à partir des articles liés</div>`;
-      else if(hasIA && hasManual) o += `<div class="hero-ess-ia">✦ Points essentiels — IA + rédaction</div>`;
     }
 
     // Timeline
@@ -737,7 +736,7 @@ function render(data){
   } else if(hasSide){
     sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
   }
-  h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Synthèse IA par Claude</div>`;
+  h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a></div>`;
 
   document.getElementById('app').innerHTML = h;
   document.getElementById('upd-bar').innerHTML = `Dernière mise à jour : ${fmtDT(new Date().toISOString())}`;
