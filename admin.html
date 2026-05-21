@@ -146,6 +146,7 @@ select.form-input{cursor:pointer}
 /* BLOCK LAYOUT PREVIEW — DRAG & DROP */
 .block-layout-preview{border:2px solid var(--border);border-radius:12px;overflow:hidden;background:#F8FAFC}
 .block-layout-title{background:linear-gradient(135deg,#1B1B2F,#2D1B4E);padding:12px 16px}
+.block-layout-full-zone{padding:10px;border-bottom:1px solid var(--border);background:rgba(99,102,241,.03)}
 .block-layout-title-inner{display:flex;align-items:center;gap:8px;font-family:'Josefin Sans';font-size:12px;font-weight:700;color:rgba(255,255,255,.6)}
 .bdg-demo{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;background:var(--red);padding:3px 8px;border-radius:4px;margin-left:auto}
 .block-layout-zone-label{font-family:'Josefin Sans';font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px}
@@ -623,12 +624,10 @@ function renderModules(el){
   const mod=ev?.modules||{};
   const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
 
-  const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
+    const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
   const blockOrder=ev?.blockOrder||defaultOrder;
   const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
   const blockZones=ev?.blockZones||defaultZones;
-
-  // All draggable blocks
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
     {key:'flash',icon:'⚡',label:'Bandeau Flash'},
@@ -639,80 +638,33 @@ function renderModules(el){
     {key:'articles',icon:'📰',label:'Articles liés'}
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
-
-  // Build ordered lists per zone from blockOrder
   const orderedKeys=[...blockOrder];
-  // Migration: old format may have essential/timeline separately
   const migIdx=orderedKeys.indexOf('essential');
-  if(migIdx>=0){
-    orderedKeys.splice(migIdx,1);
-    const tlIdx=orderedKeys.indexOf('timeline');
-    if(tlIdx>=0) orderedKeys.splice(tlIdx,1);
-    if(!orderedKeys.includes('hero')) orderedKeys.unshift('hero');
-  }
+  if(migIdx>=0){orderedKeys.splice(migIdx,1);const ti=orderedKeys.indexOf('timeline');if(ti>=0)orderedKeys.splice(ti,1);if(!orderedKeys.includes('hero'))orderedKeys.unshift('hero');}
   allBlocks.forEach(b=>{if(!orderedKeys.includes(b.key))orderedKeys.push(b.key);});
   const validKeys=orderedKeys.filter(k=>blockMap[k]);
-
-  const mainItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])!=='side');
+  const fullItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
+  const mainItems=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
   const sideItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
 
+  function renderDI(items){let o='';items.forEach(key=>{const b=blockMap[key];if(!b)return;const dis=mod[b.key]===false;o+=`<div class="block-drag-item${dis?' disabled':''}" draggable="true" data-key="${key}"><span class="block-drag-handle">⠿</span><span class="block-drag-icon">${b.icon}</span><span class="block-drag-label">${b.label}</span>${dis?'<span class="block-drag-off">OFF</span>':''}</div>`;});return o;}
+
   let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs par glisser-déposer.</div>
-
   <div class="admin-card"><h3>🧩 Visibilité</h3>`;
-  mods.forEach(m=>{
-    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${mod[m.key]!==false?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
-  });
+  mods.forEach(m=>{h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${mod[m.key]!==false?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
   h+=`</div>
-
-  <div class="admin-card"><h3>↕️ Structure de la page — glisser-déposer</h3>
-    <div class="page-desc" style="margin-bottom:12px">Glissez les blocs pour réordonner la page. Vous pouvez déplacer n'importe quel bloc d'une colonne à l'autre.</div>
+  <div class="admin-card"><h3>↕️ Structure de la page</h3>
+    <div class="page-desc" style="margin-bottom:12px">3 zones : pleine largeur, colonne principale, sidebar.</div>
     <div class="block-layout-preview">
-      <div class="block-layout-title">
-        <div class="block-layout-title-inner">
-          <span style="font-size:14px">📡</span>
-          <span>Titre de l'événement</span>
-          <span class="bdg-demo">EN DIRECT</span>
-        </div>
-      </div>
+      <div class="block-layout-title"><div class="block-layout-title-inner"><span style="font-size:14px">📡</span><span>Titre de l'événement</span><span class="bdg-demo">EN DIRECT</span></div></div>
+      <div class="block-layout-full-zone"><div class="block-layout-zone-label">⬛ Pleine largeur</div><div class="block-drop-zone" id="drop-full" data-zone="full">${renderDI(fullItems)}</div></div>
       <div class="block-layout-body">
-        <div class="block-layout-col block-layout-main">
-          <div class="block-layout-zone-label">Colonne principale</div>
-          <div class="block-drop-zone" id="drop-main" data-zone="main">`;
-
-  mainItems.forEach(key=>{
-    const b=blockMap[key];if(!b)return;
-    const disabled=mod[b.key]===false;
-    h+=`<div class="block-drag-item${disabled?' disabled':''}" draggable="true" data-key="${key}">
-      <span class="block-drag-handle">⠿</span>
-      <span class="block-drag-icon">${b.icon}</span>
-      <span class="block-drag-label">${b.label}</span>
-      ${disabled?'<span class="block-drag-off">OFF</span>':''}
-    </div>`;
-  });
-
-  h+=`</div></div>
-        <div class="block-layout-col block-layout-side">
-          <div class="block-layout-zone-label">Sidebar</div>
-          <div class="block-drop-zone" id="drop-side" data-zone="side">`;
-
-  sideItems.forEach(key=>{
-    const b=blockMap[key];if(!b)return;
-    const disabled=mod[b.key]===false;
-    h+=`<div class="block-drag-item${disabled?' disabled':''}" draggable="true" data-key="${key}">
-      <span class="block-drag-handle">⠿</span>
-      <span class="block-drag-icon">${b.icon}</span>
-      <span class="block-drag-label">${b.label}</span>
-      ${disabled?'<span class="block-drag-off">OFF</span>':''}
-    </div>`;
-  });
-
-  h+=`</div></div>
+        <div class="block-layout-col block-layout-main"><div class="block-layout-zone-label">Colonne principale</div><div class="block-drop-zone" id="drop-main" data-zone="main">${renderDI(mainItems)}</div></div>
+        <div class="block-layout-col block-layout-side"><div class="block-layout-zone-label">Sidebar</div><div class="block-drop-zone" id="drop-side" data-zone="side">${renderDI(sideItems)}</div></div>
       </div>
     </div>
   </div>`;
   el.innerHTML=h;
-
-  // Init drag and drop
   initBlockDragDrop();
 }
 
@@ -766,17 +718,15 @@ function getDragAfterElement(zone,y){
 }
 
 async function saveBlockOrder(){
-  // Read order from DOM
+  const fullItems=[...document.querySelectorAll('#drop-full .block-drag-item')].map(el=>el.dataset.key);
   const mainItems=[...document.querySelectorAll('#drop-main .block-drag-item')].map(el=>el.dataset.key);
   const sideItems=[...document.querySelectorAll('#drop-side .block-drag-item')].map(el=>el.dataset.key);
-  const newOrder=[...mainItems,...sideItems];
+  const newOrder=[...fullItems,...mainItems,...sideItems];
   if(!newOrder.length)return;
-
-  // Update zone assignments
   const newZones={};
+  fullItems.forEach(k=>newZones[k]='full');
   mainItems.forEach(k=>newZones[k]='main');
   sideItems.forEach(k=>newZones[k]='side');
-
   saving(true);
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;}
@@ -1140,23 +1090,31 @@ async function saveCitVisible(){
 
 // ==================== PROGRAMME ====================
 function renderProgramme(el){
-  // Collect unique days
-  const days=[];const daySet=new Set();
-  programmeData.forEach(p=>{const d=p.day||'';if(!daySet.has(d)){daySet.add(d);days.push(d);}});
-  const dayOpts=days.filter(d=>d).map(d=>`<option value="${d}">${d}</option>`).join('');
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  // Get day order from event doc, or build from data
+  const dayOrderStored=ev.programmeDayOrder||[];
+  const allDays=[];const daySet=new Set();
+  programmeData.forEach(p=>{const d=p.day||'';if(d&&!daySet.has(d)){daySet.add(d);allDays.push(d);}});
+  // Merge: stored order first, then any new days not yet in the order
+  const dayOrder=[...dayOrderStored.filter(d=>daySet.has(d))];
+  allDays.forEach(d=>{if(!dayOrder.includes(d))dayOrder.push(d);});
+  const dayOpts=dayOrder.map(d=>`<option value="${d}">${d}</option>`).join('');
 
   let h=`<div class="page-title">Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
 
-  <div class="admin-card"><h3>📅 Jours</h3>
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px" id="prog-days-list">`;
-  days.filter(d=>d).forEach((day,i)=>{
+  <div class="admin-card"><h3>📅 Jours — ordre d'affichage</h3>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+  dayOrder.forEach((day,i)=>{
     const count=programmeData.filter(p=>p.day===day).length;
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-      <span style="font-size:12px;font-weight:600;flex:1">${day}</span>
+      <span style="font-size:12px;font-weight:600;flex:1">📅 ${day}</span>
       <span style="font-size:9px;color:var(--text3)">${count} élément${count>1?'s':''}</span>
-      <button class="btn btn-ghost btn-xs" onclick="renameDay('${day.replace(/'/g,"\\'")}')">✏️</button>
+      <button class="btn btn-ghost btn-xs" onclick="moveDayOrder(${i},-1)" ${i===0?'disabled':''}>▲</button>
+      <button class="btn btn-ghost btn-xs" onclick="moveDayOrder(${i},1)" ${i===dayOrder.length-1?'disabled':''}>▼</button>
+      <button class="btn btn-ghost btn-xs" onclick="renameDay(${i})">✏️</button>
     </div>`;
   });
+  if(!dayOrder.length) h+=`<div style="font-size:11px;color:var(--text3);padding:8px">Aucun jour créé. Ajoutez un élément avec un jour.</div>`;
   h+=`</div></div>
 
   <div class="admin-card"><h3>➕ Ajouter</h3>
@@ -1170,23 +1128,30 @@ function renderProgramme(el){
   <div class="admin-card"><h3>📋 Programme</h3>`;
   if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
   else{
-    const grouped={};const groupOrder=[];
+    // Group by day, respecting dayOrder
+    const grouped={};
     programmeData.forEach(p=>{
       const d=p.day||'(sans jour)';
-      if(!grouped[d]){grouped[d]=[];groupOrder.push(d);}
+      if(!grouped[d])grouped[d]=[];
       grouped[d].push(p);
     });
-    groupOrder.forEach(day=>{
+    // Sort each group by order
+    Object.values(grouped).forEach(items=>items.sort((a,b)=>(a.order||0)-(b.order||0)));
+    // Display order: stored day order, then orphans
+    const displayOrder=[...dayOrder];
+    if(grouped['(sans jour)']) displayOrder.push('(sans jour)');
+    displayOrder.forEach(day=>{
       const items=grouped[day];
-      h+=`<div style="margin-bottom:16px"><div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px;padding:6px 10px;background:rgba(232,132,44,.08);border-radius:6px;display:inline-flex;align-items:center;gap:8px">📅 ${day}<button class="btn btn-ghost btn-xs" onclick="renameDay('${day.replace(/'/g,"\\'")}')" style="font-size:8px;padding:2px 6px">✏️</button></div>`;
+      if(!items||!items.length) return;
+      h+=`<div style="margin-bottom:16px"><div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px;padding:6px 10px;background:rgba(232,132,44,.08);border-radius:6px;display:inline-block">📅 ${day}</div>`;
       items.forEach((p,i)=>{
         const st=autoStatus(p.time, p.day);
         const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
         const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
         const timeDisplay=p.time?`<div class="list-item-time">${p.time}</div>`:'';
         h+=`<div class="list-item">${timeDisplay}<div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions" style="display:flex;gap:3px;align-items:center">
-          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}','${day.replace(/'/g,"\\'")}',-1)" ${i===0?'disabled':''}>▲</button>
-          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}','${day.replace(/'/g,"\\'")}',1)" ${i===items.length-1?'disabled':''}>▼</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}',-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}',1)" ${i===items.length-1?'disabled':''}>▼</button>
           <button class="btn btn-ghost btn-xs" onclick="editProgramme('${p.id}')">✏️</button>
           <button class="btn btn-danger btn-xs" onclick="deleteProgramme('${p.id}')">✕</button>
         </div></div>`;
@@ -1196,6 +1161,57 @@ function renderProgramme(el){
   }
   h+=`</div>`; el.innerHTML=h;
 }
+
+function getDayOrder(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const stored=ev.programmeDayOrder||[];
+  const allDays=[];const s=new Set();
+  programmeData.forEach(p=>{const d=p.day||'';if(d&&!s.has(d)){s.add(d);allDays.push(d);}});
+  const order=[...stored.filter(d=>s.has(d))];
+  allDays.forEach(d=>{if(!order.includes(d))order.push(d);});
+  return order;
+}
+
+async function moveDayOrder(idx,dir){
+  const order=getDayOrder();
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=order.length)return;
+  [order[idx],order[newIdx]]=[order[newIdx],order[idx]];
+  saving(true);
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(ev) ev.programmeDayOrder=order;
+  await evRef().update({programmeDayOrder:order});
+  renderTab();
+  toast('Ordre des jours mis à jour');
+}
+
+function renameDay(idx){
+  const order=getDayOrder();
+  const oldDay=order[idx]||'';
+  openModal(`<h3>Renommer le jour</h3>
+    <div class="form-row"><label class="form-label">Nom actuel : <strong>${oldDay}</strong></label><input class="form-input" id="m-rename-day" value="${oldDay.replace(/"/g,'&quot;')}" placeholder="Nouveau nom"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="executeRenameDay(${idx})">💾 Renommer</button></div>`);
+}
+async function executeRenameDay(idx){
+  const order=getDayOrder();
+  const oldDay=order[idx];
+  const newDay=document.getElementById('m-rename-day').value.trim();
+  if(!newDay){toast('Nom requis','error');return;}
+  if(newDay===oldDay){closeModal();return;}
+  saving(true);
+  // Update all programme items with this day
+  const items=programmeData.filter(p=>p.day===oldDay);
+  for(const p of items){
+    await subCol('programme').doc(p.id).update({day:newDay});
+  }
+  // Update day order
+  order[idx]=newDay;
+  await evRef().update({programmeDayOrder:order});
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(ev) ev.programmeDayOrder=order;
+  closeModal();toast(items.length+' éléments mis à jour');
+}
+
 function getProgDay(){
   const sel=document.getElementById('prog-day-select').value;
   const nw=document.getElementById('prog-day-new').value.trim();
@@ -1208,14 +1224,19 @@ async function addProgramme(){
   saving(true);
   const dayItems=programmeData.filter(p=>(p.day||'')===(day||''));
   await subCol('programme').add({time:time||'',label,desc:document.getElementById('prog-desc').value,day,order:dayItems.length});
+  // Add day to order if new
+  if(day){
+    const order=getDayOrder();
+    if(!order.includes(day)){order.push(day);await evRef().update({programmeDayOrder:order});}
+  }
   document.getElementById('prog-label').value='';document.getElementById('prog-desc').value='';document.getElementById('prog-day-new').value='';toast('Ajouté');
 }
 function editProgramme(id){
   const p=programmeData.find(x=>x.id===id);if(!p)return;
-  const days=new Set();programmeData.forEach(x=>{if(x.day)days.add(x.day);});
-  const dayOpts=[...days].sort().map(d=>`<option value="${d}"${d===p.day?' selected':''}>${d}</option>`).join('');
+  const dayOrder=getDayOrder();
+  const dayOpts=dayOrder.map(d=>`<option value="${d}"${d===p.day?' selected':''}>${d}</option>`).join('');
   openModal(`<h3>Modifier</h3>
-    <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="m-prog-day-select"><option value="">—</option>${dayOpts}</select><input class="form-input" id="m-prog-day-new" placeholder="Nouveau jour" value="${(!p.day||[...days].includes(p.day))?'':p.day}"></div></div>
+    <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="m-prog-day-select"><option value="">—</option>${dayOpts}</select><input class="form-input" id="m-prog-day-new" placeholder="Nouveau jour" value="${(!p.day||dayOrder.includes(p.day))?'':p.day}"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure (optionnel)</label><input class="form-input" id="m-prog-time" type="time" value="${p.time||''}"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="m-prog-label" value="${(p.label||'').replace(/"/g,'&quot;')}"></div></div>
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="m-prog-desc" value="${(p.desc||'').replace(/"/g,'&quot;')}"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveProgrammeEdit('${id}')">💾 Enregistrer</button></div>`);
@@ -1224,12 +1245,14 @@ async function saveProgrammeEdit(id){
   saving(true);
   const dayNew=document.getElementById('m-prog-day-new').value.trim();
   const daySel=document.getElementById('m-prog-day-select').value;
+  const day=dayNew||daySel||'';
   await subCol('programme').doc(id).update({
     time:document.getElementById('m-prog-time').value||'',
     label:document.getElementById('m-prog-label').value.trim(),
     desc:document.getElementById('m-prog-desc').value,
-    day:dayNew||daySel||''
+    day
   });
+  if(day){const order=getDayOrder();if(!order.includes(day)){order.push(day);await evRef().update({programmeDayOrder:order});}}
   closeModal();toast('Modifié');
 }
 async function deleteProgramme(id){saving(true);await subCol('programme').doc(id).delete();toast('Supprimé');}
@@ -1250,8 +1273,11 @@ async function executeRenameDay(oldDay){
   }
   closeModal();toast(items.length+' éléments mis à jour');
 }
-async function moveProgInDay(id,day,dir){
-  const items=programmeData.filter(p=>(p.day||'(sans jour)')===day).sort((a,b)=>(a.order||0)-(b.order||0));
+async function moveProgInDay(id,dir){
+  const item=programmeData.find(p=>p.id===id);
+  if(!item)return;
+  const day=item.day||'';
+  const items=programmeData.filter(p=>(p.day||'')===day).sort((a,b)=>(a.order||0)-(b.order||0));
   const idx=items.findIndex(p=>p.id===id);
   if(idx<0)return;
   const newIdx=idx+dir;
@@ -1295,7 +1321,7 @@ function renderArticles(el){
       <div class="form-row" style="width:150px;margin-bottom:0"><label class="form-label">Label (optionnel)</label><input class="form-input" id="rss-label" placeholder="TourMaG"></div>
       <button class="btn btn-primary btn-sm" style="height:42px" onclick="addRssFeed()">＋ Ajouter</button>
     </div>
-    ${rssFeeds.length?`<div style="margin-top:14px"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button></div>`:''}
+    ${rssFeeds.length?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button><button class="btn btn-ghost" onclick="fixMissingImages()">🖼 Corriger images manquantes</button><button class="btn btn-ghost" onclick="debugRssImages()">🔍 Diagnostiquer</button></div>`:''}
     <div id="rss-preview" style="margin-top:12px"></div>
   </div>
 
@@ -1468,6 +1494,127 @@ async function fetchAllRss(){
   if(preview) preview.innerHTML=`<div style="font-size:11px;padding:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;color:#15803D">✓ ${imported} article${imported>1?'s':''} importé${imported>1?'s':''}, ${skipped} doublon${skipped>1?'s':''} ignoré${skipped>1?'s':''}.</div>`;
   if(btn){btn.disabled=false;btn.textContent='🔄 Importer les articles RSS';}
   if(imported) toast(imported+' article'+(imported>1?'s':'')+' importé'+(imported>1?'s':''));
+}
+
+async function fixMissingImages(){
+  const preview=document.getElementById('rss-preview');
+  if(!preview)return;
+  // Find articles without images
+  const noImg=articlesData.filter(a=>!a.image);
+  if(!noImg.length){toast('Tous les articles ont une image');return;}
+  preview.innerHTML=`<div style="font-size:11px;color:var(--text3)">🖼 Recherche d'images pour ${noImg.length} articles sans image...</div>`;
+
+  // Build a map of link→image from RSS feeds
+  const linkToImage={};
+  for(const feed of rssFeeds){
+    try{
+      const xml=await fetchRssXml(feed.url);
+      if(!xml) continue;
+      const parser=new DOMParser();
+      const doc=parser.parseFromString(xml,'text/xml');
+      const items=doc.querySelectorAll('item');
+      for(const item of items){
+        const link=item.querySelector('link')?.textContent?.trim()||'';
+        if(!link) continue;
+        const itemXml=new XMLSerializer().serializeToString(item);
+        let img='';
+        // imagette
+        const m1=itemXml.match(/https?:\/\/[^"'\s<>]*imagette[^"'\s<>]*/i);
+        if(m1) img=m1[0];
+        // photo:imgsrc
+        if(!img){const m2=itemXml.match(/<photo:imgsrc[^>]*>([^<]+)<\/photo:imgsrc>/i);if(m2) img=m2[1].trim();}
+        // any image URL
+        if(!img){const m3=itemXml.match(/https?:\/\/[^"'\s<>]+\.(jpe?g|png|webp)/gi);if(m3) img=m3[0];}
+        if(img) linkToImage[link]=img;
+      }
+    }catch(e){console.warn('RSS parse error',e);}
+  }
+
+  let fixed=0;
+  for(const a of noImg){
+    let img=linkToImage[a.link]||'';
+    // If not found in RSS, try og:image
+    if(!img && a.link){
+      try{img=await fetchOgImage(a.link);}catch(e){}
+    }
+    if(img){
+      await subCol('articles').doc(a.id).update({image:img});
+      fixed++;
+    }
+  }
+
+  preview.innerHTML=`<div style="font-size:11px;padding:10px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;color:#15803D">✅ ${fixed}/${noImg.length} images corrigées</div>`;
+  if(fixed) toast(fixed+' images récupérées');
+}
+
+async function debugRssImages(){
+  const preview=document.getElementById('rss-preview');
+  if(!preview)return;
+  preview.innerHTML='<div style="font-size:11px;color:var(--text3)">Analyse des flux en cours...</div>';
+  let html='<div style="font-size:11px;max-height:500px;overflow-y:auto;background:#1B1B2F;color:#E2E8F0;padding:14px;border-radius:10px;font-family:\'IBM Plex Mono\';line-height:1.8">';
+  for(const feed of rssFeeds){
+    html+=`<div style="color:#E8842C;font-weight:700;margin-bottom:6px">📡 ${feed.label||feed.url}</div>`;
+    try{
+      const xml=await fetchRssXml(feed.url);
+      if(!xml){html+=`<div style="color:#F87171">❌ Impossible de charger le flux</div>`;continue;}
+      const parser=new DOMParser();
+      const doc=parser.parseFromString(xml,'text/xml');
+      const items=doc.querySelectorAll('item');
+      let count=0;
+      for(const item of items){
+        if(count>=15)break;count++;
+        const title=item.querySelector('title')?.textContent?.trim()||'(sans titre)';
+        const itemXml=new XMLSerializer().serializeToString(item);
+
+        // Collect all image sources found
+        const sources=[];
+        // imagette
+        const img1=itemXml.match(/https?:\/\/[^"'\s<>]*imagette[^"'\s<>]*/i);
+        if(img1) sources.push({method:'imagette URL',url:img1[0]});
+        // photo:imgsrc
+        const img2=itemXml.match(/<photo:imgsrc[^>]*>([^<]+)<\/photo:imgsrc>/i);
+        if(img2) sources.push({method:'photo:imgsrc',url:img2[1].trim()});
+        // Also raw search
+        const img2b=itemXml.match(/imgsrc[^>]*>([^<]+)</i);
+        if(img2b&&!img2) sources.push({method:'imgsrc (raw)',url:img2b[1].trim()});
+        // enclosure
+        const enc=item.querySelector('enclosure');
+        if(enc) sources.push({method:'enclosure',url:enc.getAttribute('url')||'(vide)',type:enc.getAttribute('type')||''});
+        // media:content NS
+        const mc=item.getElementsByTagNameNS('http://search.yahoo.com/mrss/','content');
+        for(let i=0;i<mc.length;i++) sources.push({method:'media:content (NS)',url:mc[i].getAttribute('url')||''});
+        // media:thumbnail NS
+        const mt=item.getElementsByTagNameNS('http://search.yahoo.com/mrss/','thumbnail');
+        for(let i=0;i<mt.length;i++) sources.push({method:'media:thumbnail (NS)',url:mt[i].getAttribute('url')||''});
+        // img in description
+        const desc=item.querySelector('description')?.textContent||'';
+        const imgDesc=desc.match(/<img[^>]+src=["']([^"']+)/i);
+        if(imgDesc) sources.push({method:'<img> in description',url:imgDesc[1]});
+        // Any image URL in XML
+        const allImgs=itemXml.match(/https?:\/\/[^"'\s<>]+\.(jpe?g|png|webp)/gi);
+        if(allImgs) allImgs.slice(0,3).forEach(u=>sources.push({method:'URL image brute',url:u}));
+
+        const color=sources.length?'#34D399':'#F87171';
+        html+=`<div style="margin-bottom:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)">`;
+        html+=`<div style="color:${color};font-weight:600">${sources.length?'✅':'❌'} ${title.slice(0,80)}</div>`;
+        if(sources.length){
+          sources.forEach(s=>{
+            html+=`<div style="color:#94A3B8;font-size:10px;margin-left:12px">→ <span style="color:#60A5FA">${s.method}</span>: <span style="word-break:break-all">${(s.url||'').slice(0,120)}</span></div>`;
+          });
+        } else {
+          // Show raw XML snippet to help debug
+          const snippet=itemXml.replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,500);
+          html+=`<div style="color:#F87171;font-size:9px;margin-left:12px;opacity:.7">Aucune image trouvée. XML brut (500 premiers car.) :</div>`;
+          html+=`<div style="color:#64748B;font-size:8px;margin-left:12px;word-break:break-all;max-height:80px;overflow:hidden">${snippet}</div>`;
+        }
+        html+=`</div>`;
+      }
+    }catch(e){
+      html+=`<div style="color:#F87171">❌ Erreur: ${e.message}</div>`;
+    }
+  }
+  html+=`</div>`;
+  preview.innerHTML=html;
 }
 
 async function fetchRssXml(url){
@@ -2030,9 +2177,12 @@ function renderWidget(el){
     <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetConfig()">💾 Enregistrer la configuration</button></div>
   </div>
 
-  <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe)</h3>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live complète dans un iframe avec auto-resize. <strong>Recommandé</strong> — isolation CSS totale, aucun conflit avec le CMS.</p>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px" id="${iframeId}"&gt;&lt;/iframe&gt;
+  <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe pleine largeur)</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live en pleine largeur, en sortant du conteneur CMS TourMaG (max-width:666px). <strong>Recommandé.</strong></p>
+    <div style="position:relative"><textarea class="form-input" rows="12" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;div id="${iframeId}-wrap" style="position:relative;width:100vw;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;max-width:1200px;left:50%;transform:translateX(-50%);margin-left:0;margin-right:0"&gt;
+  &lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;style&gt;#${iframeId}-wrap{max-width:none!important}#${iframeId}-wrap img,#${iframeId}-wrap iframe{max-width:none!important}&lt;/style&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
