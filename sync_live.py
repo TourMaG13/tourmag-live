@@ -441,8 +441,8 @@ def main():
 
     for event_id, event_data in event_list:
         has_rss = bool(event_data.get("rssFeeds"))
-        has_ia_ess = event_data.get("iaEssential") is not False  # activé par défaut si non défini
-        has_ia_tl = event_data.get("iaTimeline") is not False    # activé par défaut si non défini
+        has_ia_ess = event_data.get("iaEssential") not in [False, "false", 0, "0", None]
+        has_ia_tl = event_data.get("iaTimeline") not in [False, "false", 0, "0", None]
 
         # Skip events with nothing to do
         if not has_rss and not has_ia_ess and not has_ia_tl:
