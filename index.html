@@ -470,7 +470,7 @@ function render(data){
     // Hero = titre + points essentiels + timeline — un seul bloc cohérent
     let o = `<div class="hero fi"><div class="hero-header"><div class="hero-left">`;
     if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
-    o += `<div class="hero-text"><div class="hero-title">${event.title}</div><div class="hero-subtitle"><span>${ICO.mapPin} ${event.location}</span><span>${ICO.calendar} ${event.dates}</span></div></div></div>`;
+    o += `<div class="hero-text">${event.title?`<div class="hero-title">${event.title}</div>`:''}${(event.location||event.dates)?`<div class="hero-subtitle">${event.location?`<span>${ICO.mapPin} ${event.location}</span>`:''}${event.dates?`<span>${ICO.calendar} ${event.dates}</span>`:''}</div>`:''}</div></div>`;
     o += `<div class="hero-meta">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}</div></div>`;
 
     // Essential (IA + manuels)
