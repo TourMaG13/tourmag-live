@@ -1775,7 +1775,7 @@ function renderTimelineHTML(){
 
   <div class="admin-card"><h3>🤖 IA Timeline</h3>
     <div class="toggle-row"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique de la timeline</span><label class="toggle"><input type="checkbox" ${iaTimelineEnabled?'checked':''} onchange="toggleIATimeline(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    <div style="font-size:9px;color:var(--text3);margin-top:6px">Quand activé, le cron génère automatiquement les jalons à partir des articles et du fil live.</div>
+    ${iaTimelineEnabled?`<div style="font-size:9px;color:var(--text3);margin-top:6px">Le cron génère automatiquement les jalons à partir des articles liés.</div>`:`<div style="font-size:10px;color:var(--text3);margin-top:6px;padding:6px 10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;display:inline-block">⏸ IA désactivée</div>`}
   </div>
 
   <div class="admin-card"><h3>➕ Jalon manuel</h3>
@@ -1945,13 +1945,13 @@ function renderIAHTML(){
 
   <div class="admin-card"><h3>🤖 Génération IA</h3>
     <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    <div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    ${iaEssentialEnabled?`<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span>Dernière génération : <strong style="color:var(--text2)">${lastGen}</strong></span>
       <span style="opacity:.4">·</span>
       <span>Cron : 6h · 10h · 14h · 18h</span>
       <span style="opacity:.4">·</span>
       <span>Points IA : <strong style="color:var(--violet)">${ia.length}</strong></span>
-    </div>
+    </div>`:`<div style="font-size:10px;color:var(--text3);padding:6px 10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;display:inline-block">⏸ IA désactivée — aucune génération automatique${ia.length?` · ${ia.length} anciens points IA en base`:''}</div>`}
     ${ia.length?`<div style="margin-top:10px"><button class="btn btn-danger btn-sm" onclick="clearIAPoints()">🗑 Supprimer les points IA</button></div>`:''}
   </div>
 
