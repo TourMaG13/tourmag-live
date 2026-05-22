@@ -526,7 +526,7 @@ function switchEvent(id){
 
 function updateTopbarSelect(){
   const sel=document.getElementById('topbar-event-select');
-  sel.innerHTML=eventsData.map(e=>`<option value="${e.id}"${e.id===currentEventId?' selected':''}>${e.title||'Sans titre'}</option>`).join('');
+  sel.innerHTML=eventsData.map(e=>`<option value="${e.id}"${e.id===currentEventId?' selected':''}>${e.internalName||e.title||'Sans titre'}</option>`).join('');
 }
 
 var subCollectionsEventId=''; // track which event's subcollections we're listening to
@@ -643,7 +643,7 @@ function renderEvents(el){
     const baseUrl=window.location.origin+window.location.pathname.replace('admin.html','');
     const widgetUrl=baseUrl+'widget.html?event='+ev.id;
     h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
-      <div class="event-card-title">${ev.title||'Sans titre'}${st}</div>
+      <div class="event-card-title">${ev.internalName||ev.title||'Sans titre'}${st}</div>
       <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
       <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -652,7 +652,7 @@ function renderEvents(el){
       </div>
       <div style="margin-top:10px;display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();modifyEvent('${ev.id}')">✏️ Modifier</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmRemoveEvent('${ev.id}','${(ev.title||'').replace(/'/g,"\\'")}')">🗑 Supprimer</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmRemoveEvent('${ev.id}','${(ev.internalName||ev.title||'').replace(/'/g,"\\'")}')">🗑 Supprimer</button>
       </div></div>`;
   });
   if(!eventsData.length) h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
@@ -663,7 +663,7 @@ function renderEvents(el){
 async function newEvent(){
   saving(true);
   const ref=await db.collection('events').add({
-    title:'Nouvel événement',subtitle:'',location:'',dates:'',status:'upcoming',
+    internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true},
@@ -716,7 +716,8 @@ async function executeRemoveEvent(id,title){
 function modifyEvent(id){
   const ev=eventsData.find(e=>e.id===id);if(!ev)return;
   openModal(`<h3>Modifier l'événement</h3>
-    <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-title" value="${ev.title||''}"></div>
+    <div class="form-row"><label class="form-label">Nom interne (back-office uniquement)</label><input class="form-input" id="m-ev-internal" value="${(ev.internalName||ev.title||'').replace(/"/g,'&quot;')}" placeholder="Ex: Forum des Pionniers 2026"><div style="font-size:9px;color:var(--text3);margin-top:3px">Affiché dans le dropdown, la liste d'événements et la sidebar. Non visible sur le front.</div></div>
+    <div class="form-row"><label class="form-label">Titre affiché (front — optionnel)</label><input class="form-input" id="m-ev-title" value="${(ev.title||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide si le logo suffit"><div style="font-size:9px;color:var(--text3);margin-top:3px">S'affiche dans le hero du front à côté du logo. Si vide, seul le logo apparaît.</div></div>
     <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="m-ev-subtitle" value="${ev.subtitle||''}"></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-ev-location" value="${ev.location||''}"></div>
@@ -736,6 +737,7 @@ function modifyEvent(id){
 async function updateEvent(id){
   saving(true);
   await db.collection('events').doc(id).update({
+    internalName:document.getElementById('m-ev-internal').value,
     title:document.getElementById('m-ev-title').value,
     subtitle:document.getElementById('m-ev-subtitle').value,
     location:document.getElementById('m-ev-location').value,
