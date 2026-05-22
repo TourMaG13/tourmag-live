@@ -209,6 +209,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-section">Système</div>
       <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
+      <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
     </div>
     <div class="admin-main" id="admin-main"></div>
   </div>
@@ -316,6 +317,62 @@ function toast(msg,type='success'){
 }
 function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('show');}
 function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+// ==================== ROLES & TAB VISIBILITY ====================
+function isSuperAdmin(){
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  const superAdmins=ev?.superAdmins||[];
+  // If no super admins defined, everyone is super admin (retrocompat)
+  if(!superAdmins.length) return true;
+  const email=(auth.currentUser?.email||'').toLowerCase();
+  return superAdmins.some(e=>(e||'').toLowerCase()===email);
+}
+
+function applyTabVisibility(){
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  const hiddenTabs=ev?.hiddenTabs||[];
+  const superAdmin=isSuperAdmin();
+
+  document.querySelectorAll('.sidebar-item').forEach(item=>{
+    const tab=item.dataset.tab;
+    if(!tab) return;
+
+    // "access" tab only visible to super admins
+    if(tab==='access'){
+      item.style.display=superAdmin?'':'none';
+      return;
+    }
+
+    // For other tabs: hidden if in hiddenTabs AND user is not super admin
+    if(!superAdmin && hiddenTabs.includes(tab)){
+      item.style.display='none';
+    } else {
+      item.style.display='';
+    }
+  });
+
+  // Also hide sidebar sections if all their items are hidden
+  document.querySelectorAll('.sidebar-section').forEach(sec=>{
+    let next=sec.nextElementSibling;
+    let anyVisible=false;
+    while(next && !next.classList.contains('sidebar-section')){
+      if(next.classList.contains('sidebar-item') && next.style.display!=='none') anyVisible=true;
+      next=next.nextElementSibling;
+    }
+    sec.style.display=anyVisible?'':'none';
+  });
+
+  // If current tab is hidden, switch to first visible tab
+  if(!superAdmin && hiddenTabs.includes(currentTab)){
+    const firstVisible=document.querySelector('.sidebar-item[style=""],.sidebar-item:not([style])');
+    if(firstVisible && firstVisible.dataset.tab){
+      currentTab=firstVisible.dataset.tab;
+      document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+      firstVisible.classList.add('active');
+      renderTab();
+    }
+  }
+}
 
 // ==================== IMAGE UPLOAD ====================
 function getUploadUrl(){
@@ -492,6 +549,7 @@ function initApp(){
     updateTopbarSelect();
     const ev=eventsData.find(e=>e.id===currentEventId);
     tagsData=ev&&ev.tags?ev.tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'];
+    applyTabVisibility();
     // Subscribe to sub-collections if not yet done for this event
     if(currentEventId && subCollectionsEventId!==currentEventId){
       subscribeSubCollections();
@@ -571,6 +629,7 @@ function renderTab(){
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
+    case 'access':renderAccess(main);break;
   }
 }
 
@@ -2236,6 +2295,103 @@ async function moveVideo(id,secId,dir){
     subCol('videos').doc(secVids[newIdx].id).update({order:idx})
   ]);
   toast('Ordre modifié');
+}
+
+// ==================== ACCÈS ====================
+function renderAccess(el){
+  if(!isSuperAdmin()){el.innerHTML='<div class="page-title">Accès refusé</div>';return;}
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const superAdmins=ev.superAdmins||[];
+  const hiddenTabs=ev.hiddenTabs||[];
+
+  const allTabs=[
+    {key:'events',icon:'📋',label:'Mes événements'},
+    {key:'programme',icon:'🗓',label:'Programme'},
+    {key:'flash',icon:'⚡',label:'Flash info'},
+    {key:'essentiel',icon:'🧠',label:'L\'essentiel'},
+    {key:'live',icon:'📡',label:'Fil live'},
+    {key:'citations',icon:'💬',label:'Citations'},
+    {key:'articles',icon:'📰',label:'Articles liés'},
+    {key:'videos',icon:'🎬',label:'Vidéos'},
+    {key:'media',icon:'📷',label:'Médiathèque'},
+    {key:'rubriques',icon:'📁',label:'Rubriques'},
+    {key:'tags',icon:'🏷',label:'Tags live'},
+    {key:'modules',icon:'⚙️',label:'Modules'},
+    {key:'widget',icon:'📦',label:'Widget homepage'}
+  ];
+
+  let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Définissez les super admins et choisissez les onglets visibles pour les autres utilisateurs.</div>
+
+  <div class="admin-card"><h3>👑 Super administrateurs</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Les super admins voient tous les onglets et ont accès à cette page. Si la liste est vide, tout le monde a un accès complet.</div>
+    <div id="access-admins-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+  superAdmins.forEach((email,i)=>{
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:12px">👑</span>
+      <span style="font-size:12px;font-family:'IBM Plex Mono';flex:1">${email}</span>
+      <button class="btn btn-danger btn-xs" onclick="removeSuperAdmin(${i})">✕</button>
+    </div>`;
+  });
+  if(!superAdmins.length) h+=`<div style="font-size:11px;color:var(--text3);padding:8px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px">⚠️ Aucun super admin défini — tous les utilisateurs ont un accès complet.</div>`;
+  h+=`</div>
+    <div style="display:flex;gap:8px"><input class="form-input" id="access-new-email" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addSuperAdmin()">+ Ajouter</button></div>
+  </div>
+
+  <div class="admin-card"><h3>👁 Onglets visibles pour les admins</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Décochez les onglets que vous souhaitez masquer aux utilisateurs non super-admin. L'onglet "Accès" est toujours réservé aux super admins.</div>`;
+  allTabs.forEach(t=>{
+    const visible=!hiddenTabs.includes(t.key);
+    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${t.icon}</span>${t.label}</span><label class="toggle"><input type="checkbox" ${visible?'checked':''} onchange="toggleTabVisibility('${t.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+  });
+  h+=`</div>`;
+
+  el.innerHTML=h;
+}
+
+async function addSuperAdmin(){
+  const email=document.getElementById('access-new-email').value.trim().toLowerCase();
+  if(!email||!email.includes('@')){toast('Email invalide','error');return;}
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const superAdmins=[...(ev.superAdmins||[])];
+  if(superAdmins.includes(email)){toast('Déjà super admin','error');return;}
+  superAdmins.push(email);
+  saving(true);
+  await evRef().update({superAdmins});
+  if(ev) ev.superAdmins=superAdmins;
+  document.getElementById('access-new-email').value='';
+  renderTab();
+  toast('Super admin ajouté');
+}
+
+async function removeSuperAdmin(idx){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const superAdmins=[...(ev.superAdmins||[])];
+  const removed=superAdmins.splice(idx,1);
+  // Prevent removing yourself if you're the last one
+  if(!superAdmins.length){
+    if(!confirm('Vous allez supprimer le dernier super admin. Tous les utilisateurs auront un accès complet. Continuer ?'))return;
+  }
+  saving(true);
+  await evRef().update({superAdmins});
+  if(ev) ev.superAdmins=superAdmins;
+  applyTabVisibility();
+  renderTab();
+  toast('Super admin retiré');
+}
+
+async function toggleTabVisibility(tabKey,visible){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let hiddenTabs=[...(ev.hiddenTabs||[])];
+  if(visible){
+    hiddenTabs=hiddenTabs.filter(t=>t!==tabKey);
+  } else {
+    if(!hiddenTabs.includes(tabKey)) hiddenTabs.push(tabKey);
+  }
+  saving(true);
+  await evRef().update({hiddenTabs});
+  if(ev) ev.hiddenTabs=hiddenTabs;
+  applyTabVisibility();
+  toast(visible?'Onglet visible':'Onglet masqué');
 }
 
 // ==================== WIDGET ====================
