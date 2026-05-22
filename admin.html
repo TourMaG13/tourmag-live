@@ -358,26 +358,59 @@ async function uploadImageTo(targetInputId){
   input.click();
 }
 function openMediaPicker(targetInputId){
+  // Store the target input ID globally so it survives modal replacement
+  window._mediaPickerTarget=targetInputId;
+  // If we're already in a modal (e.g. citation edit), save its content to restore later
+  const modalBox=document.getElementById('modal-box');
+  const isNested=document.getElementById('modal').classList.contains('show');
+  if(isNested) window._savedModalHtml=modalBox.innerHTML;
+  else window._savedModalHtml=null;
+
   let h=`<h3>📂 Médiathèque</h3>`;
   if(!mediaData.length){
     h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
   } else {
     h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
-    mediaData.forEach(m=>{
-      h+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickMedia('${targetInputId}','${(m.url||'').replace(/'/g,"\\'")}')" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
+    mediaData.forEach((m,i)=>{
+      h+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickMediaItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
         <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()">
       </div>`;
     });
     h+=`</div>`;
   }
-  h+=`<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>`;
+  h+=`<div class="modal-footer"><button class="btn btn-ghost" onclick="closeMediaPicker()">Fermer</button></div>`;
   openModal(h);
 }
-function pickMedia(targetInputId,url){
-  const target=document.getElementById(targetInputId);
-  if(target) target.value=url;
-  closeModal();
-  toast('Image sélectionnée');
+function pickMediaItem(idx){
+  const m=mediaData[idx];
+  if(!m)return;
+  const url=m.url||'';
+  const targetId=window._mediaPickerTarget;
+
+  // Restore previous modal if it was nested, or close
+  if(window._savedModalHtml){
+    document.getElementById('modal-box').innerHTML=window._savedModalHtml;
+    window._savedModalHtml=null;
+    // Set the value after restoring the modal
+    setTimeout(()=>{
+      const target=document.getElementById(targetId);
+      if(target) target.value=url;
+      toast('Image sélectionnée');
+    },50);
+  } else {
+    closeModal();
+    const target=document.getElementById(targetId);
+    if(target) target.value=url;
+    toast('Image sélectionnée');
+  }
+}
+function closeMediaPicker(){
+  if(window._savedModalHtml){
+    document.getElementById('modal-box').innerHTML=window._savedModalHtml;
+    window._savedModalHtml=null;
+  } else {
+    closeModal();
+  }
 }
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
@@ -897,7 +930,6 @@ function _restoreLiveDraft(){
 function renderLive(el){
   _saveLiveDraft();
   const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}">${n}</option>`;}).join('');
-  const mediaPicker=mediaData.length?`<div class="form-row"><label class="form-label">Ou choisir dans la médiathèque</label><div class="media-grid" id="media-picker">${mediaData.map(m=>`<div class="media-thumb" onclick="pickMedia('${m.url}',this)"><img src="${m.url}" alt=""></div>`).join('')}</div></div>`:'';
 
   let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
@@ -908,7 +940,6 @@ function renderLive(el){
     </div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
-    ${mediaPicker}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
   </div>
   <div class="admin-card"><h3>📜 Historique (${liveData.length})</h3><div style="max-height:600px;overflow-y:auto">`;
