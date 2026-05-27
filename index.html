@@ -112,7 +112,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .live-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:#F1F5F9;color:#475569}
 .live-timestamp{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
 .live-journalist{font-size:9px;color:var(--acc);font-weight:600}
-.live-text{font-size:13px;line-height:1.6;color:var(--text)}
+.live-text{font-size:13px;line-height:1.6;color:var(--text);white-space:pre-line}
 .live-text strong{font-weight:600}
 
 .live-img{margin-top:10px;border-radius:8px;overflow:hidden}
@@ -408,7 +408,21 @@ function mkLiveEntry(e){
 
 function mkArticle(a){
   const img = a.image ? `<img class="ni-img" src="${a.image}" alt="" onerror="this.remove()">` : '';
-  return `<div class="ni" onclick="window.open('${a.link}','_blank')">${img}<div class="ni-body"><div class="nt">${a.title}</div><div class="nm">${a.author} · ${a.date}</div></div></div>`;
+  return `<div class="ni" onclick="window.open('${a.link}','_blank')">${img}<div class="ni-body"><div class="nt">${a.title}</div><div class="nm">${a.author} · ${fmtDateFr(a.date)}</div></div></div>`;
+}
+function fmtDateFr(str){
+  if(!str)return '';
+  // Already French? Return as-is
+  if(/janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|déc/i.test(str)) return str;
+  // Try to parse English month and convert
+  const enToFr={Jan:'janv.',Feb:'févr.',Mar:'mars',Apr:'avr.',May:'mai',Jun:'juin',Jul:'juil.',Aug:'août',Sep:'sept.',Oct:'oct.',Nov:'nov.',Dec:'déc.',
+    January:'janv.',February:'févr.',March:'mars',April:'avr.',June:'juin',July:'juil.',August:'août',September:'sept.',October:'oct.',November:'nov.',December:'déc.'};
+  let result=str;
+  Object.keys(enToFr).forEach(en=>{
+    const re=new RegExp('\\b'+en+'\\b','gi');
+    result=result.replace(re,enToFr[en]);
+  });
+  return result;
 }
 
 // TOGGLE FUNCTIONS (global)
