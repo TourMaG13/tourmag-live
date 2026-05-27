@@ -348,6 +348,7 @@ async function init(){
   if(!eventId){document.getElementById('encart').innerHTML='<div class="er-loading">?event= manquant</div>';return;}
   try{
     const ec=db.collection('events').doc(eventId);
+    // Initial load
     const [evS,esS,ciS,tlS]=await Promise.all([
       ec.get(),
       ec.collection('essential').get(),
@@ -355,13 +356,20 @@ async function init(){
       ec.collection('timeline').get()
     ]);
     if(!evS.exists){document.getElementById('encart').innerHTML='<div class="er-loading">Événement introuvable</div>';return;}
-    const ess=[]; esS.forEach(d=>ess.push(d.data()));
-    ess.sort((a,b)=>(a.order||0)-(b.order||0));
-    const allCit=[]; ciS.forEach(d=>allCit.push(d.data()));
-    allCit.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0; const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0; return tb-ta; });
-    const tl=[]; tlS.forEach(d=>tl.push(d.data()));
-    tl.sort((a,b)=>(a.order||0)-(b.order||0));
-    renderEncart({event:evS.data(),essential:ess,citations:allCit,timeline:tl});
+    function toArr(snap){const a=[];snap.forEach(d=>a.push(d.data()));return a;}
+    const state={
+      event:evS.data(),
+      essential:toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0)),
+      citations:toArr(ciS).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;}),
+      timeline:toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0))
+    };
+    renderEncart(state);
+
+    // Real-time listeners — update widget when data changes
+    ec.onSnapshot(snap=>{if(snap.exists){state.event=snap.data();renderEncart(state);}});
+    ec.collection('essential').onSnapshot(snap=>{state.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
+    ec.collection('citations').onSnapshot(snap=>{state.citations=toArr(snap).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;});renderEncart(state);});
+    ec.collection('timeline').onSnapshot(snap=>{state.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
   }catch(e){
     console.error(e);
     document.getElementById('encart').innerHTML='<div class="er-loading">Erreur de chargement</div>';
