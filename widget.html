@@ -169,7 +169,7 @@ function renderEncart(data, forceRender){
     if(tlContainer && timeline){
       const cols=Math.min(timeline.length,5);
       let tlH='';
-      timeline.slice(0,5).forEach(t=>{
+      timeline.slice(-5).forEach(t=>{
         tlH+=`<div class="er-fe"><div class="er-fe-d"></div><div class="er-fe-date">${t.date}</div><div class="er-fe-txt">${t.text}</div></div>`;
       });
       tlContainer.style.setProperty('--frise-cols',cols);
@@ -207,7 +207,7 @@ function renderEncart(data, forceRender){
     if(essential&&essential.length){
       const bc=_tagColors[(essential[0].tag||'').toUpperCase()]||'#3B82F6';
       h+=`<div class="er-ess" id="er-ess" style="border-left-color:${bc}">`;
-      h+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel du live</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
+      h+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
       h+=`<div id="er-ess-tag"></div><div class="er-ess-text" id="er-ess-text"></div>`;
       h+=`<div class="er-ess-dots" id="er-ess-dots">`;
       essential.forEach((_,i)=>{ h+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goEss(${i})"></div>`; });
@@ -234,7 +234,7 @@ function renderEncart(data, forceRender){
   if(timeline&&timeline.length){
     const cols=Math.min(timeline.length,5);
     h+=`<div class="er-frise" style="--frise-cols:${cols}">`;
-    timeline.slice(0,5).forEach(t=>{
+    timeline.slice(-5).forEach(t=>{
       h+=`<div class="er-fe"><div class="er-fe-d"></div><div class="er-fe-date">${t.date}</div><div class="er-fe-txt">${t.text}</div></div>`;
     });
     h+=`</div>`;
