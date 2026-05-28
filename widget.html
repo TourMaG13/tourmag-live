@@ -133,8 +133,23 @@ let essIdx=0, essTimer=null, citIdx=0, citTimer=null;
 var _essPts=[];
 var _citPts=[];
 var _tagColors={};
+var _rendered=false; // track if initial render is done
+var _lastStructureKey=''; // track if structure changed
 
-function renderEncart(data){
+function getStructureKey(data){
+  // Key that changes when we need a full re-render (counts, flash, footer, timeline)
+  return [
+    (data.essential||[]).length,
+    (data.citations||[]).length,
+    (data.timeline||[]).length,
+    data.event?.flash_text||'',
+    data.event?.widgetFooterText||'',
+    data.event?.widgetFooterBtnLabel||'',
+    data.event?.logo_url||''
+  ].join('|');
+}
+
+function renderEncart(data, forceRender){
   const {event,essential,citations,timeline}=data;
   _essPts=essential||[];
   _citPts=citations||[];
@@ -144,6 +159,29 @@ function renderEncart(data){
     if(typeof t==='string')return;
     if(t&&t.name&&t.color) _tagColors[t.name.toUpperCase()]=t.color;
   });
+
+  // Check if we need a full re-render or just data update
+  const newKey=getStructureKey(data);
+  if(_rendered && !forceRender && newKey===_lastStructureKey){
+    // Structure unchanged — just update data arrays, carousels will pick up on next cycle
+    // But update timeline text in case it changed
+    const tlContainer=document.querySelector('.er-frise');
+    if(tlContainer && timeline){
+      const cols=Math.min(timeline.length,5);
+      let tlH='';
+      timeline.slice(0,5).forEach(t=>{
+        tlH+=`<div class="er-fe"><div class="er-fe-d"></div><div class="er-fe-date">${t.date}</div><div class="er-fe-txt">${t.text}</div></div>`;
+      });
+      tlContainer.style.setProperty('--frise-cols',cols);
+      tlContainer.innerHTML=tlH;
+    }
+    return;
+  }
+  _lastStructureKey=newKey;
+
+  // Clear existing timers before full re-render
+  if(essTimer){clearInterval(essTimer);essTimer=null;}
+  if(citTimer){clearInterval(citTimer);citTimer=null;}
 
   // CTA URL: use event.widgetCtaUrl, fallback to ?cta= param, then default
   const paramCta=new URLSearchParams(window.location.search).get('cta');
@@ -263,16 +301,17 @@ function renderEncart(data){
       // NOW start the carousels (after height is locked)
       if(essential&&essential.length>1){
         essTimer=setInterval(()=>{
-          essIdx=(essIdx+1)%essential.length;
-          showEss(essIdx, essential);
+          essIdx=(essIdx+1)%_essPts.length;
+          showEss(essIdx, _essPts);
         },8000);
       }
       if(citations&&citations.length>1){
         citTimer=setInterval(()=>{
-          citIdx=(citIdx+1)%citations.length;
+          citIdx=(citIdx+1)%_citPts.length;
           showCit(citIdx);
         },10000);
       }
+      _rendered=true;
     });
   });
 }
@@ -363,13 +402,15 @@ async function init(){
       citations:toArr(ciS).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;}),
       timeline:toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0))
     };
-    renderEncart(state);
+    renderEncart(state, true);
 
     // Real-time listeners — update widget when data changes
-    ec.onSnapshot(snap=>{if(snap.exists){state.event=snap.data();renderEncart(state);}});
-    ec.collection('essential').onSnapshot(snap=>{state.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
-    ec.collection('citations').onSnapshot(snap=>{state.citations=toArr(snap).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;});renderEncart(state);});
-    ec.collection('timeline').onSnapshot(snap=>{state.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
+    // Skip first snapshot fire (already loaded above)
+    let skipEv=true,skipEs=true,skipCi=true,skipTl=true;
+    ec.onSnapshot(snap=>{if(skipEv){skipEv=false;return;}if(snap.exists){state.event=snap.data();renderEncart(state);}});
+    ec.collection('essential').onSnapshot(snap=>{if(skipEs){skipEs=false;return;}state.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
+    ec.collection('citations').onSnapshot(snap=>{if(skipCi){skipCi=false;return;}state.citations=toArr(snap).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;});renderEncart(state);});
+    ec.collection('timeline').onSnapshot(snap=>{if(skipTl){skipTl=false;return;}state.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
   }catch(e){
     console.error(e);
     document.getElementById('encart').innerHTML='<div class="er-loading">Erreur de chargement</div>';
