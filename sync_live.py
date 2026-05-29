@@ -129,12 +129,12 @@ def collect_context(db, event_ref, event_data):
                 pass
         ctx["live_texts"].append(f"[{ts}] {text}")
 
-    # Articles liés : on récupère les 20 plus récents (DESC + limit),
-    # puis on les passe à l'IA en ordre chronologique CROISSANT (ancien → récent),
-    # ce qui correspond au sens de lecture naturel d'une frise.
+    # Articles liés : on récupère les 10 plus récents (DESC + limit),
+    # puis on les passe à l'IA en ordre chronologique CROISSANT (ancien → récent).
+    # 10 suffit puisque la timeline ne retient que les jalons récents.
     art_docs = list(event_ref.collection("articles")
                     .order_by("created_at", direction=firestore.Query.DESCENDING)
-                    .limit(20).stream())
+                    .limit(10).stream())
     art_docs.reverse()  # remettre en ordre chronologique croissant
     for doc in art_docs:
         d = doc.to_dict()
@@ -242,8 +242,7 @@ RÈGLES STRICTES :
 - N'anticipe JAMAIS des événements futurs, même si les dates sont connues
 - N'invente aucune information qui n'est pas dans les articles
 - Chaque jalon doit correspondre à un fait précis issu d'un article
-- COUVERTURE : ton DERNIER jalon DOIT correspondre à l'un des 3 articles les plus récents de la liste (les derniers ci-dessous). Ne t'arrête jamais en milieu de période si des articles plus récents existent.
-- Répartis les jalons sur toute la période couverte par les articles, du premier au dernier
+- RÉCENCE EXCLUSIVE : utilise UNIQUEMENT les articles les plus récents (le bas de la liste). Le dernier jalon doit être l'article le plus récent. Ignore complètement les articles anciens, même s'ils semblent fondateurs ou importants.
 
 --- ARTICLES (du plus ancien au plus récent) ---
 {articles_block}
