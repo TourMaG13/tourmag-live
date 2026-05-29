@@ -129,8 +129,13 @@ def collect_context(db, event_ref, event_data):
                 pass
         ctx["live_texts"].append(f"[{ts}] {text}")
 
-    # Articles liés (20 derniers, triés par date décroissante)
-    art_docs = event_ref.collection("articles").order_by("created_at", direction=firestore.Query.DESCENDING).limit(20).stream()
+    # Articles liés : on récupère les 20 plus récents (DESC + limit),
+    # puis on les passe à l'IA en ordre chronologique CROISSANT (ancien → récent),
+    # ce qui correspond au sens de lecture naturel d'une frise.
+    art_docs = list(event_ref.collection("articles")
+                    .order_by("created_at", direction=firestore.Query.DESCENDING)
+                    .limit(20).stream())
+    art_docs.reverse()  # remettre en ordre chronologique croissant
     for doc in art_docs:
         d = doc.to_dict()
         ctx["article_titles"].append(f"- {d.get('title', '')} ({d.get('date', '')})")
@@ -232,21 +237,24 @@ def generate_timeline(db, event_ref, event_data, ctx):
 À partir UNIQUEMENT des articles ci-dessous, crée une frise chronologique pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
 
 RÈGLES STRICTES :
+- Les articles sont fournis en ORDRE CHRONOLOGIQUE CROISSANT (du plus ancien au plus récent)
 - Ne génère des jalons QUE pour des faits déjà survenus et mentionnés dans les articles
 - N'anticipe JAMAIS des événements futurs, même si les dates sont connues
 - N'invente aucune information qui n'est pas dans les articles
 - Chaque jalon doit correspondre à un fait précis issu d'un article
+- COUVERTURE : ton DERNIER jalon DOIT correspondre à l'un des 3 articles les plus récents de la liste (les derniers ci-dessous). Ne t'arrête jamais en milieu de période si des articles plus récents existent.
+- Répartis les jalons sur toute la période couverte par les articles, du premier au dernier
 
---- ARTICLES ---
+--- ARTICLES (du plus ancien au plus récent) ---
 {articles_block}
 
 {f"--- POINTS ESSENTIELS (contexte) ---{chr(10)}{essential_block}" if ctx["essential_texts"] else ""}
 
-Génère entre 3 et 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Chaque jalon :
-- date courte (ex: "16 avr.", "11 mai")
+Génère entre 4 et 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Chaque jalon :
+- date courte (ex: "16 avr.", "11 mai", "26 juin")
 - texte bref (max 20 mots) résumant le fait tel que rapporté dans l'article
 
-Réponds UNIQUEMENT en JSON, sans backticks :
+Réponds UNIQUEMENT en JSON, sans backticks, classés du plus ancien au plus récent :
 [{{"date":"16 avr.","text":"Annonce officielle du Forum des Pionniers 2026."}}, ...]"""
 
     print("  🤖 Génération de la timeline...", flush=True)
