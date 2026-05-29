@@ -129,8 +129,8 @@ def collect_context(db, event_ref, event_data):
                 pass
         ctx["live_texts"].append(f"[{ts}] {text}")
 
-    # Articles liés (20 derniers)
-    art_docs = event_ref.collection("articles").limit(20).stream()
+    # Articles liés (20 derniers, triés par date décroissante)
+    art_docs = event_ref.collection("articles").order_by("created_at", direction=firestore.Query.DESCENDING).limit(20).stream()
     for doc in art_docs:
         d = doc.to_dict()
         ctx["article_titles"].append(f"- {d.get('title', '')} ({d.get('date', '')})")
