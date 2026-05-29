@@ -27,15 +27,6 @@ from firebase_admin import credentials, firestore
 from bs4 import BeautifulSoup
 
 # ============================================================
-# UTILS
-# ============================================================
-MOIS_FR = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']
-
-def format_date_fr(dt):
-    """Formate une date en français : '22 mai 2026'"""
-    return f"{dt.day} {MOIS_FR[dt.month-1]} {dt.year}"
-
-# ============================================================
 # CONFIG
 # ============================================================
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -138,26 +129,11 @@ def collect_context(db, event_ref, event_data):
                 pass
         ctx["live_texts"].append(f"[{ts}] {text}")
 
-    # Articles liés (TOUS, triés du plus récent au plus ancien)
-    all_articles = []
-    art_docs = event_ref.collection("articles").stream()
+    # Articles liés (20 derniers)
+    art_docs = event_ref.collection("articles").limit(20).stream()
     for doc in art_docs:
         d = doc.to_dict()
-        # Get sortable timestamp
-        ts = 0
-        ca = d.get("created_at")
-        if ca:
-            try:
-                ts = ca.timestamp() if hasattr(ca, 'timestamp') else 0
-            except:
-                pass
-        all_articles.append({"title": d.get("title", ""), "date": d.get("date", ""), "ts": ts})
-    # Sort by timestamp descending (most recent first)
-    all_articles.sort(key=lambda a: a["ts"], reverse=True)
-    # Take up to 30 most recent for context
-    for a in all_articles[:30]:
-        ctx["article_titles"].append(f"- {a['title']} ({a['date']})")
-    print(f"  📊 Contexte: {len(all_articles)} articles, {len(ctx['live_texts'])} live, {len(ctx['essential_texts'])} essentiels", flush=True)
+        ctx["article_titles"].append(f"- {d.get('title', '')} ({d.get('date', '')})")
 
     # Points essentiels existants
     ess_docs = event_ref.collection("essential").stream()
@@ -190,7 +166,7 @@ def generate_essential(db, event_ref, event_data, ctx):
             tag_names.append(t["name"])
 
     live_block = "\n".join(ctx["live_texts"][:30]) or "(vide)"
-    articles_block = "\n".join(ctx["article_titles"]) or "(vide)"
+    articles_block = "\n".join(ctx["article_titles"][:20]) or "(vide)"
 
     prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
 À partir des articles ci-dessous liés à l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}), génère 4 à 6 points essentiels de synthèse.
@@ -248,28 +224,26 @@ Réponds UNIQUEMENT en JSON, sans backticks :
 # ============================================================
 def generate_timeline(db, event_ref, event_data, ctx):
     """Génère la timeline via IA et écrit dans Firestore."""
-    articles_block = "\n".join(ctx["article_titles"]) or "(vide)"
+    live_block = "\n".join(ctx["live_texts"][:30]) or "(vide)"
+    articles_block = "\n".join(ctx["article_titles"][:20]) or "(vide)"
     essential_block = "\n".join(ctx["essential_texts"]) or "(vide)"
-
-    print(f"  📰 {len(ctx['article_titles'])} articles envoyés au prompt timeline", flush=True)
 
     prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
 À partir UNIQUEMENT des articles ci-dessous, crée une frise chronologique pour l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}).
 
 RÈGLES STRICTES :
-- Génère un jalon pour CHAQUE article qui a une date identifiable
-- Ne génère des jalons QUE pour des faits mentionnés dans les articles
-- N'anticipe JAMAIS des événements futurs non mentionnés dans les articles
-- N'invente aucune information
-- Utilise la date de publication de l'article comme date du jalon
+- Ne génère des jalons QUE pour des faits déjà survenus et mentionnés dans les articles
+- N'anticipe JAMAIS des événements futurs, même si les dates sont connues
+- N'invente aucune information qui n'est pas dans les articles
+- Chaque jalon doit correspondre à un fait précis issu d'un article
 
---- ARTICLES ({len(ctx['article_titles'])} articles) ---
+--- ARTICLES ---
 {articles_block}
 
 {f"--- POINTS ESSENTIELS (contexte) ---{chr(10)}{essential_block}" if ctx["essential_texts"] else ""}
 
-Génère un jalon par article (ou regroupe si deux articles ont la même date). Chaque jalon :
-- date courte (ex: "16 avr.", "11 mai", "26 mai")
+Génère entre 3 et 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Chaque jalon :
+- date courte (ex: "16 avr.", "11 mai")
 - texte bref (max 20 mots) résumant le fait tel que rapporté dans l'article
 
 Réponds UNIQUEMENT en JSON, sans backticks :
@@ -348,7 +322,7 @@ def import_rss(db, event_ref, event_data):
                 if pub:
                     try:
                         dt = datetime(*pub[:6])
-                        date_str = format_date_fr(dt)
+                        date_str = dt.strftime("%-d %b %Y")
                         date_ts = dt
                     except:
                         pass
@@ -428,7 +402,7 @@ def import_rss(db, event_ref, event_data):
                     "link": link,
                     "author": author,
                     "image": image,
-                    "date": date_str or format_date_fr(datetime.now()),
+                    "date": date_str or datetime.now().strftime("%-d %b %Y"),
                     "source": "rss"
                 }
                 if date_ts:
