@@ -1127,21 +1127,25 @@ function editLive(id){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="m-live-journalist" value="${e.journalist||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="m-live-image" value="${e.image||''}"></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="m-live-url" value="${e.url||''}"></div>
     ${e.image?`<div class="form-row-inline">
       <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="m-live-imgpos">${posOpts}</select></div>
       <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="80" max="500" step="10"></div>
     </div>
-    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>
-    <script>
-      document.getElementById('m-live-imgpos').onchange=function(){document.getElementById('m-live-imgpreview').style.objectPosition=this.value};
-      document.getElementById('m-live-imgheight').oninput=function(){document.getElementById('m-live-imgpreview').style.height=this.value+'px'};
-    <\/script>`:''}
+    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>`:''}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveLiveEdit('${id}')">💾 Enregistrer</button>
     </div>`);
+  // Attach image preview listeners after modal render
+  setTimeout(()=>{
+    const posEl=document.getElementById('m-live-imgpos');
+    const hEl=document.getElementById('m-live-imgheight');
+    const prevEl=document.getElementById('m-live-imgpreview');
+    if(posEl&&prevEl) posEl.onchange=function(){prevEl.style.objectPosition=this.value;};
+    if(hEl&&prevEl) hEl.oninput=function(){prevEl.style.height=this.value+'px';};
+  },50);
 }
 async function saveLiveEdit(id){
   saving(true);
@@ -1579,7 +1583,7 @@ function editArticle(id){
   openModal(`<h3>Modifier l'article</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-art-title" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><input class="form-input" id="m-art-image" value="${a.image||''}"></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveArticleEdit('${id}')">💾 Enregistrer</button>
