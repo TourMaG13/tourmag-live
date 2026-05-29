@@ -249,7 +249,7 @@ RÈGLES STRICTES :
 
 {f"--- POINTS ESSENTIELS (contexte) ---{chr(10)}{essential_block}" if ctx["essential_texts"] else ""}
 
-Génère entre 4 et 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Chaque jalon :
+Génère EXACTEMENT 6 jalons chronologiques basés UNIQUEMENT sur les faits des articles. Pas 5, pas 7 : 6. Chaque jalon :
 - date courte (ex: "16 avr.", "11 mai", "26 juin")
 - texte bref (max 20 mots) résumant le fait tel que rapporté dans l'article
 
@@ -262,6 +262,14 @@ Réponds UNIQUEMENT en JSON, sans backticks, classés du plus ancien au plus ré
     if not jalons or not isinstance(jalons, list):
         print("  ❌ Pas de jalons générés", flush=True)
         return 0
+
+    # Garantir exactement 6 jalons : tronquer aux 6 plus récents si trop,
+    # avertir si moins (l'IA n'a pas suivi l'instruction)
+    if len(jalons) > 6:
+        print(f"  ⚠ {len(jalons)} jalons reçus, on garde les 6 plus récents", flush=True)
+        jalons = jalons[-6:]  # les derniers de la liste = les plus récents (ordre chronologique croissant)
+    elif len(jalons) < 6:
+        print(f"  ⚠ Seulement {len(jalons)} jalons reçus (6 attendus)", flush=True)
 
     # Supprimer les anciens jalons IA
     old_docs = event_ref.collection("timeline").where("source", "==", "ia").stream()
