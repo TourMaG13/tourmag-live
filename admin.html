@@ -599,9 +599,28 @@ function scheduleRender(){
 function initApp(){
   // Listen to events collection
   const u1=db.collection('events').onSnapshot(snap=>{
-    eventsData=[];
-    snap.forEach(d=>eventsData.push({id:d.id,...d.data()}));
+    const allEvents=[];
+    snap.forEach(d=>allEvents.push({id:d.id,...d.data()}));
+    // Filter events based on user access
+    const userEmail=(auth.currentUser?.email||'').toLowerCase();
+    eventsData=allEvents.filter(ev=>{
+      const allowed=ev.allowedUsers||[];
+      // No restriction: everyone sees the event
+      if(!allowed.length) return true;
+      // User is in allowedUsers list
+      if(allowed.some(e=>(e||'').toLowerCase()===userEmail)) return true;
+      // User is a superAdmin of this event
+      const superAdmins=ev.superAdmins||[];
+      if(superAdmins.some(e=>(e||'').toLowerCase()===userEmail)) return true;
+      // If no superAdmins defined, treat everyone as super admin (retrocompat)
+      if(!superAdmins.length) return true;
+      return false;
+    });
     if(!currentEventId && eventsData.length) currentEventId=eventsData[0].id;
+    // If current event is no longer visible, switch to first available
+    if(currentEventId && !eventsData.find(e=>e.id===currentEventId)){
+      currentEventId=eventsData.length?eventsData[0].id:'';
+    }
     updateTopbarSelect();
     const ev=eventsData.find(e=>e.id===currentEventId);
     tagsData=ev&&ev.tags?ev.tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'];
@@ -1320,6 +1339,13 @@ function renderProgramme(el){
 
   let h=`<div class="page-title">Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
 
+  <div class="admin-card"><h3>🏷 Titre de l'encart</h3>
+    <div class="form-row"><label class="form-label">Titre affiché sur le dashboard public</label>
+      <div style="display:flex;gap:8px"><input class="form-input" id="prog-custom-title" value="${(ev.programmeTitle||'').replace(/"/g,'&quot;')}" placeholder="Programme" style="max-width:400px"><button class="btn btn-primary btn-sm" onclick="saveProgrammeTitle()">💾</button></div>
+      <div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le titre par défaut « Programme » sera affiché.</div>
+    </div>
+  </div>
+
   <div class="admin-card"><h3>📅 Jours — ordre d'affichage</h3>
     <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
   dayOrder.forEach((day,i)=>{
@@ -1506,6 +1532,15 @@ async function moveProgInDay(id,dir){
     subCol('programme').doc(items[newIdx].id).update({order:idx})
   ]);
   toast('Ordre modifié');
+}
+
+async function saveProgrammeTitle(){
+  const title=document.getElementById('prog-custom-title').value.trim();
+  saving(true);
+  await evRef().update({programmeTitle:title});
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(ev) ev.programmeTitle=title;
+  toast(title?'Titre mis à jour':'Titre remis par défaut');
 }
 
 // ==================== ARTICLES ====================
@@ -2180,22 +2215,42 @@ async function toggleIATimeline(val){
 }
 
 // ==================== VIDÉOS ====================
-function parseYoutubeUrl(url){
+function parseVideoUrl(url){
   let m;
+  // YouTube shorts
   m=url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if(m) return {id:m[1],type:'short'};
+  if(m) return {platform:'youtube',id:m[1],type:'short',ytId:m[1]};
+  // YouTube watch/short URL
   m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if(m) return {id:m[1],type:'video'};
+  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1]};
+  // YouTube embed
   m=url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-  if(m) return {id:m[1],type:'video'};
+  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1]};
+  // Instagram Reel
+  m=url.match(/instagram\.com\/(?:reel|reels)\/([a-zA-Z0-9_-]+)/);
+  if(m) return {platform:'instagram',id:m[1],type:'short',url:url};
+  // Instagram post (video)
+  m=url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/);
+  if(m) return {platform:'instagram',id:m[1],type:'video',url:url};
+  // LinkedIn video post
+  m=url.match(/linkedin\.com\/.+/);
+  if(m) return {platform:'linkedin',id:'li_'+Date.now(),type:'video',url:url};
+  // Facebook video
+  m=url.match(/facebook\.com\/.+\/videos\/|fb\.watch\/|facebook\.com\/watch|facebook\.com\/.+\/posts\//);
+  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'video',url:url};
+  // Facebook reel
+  m=url.match(/facebook\.com\/reel\//);
+  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'short',url:url};
   return null;
 }
+// Backward compat alias
+function parseYoutubeUrl(url){ return parseVideoUrl(url); }
 
 function renderVideos(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sections=ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
 
-  let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos YouTube en sections. Chaque section a son propre titre et mode d'affichage.</div>
+  let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
 
   <div class="admin-card"><h3>📂 Sections</h3>
     <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
@@ -2213,10 +2268,13 @@ function renderVideos(el){
 
   <div class="admin-card"><h3>➕ Ajouter une vidéo</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL YouTube</label><input class="form-input" id="vid-url" placeholder="https://www.youtube.com/watch?v=... ou /shorts/..."></div>
+      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px">Supporte : youtube.com, youtu.be, instagram.com/reel/…, facebook.com/…/videos/…, linkedin.com/…</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
     </div>
-    <div class="form-row" style="max-width:300px"><label class="form-label">Section</label><select class="form-input" id="vid-section">${sections.map(s=>`<option value="${s.id}">${s.title}</option>`).join('')}</select></div>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:300px"><label class="form-label">Section</label><select class="form-input" id="vid-section">${sections.map(s=>`<option value="${s.id}">${s.title}</option>`).join('')}</select></div>
+      <div class="form-row" id="vid-thumb-row" style="display:none"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="vid-thumb" placeholder="https://... (recommandé pour Instagram/LinkedIn/Facebook)"></div>
+    </div>
     <div id="vid-preview" style="margin-top:8px"></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addVideo()">🎬 Ajouter</button></div>
   </div>`;
@@ -2231,13 +2289,20 @@ function renderVideos(el){
     h+=`<div class="admin-card"><h3>🎬 ${sec.title} (${allVids.length})</h3>`;
     if(!allVids.length) h+=`<div class="empty"><div class="text">Aucune vidéo</div></div>`;
     else allVids.forEach((v,i)=>{
-      const thumb=`https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg`;
+      const platform=v.platform||'youtube';
+      const platformIcons={youtube:'▶️',instagram:'📸',facebook:'📘',linkedin:'💼'};
+      const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
+      const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2'};
+      const thumb=platform==='youtube'?`https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg`:(v.thumbnail||'');
       const typeLabel=v.type==='short'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">SHORT</span>':'<span style="font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">VIDÉO</span>';
+      const platformBadge=`<span style="font-size:8px;background:${platformColors[platform]||'#475569'}15;color:${platformColors[platform]||'#475569'};padding:2px 6px;border-radius:3px;font-weight:700;margin-left:4px">${platformLabels[platform]||platform}</span>`;
+      const thumbHtml=thumb?`<img src="${thumb}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:80px;height:45px;border-radius:6px;background:${platformColors[platform]||'#475569'}15;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">${platformIcons[platform]||'🎬'}</div>`;
+      const linkUrl=platform==='youtube'?`https://youtube.com/watch?v=${v.ytId}`:(v.url||'#');
       h+=`<div class="list-item" style="align-items:center">
-        <img src="${thumb}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">
+        ${thumbHtml}
         <div class="list-item-content" style="flex:1">
-          <div class="list-item-text">${v.caption||'Sans titre'}${typeLabel}</div>
-          <div class="list-item-meta"><a href="https://youtube.com/watch?v=${v.ytId}" target="_blank" style="color:var(--blue);font-size:10px">${v.ytId}</a></div>
+          <div class="list-item-text">${v.caption||'Sans titre'}${typeLabel}${platformBadge}</div>
+          <div class="list-item-meta"><a href="${linkUrl}" target="_blank" style="color:var(--blue);font-size:10px">${platform==='youtube'?v.ytId:((v.url||'').substring(0,60)+(v.url&&v.url.length>60?'…':''))}</a></div>
         </div>
         <div class="list-item-actions" style="display:flex;gap:4px;align-items:center">
           <button class="btn btn-ghost btn-xs" onclick="moveVideo('${v.id}','${sec.id}',-1)" ${i===0?'disabled':''}>▲</button>
@@ -2255,12 +2320,24 @@ function renderVideos(el){
   // URL preview
   const urlInput=document.getElementById('vid-url');
   if(urlInput) urlInput.addEventListener('input',()=>{
-    const p=parseYoutubeUrl(urlInput.value);
+    const p=parseVideoUrl(urlInput.value);
     const prev=document.getElementById('vid-preview');
+    const thumbRow=document.getElementById('vid-thumb-row');
     if(p&&prev){
-      const thumb=`https://img.youtube.com/vi/${p.id}/mqdefault.jpg`;
-      prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:11px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short (9:16)':'Vidéo classique (16:9)'}</div></div></div>`;
-    } else if(prev){ prev.innerHTML=''; }
+      const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
+      const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2'};
+      if(p.platform==='youtube'){
+        const thumb=`https://img.youtube.com/vi/${p.id}/mqdefault.jpg`;
+        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:11px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'YouTube Short (9:16)':'YouTube Vidéo (16:9)'}</div></div></div>`;
+        if(thumbRow) thumbRow.style.display='none';
+      } else {
+        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid ${platformColors[p.platform]||'var(--border)'}40"><span style="font-size:20px;flex-shrink:0;width:40px;text-align:center">${p.platform==='instagram'?'📸':p.platform==='facebook'?'📘':p.platform==='linkedin'?'💼':'🎬'}</span><div><div style="font-size:11px;font-weight:600;color:${platformColors[p.platform]||'var(--text)'}">${platformLabels[p.platform]||p.platform}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short/Reel':'Vidéo'} — l'url sera ouverte dans un nouvel onglet</div></div></div>`;
+        if(thumbRow) thumbRow.style.display='block';
+      }
+    } else {
+      if(prev) prev.innerHTML='';
+      if(thumbRow) thumbRow.style.display='none';
+    }
   });
 }
 
@@ -2331,40 +2408,65 @@ async function addVideo(){
   const url=document.getElementById('vid-url').value.trim();
   const caption=document.getElementById('vid-caption').value.trim();
   const section=document.getElementById('vid-section').value;
-  const parsed=parseYoutubeUrl(url);
-  if(!parsed){toast('URL YouTube invalide','error');return;}
-  if(videosData.find(v=>v.ytId===parsed.id)){toast('Vidéo déjà ajoutée','error');return;}
+  const thumbInput=document.getElementById('vid-thumb');
+  const thumbnail=thumbInput?thumbInput.value.trim():'';
+  const parsed=parseVideoUrl(url);
+  if(!parsed){toast('URL non reconnue (YouTube, Instagram, Facebook ou LinkedIn)','error');return;}
+  // Duplicate check: for YouTube use ytId, for others use url
+  if(parsed.platform==='youtube'){
+    if(videosData.find(v=>v.ytId===parsed.ytId)){toast('Vidéo déjà ajoutée','error');return;}
+  } else {
+    if(videosData.find(v=>v.url===url)){toast('Vidéo déjà ajoutée','error');return;}
+  }
   const secVids=videosData.filter(v=>v.section===section);
   saving(true);
-  await subCol('videos').add({
-    ytId:parsed.id,type:parsed.type,url:url,caption:caption,section:section,
+  const docData={
+    platform:parsed.platform,
+    type:parsed.type,
+    url:url,
+    caption:caption,
+    section:section,
     order:secVids.length,
     created_at:firebase.firestore.FieldValue.serverTimestamp()
-  });
+  };
+  if(parsed.platform==='youtube') docData.ytId=parsed.ytId;
+  if(thumbnail) docData.thumbnail=thumbnail;
+  await subCol('videos').add(docData);
   document.getElementById('vid-url').value='';document.getElementById('vid-caption').value='';
+  if(thumbInput) thumbInput.value='';
   document.getElementById('vid-preview').innerHTML='';
+  const thumbRow=document.getElementById('vid-thumb-row');
+  if(thumbRow) thumbRow.style.display='none';
   toast('Vidéo ajoutée');
 }
 
 function editVideo(id){
   const v=videosData.find(x=>x.id===id);if(!v)return;
   const sections=getVideoSections();
+  const platform=v.platform||'youtube';
   const secOpts=sections.map(s=>`<option value="${s.id}"${v.section===s.id?' selected':''}>${s.title}</option>`).join('');
+  const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
+  const thumbField=platform!=='youtube'?`<div class="form-row"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="m-vid-thumb" value="${(v.thumbnail||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>`:'';
   openModal(`<h3>Modifier la vidéo</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px">Plateforme : <strong style="color:var(--text)">${platformLabels[platform]||platform}</strong></div>
     <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-vid-caption" value="${(v.caption||'').replace(/"/g,'&quot;')}"></div>
+    ${thumbField}
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Type</label><select class="form-input" id="m-vid-type"><option value="video"${v.type==='video'?' selected':''}>Vidéo (16:9)</option><option value="short"${v.type==='short'?' selected':''}>Short (9:16)</option></select></div>
+      <div class="form-row"><label class="form-label">Type</label><select class="form-input" id="m-vid-type"><option value="video"${v.type==='video'?' selected':''}>Vidéo (16:9)</option><option value="short"${v.type==='short'?' selected':''}>Short/Reel (9:16)</option></select></div>
       <div class="form-row"><label class="form-label">Section</label><select class="form-input" id="m-vid-section">${secOpts}</select></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveVideoEdit('${id}')">💾 Enregistrer</button></div>`);
 }
 async function saveVideoEdit(id){
   saving(true);
-  await subCol('videos').doc(id).update({
+  const updateData={
     caption:document.getElementById('m-vid-caption').value.trim(),
     type:document.getElementById('m-vid-type').value,
     section:document.getElementById('m-vid-section').value
-  });
+  };
+  const thumbInput=document.getElementById('m-vid-thumb');
+  if(thumbInput) updateData.thumbnail=thumbInput.value.trim();
+  await subCol('videos').doc(id).update(updateData);
   closeModal();toast('Modifié');
 }
 async function deleteVideo(id){if(!confirm('Supprimer cette vidéo ?'))return;saving(true);await subCol('videos').doc(id).delete();toast('Supprimé');}
@@ -2430,6 +2532,26 @@ function renderAccess(el){
   });
   h+=`</div>`;
 
+  // ===== RESTRICTION D'ACCÈS PAR ÉVÉNEMENT =====
+  const allowedUsers=ev.allowedUsers||[];
+  h+=`<div class="admin-card"><h3>🔒 Accès restreint à cet événement</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Limitez l'accès à cet événement à certains utilisateurs. Si la liste est vide, tous les admins connectés voient cet événement. Les super admins ont toujours accès.</div>
+    <div id="access-allowed-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+  allowedUsers.forEach((email,i)=>{
+    const isSA=superAdmins.some(e=>(e||'').toLowerCase()===email.toLowerCase());
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:12px">${isSA?'👑':'👤'}</span>
+      <span style="font-size:12px;font-family:'IBM Plex Mono';flex:1">${email}</span>
+      ${isSA?'<span style="font-size:8px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:3px">super admin</span>':''}
+      <button class="btn btn-danger btn-xs" onclick="removeAllowedUser(${i})">✕</button>
+    </div>`;
+  });
+  if(!allowedUsers.length) h+=`<div style="font-size:11px;color:var(--text3);padding:8px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px">🌐 Aucune restriction — tous les admins voient cet événement.</div>`;
+  h+=`</div>
+    <div style="display:flex;gap:8px"><input class="form-input" id="access-new-allowed" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addAllowedUser()">+ Ajouter</button></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:8px">💡 Dès qu'un utilisateur est ajouté, seuls les utilisateurs listés (+ les super admins) pourront voir cet événement.</div>
+  </div>`;
+
   el.innerHTML=h;
 }
 
@@ -2477,6 +2599,32 @@ async function toggleTabVisibility(tabKey,visible){
   if(ev) ev.hiddenTabs=hiddenTabs;
   applyTabVisibility();
   toast(visible?'Onglet visible':'Onglet masqué');
+}
+
+async function addAllowedUser(){
+  const email=document.getElementById('access-new-allowed').value.trim().toLowerCase();
+  if(!email||!email.includes('@')){toast('Email invalide','error');return;}
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const allowedUsers=[...(ev.allowedUsers||[])];
+  if(allowedUsers.some(e=>(e||'').toLowerCase()===email)){toast('Déjà dans la liste','error');return;}
+  allowedUsers.push(email);
+  saving(true);
+  await evRef().update({allowedUsers});
+  if(ev) ev.allowedUsers=allowedUsers;
+  document.getElementById('access-new-allowed').value='';
+  renderTab();
+  toast('Utilisateur ajouté');
+}
+
+async function removeAllowedUser(idx){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const allowedUsers=[...(ev.allowedUsers||[])];
+  allowedUsers.splice(idx,1);
+  saving(true);
+  await evRef().update({allowedUsers});
+  if(ev) ev.allowedUsers=allowedUsers;
+  renderTab();
+  toast('Utilisateur retiré');
 }
 
 // ==================== WIDGET ====================
