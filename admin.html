@@ -2240,10 +2240,10 @@ function parseVideoUrl(url){
   // Feed update URL with URN
   m=url.match(/linkedin\.com\/feed\/update\/(urn:li:\w+:\d+)/);
   if(m) return {platform:'linkedin',id:m[1],type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/${m[1]}`};
-  // Post URL with activity ID: /posts/...-activity-1234567890123456789-...
-  m=url.match(/linkedin\.com\/(?:posts|feed)\/.*?activity[:-](\d{10,})/i);
-  if(m) return {platform:'linkedin',id:'urn:li:activity:'+m[1],type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/urn:li:activity:${m[1]}`};
-  // Generic LinkedIn URL (video, pulse, etc.) — fallback: store URL, no embed
+  // Post URL with activity or ugcPost ID
+  m=url.match(/linkedin\.com\/(?:posts|feed)\/.*?(activity|ugcPost)[:-](\d{10,})/i);
+  if(m){ const urnType=m[1].toLowerCase()==='ugcpost'?'ugcPost':'activity'; return {platform:'linkedin',id:`urn:li:${urnType}:${m[2]}`,type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/urn:li:${urnType}:${m[2]}`}; }
+  // Generic LinkedIn URL — fallback: store URL, no embed
   m=url.match(/linkedin\.com\/.+/);
   if(m) return {platform:'linkedin',id:'li_'+Date.now(),type:'video',url:url,embedUrl:''};
 
@@ -2285,7 +2285,7 @@ function renderVideos(el){
 
   <div class="admin-card"><h3>➕ Ajouter une vidéo</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">Supporte : youtube.com, youtu.be, instagram.com/reel/…, instagram.com/p/…, facebook.com/…/videos/…, facebook.com/reel/…, linkedin.com/posts/…<br>💡 Pour LinkedIn, utilisez l'URL contenant « activity- » (ex : linkedin.com/posts/nom_texte-<strong>activity-123…</strong>-xx) pour une intégration directe.</div></div>
+      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">Supporte : youtube.com, youtu.be, instagram.com/reel/…, instagram.com/p/…, facebook.com/…/videos/…, facebook.com/reel/…, linkedin.com/posts/…<br>⚠️ <strong>Facebook et LinkedIn</strong> : la vidéo/publication doit être <strong>publique</strong> pour s'afficher. Si l'embed échoue, un lien « Ouvrir sur… » sera affiché sous la vidéo.</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
     </div>
     <div class="form-row-inline">
@@ -2349,9 +2349,9 @@ function renderVideos(el){
         if(thumbRow) thumbRow.style.display='none';
       } else {
         const embedMethods={
-          facebook:'SDK Facebook — lecture directe sur le dashboard',
-          instagram:'Embed officiel Instagram — lecture directe sur le dashboard',
-          linkedin:p.embedUrl?'Embed LinkedIn — post intégré avec vidéo':'⚠️ URL sans identifiant d\'activité — lien externe uniquement'
+          facebook:p.embedUrl?'✅ Embed iframe — la vidéo doit être publique pour s\'afficher':'⚠️ URL non reconnue',
+          instagram:'✅ Embed Instagram officiel — la publication doit être publique',
+          linkedin:p.embedUrl?'✅ Embed LinkedIn — le post doit être public. Si l\'embed échoue, un lien popup sera proposé':'⚠️ URL sans identifiant — un lien popup sera proposé'
         };
         const embedNote=embedMethods[p.platform]||'Intégration directe';
         const noteColor=(!p.embedUrl && p.platform==='linkedin')?'var(--red)':'var(--text3)';
