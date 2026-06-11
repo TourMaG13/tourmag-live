@@ -202,6 +202,9 @@ select.form-input{cursor:pointer}
 .block-drag-item:active,.block-drag-item.dragging{cursor:grabbing;opacity:.5;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 .block-drag-item.disabled{opacity:.4}
 .block-drag-handle{font-size:14px;color:var(--text3);cursor:grab;line-height:1;letter-spacing:-1px}
+.block-uni-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:grab;user-select:none;transition:all .15s}
+.block-uni-item:hover{border-color:var(--acc);box-shadow:0 2px 8px rgba(232,132,44,.1)}
+.block-uni-item.disabled{opacity:.5}
 .block-drag-icon{font-size:13px}
 .block-drag-label{flex:1;font-weight:500;color:var(--text)}
 .block-drag-off{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px}
@@ -528,6 +531,16 @@ document.addEventListener('click',function(e){
   if(act==='delVid'&&vid) deleteVideo(vid);
   if(act==='editVid'&&vid) editVideo(vid);
   if(act==='moveVid'&&vid&&sec) moveVideo(vid,sec,parseInt(dir));
+  if((act==='blockUp'||act==='blockDown')&&btn.getAttribute('data-key')){
+    var bkey=btn.getAttribute('data-key');
+    var list=document.getElementById('block-unified-list');
+    if(!list)return;
+    var item=list.querySelector('[data-key="'+bkey+'"]');
+    if(!item)return;
+    if(act==='blockUp'&&item.previousElementSibling){list.insertBefore(item,item.previousElementSibling);}
+    if(act==='blockDown'&&item.nextElementSibling){list.insertBefore(item.nextElementSibling,item);}
+    saveUnifiedBlockOrder();updateBlockPreview();renderTab();
+  }
 });
 
 function autoStatus(timeStr,dayStr){
@@ -871,9 +884,9 @@ function renderModules(el){
   const mod=ev?.modules||{};
   const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
 
-    const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
+  const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
+  const defaultZones={hero:'full',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
@@ -890,72 +903,131 @@ function renderModules(el){
   if(migIdx>=0){orderedKeys.splice(migIdx,1);const ti=orderedKeys.indexOf('timeline');if(ti>=0)orderedKeys.splice(ti,1);if(!orderedKeys.includes('hero'))orderedKeys.unshift('hero');}
   allBlocks.forEach(b=>{if(!orderedKeys.includes(b.key))orderedKeys.push(b.key);});
   const validKeys=orderedKeys.filter(k=>blockMap[k]);
-  const fullItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
-  const mainItems=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
-  const sideItems=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
 
-  function renderDI(items){let o='';items.forEach(key=>{const b=blockMap[key];if(!b)return;const dis=mod[b.key]===false;o+=`<div class="block-drag-item${dis?' disabled':''}" draggable="true" data-key="${key}"><span class="block-drag-handle">⠿</span><span class="block-drag-icon">${b.icon}</span><span class="block-drag-label">${b.label}</span>${dis?'<span class="block-drag-off">OFF</span>':''}</div>`;});return o;}
+  const zoneLabels={full:'⬛ Pleine largeur',main:'◀ Colonne principale',side:'▶ Sidebar'};
+  const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
 
-  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs par glisser-déposer.</div>
+  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
   <div class="admin-card"><h3>🧩 Visibilité</h3>`;
   mods.forEach(m=>{h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${mod[m.key]!==false?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
   h+=`</div>
-  <div class="admin-card"><h3>↕️ Structure de la page</h3>
-    <div class="page-desc" style="margin-bottom:12px">3 zones : pleine largeur, colonne principale, sidebar.</div>
-    <div class="block-layout-preview">
-      <div class="block-layout-title"><div class="block-layout-title-inner"><span style="font-size:14px">📡</span><span>Titre de l'événement</span><span class="bdg-demo">EN DIRECT</span></div></div>
-      <div class="block-layout-full-zone"><div class="block-layout-zone-label">⬛ Pleine largeur</div><div class="block-drop-zone" id="drop-full" data-zone="full">${renderDI(fullItems)}</div></div>
-      <div class="block-layout-body">
-        <div class="block-layout-col block-layout-main"><div class="block-layout-zone-label">Colonne principale</div><div class="block-drop-zone" id="drop-main" data-zone="main">${renderDI(mainItems)}</div></div>
-        <div class="block-layout-col block-layout-side"><div class="block-layout-zone-label">Sidebar</div><div class="block-drop-zone" id="drop-side" data-zone="side">${renderDI(sideItems)}</div></div>
+
+  <div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+    <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
+    <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
+
+  validKeys.forEach((key,i)=>{
+    const b=blockMap[key]; if(!b) return;
+    const dis=mod[b.key]===false;
+    const zone=blockZones[key]||defaultZones[key]||'main';
+    h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:${zoneBgs[zone]||'#FFF'}">
+      <span class="block-drag-handle">⠿</span>
+      <span style="font-size:14px">${b.icon}</span>
+      <span style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${b.label}</span>
+      ${dis?'<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px">OFF</span>':''}
+      <select class="block-zone-sel" data-key="${key}" style="font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;background:#fff;font-family:Poppins;cursor:pointer">
+        <option value="full"${zone==='full'?' selected':''}>⬛ Pleine largeur</option>
+        <option value="main"${zone==='main'?' selected':''}>◀ Col. principale</option>
+        <option value="side"${zone==='side'?' selected':''}>▶ Sidebar</option>
+      </select>
+      <div style="display:flex;gap:2px">
+        <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
+        <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===validKeys.length-1?' disabled':''}>▼</button>
       </div>
+    </div>`;
+  });
+
+  h+=`</div>
+    <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Aperçu du rendu</div>
+      <div id="block-preview-zone" style="font-size:11px;color:var(--text2);line-height:2"></div>
     </div>
   </div>`;
   el.innerHTML=h;
-  initBlockDragDrop();
+  updateBlockPreview();
+  initUnifiedBlockDrag();
 }
 
-function initBlockDragDrop(){
-  let dragEl=null;
-  const zones=document.querySelectorAll('.block-drop-zone');
+function updateBlockPreview(){
+  const pz=document.getElementById('block-preview-zone');
+  if(!pz)return;
+  const items=[...document.querySelectorAll('#block-unified-list .block-uni-item')];
+  let preview='';
+  let inTwoCols=false;
+  let mainBuf=[], sideBuf=[];
+  function flushTwoCols(){
+    if(mainBuf.length||sideBuf.length){
+      preview+='<div style="display:flex;gap:4px;margin:2px 0"><div style="flex:2;background:#EDF2F7;border-radius:4px;padding:3px 8px;font-size:10px">'+mainBuf.join(' → ')+'</div><div style="flex:1;background:#F7FAFC;border:1px dashed var(--border);border-radius:4px;padding:3px 8px;font-size:10px">'+sideBuf.join(' → ')+'</div></div>';
+      mainBuf=[];sideBuf=[];
+    }
+  }
+  items.forEach(item=>{
+    const key=item.dataset.key;
+    const sel=item.querySelector('.block-zone-sel');
+    const zone=sel?sel.value:'main';
+    const label=item.querySelector('[style*="flex:1"]')?.textContent||key;
+    const icon=item.querySelectorAll('span')[1]?.textContent||'';
+    if(zone==='full'){
+      flushTwoCols();
+      preview+='<div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:4px;padding:3px 8px;margin:2px 0;font-size:10px;text-align:center">⬛ '+icon+' '+label+'</div>';
+    } else if(zone==='side'){
+      sideBuf.push(icon);
+    } else {
+      mainBuf.push(icon);
+    }
+  });
+  flushTwoCols();
+  pz.innerHTML=preview||'<em>Aucun bloc</em>';
+}
 
-  document.querySelectorAll('.block-drag-item').forEach(item=>{
+function initUnifiedBlockDrag(){
+  const list=document.getElementById('block-unified-list');
+  if(!list)return;
+  let dragEl=null;
+
+  list.querySelectorAll('.block-uni-item').forEach(item=>{
     item.addEventListener('dragstart',e=>{
       dragEl=item;
-      item.classList.add('dragging');
+      item.style.opacity='0.4';
       e.dataTransfer.effectAllowed='move';
       e.dataTransfer.setData('text/plain',item.dataset.key);
     });
     item.addEventListener('dragend',()=>{
-      if(dragEl)dragEl.classList.remove('dragging');
+      if(dragEl)dragEl.style.opacity='1';
       dragEl=null;
-      document.querySelectorAll('.block-drag-over').forEach(z=>z.classList.remove('block-drag-over'));
     });
   });
 
-  zones.forEach(zone=>{
-    zone.addEventListener('dragover',e=>{
-      e.preventDefault();
-      e.dataTransfer.dropEffect='move';
-      zone.classList.add('block-drag-over');
-      if(!dragEl)return;
-      const afterEl=getDragAfterElement(zone,e.clientY);
-      if(afterEl){zone.insertBefore(dragEl,afterEl);}
-      else{zone.appendChild(dragEl);}
-    });
-    zone.addEventListener('dragleave',e=>{
-      if(!zone.contains(e.relatedTarget))zone.classList.remove('block-drag-over');
-    });
-    zone.addEventListener('drop',e=>{
-      e.preventDefault();
-      zone.classList.remove('block-drag-over');
-      saveBlockOrder();
+  list.addEventListener('dragover',e=>{
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    if(!dragEl)return;
+    const afterEl=getUnifiedAfter(list,e.clientY);
+    if(afterEl){list.insertBefore(dragEl,afterEl);}
+    else{list.appendChild(dragEl);}
+  });
+
+  list.addEventListener('drop',e=>{
+    e.preventDefault();
+    saveUnifiedBlockOrder();
+    updateBlockPreview();
+  });
+
+  // Zone change handlers
+  list.querySelectorAll('.block-zone-sel').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      // Update background color
+      const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
+      const item=sel.closest('.block-uni-item');
+      if(item) item.style.background=zoneBgs[sel.value]||'#FFF';
+      saveUnifiedBlockOrder();
+      updateBlockPreview();
     });
   });
 }
 
-function getDragAfterElement(zone,y){
-  const items=[...zone.querySelectorAll('.block-drag-item:not(.dragging)')];
+function getUnifiedAfter(list,y){
+  const items=[...list.querySelectorAll('.block-uni-item:not([style*="opacity: 0.4"])')];
   return items.reduce((closest,child)=>{
     const box=child.getBoundingClientRect();
     const offset=y-box.top-box.height/2;
@@ -964,21 +1036,22 @@ function getDragAfterElement(zone,y){
   },{offset:Number.NEGATIVE_INFINITY}).element||null;
 }
 
-async function saveBlockOrder(){
-  const fullItems=[...document.querySelectorAll('#drop-full .block-drag-item')].map(el=>el.dataset.key);
-  const mainItems=[...document.querySelectorAll('#drop-main .block-drag-item')].map(el=>el.dataset.key);
-  const sideItems=[...document.querySelectorAll('#drop-side .block-drag-item')].map(el=>el.dataset.key);
-  const newOrder=[...fullItems,...mainItems,...sideItems];
-  if(!newOrder.length)return;
+async function saveUnifiedBlockOrder(){
+  const items=[...document.querySelectorAll('#block-unified-list .block-uni-item')];
+  const newOrder=[];
   const newZones={};
-  fullItems.forEach(k=>newZones[k]='full');
-  mainItems.forEach(k=>newZones[k]='main');
-  sideItems.forEach(k=>newZones[k]='side');
+  items.forEach(item=>{
+    const key=item.dataset.key;
+    const sel=item.querySelector('.block-zone-sel');
+    newOrder.push(key);
+    newZones[key]=sel?sel.value:'main';
+  });
+  if(!newOrder.length)return;
   saving(true);
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;}
   await evRef().update({blockOrder:newOrder,blockZones:newZones});
-  toast('Ordre mis à jour');
+  toast('Disposition mise à jour');
 }
 async function toggleModule(key,val){
   saving(true);
