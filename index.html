@@ -205,25 +205,25 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .vid-nav:hover{background:rgba(0,0,0,.75)}
 .vid-nav-l{left:6px}
 .vid-nav-r{right:6px}
-.vid-ext-card{position:relative;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;transition:transform .15s;display:block;text-decoration:none}
-.vid-ext-card:hover{transform:translateY(-2px)}
-.vid-ext-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:.85;transition:opacity .15s}
-.vid-ext-card:hover .vid-ext-thumb{opacity:1}
-.vid-ext-thumb-short{aspect-ratio:9/16}
-.vid-ext-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
-.vid-ext-play{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.3)}
-.vid-ext-play svg{width:20px;height:20px;fill:#111;margin-left:3px}
-.vid-ext-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:4px;font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff}
-.vid-ext-badge.linkedin{background:#0A66C2}
-.vid-ext-badge.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
-.vid-ext-badge.facebook{background:#1877F2}
-.vid-ext-badge.other{background:#475569}
+/* Facebook SDK embed container */
+.vid-fb-wrap{border-radius:10px;overflow:hidden;background:#000;min-height:180px}
+.vid-fb-wrap .fb-video,.vid-fb-wrap .fb-video span,.vid-fb-wrap .fb-video iframe{width:100%!important}
+/* Instagram embed container */
+.vid-ig-wrap{border-radius:10px;overflow:hidden;background:#000;min-height:200px;display:flex;align-items:center;justify-content:center}
+.vid-ig-wrap .instagram-media{margin:0!important;min-width:0!important;max-width:100%!important;width:100%!important;border-radius:10px!important}
+.vid-ig-wrap iframe{max-width:100%!important;border-radius:10px!important}
+/* Platform badge overlay */
 .vid-ext-platform-tag{position:absolute;top:6px;left:6px;z-index:2;padding:3px 8px;border-radius:4px;font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;pointer-events:none}
 .vid-ext-platform-tag.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .vid-ext-platform-tag.facebook{background:#1877F2}
 .vid-ext-platform-tag.linkedin{background:#0A66C2}
+/* Fallback link card (used when no embed available) */
+.vid-ext-card{position:relative;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;transition:transform .15s;display:block;text-decoration:none}
+.vid-ext-card:hover{transform:translateY(-2px)}
 .vid-ext-placeholder{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .vid-ext-placeholder-short{aspect-ratio:9/16}
+.vid-ext-play{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.vid-ext-play svg{width:20px;height:20px;fill:#111;margin-left:3px}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #F59E0B25}
 .prog-card .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
 .prog-card .ci svg{width:16px;height:16px}
@@ -260,6 +260,9 @@ html,body{overflow-x:hidden}
 </style>
 </head>
 <body>
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v21.0" nonce="tmglive"></script>
+<script async src="//www.instagram.com/embed.js"></script>
 <div class="upd-bar" id="upd-bar"></div>
 <div class="dash" id="app">
   <div class="ld"><div class="spinner"></div><div class="tx">Chargement du live...</div></div>
@@ -687,39 +690,45 @@ function render(data){
       const platform=v.platform||'youtube';
       const isShort=v.type==='short';
 
-      // Compute embed URL — use stored embedUrl, or compute from known patterns
-      let embedUrl=v.embedUrl||'';
-      if(!embedUrl){
-        if(platform==='youtube' && v.ytId){
-          embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
-        } else if(platform==='instagram'){
-          // Try to extract shortcode from URL
-          const mReel=(v.url||'').match(/instagram\.com\/(?:reel|reels)\/([a-zA-Z0-9_-]+)/);
-          const mPost=(v.url||'').match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/);
-          if(mReel) embedUrl=`https://www.instagram.com/reel/${mReel[1]}/embed/`;
-          else if(mPost) embedUrl=`https://www.instagram.com/p/${mPost[1]}/embed/`;
-        } else if(platform==='facebook' && v.url){
-          embedUrl=`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(v.url)}&show_text=false&t=0`;
-        } else if(platform==='linkedin' && v.url){
+      // ===== YOUTUBE =====
+      if(platform==='youtube' && v.ytId){
+        const embedUrl=v.embedUrl||`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+        return `<div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+      }
+
+      // ===== FACEBOOK — SDK officiel fb-video =====
+      if(platform==='facebook' && v.url){
+        return `<div class="vid-fb-wrap"><div class="fb-video" data-href="${v.url}" data-width="auto" data-show-text="false" data-allowfullscreen="true" data-autoplay="false"></div></div>`;
+      }
+
+      // ===== INSTAGRAM — blockquote embed.js officiel =====
+      if(platform==='instagram' && v.url){
+        // Normaliser l'URL pour l'embed
+        let igUrl=v.url.split('?')[0]; // retirer les query params
+        if(!igUrl.endsWith('/')) igUrl+='/';
+        return `<div class="vid-ig-wrap"><blockquote class="instagram-media" data-instgrm-permalink="${igUrl}" data-instgrm-version="14" style="margin:0;width:100%;max-width:100%"><a href="${igUrl}" target="_blank">Voir sur Instagram</a></blockquote></div>`;
+      }
+
+      // ===== LINKEDIN — iframe embed =====
+      if(platform==='linkedin'){
+        let embedUrl=v.embedUrl||'';
+        if(!embedUrl && v.url){
           const mUrn=(v.url).match(/urn:li:\w+:\d+/);
           const mAct=(v.url).match(/activity[:-](\d{10,})/i);
           if(mUrn) embedUrl=`https://www.linkedin.com/embed/feed/update/${mUrn[0]}`;
           else if(mAct) embedUrl=`https://www.linkedin.com/embed/feed/update/urn:li:activity:${mAct[1]}`;
         }
+        if(embedUrl){
+          return `<div class="vid-frame" style="padding-top:70%"><iframe src="${embedUrl}" frameborder="0" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe></div>`;
+        }
       }
 
-      // If we have an embed URL → iframe
-      if(embedUrl){
-        const platformBadges={instagram:'instagram',facebook:'facebook',linkedin:'linkedin'};
-        const platformLabels={instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
-        const badgeHtml=(platform!=='youtube')?`<div class="vid-ext-platform-tag ${platform}">${platformLabels[platform]||''}</div>`:'';
-        return `<div class="vid-frame ${isShort?'vid-frame-short':''}" style="position:relative">${badgeHtml}<iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe></div>`;
-      }
-
-      // Fallback: no embed possible → clickable link card
+      // ===== FALLBACK — lien vers la plateforme =====
       const linkUrl=v.url||'#';
       const platformLabels={linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook'};
-      return `<a class="vid-ext-card" href="${linkUrl}" target="_blank" rel="noopener"><div class="vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">Voir sur ${platformLabels[platform]||platform}</div></div></a>`;
+      const platformColors={linkedin:'#0A66C2',instagram:'#E4405F',facebook:'#1877F2'};
+      const color=platformColors[platform]||'#475569';
+      return `<a class="vid-ext-card" href="${linkUrl}" target="_blank" rel="noopener"><div class="vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;font-weight:600">Voir sur ${platformLabels[platform]||platform}</div><div style="font-size:9px;color:rgba(255,255,255,.4)">Cliquer pour ouvrir</div></div></a>`;
     }
 
     sections.forEach(sec=>{
@@ -828,6 +837,13 @@ function render(data){
     es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('vis'); obs.unobserve(e.target); }});
   },{threshold:.08});
   document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+
+  // Process social media embeds after DOM update (debounced)
+  if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
+  window._socialParseTimer = setTimeout(()=>{
+    try{ if(typeof FB!=='undefined' && FB.XFBML) FB.XFBML.parse(document.getElementById('app')); }catch(e){ console.log('FB parse skip',e); }
+    try{ if(window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process(); }catch(e){ console.log('IG embed skip',e); }
+  }, 400);
 }
 
 // ============================================================
