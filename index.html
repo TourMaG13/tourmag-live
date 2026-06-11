@@ -188,9 +188,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .vid-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--text)}
 .vid-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:14px 18px}
 .vid-grid-shorts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px}
-.vid-gcol{display:grid;grid-template-columns:repeat(var(--vcols,2),1fr);gap:12px;padding:14px 18px}
-@media(max-width:768px){.vid-grid{grid-template-columns:1fr}.vid-grid-shorts{grid-template-columns:repeat(2,1fr)}.vid-gcol{grid-template-columns:repeat(2,1fr)!important}}
-@media(max-width:480px){.vid-grid-shorts{grid-template-columns:1fr}.vid-gcol{grid-template-columns:1fr!important}}
+.vid-gcol{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--vw,320px),1fr));gap:12px;padding:14px 18px}
+@media(max-width:768px){.vid-grid{grid-template-columns:1fr}.vid-grid-shorts{grid-template-columns:repeat(2,1fr)}.vid-gcol{grid-template-columns:repeat(auto-fill,minmax(min(var(--vw,280px),100%),1fr))}}
+@media(max-width:480px){.vid-grid-shorts{grid-template-columns:1fr}.vid-gcol{grid-template-columns:1fr}}
 .vid-frame{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000}
 .vid-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%}
 .vid-frame-short{padding-top:177.78%}
@@ -766,11 +766,11 @@ function render(data){
         });
         o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
       } else {
-        // Grid mode — use section columns setting, fallback to auto-detect
-        const cols=sec.columns||( allShorts?3:2 );
+        // Grid mode — use section videoWidth setting for auto-fill grid
+        const vw=sec.videoWidth||320;
         const visible=allVids.slice(0,visCount);
         const extra=allVids.slice(visCount);
-        o+=`<div class="vid-gcol" style="--vcols:${cols}">`;
+        o+=`<div class="vid-gcol" style="--vw:${vw}px">`;
         visible.forEach(v=>{
           o+=`<div>
             ${mkVidEmbed(v,false)}
@@ -779,7 +779,7 @@ function render(data){
         });
         o+=`</div>`;
         if(extra.length){
-          o+=`<div class="cd-expand" id="${accId}"><div class="vid-gcol" style="--vcols:${cols}">`;
+          o+=`<div class="cd-expand" id="${accId}"><div class="vid-gcol" style="--vw:${vw}px">`;
           extra.forEach(v=>{
             o+=`<div>
               ${mkVidEmbed(v,false)}
@@ -813,27 +813,46 @@ function render(data){
   allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
   const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
 
-  const fullBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
-  const mainBlocks=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
-  const sideBlocks=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
+  const fullBlocks_=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
+  const mainBlocks_=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
+  const sideBlocks_=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
 
-  // Full-width blocks first
-  fullBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
+  // Build layout segments: split 2-column layout around full-width blocks
+  // Each segment is either {full:key} or {main:[keys],side:[keys]}
+  var segments=[], curMain=[], curSide=[];
+  validKeys.forEach(key=>{
+    const zone=blockZones[key]||defaultZones[key];
+    if(zone==='full'){
+      if(curMain.length||curSide.length){ segments.push({main:curMain,side:curSide}); curMain=[]; curSide=[]; }
+      segments.push({full:key});
+    } else if(zone==='side'){
+      curSide.push(key);
+    } else {
+      curMain.push(key);
+    }
+  });
+  if(curMain.length||curSide.length) segments.push({main:curMain,side:curSide});
 
-  // Then 2-column layout (skip sidebar if empty)
-  const hasMain=mainBlocks.some(k=>{const fn=blockRenderers[k];return fn;});
-  const hasSide=sideBlocks.some(k=>{const fn=blockRenderers[k];return fn;});
-  if(hasMain && hasSide){
-    h += `<div class="layout"><div class="main-col">`;
-    mainBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
-    h += `</div><div class="side-col">`;
-    sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
-    h += `</div></div>`;
-  } else if(hasMain){
-    mainBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
-  } else if(hasSide){
-    sideBlocks.forEach(key=>{const fn=blockRenderers[key];if(fn)h+=fn();});
-  }
+  // Render each segment
+  segments.forEach(seg=>{
+    if(seg.full){
+      const fn=blockRenderers[seg.full]; if(fn) h+=fn();
+    } else {
+      const hasM=seg.main.some(k=>blockRenderers[k]);
+      const hasS=seg.side.some(k=>blockRenderers[k]);
+      if(hasM && hasS){
+        h+=`<div class="layout"><div class="main-col">`;
+        seg.main.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
+        h+=`</div><div class="side-col">`;
+        seg.side.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
+        h+=`</div></div>`;
+      } else if(hasM){
+        seg.main.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
+      } else if(hasS){
+        seg.side.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
+      }
+    }
+  });
   h += `<div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a></div>`;
 
   document.getElementById('app').innerHTML = h;
