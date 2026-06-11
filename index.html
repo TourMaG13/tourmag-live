@@ -218,6 +218,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .vid-ext-badge.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .vid-ext-badge.facebook{background:#1877F2}
 .vid-ext-badge.other{background:#475569}
+.vid-ext-platform-tag{position:absolute;top:6px;left:6px;z-index:2;padding:3px 8px;border-radius:4px;font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;pointer-events:none}
+.vid-ext-platform-tag.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.vid-ext-platform-tag.facebook{background:#1877F2}
+.vid-ext-platform-tag.linkedin{background:#0A66C2}
 .vid-ext-placeholder{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .vid-ext-placeholder-short{aspect-ratio:9/16}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #F59E0B25}
@@ -682,22 +686,40 @@ function render(data){
     function mkVidEmbed(v, isCarouselItem){
       const platform=v.platform||'youtube';
       const isShort=v.type==='short';
-      if(platform==='youtube'){
-        const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
-        return `<div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+
+      // Compute embed URL — use stored embedUrl, or compute from known patterns
+      let embedUrl=v.embedUrl||'';
+      if(!embedUrl){
+        if(platform==='youtube' && v.ytId){
+          embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+        } else if(platform==='instagram'){
+          // Try to extract shortcode from URL
+          const mReel=(v.url||'').match(/instagram\.com\/(?:reel|reels)\/([a-zA-Z0-9_-]+)/);
+          const mPost=(v.url||'').match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/);
+          if(mReel) embedUrl=`https://www.instagram.com/reel/${mReel[1]}/embed/`;
+          else if(mPost) embedUrl=`https://www.instagram.com/p/${mPost[1]}/embed/`;
+        } else if(platform==='facebook' && v.url){
+          embedUrl=`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(v.url)}&show_text=false&t=0`;
+        } else if(platform==='linkedin' && v.url){
+          const mUrn=(v.url).match(/urn:li:\w+:\d+/);
+          const mAct=(v.url).match(/activity[:-](\d{10,})/i);
+          if(mUrn) embedUrl=`https://www.linkedin.com/embed/feed/update/${mUrn[0]}`;
+          else if(mAct) embedUrl=`https://www.linkedin.com/embed/feed/update/urn:li:activity:${mAct[1]}`;
+        }
       }
-      // Non-YouTube: card with thumbnail + play button + platform badge
-      const platformLabels={linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook'};
-      const platformClass=platform;
-      const thumbUrl=v.thumbnail||'';
+
+      // If we have an embed URL → iframe
+      if(embedUrl){
+        const platformBadges={instagram:'instagram',facebook:'facebook',linkedin:'linkedin'};
+        const platformLabels={instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
+        const badgeHtml=(platform!=='youtube')?`<div class="vid-ext-platform-tag ${platform}">${platformLabels[platform]||''}</div>`:'';
+        return `<div class="vid-frame ${isShort?'vid-frame-short':''}" style="position:relative">${badgeHtml}<iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe></div>`;
+      }
+
+      // Fallback: no embed possible → clickable link card
       const linkUrl=v.url||'#';
-      let thumbHtml;
-      if(thumbUrl){
-        thumbHtml=`<img class="vid-ext-thumb ${isShort?'vid-ext-thumb-short':''}" src="${thumbUrl}" alt="" onerror="this.outerHTML='<div class=\\'vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}\\'><div class=\\'vid-ext-play\\'><svg viewBox=\\'0 0 24 24\\'><polygon points=\\'5 3 19 12 5 21\\'/></svg></div></div>'">`;
-      } else {
-        thumbHtml=`<div class="vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div></div>`;
-      }
-      return `<a class="vid-ext-card" href="${linkUrl}" target="_blank" rel="noopener">${thumbHtml}<div class="vid-ext-overlay"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div></div><span class="vid-ext-badge ${platformClass}">${platformLabels[platform]||platform}</span></a>`;
+      const platformLabels={linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook'};
+      return `<a class="vid-ext-card" href="${linkUrl}" target="_blank" rel="noopener"><div class="vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">Voir sur ${platformLabels[platform]||platform}</div></div></a>`;
     }
 
     sections.forEach(sec=>{
