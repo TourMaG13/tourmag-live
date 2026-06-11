@@ -205,6 +205,21 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .vid-nav:hover{background:rgba(0,0,0,.75)}
 .vid-nav-l{left:6px}
 .vid-nav-r{right:6px}
+.vid-ext-card{position:relative;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;transition:transform .15s;display:block;text-decoration:none}
+.vid-ext-card:hover{transform:translateY(-2px)}
+.vid-ext-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:.85;transition:opacity .15s}
+.vid-ext-card:hover .vid-ext-thumb{opacity:1}
+.vid-ext-thumb-short{aspect-ratio:9/16}
+.vid-ext-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+.vid-ext-play{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.vid-ext-play svg{width:20px;height:20px;fill:#111;margin-left:3px}
+.vid-ext-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:4px;font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff}
+.vid-ext-badge.linkedin{background:#0A66C2}
+.vid-ext-badge.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.vid-ext-badge.facebook{background:#1877F2}
+.vid-ext-badge.other{background:#475569}
+.vid-ext-placeholder{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.vid-ext-placeholder-short{aspect-ratio:9/16}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #F59E0B25}
 .prog-card .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
 .prog-card .ci svg{width:16px;height:16px}
@@ -627,7 +642,7 @@ function render(data){
     // Sort within each day by order then time
     Object.values(grouped).forEach(items=>items.sort((a,b)=>(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||'')));
     const hasMultipleDays=dayOrder.filter(d=>d).length>0;
-    let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">Programme</span></div><div class="prog-list">`;
+    let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">${event.programmeTitle||'Programme'}</span></div><div class="prog-list">`;
     dayOrder.forEach(day => {
       if(!grouped[day]||!grouped[day].length) return;
       if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;color:#B45309;margin:6px 0 4px;padding:3px 8px;background:rgba(245,158,11,.1);border-radius:5px;display:inline-block">📅 ${day}</div>`;
@@ -664,6 +679,27 @@ function render(data){
     var _vidAccCounter=0;
     let o='';
 
+    function mkVidEmbed(v, isCarouselItem){
+      const platform=v.platform||'youtube';
+      const isShort=v.type==='short';
+      if(platform==='youtube'){
+        const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
+        return `<div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+      }
+      // Non-YouTube: card with thumbnail + play button + platform badge
+      const platformLabels={linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook'};
+      const platformClass=platform;
+      const thumbUrl=v.thumbnail||'';
+      const linkUrl=v.url||'#';
+      let thumbHtml;
+      if(thumbUrl){
+        thumbHtml=`<img class="vid-ext-thumb ${isShort?'vid-ext-thumb-short':''}" src="${thumbUrl}" alt="" onerror="this.outerHTML='<div class=\\'vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}\\'><div class=\\'vid-ext-play\\'><svg viewBox=\\'0 0 24 24\\'><polygon points=\\'5 3 19 12 5 21\\'/></svg></div></div>'">`;
+      } else {
+        thumbHtml=`<div class="vid-ext-placeholder ${isShort?'vid-ext-placeholder-short':''}"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div></div>`;
+      }
+      return `<a class="vid-ext-card" href="${linkUrl}" target="_blank" rel="noopener">${thumbHtml}<div class="vid-ext-overlay"><div class="vid-ext-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg></div></div><span class="vid-ext-badge ${platformClass}">${platformLabels[platform]||platform}</span></a>`;
+    }
+
     sections.forEach(sec=>{
       const secVids=videos.filter(v=>v.section===sec.id);
       // Include orphan videos in default section
@@ -683,9 +719,8 @@ function render(data){
         o+=`<div class="vid-carousel" id="vid-car-${accId}"><div class="vid-carousel-track">`;
         allVids.forEach(v=>{
           const isShort=v.type==='short';
-          const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
           o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">
-            <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+            ${mkVidEmbed(v,true)}
             ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
           </div>`;
         });
@@ -698,9 +733,8 @@ function render(data){
         o+=`<div class="${gridClass}">`;
         visible.forEach(v=>{
           const isShort=v.type==='short';
-          const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
           o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
-            <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+            ${mkVidEmbed(v,false)}
             ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
           </div>`;
         });
@@ -709,9 +743,8 @@ function render(data){
           o+=`<div class="cd-expand" id="${accId}"><div class="${gridClass}">`;
           extra.forEach(v=>{
             const isShort=v.type==='short';
-            const embedUrl=`https://www.youtube.com/embed/${v.ytId}${isShort?'?loop=1':''}`;
             o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
-              <div class="vid-frame ${isShort?'vid-frame-short':''}"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+              ${mkVidEmbed(v,false)}
               ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
             </div>`;
           });
