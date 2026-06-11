@@ -813,25 +813,33 @@ function render(data){
   allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
   const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
 
-  const fullBlocks_=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='full');
-  const mainBlocks_=validKeys.filter(k=>{const z=blockZones[k]||defaultZones[k];return z!=='side'&&z!=='full';});
-  const sideBlocks_=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
+  // Build layout: collect side blocks globally, distribute to first main segment
+  const allSideKeys=validKeys.filter(k=>(blockZones[k]||defaultZones[k])==='side');
+  var segments=[], curMain=[], sideAttached=false;
 
-  // Build layout segments: split 2-column layout around full-width blocks
-  // Each segment is either {full:key} or {main:[keys],side:[keys]}
-  var segments=[], curMain=[], curSide=[];
   validKeys.forEach(key=>{
     const zone=blockZones[key]||defaultZones[key];
     if(zone==='full'){
-      if(curMain.length||curSide.length){ segments.push({main:curMain,side:curSide}); curMain=[]; curSide=[]; }
+      if(curMain.length){
+        segments.push({main:curMain, side:sideAttached?[]:allSideKeys});
+        sideAttached=true;
+        curMain=[];
+      }
       segments.push({full:key});
     } else if(zone==='side'){
-      curSide.push(key);
+      // handled via allSideKeys
     } else {
       curMain.push(key);
     }
   });
-  if(curMain.length||curSide.length) segments.push({main:curMain,side:curSide});
+  if(curMain.length){
+    segments.push({main:curMain, side:sideAttached?[]:allSideKeys});
+    sideAttached=true;
+  }
+  // If sidebar never attached (all blocks are full), add standalone
+  if(!sideAttached && allSideKeys.length){
+    segments.push({main:[], side:allSideKeys});
+  }
 
   // Render each segment
   segments.forEach(seg=>{
@@ -849,7 +857,9 @@ function render(data){
       } else if(hasM){
         seg.main.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
       } else if(hasS){
+        h+=`<div class="layout"><div class="main-col"></div><div class="side-col">`;
         seg.side.forEach(k=>{const fn=blockRenderers[k];if(fn)h+=fn();});
+        h+=`</div></div>`;
       }
     }
   });
