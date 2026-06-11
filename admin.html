@@ -2217,30 +2217,47 @@ async function toggleIATimeline(val){
 // ==================== VIDÉOS ====================
 function parseVideoUrl(url){
   let m;
-  // YouTube shorts
+  // ===== YOUTUBE =====
   m=url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if(m) return {platform:'youtube',id:m[1],type:'short',ytId:m[1]};
-  // YouTube watch/short URL
+  if(m) return {platform:'youtube',id:m[1],type:'short',ytId:m[1],embedUrl:`https://www.youtube.com/embed/${m[1]}?loop=1`};
   m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1]};
-  // YouTube embed
+  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1],embedUrl:`https://www.youtube.com/embed/${m[1]}`};
   m=url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1]};
-  // Instagram Reel
+  if(m) return {platform:'youtube',id:m[1],type:'video',ytId:m[1],embedUrl:`https://www.youtube.com/embed/${m[1]}`};
+
+  // ===== INSTAGRAM =====
+  // Reel
   m=url.match(/instagram\.com\/(?:reel|reels)\/([a-zA-Z0-9_-]+)/);
-  if(m) return {platform:'instagram',id:m[1],type:'short',url:url};
-  // Instagram post (video)
+  if(m) return {platform:'instagram',id:m[1],type:'short',url:url,embedUrl:`https://www.instagram.com/reel/${m[1]}/embed/`};
+  // Post
   m=url.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/);
-  if(m) return {platform:'instagram',id:m[1],type:'video',url:url};
-  // LinkedIn video post
+  if(m) return {platform:'instagram',id:m[1],type:'video',url:url,embedUrl:`https://www.instagram.com/p/${m[1]}/embed/`};
+
+  // ===== LINKEDIN =====
+  // Already an embed URL
+  m=url.match(/linkedin\.com\/embed\/feed\/update\/(urn:li:\w+:\d+)/);
+  if(m) return {platform:'linkedin',id:m[1],type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/${m[1]}`};
+  // Feed update URL with URN
+  m=url.match(/linkedin\.com\/feed\/update\/(urn:li:\w+:\d+)/);
+  if(m) return {platform:'linkedin',id:m[1],type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/${m[1]}`};
+  // Post URL with activity ID: /posts/...-activity-1234567890123456789-...
+  m=url.match(/linkedin\.com\/(?:posts|feed)\/.*?activity[:-](\d{10,})/i);
+  if(m) return {platform:'linkedin',id:'urn:li:activity:'+m[1],type:'video',url:url,embedUrl:`https://www.linkedin.com/embed/feed/update/urn:li:activity:${m[1]}`};
+  // Generic LinkedIn URL (video, pulse, etc.) — fallback: store URL, no embed
   m=url.match(/linkedin\.com\/.+/);
-  if(m) return {platform:'linkedin',id:'li_'+Date.now(),type:'video',url:url};
-  // Facebook video
-  m=url.match(/facebook\.com\/.+\/videos\/|fb\.watch\/|facebook\.com\/watch|facebook\.com\/.+\/posts\//);
-  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'video',url:url};
-  // Facebook reel
-  m=url.match(/facebook\.com\/reel\//);
-  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'short',url:url};
+  if(m) return {platform:'linkedin',id:'li_'+Date.now(),type:'video',url:url,embedUrl:''};
+
+  // ===== FACEBOOK =====
+  // Reel
+  m=url.match(/facebook\.com\/reel\/(\d+)/);
+  if(m) return {platform:'facebook',id:'fb_reel_'+m[1],type:'short',url:url,embedUrl:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&t=0`};
+  // Video URL (various patterns)
+  m=url.match(/facebook\.com\/.+\/videos\/|fb\.watch\/|facebook\.com\/watch/);
+  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'video',url:url,embedUrl:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&t=0`};
+  // Generic Facebook post with video
+  m=url.match(/facebook\.com\/.+/);
+  if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'video',url:url,embedUrl:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&t=0`};
+
   return null;
 }
 // Backward compat alias
@@ -2268,7 +2285,7 @@ function renderVideos(el){
 
   <div class="admin-card"><h3>➕ Ajouter une vidéo</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px">Supporte : youtube.com, youtu.be, instagram.com/reel/…, facebook.com/…/videos/…, linkedin.com/…</div></div>
+      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">Supporte : youtube.com, youtu.be, instagram.com/reel/…, instagram.com/p/…, facebook.com/…/videos/…, facebook.com/reel/…, linkedin.com/posts/…<br>💡 Pour LinkedIn, utilisez l'URL contenant « activity- » (ex : linkedin.com/posts/nom_texte-<strong>activity-123…</strong>-xx) pour une intégration directe.</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
     </div>
     <div class="form-row-inline">
@@ -2331,7 +2348,8 @@ function renderVideos(el){
         prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:11px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'YouTube Short (9:16)':'YouTube Vidéo (16:9)'}</div></div></div>`;
         if(thumbRow) thumbRow.style.display='none';
       } else {
-        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid ${platformColors[p.platform]||'var(--border)'}40"><span style="font-size:20px;flex-shrink:0;width:40px;text-align:center">${p.platform==='instagram'?'📸':p.platform==='facebook'?'📘':p.platform==='linkedin'?'💼':'🎬'}</span><div><div style="font-size:11px;font-weight:600;color:${platformColors[p.platform]||'var(--text)'}">${platformLabels[p.platform]||p.platform}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short/Reel':'Vidéo'} — l'url sera ouverte dans un nouvel onglet</div></div></div>`;
+        const embedNote=p.embedUrl?'Intégration directe par iframe':'⚠️ Pas d\'embed disponible — lien externe';
+        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid ${platformColors[p.platform]||'var(--border)'}40"><span style="font-size:20px;flex-shrink:0;width:40px;text-align:center">${p.platform==='instagram'?'📸':p.platform==='facebook'?'📘':p.platform==='linkedin'?'💼':'🎬'}</span><div><div style="font-size:11px;font-weight:600;color:${platformColors[p.platform]||'var(--text)'}">${platformLabels[p.platform]||p.platform}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short/Reel':'Vidéo'} — ${embedNote}</div></div></div>`;
         if(thumbRow) thumbRow.style.display='block';
       }
     } else {
@@ -2430,6 +2448,7 @@ async function addVideo(){
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   };
   if(parsed.platform==='youtube') docData.ytId=parsed.ytId;
+  if(parsed.embedUrl) docData.embedUrl=parsed.embedUrl;
   if(thumbnail) docData.thumbnail=thumbnail;
   await subCol('videos').add(docData);
   document.getElementById('vid-url').value='';document.getElementById('vid-caption').value='';
