@@ -236,6 +236,7 @@ select.form-input{cursor:pointer}
   <div class="mobile-sidebar-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
+      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
       <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
       <div class="sidebar-section">Contenu</div>
       <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
@@ -718,6 +719,7 @@ function renderTab(){
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
     case 'access':renderAccess(main);break;
+    case 'guide':renderGuide(main);break;
   }
 }
 
@@ -2683,6 +2685,299 @@ async function removeAllowedUser(idx){
   if(ev) ev.allowedUsers=allowedUsers;
   renderTab();
   toast('Utilisateur retiré');
+}
+
+// ==================== GUIDE ====================
+function renderGuide(el){
+  const guideCSS=`
+    .guide{max-width:780px}
+    .guide h2{font-family:'Josefin Sans';font-size:18px;font-weight:700;color:var(--pri);margin:32px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+    .guide h2:first-of-type{margin-top:8px}
+    .guide h3{font-size:14px;font-weight:700;color:var(--acc);margin:20px 0 8px}
+    .guide p,.guide li{font-size:13px;color:var(--text);line-height:1.8}
+    .guide ul{padding-left:20px;margin:8px 0 16px}
+    .guide li{margin-bottom:6px}
+    .guide .tip{background:#FFF7ED;border:1px solid #FDE68A;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:12px;line-height:1.7;color:#78350F}
+    .guide .warn{background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:12px;line-height:1.7;color:#991B1B}
+    .guide .step{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.8}
+    .guide .step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-right:6px}
+    .guide .key{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 8px;font-family:'IBM Plex Mono';font-size:11px;color:var(--text2)}
+    .guide-toc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:24px}
+    .guide-toc a{display:block;font-size:12px;color:var(--blue);text-decoration:none;padding:4px 0;transition:color .15s}
+    .guide-toc a:hover{color:var(--acc)}
+  `;
+  let h=`<style>${guideCSS}</style>
+  <div class="guide">
+  <div class="page-title">📖 Guide d'utilisation</div>
+  <div class="page-desc">Ce guide vous accompagne pas à pas dans l'utilisation de TourMaG Live. Cliquez sur une section pour y accéder directement.</div>
+
+  <div class="guide-toc">
+    <div style="font-family:'Josefin Sans';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
+    <a href="#g-start">1. Premiers pas</a>
+    <a href="#g-events">2. Créer et gérer un événement</a>
+    <a href="#g-programme">3. Le programme</a>
+    <a href="#g-flash">4. Le flash info</a>
+    <a href="#g-essential">5. Les points essentiels</a>
+    <a href="#g-live">6. Le fil live</a>
+    <a href="#g-citations">7. Les citations</a>
+    <a href="#g-articles">8. Les articles liés</a>
+    <a href="#g-videos">9. Les vidéos</a>
+    <a href="#g-media">10. La médiathèque</a>
+    <a href="#g-rubriques">11. Rubriques et tags</a>
+    <a href="#g-modules">12. Disposition des blocs</a>
+    <a href="#g-widget">13. Intégrer sur votre site</a>
+    <a href="#g-access">14. Gestion des accès</a>
+  </div>
+
+  <!-- ==================== 1. PREMIERS PAS ==================== -->
+  <h2 id="g-start">1. 🚀 Premiers pas</h2>
+  <p>TourMaG Live est un dashboard de couverture événementielle en temps réel. Il vous permet de créer une page live pour un événement (salon, conférence, etc.) et d'y publier du contenu en direct : fil d'actualité, citations, programme, vidéos…</p>
+
+  <h3>L'interface en un coup d'œil</h3>
+  <ul>
+    <li><strong>Barre du haut</strong> — Le sélecteur d'événement (si vous en avez plusieurs) et le bouton de déconnexion.</li>
+    <li><strong>Menu à gauche</strong> — Les différents onglets pour gérer le contenu. Vous êtes ici, dans le Guide !</li>
+    <li><strong>Zone principale</strong> — C'est là que vous éditez le contenu de l'onglet sélectionné.</li>
+  </ul>
+
+  <div class="tip">💡 <strong>Astuce</strong> : Tout ce que vous modifiez est enregistré automatiquement dans le cloud. Le dashboard public se met à jour en temps réel, sans besoin de rafraîchir la page.</div>
+
+  <!-- ==================== 2. ÉVÉNEMENTS ==================== -->
+  <h2 id="g-events">2. 📋 Créer et gérer un événement</h2>
+  <p>Un événement est un conteneur qui regroupe tout le contenu d'une couverture live (programme, fil live, citations, vidéos…).</p>
+
+  <h3>Créer un événement</h3>
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">📋 Mes événements</span><br>
+    <span class="step-num">2</span> Cliquez sur <strong>＋ Nouvel événement</strong><br>
+    <span class="step-num">3</span> Un événement vierge est créé. Cliquez sur <strong>✏️ Modifier</strong> pour renseigner le titre, les dates, le lieu, le logo, etc.
+  </div>
+
+  <h3>Les champs de l'événement</h3>
+  <ul>
+    <li><strong>Nom interne</strong> — Visible uniquement dans l'admin (ex : « IFTM 2026 — test »).</li>
+    <li><strong>Titre public</strong> — Affiché sur le dashboard public (ex : « IFTM Top Resa 2026 »).</li>
+    <li><strong>Statut</strong> — <em>À venir</em>, <em>En direct</em> ou <em>Terminé</em>. Choisissez « En direct » pour afficher le badge rouge « EN DIRECT » sur le dashboard.</li>
+    <li><strong>Logo</strong> — URL d'une image (vous pouvez l'uploader via la médiathèque).</li>
+    <li><strong>Couleur</strong> — La couleur de fond du héro (en-tête) du dashboard.</li>
+  </ul>
+
+  <div class="tip">💡 <strong>Passer en live</strong> : quand l'événement commence, changez le statut en « En direct ». Quand il se termine, passez-le en « Terminé ».</div>
+
+  <!-- ==================== 3. PROGRAMME ==================== -->
+  <h2 id="g-programme">3. 🗓 Le programme</h2>
+  <p>Le programme affiche les horaires de l'événement sur le dashboard (conférences, tables rondes, pauses…).</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">🗓 Programme</span><br>
+    <span class="step-num">2</span> Vous pouvez personnaliser le <strong>titre de l'encart</strong> (par défaut : « Programme »). Tapez ce que vous voulez (ex : « Agenda », « Planning du jour ») et cliquez 💾.<br>
+    <span class="step-num">3</span> Pour ajouter un élément : renseignez le <strong>jour</strong> (sélectionnez un jour existant ou tapez-en un nouveau, ex : « Mardi 1er octobre »), l'<strong>heure</strong> (optionnel), l'<strong>intitulé</strong> et une <strong>description</strong>.<br>
+    <span class="step-num">4</span> Cliquez sur <strong>🗓 Ajouter</strong>.
+  </div>
+
+  <ul>
+    <li>Les éléments sont regroupés par jour et triés par heure.</li>
+    <li>Le statut (À venir / En cours / Terminé) est calculé automatiquement d'après l'heure.</li>
+    <li>Vous pouvez réordonner les jours avec ▲ ▼ et renommer un jour avec ✏️.</li>
+  </ul>
+
+  <!-- ==================== 4. FLASH ==================== -->
+  <h2 id="g-flash">4. ⚡ Le flash info</h2>
+  <p>Le flash est un bandeau rouge en haut du dashboard pour mettre en avant une information urgente ou importante.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">⚡ Flash info</span><br>
+    <span class="step-num">2</span> Activez le flash avec l'interrupteur.<br>
+    <span class="step-num">3</span> Tapez votre message (ex : « Le ministre annonce un plan de 500 M€ »).<br>
+    <span class="step-num">4</span> Optionnel : ajoutez un lien URL (le bandeau deviendra cliquable).<br>
+    <span class="step-num">5</span> Cliquez <strong>💾 Enregistrer</strong>.
+  </div>
+
+  <!-- ==================== 5. ESSENTIEL ==================== -->
+  <h2 id="g-essential">5. 🧠 Les points essentiels</h2>
+  <p>Ce sont les 3 à 6 cartes affichées dans l'en-tête du dashboard, qui résument les informations clés de l'événement.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">🧠 L'essentiel</span><br>
+    <span class="step-num">2</span> Ajoutez un point manuellement : choisissez un <strong>tag</strong> (catégorie), rédigez le <strong>texte</strong> (vous pouvez utiliser &lt;strong&gt; pour mettre en gras).<br>
+    <span class="step-num">3</span> Réordonnez les points avec ▲ ▼.
+  </div>
+
+  <div class="tip">💡 Gardez entre 3 et 6 points essentiels pour un rendu optimal. Au-delà, l'en-tête devient trop long.</div>
+
+  <!-- ==================== 6. FIL LIVE ==================== -->
+  <h2 id="g-live">6. 📡 Le fil live</h2>
+  <p>C'est le cœur du dashboard : un fil d'actualité en temps réel, avec les publications les plus récentes en haut.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">📡 Fil live</span><br>
+    <span class="step-num">2</span> Rédigez votre message dans le champ texte. Vous pouvez utiliser &lt;strong&gt; pour le gras.<br>
+    <span class="step-num">3</span> Choisissez un <strong>tag</strong> (catégorie), renseignez le nom du <strong>journaliste</strong>.<br>
+    <span class="step-num">4</span> Optionnel : ajoutez une <strong>image</strong> (URL) et un <strong>lien</strong> « Lire la suite ».<br>
+    <span class="step-num">5</span> Cliquez <strong>📡 Publier</strong>. Le message apparaît instantanément sur le dashboard public.
+  </div>
+
+  <div class="tip">💡 Les 5 dernières entrées sont affichées par défaut. Les précédentes sont accessibles via « Voir les entrées précédentes ».</div>
+
+  <!-- ==================== 7. CITATIONS ==================== -->
+  <h2 id="g-citations">7. 💬 Les citations</h2>
+  <p>Mettez en valeur les verbatims des intervenants avec des cartes visuelles élégantes.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">💬 Citations</span><br>
+    <span class="step-num">2</span> Renseignez la <strong>citation</strong> (le texte), le <strong>nom</strong> de la personne, son <strong>rôle/poste</strong>.<br>
+    <span class="step-num">3</span> Choisissez la <strong>rubrique</strong> (les rubriques se créent dans l'onglet Rubriques).<br>
+    <span class="step-num">4</span> Optionnel : ajoutez une <strong>photo</strong> (URL) et choisissez le format (médaillon rond ou grand format).<br>
+    <span class="step-num">5</span> Cliquez <strong>💬 Ajouter</strong>.
+  </div>
+
+  <p>Les citations sont regroupées par rubrique sur le dashboard. Si une même personne a plusieurs citations, elles sont fusionnées dans une seule carte.</p>
+
+  <!-- ==================== 8. ARTICLES ==================== -->
+  <h2 id="g-articles">8. 📰 Les articles liés</h2>
+  <p>Listez les articles publiés sur TourMaG.com en lien avec l'événement.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">📰 Articles liés</span><br>
+    <span class="step-num">2</span> Renseignez le <strong>titre</strong>, l'<strong>URL</strong> de l'article, l'<strong>auteur</strong>.<br>
+    <span class="step-num">3</span> Optionnel : ajoutez une <strong>image</strong> (pour la vignette).<br>
+    <span class="step-num">4</span> Cliquez <strong>📰 Ajouter</strong>.
+  </div>
+
+  <!-- ==================== 9. VIDÉOS ==================== -->
+  <h2 id="g-videos">9. 🎬 Les vidéos</h2>
+  <p>Intégrez des vidéos provenant de YouTube, Instagram, Facebook ou LinkedIn.</p>
+
+  <h3>Ajouter une vidéo</h3>
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">🎬 Vidéos</span><br>
+    <span class="step-num">2</span> Collez l'<strong>URL de la vidéo</strong> dans le champ. Le système détecte automatiquement la plateforme.<br>
+    <span class="step-num">3</span> Ajoutez une <strong>légende</strong> (optionnel) et choisissez la <strong>section</strong>.<br>
+    <span class="step-num">4</span> Cliquez <strong>🎬 Ajouter</strong>.
+  </div>
+
+  <h3>Où trouver les URLs ?</h3>
+  <ul>
+    <li><strong>YouTube</strong> — Copiez l'URL dans la barre d'adresse (ex : youtube.com/watch?v=…) ou via Partager → Copier le lien.</li>
+    <li><strong>Instagram</strong> — Sur le reel ou le post, cliquez ⋯ → <em>Copier le lien</em>. Le compte doit être <strong>public</strong>.</li>
+    <li><strong>Facebook</strong> — Sur la vidéo, cliquez ⋯ → <em>Copier le lien</em>. La vidéo doit être <strong>publique</strong>.</li>
+    <li><strong>LinkedIn</strong> — Sur le post, cliquez ⋯ → <em>Copier le lien du post</em>. Le post doit être <strong>public</strong>. L'URL doit contenir « activity- » ou « ugcPost- ».</li>
+  </ul>
+
+  <div class="warn">⚠️ <strong>Important</strong> : Facebook et LinkedIn bloquent parfois l'intégration de vidéos sur les sites tiers. Si l'embed ne fonctionne pas, un lien « Ouvrir sur… » apparaît sous la vidéo pour la voir dans une fenêtre popup. YouTube et Instagram sont les plus fiables pour l'intégration directe.</div>
+
+  <h3>Sections et taille</h3>
+  <p>Les vidéos sont organisées en <strong>sections</strong> (ex : « Interviews », « Shorts du salon »). Pour chaque section, vous pouvez régler :</p>
+  <ul>
+    <li><strong>Mode</strong> — Grille (côte à côte) ou Carrousel (défilant horizontal).</li>
+    <li><strong>Largeur des vidéos (px)</strong> — Contrôle la taille de chaque vidéo. Plus la valeur est grande, moins il y a de vidéos par ligne. Exemples : 200 = petit, 320 = standard, 500 = grand, 800 = très grand.</li>
+    <li><strong>Vidéos visibles</strong> — En mode grille, combien de vidéos afficher avant le bouton « Voir plus ».</li>
+  </ul>
+
+  <h3>Supprimer ou modifier une vidéo</h3>
+  <p>Dans la liste des vidéos de chaque section, utilisez les boutons à droite de chaque vidéo :</p>
+  <ul>
+    <li>▲ ▼ — Changer l'ordre</li>
+    <li>✏️ — Modifier la légende, le type ou la section</li>
+    <li><span style="color:var(--red);font-weight:700">✕</span> — Supprimer la vidéo</li>
+  </ul>
+
+  <!-- ==================== 10. MÉDIATHÈQUE ==================== -->
+  <h2 id="g-media">10. 📷 La médiathèque</h2>
+  <p>La médiathèque stocke les images que vous pouvez ensuite utiliser dans les citations, le fil live, les articles, etc.</p>
+
+  <div class="step">
+    <span class="step-num">1</span> Allez dans <span class="key">📷 Médiathèque</span><br>
+    <span class="step-num">2</span> Cliquez sur <strong>+ Ajouter</strong> et collez une URL d'image, ou uploadez un fichier (si le serveur d'upload est configuré).<br>
+    <span class="step-num">3</span> L'image apparaît dans la grille. Cliquez dessus pour copier son URL.
+  </div>
+
+  <div class="tip">💡 Pour utiliser une image de la médiathèque, copiez son URL et collez-la dans le champ image du fil live, d'une citation, etc.</div>
+
+  <!-- ==================== 11. RUBRIQUES & TAGS ==================== -->
+  <h2 id="g-rubriques">11. 📁 Rubriques et 🏷 Tags</h2>
+
+  <h3>Rubriques</h3>
+  <p>Les rubriques servent à organiser les <strong>citations</strong> par thème (ex : « IA & Tech », « Distribution », « Destinations »). Chaque rubrique a un nom, un emoji, et des couleurs.</p>
+
+  <h3>Tags live</h3>
+  <p>Les tags servent à catégoriser les entrées du <strong>fil live</strong> (ex : GÉNÉRAL, TECH, AÉRIEN…). Vous pouvez personnaliser la liste et les couleurs des tags.</p>
+
+  <!-- ==================== 12. DISPOSITION ==================== -->
+  <h2 id="g-modules">12. ⚙️ Disposition des blocs</h2>
+  <p>C'est ici que vous contrôlez <strong>quels blocs sont visibles</strong> et <strong>où ils apparaissent</strong> sur le dashboard.</p>
+
+  <h3>Activer/désactiver les blocs</h3>
+  <p>Les interrupteurs en haut de la page permettent d'activer ou désactiver chaque bloc (programme, fil live, citations, vidéos, etc.).</p>
+
+  <h3>Organiser la disposition</h3>
+  <p>Le preview en bas de la page montre la structure du dashboard avec 3 zones :</p>
+  <ul>
+    <li><strong>⬛ Pleine largeur</strong> — Le bloc occupe toute la largeur du dashboard. Idéal pour les vidéos en grand format.</li>
+    <li><strong>◀ Colonne principale</strong> — La grande colonne de gauche (fil live, citations…).</li>
+    <li><strong>▶ Colonne latérale</strong> — La petite colonne de droite (programme, articles…).</li>
+  </ul>
+
+  <div class="step">
+    <span class="step-num">1</span> <strong>Glissez-déposez</strong> les blocs d'une zone à l'autre pour changer leur position.<br>
+    <span class="step-num">2</span> L'ordre dans chaque zone correspond à l'ordre d'affichage sur le dashboard.<br>
+    <span class="step-num">3</span> Un bloc en pleine largeur s'insère à sa position dans le flux global : il « coupe » le layout 2 colonnes et reprend ensuite.
+  </div>
+
+  <div class="tip">💡 <strong>Exemple</strong> : pour avoir les vidéos en très grand format au milieu du dashboard, glissez le bloc « Vidéos » dans la zone Pleine largeur, et réglez la largeur des vidéos à 600 ou 800 px dans l'onglet Vidéos.</div>
+
+  <!-- ==================== 13. INTÉGRATION ==================== -->
+  <h2 id="g-widget">13. 📦 Intégrer sur votre site</h2>
+  <p>L'onglet <span class="key">📦 Widget homepage</span> vous donne les codes à intégrer dans votre site (CMS TourMaG).</p>
+
+  <h3>Deux options d'intégration</h3>
+  <ul>
+    <li><strong>Option 1 — Page complète (iframe)</strong> : intègre tout le dashboard dans votre page. Copiez le code et collez-le dans un module HTML de votre CMS.</li>
+    <li><strong>Option 2 — Widget compact (iframe)</strong> : un encart résumé pour la homepage, avec les dernières entrées du fil live.</li>
+  </ul>
+
+  <h3>Configuration du widget</h3>
+  <ul>
+    <li><strong>URL du bouton CTA</strong> — L'URL vers laquelle pointe le bouton « Accéder au Live ».</li>
+    <li><strong>Zone personnalisable</strong> — Texte et bouton sous la frise du widget compact.</li>
+  </ul>
+
+  <!-- ==================== 14. ACCÈS ==================== -->
+  <h2 id="g-access">14. 👥 Gestion des accès</h2>
+  <p>L'onglet <span class="key">👥 Accès</span> permet de contrôler qui a accès à quoi. Il n'est visible que par les super admins.</p>
+
+  <h3>Super administrateurs</h3>
+  <p>Les super admins voient tous les onglets et ont accès à la page Accès. Si la liste est vide, tout le monde a un accès complet.</p>
+
+  <h3>Onglets visibles</h3>
+  <p>Vous pouvez masquer certains onglets aux utilisateurs non super-admin (ex : cacher les modules, le widget, les tags…).</p>
+
+  <h3>Accès restreint par événement</h3>
+  <p>Par défaut, tous les admins connectés voient tous les événements. Vous pouvez restreindre un événement à certains utilisateurs seulement :</p>
+  <div class="step">
+    <span class="step-num">1</span> Dans la section « 🔒 Accès restreint à cet événement », ajoutez les emails des utilisateurs autorisés.<br>
+    <span class="step-num">2</span> Dès qu'un email est ajouté, seuls les utilisateurs listés (+ les super admins) pourront voir cet événement.<br>
+    <span class="step-num">3</span> Si la liste est vide, aucune restriction : tout le monde voit l'événement.
+  </div>
+
+  <div class="warn">⚠️ Attention : si vous restreignez un événement, assurez-vous que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>
+
+  <!-- ==================== FIN ==================== -->
+  <div style="margin-top:40px;padding:24px;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);border-radius:12px;text-align:center">
+    <div style="font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">Besoin d'aide ?</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">Contactez l'équipe technique TourMaG pour toute question.<br>Ce guide est aussi accessible à tout moment via le menu 📖 Guide d'utilisation.</div>
+  </div>
+  </div>`;
+
+  el.innerHTML=h;
+  // Handle anchor clicks for TOC
+  el.querySelectorAll('.guide-toc a').forEach(a=>{
+    a.addEventListener('click',e=>{
+      e.preventDefault();
+      const target=el.querySelector(a.getAttribute('href'));
+      if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
 }
 
 // ==================== WIDGET ====================
