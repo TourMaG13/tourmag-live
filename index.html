@@ -188,8 +188,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .vid-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--text)}
 .vid-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:14px 18px}
 .vid-grid-shorts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 18px}
-@media(max-width:768px){.vid-grid{grid-template-columns:1fr}.vid-grid-shorts{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.vid-grid-shorts{grid-template-columns:1fr}}
+.vid-gcol{display:grid;grid-template-columns:repeat(var(--vcols,2),1fr);gap:12px;padding:14px 18px}
+@media(max-width:768px){.vid-grid{grid-template-columns:1fr}.vid-grid-shorts{grid-template-columns:repeat(2,1fr)}.vid-gcol{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:480px){.vid-grid-shorts{grid-template-columns:1fr}.vid-gcol{grid-template-columns:1fr!important}}
 .vid-frame{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000}
 .vid-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%}
 .vid-frame-short{padding-top:177.78%}
@@ -765,24 +766,22 @@ function render(data){
         });
         o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
       } else {
-        // Grid mode — adapt columns: 3 cols for shorts, 2 for classic, auto-detect
-        const gridClass=allShorts?'vid-grid vid-grid-shorts':'vid-grid';
+        // Grid mode — use section columns setting, fallback to auto-detect
+        const cols=sec.columns||( allShorts?3:2 );
         const visible=allVids.slice(0,visCount);
         const extra=allVids.slice(visCount);
-        o+=`<div class="${gridClass}">`;
+        o+=`<div class="vid-gcol" style="--vcols:${cols}">`;
         visible.forEach(v=>{
-          const isShort=v.type==='short';
-          o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
+          o+=`<div>
             ${mkVidEmbed(v,false)}
             ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
           </div>`;
         });
         o+=`</div>`;
         if(extra.length){
-          o+=`<div class="cd-expand" id="${accId}"><div class="${gridClass}">`;
+          o+=`<div class="cd-expand" id="${accId}"><div class="vid-gcol" style="--vcols:${cols}">`;
           extra.forEach(v=>{
-            const isShort=v.type==='short';
-            o+=`<div class="vid-grid-item ${isShort?'vid-short':'vid-classic'}">
+            o+=`<div>
               ${mkVidEmbed(v,false)}
               ${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}
             </div>`;
