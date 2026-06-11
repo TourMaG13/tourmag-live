@@ -2348,9 +2348,15 @@ function renderVideos(el){
         prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:11px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'YouTube Short (9:16)':'YouTube Vidéo (16:9)'}</div></div></div>`;
         if(thumbRow) thumbRow.style.display='none';
       } else {
-        const embedNote=p.embedUrl?'Intégration directe par iframe':'⚠️ Pas d\'embed disponible — lien externe';
-        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid ${platformColors[p.platform]||'var(--border)'}40"><span style="font-size:20px;flex-shrink:0;width:40px;text-align:center">${p.platform==='instagram'?'📸':p.platform==='facebook'?'📘':p.platform==='linkedin'?'💼':'🎬'}</span><div><div style="font-size:11px;font-weight:600;color:${platformColors[p.platform]||'var(--text)'}">${platformLabels[p.platform]||p.platform}</div><div style="font-size:9px;color:var(--text3)">Détecté : ${p.type==='short'?'Short/Reel':'Vidéo'} — ${embedNote}</div></div></div>`;
-        if(thumbRow) thumbRow.style.display='block';
+        const embedMethods={
+          facebook:'SDK Facebook — lecture directe sur le dashboard',
+          instagram:'Embed officiel Instagram — lecture directe sur le dashboard',
+          linkedin:p.embedUrl?'Embed LinkedIn — post intégré avec vidéo':'⚠️ URL sans identifiant d\'activité — lien externe uniquement'
+        };
+        const embedNote=embedMethods[p.platform]||'Intégration directe';
+        const noteColor=(!p.embedUrl && p.platform==='linkedin')?'var(--red)':'var(--text3)';
+        prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid ${platformColors[p.platform]||'var(--border)'}40"><span style="font-size:20px;flex-shrink:0;width:40px;text-align:center">${p.platform==='instagram'?'📸':p.platform==='facebook'?'📘':p.platform==='linkedin'?'💼':'🎬'}</span><div><div style="font-size:11px;font-weight:600;color:${platformColors[p.platform]||'var(--text)'}">${platformLabels[p.platform]||p.platform}</div><div style="font-size:9px;color:${noteColor}">Détecté : ${p.type==='short'?'Short/Reel':'Vidéo'} — ${embedNote}</div></div></div>`;
+        if(thumbRow) thumbRow.style.display=(p.platform==='linkedin'&&!p.embedUrl)?'block':'none';
       }
     } else {
       if(prev) prev.innerHTML='';
