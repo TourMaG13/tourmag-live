@@ -2274,7 +2274,7 @@ function renderVideos(el){
   sections.forEach((s,i)=>{
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
       <span style="font-size:11px;font-weight:600;flex:1">${s.title||'Sans titre'}</span>
-      <span style="font-size:9px;color:var(--text3)">${s.display==='carousel'?'Carrousel':'Grille'} · ${videosData.filter(v=>v.section===s.id).length} vidéos</span>
+      <span style="font-size:9px;color:var(--text3)">${s.display==='carousel'?'Carrousel':'Grille '+(s.columns||2)+' col.'} · ${videosData.filter(v=>v.section===s.id).length} vidéos</span>
       <button class="btn btn-ghost btn-xs" onclick="editVideoSection(${i})">✏️</button>
       ${sections.length>1?`<button class="btn btn-danger btn-xs" onclick="deleteVideoSection(${i})">✕</button>`:''}
     </div>`;
@@ -2310,24 +2310,29 @@ function renderVideos(el){
       const platformIcons={youtube:'▶️',instagram:'📸',facebook:'📘',linkedin:'💼'};
       const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
       const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2'};
+      const pColor=platformColors[platform]||'#475569';
       const thumb=platform==='youtube'?`https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg`:(v.thumbnail||'');
-      const typeLabel=v.type==='short'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">SHORT</span>':'<span style="font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">VIDÉO</span>';
-      const platformBadge=`<span style="font-size:8px;background:${platformColors[platform]||'#475569'}15;color:${platformColors[platform]||'#475569'};padding:2px 6px;border-radius:3px;font-weight:700;margin-left:4px">${platformLabels[platform]||platform}</span>`;
-      const thumbHtml=thumb?`<img src="${thumb}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:80px;height:45px;border-radius:6px;background:${platformColors[platform]||'#475569'}15;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">${platformIcons[platform]||'🎬'}</div>`;
-      const linkUrl=platform==='youtube'?`https://youtube.com/watch?v=${v.ytId}`:(v.url||'#');
-      h+=`<div class="list-item" style="align-items:center">
-        ${thumbHtml}
-        <div class="list-item-content" style="flex:1">
-          <div class="list-item-text">${v.caption||'Sans titre'}${typeLabel}${platformBadge}</div>
-          <div class="list-item-meta"><a href="${linkUrl}" target="_blank" style="color:var(--blue);font-size:10px">${platform==='youtube'?v.ytId:((v.url||'').substring(0,60)+(v.url&&v.url.length>60?'…':''))}</a></div>
-        </div>
-        <div class="list-item-actions" style="display:flex;gap:4px;align-items:center">
-          <button class="btn btn-ghost btn-xs" onclick="moveVideo('${v.id}','${sec.id}',-1)" ${i===0?'disabled':''}>▲</button>
-          <button class="btn btn-ghost btn-xs" onclick="moveVideo('${v.id}','${sec.id}',1)" ${i===allVids.length-1?'disabled':''}>▼</button>
-          <button class="btn btn-ghost btn-xs" onclick="editVideo('${v.id}')">✏️</button>
-          <button class="btn btn-danger btn-xs" onclick="deleteVideo('${v.id}')">✕</button>
-        </div>
-      </div>`;
+      const typeLabel=v.type==='short'?' <span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700">SHORT</span>':' <span style="font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700">VIDÉO</span>';
+      const platformBadge=' <span style="font-size:8px;background:'+pColor+'18;color:'+pColor+';padding:2px 6px;border-radius:3px;font-weight:700">'+platformLabels[platform]+'</span>';
+      const safeUrl=(v.url||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const displayUrl=(v.url||'').substring(0,60)+((v.url||'').length>60?'…':'');
+      const thumbHtml=thumb
+        ?'<img src="'+thumb.replace(/"/g,'&quot;')+'" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'">'
+        :'<div style="width:80px;height:45px;border-radius:6px;background:'+pColor+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">'+(platformIcons[platform]||'🎬')+'</div>';
+      const linkUrl=platform==='youtube'?'https://youtube.com/watch?v='+v.ytId:safeUrl;
+      const linkText=platform==='youtube'?v.ytId:displayUrl;
+      h+='<div class="list-item" style="align-items:center">'
+        +thumbHtml
+        +'<div class="list-item-content" style="flex:1">'
+        +'<div class="list-item-text">'+(v.caption||'Sans titre')+typeLabel+platformBadge+'</div>'
+        +'<div class="list-item-meta"><a href="'+linkUrl+'" target="_blank" style="color:var(--blue);font-size:10px">'+linkText+'</a></div>'
+        +'</div>'
+        +'<div class="list-item-actions" style="display:flex;gap:4px;align-items:center">'
+        +'<button class="btn btn-ghost btn-xs" onclick="moveVideo(\''+v.id+'\',\''+sec.id+'\',-1)"'+(i===0?' disabled':'')+'>▲</button>'
+        +'<button class="btn btn-ghost btn-xs" onclick="moveVideo(\''+v.id+'\',\''+sec.id+'\',1)"'+(i===allVids.length-1?' disabled':'')+'>▼</button>'
+        +'<button class="btn btn-ghost btn-xs" onclick="editVideo(\''+v.id+'\')">✏️</button>'
+        +'<button class="btn btn-danger btn-xs" onclick="deleteVideo(\''+v.id+'\')">✕</button>'
+        +'</div></div>';
     });
     h+=`</div>`;
   });
@@ -2379,6 +2384,14 @@ function addVideoSection(){
       <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid">Grille</option><option value="carousel">Carrousel</option></select></div>
       <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="6"></div>
     </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Colonnes (taille)</label><select class="form-input" id="m-vsec-cols">
+        <option value="1">1 colonne — pleine largeur</option>
+        <option value="2" selected>2 colonnes — standard</option>
+        <option value="3">3 colonnes — compact</option>
+        <option value="4">4 colonnes — miniatures</option>
+      </select><div style="font-size:9px;color:var(--text3);margin-top:3px">Plus il y a de colonnes, plus les vidéos sont petites</div></div>
+    </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveNewVideoSection('${newId}')">✅ Créer</button></div>`);
 }
 async function saveNewVideoSection(newId){
@@ -2387,7 +2400,8 @@ async function saveNewVideoSection(newId){
     id:newId,
     title:document.getElementById('m-vsec-title').value.trim()||'Nouvelle section',
     display:document.getElementById('m-vsec-display').value,
-    visibleCount:parseInt(document.getElementById('m-vsec-count').value)||6
+    visibleCount:parseInt(document.getElementById('m-vsec-count').value)||6,
+    columns:parseInt(document.getElementById('m-vsec-cols').value)||2
   });
   saving(true);
   await evRef().update({videoSections:sections});
@@ -2397,11 +2411,20 @@ async function saveNewVideoSection(newId){
 function editVideoSection(idx){
   const sections=getVideoSections();
   const s=sections[idx];if(!s)return;
+  const cols=s.columns||2;
   openModal(`<h3>Modifier la section</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-vsec-title" value="${(s.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid"${s.display==='grid'?' selected':''}>Grille</option><option value="carousel"${s.display==='carousel'?' selected':''}>Carrousel</option></select></div>
       <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="${s.visibleCount||6}"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Colonnes (taille)</label><select class="form-input" id="m-vsec-cols">
+        <option value="1"${cols===1?' selected':''}>1 colonne — pleine largeur</option>
+        <option value="2"${cols===2?' selected':''}>2 colonnes — standard</option>
+        <option value="3"${cols===3?' selected':''}>3 colonnes — compact</option>
+        <option value="4"${cols===4?' selected':''}>4 colonnes — miniatures</option>
+      </select></div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveEditVideoSection(${idx})">💾 Enregistrer</button></div>`);
 }
@@ -2410,6 +2433,7 @@ async function saveEditVideoSection(idx){
   sections[idx].title=document.getElementById('m-vsec-title').value.trim();
   sections[idx].display=document.getElementById('m-vsec-display').value;
   sections[idx].visibleCount=parseInt(document.getElementById('m-vsec-count').value)||6;
+  sections[idx].columns=parseInt(document.getElementById('m-vsec-cols').value)||2;
   saving(true);
   await evRef().update({videoSections:sections});
   closeModal();toast('Section modifiée');
