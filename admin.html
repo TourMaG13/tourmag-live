@@ -249,6 +249,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
       <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
       <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
+      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Journalistes</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
@@ -297,6 +298,7 @@ var programmeData=[];
 var timelineData=[];
 var mediaData=[];
 var videosData=[];
+var journalistsGlobalData=[];  // collection globale (réutilisable entre événements)
 var tagsData=[];      // Stocké dans event doc → tags[]
 
 // Listeners unsubscribe handles
@@ -659,11 +661,19 @@ function initApp(){
     scheduleRender();
   });
   unsubs.push(u1);
+
+  // Global journalists collection (cross-event repertoire)
+  const u2=db.collection('journalists').orderBy('name').onSnapshot(snap=>{
+    journalistsGlobalData=[];
+    snap.forEach(d=>journalistsGlobalData.push({id:d.id,...d.data()}));
+    scheduleRender();
+  },err=>console.error('onSnapshot error on global journalists',err));
+  unsubs.push(u2);
 }
 
 function subscribeSubCollections(){
-  // Unsubscribe previous sub-collection listeners (indices 1+)
-  while(unsubs.length>1) unsubs.pop()();
+  // Unsubscribe previous sub-collection listeners (indices 2+), keep global listeners (events=0, journalists=1)
+  while(unsubs.length>2) unsubs.pop()();
 
   if(!currentEventId){ subCollectionsEventId=''; return; }
   subCollectionsEventId=currentEventId;
@@ -728,6 +738,7 @@ function renderTab(){
     case 'programme':renderProgramme(main);break;
     case 'articles':renderArticles(main);break;
     case 'videos':renderVideos(main);break;
+    case 'journalistes':renderJournalistes(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
@@ -769,9 +780,9 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true},
-    blockOrder:['hero','flash','live','citations','videos','programme','articles'],
-    blockZones:{hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true},
+    blockOrder:['hero','flash','live','citations','videos','programme','articles','journalists'],
+    blockZones:{hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side',journalists:'side'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
   currentEventId=ref.id;
@@ -882,11 +893,11 @@ async function saveFlash(){
 function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
-  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'}];
+  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'}];
 
-  const defaultOrder=['hero','flash','live','citations','videos','programme','articles'];
+  const defaultOrder=['hero','flash','live','citations','videos','programme','articles','journalists'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'full',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
+  const defaultZones={hero:'full',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side',journalists:'side'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
@@ -895,7 +906,8 @@ function renderModules(el){
     {key:'citations',icon:'💬',label:'Citations'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'programme',icon:'🗓',label:'Programme'},
-    {key:'articles',icon:'📰',label:'Articles liés'}
+    {key:'articles',icon:'📰',label:'Articles liés'},
+    {key:'journalists',icon:'👤',label:'Journalistes'}
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
   const orderedKeys=[...blockOrder];
@@ -1135,10 +1147,10 @@ async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete
 
 // ==================== LIVE ====================
 // Preserve form values across re-renders
-var _liveDraft={text:'',tag:'',journalist:'',image:''};
+var _liveDraft={text:'',tag:'',journalist:'',image:'',scheduledAt:''};
 function _saveLiveDraft(){
   const t=document.getElementById('live-text');
-  if(t){_liveDraft={text:t.value,tag:document.getElementById('live-tag')?.value||'',journalist:document.getElementById('live-journalist')?.value||'',image:document.getElementById('live-image')?.value||''};}
+  if(t){_liveDraft={text:t.value,tag:document.getElementById('live-tag')?.value||'',journalist:document.getElementById('live-journalist')?.value||'',image:document.getElementById('live-image')?.value||'',scheduledAt:document.getElementById('live-scheduled')?.value||''};}
 }
 function _restoreLiveDraft(){
   const t=document.getElementById('live-text');
@@ -1149,6 +1161,8 @@ function _restoreLiveDraft(){
   if(j&&_liveDraft.journalist){j.value=_liveDraft.journalist;}
   const img=document.getElementById('live-image');
   if(img&&_liveDraft.image){img.value=_liveDraft.image;}
+  const sched=document.getElementById('live-scheduled');
+  if(sched&&_liveDraft.scheduledAt){sched.value=_liveDraft.scheduledAt;}
 }
 
 function renderLive(el){
@@ -1164,7 +1178,8 @@ function renderLive(el){
     </div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier</button></div>
+    <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier / Programmer</button></div>
   </div>
   <div class="admin-card"><h3>📜 Historique (${liveData.length})</h3><div style="max-height:600px;overflow-y:auto">`;
   if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée publiée</div></div>`;
@@ -1178,7 +1193,18 @@ function renderLive(el){
         fullDate=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})+' à '+ts;
       }
     }catch(x){}
-    h+=`<div class="list-item">
+    // Scheduled badge
+    let schedBadge='';
+    if(e.scheduledAt){
+      const sd=e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt);
+      if(!isNaN(sd)){
+        const isPending=sd.getTime()>Date.now();
+        const sdStr=sd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+sd.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        schedBadge=isPending?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:#FEF3C7;color:#92400E">🕐 Programmé — ${sdStr}</span>`
+          :`<span style="font-size:9px;color:var(--text3)">✅ Publié (était programmé ${sdStr})</span>`;
+      }
+    }
+    h+=`<div class="list-item"${e.scheduledAt&&(e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt)).getTime()>Date.now()?' style="opacity:.7;border-left:3px solid #F59E0B"':''}>
       <div class="list-item-time">${ts}</div>
       <div class="list-item-content">
         <div class="list-item-text">${e.text||''}</div>
@@ -1188,6 +1214,7 @@ function renderLive(el){
           ${e.image?'<span>📷</span>':''}
           ${e.url?`<span><a href="${e.url}" target="_blank" style="color:var(--blue)">🔗</a></span>`:''}
           ${fullDate?`<span style="opacity:.5">${fullDate}</span>`:''}
+          ${schedBadge}
         </div>
       </div>
       <div class="list-item-actions">
@@ -1212,22 +1239,29 @@ async function addLive(){
   const tag=document.getElementById('live-tag').value;
   const image=document.getElementById('live-image').value||'';
   const url=document.getElementById('live-url').value.trim()||'';
+  const scheduledRaw=document.getElementById('live-scheduled').value;
   const tagData=tagsData.find(t=>tagName(t)===tag);
-  await subCol('live').add({
+  const doc={
     text,tag,journalist,image,url,
     tag_color:tagData?tagColor(tagData):'',
     time:firebase.firestore.FieldValue.serverTimestamp()
-  });
-  _liveDraft={text:'',tag:'',journalist:journalist,image:''};
+  };
+  if(scheduledRaw) doc.scheduledAt=new Date(scheduledRaw);
+  await subCol('live').add(doc);
+  _liveDraft={text:'',tag:'',journalist:journalist,image:'',scheduledAt:''};
   document.getElementById('live-text').value='';
   document.getElementById('live-image').value='';
   document.getElementById('live-url').value='';
-  toast('Publié !');
+  document.getElementById('live-scheduled').value='';
+  toast(scheduledRaw?'Programmé !':'Publié !');
 }
 function editLive(id){
   const e=liveData.find(x=>x.id===id);if(!e)return;
   const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}"${n===e.tag?' selected':''}>${n}</option>`;}).join('');
   const posOpts=['center center','center top','center bottom','left center','right center'].map(p=>`<option value="${p}"${(e.image_position||'center center')===p?' selected':''}>${p}</option>`).join('');
+  // Format scheduledAt for datetime-local input
+  let schedVal='';
+  if(e.scheduledAt){const sd=e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt);if(!isNaN(sd)){const p=v=>String(v).padStart(2,'0');schedVal=sd.getFullYear()+'-'+p(sd.getMonth()+1)+'-'+p(sd.getDate())+'T'+p(sd.getHours())+':'+p(sd.getMinutes());}}
   openModal(`<h3>Modifier l'entrée</h3>
     <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-live-text" rows="3">${e.text||''}</textarea></div>
     <div class="form-row-inline">
@@ -1236,6 +1270,7 @@ function editLive(id){
     </div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="m-live-url" value="${e.url||''}"></div>
+    <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-live-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     ${e.image?`<div class="form-row-inline">
       <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="m-live-imgpos">${posOpts}</select></div>
       <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="80" max="500" step="10"></div>
@@ -1263,6 +1298,8 @@ async function saveLiveEdit(id){
     image:document.getElementById('m-live-image').value,
     url:document.getElementById('m-live-url')?.value?.trim()||''
   };
+  const schedRaw=document.getElementById('m-live-scheduled')?.value||'';
+  update.scheduledAt=schedRaw?new Date(schedRaw):firebase.firestore.FieldValue.delete();
   const posEl=document.getElementById('m-live-imgpos');
   if(posEl) update.image_position=posEl.value;
   const hEl=document.getElementById('m-live-imgheight');
@@ -1349,7 +1386,8 @@ function renderCitations(el){
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="cit-photo-format"><option value="round">Médaillon (rond)</option><option value="large">Photo grand format (rectangle)</option></select></div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter</button></div></div>
+    <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="cit-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter / Programmer</button></div></div>
   <div class="admin-card"><h3>📋 Historique (${citationsData.length})</h3>`;
   if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
   else citationsData.forEach(c=>{
@@ -1359,10 +1397,23 @@ function renderCitations(el){
       const t=c.created_at?.toDate?c.created_at.toDate():(c.created_at?new Date(c.created_at):null);
       if(t&&!isNaN(t)) dateStr=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     }catch(x){}
-    h+=`<div class="cit-item">
+    // Scheduled badge
+    let schedBadge='';
+    let isPending=false;
+    if(c.scheduledAt){
+      const sd=c.scheduledAt?.toDate?c.scheduledAt.toDate():new Date(c.scheduledAt);
+      if(!isNaN(sd)){
+        isPending=sd.getTime()>Date.now();
+        const sdStr=sd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+sd.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        schedBadge=isPending?`<div style="margin-top:4px"><span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:#FEF3C7;color:#92400E">🕐 Programmé — ${sdStr}</span></div>`
+          :`<div style="margin-top:4px"><span style="font-size:9px;color:var(--text3)">✅ Publié (était programmé ${sdStr})</span></div>`;
+      }
+    }
+    h+=`<div class="cit-item"${isPending?' style="opacity:.7;border-left:3px solid #F59E0B"':''}>
       <div class="cit-item-text">« ${c.text} »</div>
       <div class="cit-item-author">${c.name}</div>
       <div class="cit-item-role">${c.role||''}${rub?' · '+rub.icon+' '+rub.name:''}${dateStr?' · <span style="opacity:.5">'+dateStr+'</span>':''}</div>
+      ${schedBadge}
       <div style="margin-top:8px;display:flex;gap:6px">
         <button class="btn btn-ghost btn-xs" onclick="editCitation('${c.id}')">✏️ Modifier</button>
         <button class="btn btn-danger btn-xs" onclick="deleteCitation('${c.id}')">✕</button>
@@ -1376,18 +1427,27 @@ async function addCitation(){
   const text=document.getElementById('cit-text').value.trim(),name=document.getElementById('cit-name').value.trim();
   if(!text||!name){toast('Citation et nom requis','error');return;}
   saving(true);
-  await subCol('citations').add({text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,photoFormat:document.getElementById('cit-photo-format').value,created_at:firebase.firestore.FieldValue.serverTimestamp()});
+  const scheduledRaw=document.getElementById('cit-scheduled')?.value||'';
+  const doc={text,name,role:document.getElementById('cit-role').value,rubrique:document.getElementById('cit-rub').value,avatar:document.getElementById('cit-avatar').value,photoFormat:document.getElementById('cit-photo-format').value,created_at:firebase.firestore.FieldValue.serverTimestamp()};
+  if(scheduledRaw) doc.scheduledAt=new Date(scheduledRaw);
+  await subCol('citations').add(doc);
   _citDraft={text:'',name:'',role:'',rub:'',avatar:''};
-  ['cit-text','cit-name','cit-role','cit-avatar'].forEach(x=>document.getElementById(x).value='');toast('Ajoutée');
+  ['cit-text','cit-name','cit-role','cit-avatar'].forEach(x=>document.getElementById(x).value='');
+  const schedEl=document.getElementById('cit-scheduled');if(schedEl)schedEl.value='';
+  toast(scheduledRaw?'Programmée !':'Ajoutée');
 }
 function editCitation(id){
   const c=citationsData.find(x=>x.id===id);if(!c)return;
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}"${r.id===c.rubrique?' selected':''}>${r.icon} ${r.name}</option>`).join('');
+  // Format scheduledAt for datetime-local input
+  let schedVal='';
+  if(c.scheduledAt){const sd=c.scheduledAt?.toDate?c.scheduledAt.toDate():new Date(c.scheduledAt);if(!isNaN(sd)){const p=v=>String(v).padStart(2,'0');schedVal=sd.getFullYear()+'-'+p(sd.getMonth()+1)+'-'+p(sd.getDate())+'T'+p(sd.getHours())+':'+p(sd.getMinutes());}}
   openModal(`<h3>Modifier la citation</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="m-cit-photo-format"><option value="round"${(c.photoFormat||'round')==='round'?' selected':''}>Médaillon (rond)</option><option value="large"${c.photoFormat==='large'?' selected':''}>Photo grand format (rectangle)</option></select></div>
+    <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-cit-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveCitEdit('${id}')">💾 Enregistrer</button>
@@ -1395,13 +1455,15 @@ function editCitation(id){
 }
 async function saveCitEdit(id){
   saving(true);
+  const schedRaw=document.getElementById('m-cit-scheduled')?.value||'';
   await subCol('citations').doc(id).update({
     text:document.getElementById('m-cit-text').value.trim(),
     name:document.getElementById('m-cit-name').value.trim(),
     role:document.getElementById('m-cit-role').value,
     rubrique:document.getElementById('m-cit-rub').value,
     avatar:document.getElementById('m-cit-avatar').value,
-    photoFormat:document.getElementById('m-cit-photo-format').value
+    photoFormat:document.getElementById('m-cit-photo-format').value,
+    scheduledAt:schedRaw?new Date(schedRaw):firebase.firestore.FieldValue.delete()
   });
   closeModal();toast('Modifié');
 }
@@ -2617,6 +2679,228 @@ async function moveVideo(id,secId,dir){
   toast('Ordre modifié');
 }
 
+// ==================== JOURNALISTES (répertoire global + assignation événement) ====================
+
+function renderJournalistes(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const eventJournalists=ev.eventJournalists||[];
+  // Resolve assigned journalists with global data
+  const assignedList=eventJournalists.map(ej=>{
+    const g=journalistsGlobalData.find(j=>j.id===ej.globalId);
+    return g?{...g,_order:ej.order}:null;
+  }).filter(Boolean).sort((a,b)=>(a._order||0)-(b._order||0));
+
+  let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
+
+  <div class="admin-card"><h3>⚙️ Affichage</h3>
+    <div class="form-row" style="max-width:400px"><label class="form-label">Titre du bloc (côté public)</label>
+      <div style="display:flex;gap:6px"><input class="form-input" id="jr-block-title" value="${ev.journalistsTitle||'Vos reporters'}" placeholder="Vos reporters"><button class="btn btn-primary btn-sm" onclick="saveJournalistsTitle()">💾</button></div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>📌 Assignés à cet événement (${assignedList.length})</h3>`;
+  if(!currentEventId) h+=`<div class="empty"><div class="text">Sélectionnez un événement</div></div>`;
+  else if(!assignedList.length) h+=`<div class="empty"><div class="text">Aucun journaliste assigné</div></div>`;
+  else {
+    assignedList.forEach((j,i)=>{
+      h+=`<div class="list-item" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border)">
+        ${j.photoUrl?`<img src="${j.photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👤</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${j.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${j.role||''}</div>
+        </div>
+        <div class="list-item-actions" style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="moveEventJournalist('${j.id}',-1)"${i===0?' disabled':''}>▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveEventJournalist('${j.id}',1)"${i===assignedList.length-1?' disabled':''}>▼</button>
+          <button class="btn btn-danger btn-xs" onclick="unassignJournalist('${j.id}')">✕</button>
+        </div>
+      </div>`;
+    });
+  }
+  // Quick-assign dropdown (only show unassigned journalists)
+  const assignedIds=eventJournalists.map(ej=>ej.globalId);
+  const unassigned=journalistsGlobalData.filter(j=>!assignedIds.includes(j.id));
+  if(currentEventId && unassigned.length){
+    h+=`<div style="margin-top:12px;display:flex;gap:8px;align-items:flex-end">
+      <div class="form-row" style="margin-bottom:0;flex:1"><label class="form-label">Ajouter un journaliste</label>
+        <select class="form-input" id="assign-journalist-sel">
+          <option value="">— Choisir —</option>
+          ${unassigned.map(j=>`<option value="${j.id}">${j.name}${j.role?' — '+j.role:''}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="assignJournalist()" style="height:42px">＋ Assigner</button>
+    </div>`;
+  } else if(currentEventId && !journalistsGlobalData.length){
+    h+=`<div style="margin-top:10px;font-size:11px;color:var(--text3)">Créez d'abord des fiches dans le répertoire ci-dessous.</div>`;
+  }
+  h+=`</div>
+
+  <div class="admin-card"><h3>📇 Répertoire global (${journalistsGlobalData.length})</h3>
+  <div class="page-desc" style="margin-bottom:14px">Ces fiches sont réutilisables sur tous les événements.</div>`;
+
+  // New journalist form
+  h+=`<div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg);margin-bottom:16px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">＋ Nouvelle fiche</div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="jr-name" placeholder="Jean Dupont"></div>
+      <div class="form-row"><label class="form-label">Fonction / Titre</label><input class="form-input" id="jr-role" placeholder="Envoyé spécial"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="jr-bio" rows="2" placeholder="Spécialiste croisières depuis 15 ans..."></textarea></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="jr-photo" style="flex:1">${mkMediaPickerBtn('jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="jr-profile" placeholder="https://www.tourmag.com/..."></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">𝕏 Twitter</label><input class="form-input" id="jr-twitter" placeholder="@pseudo ou URL"></div>
+      <div class="form-row"><label class="form-label">LinkedIn</label><input class="form-input" id="jr-linkedin" placeholder="URL profil LinkedIn"></div>
+    </div>
+    <div class="form-row" style="max-width:50%"><label class="form-label">Instagram</label><input class="form-input" id="jr-instagram" placeholder="@pseudo ou URL"></div>
+    <div style="margin-top:10px"><button class="btn btn-primary" onclick="addGlobalJournalist()">👤 Créer la fiche</button></div>
+  </div>`;
+
+  // List existing
+  if(!journalistsGlobalData.length) h+=`<div class="empty"><div class="text">Aucun journaliste dans le répertoire</div></div>`;
+  else journalistsGlobalData.forEach(j=>{
+    const socials=[];
+    if(j.twitter) socials.push(`<a href="${j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','')}" target="_blank" title="𝕏 Twitter" style="color:var(--text3);text-decoration:none;font-size:13px">𝕏</a>`);
+    if(j.linkedin) socials.push(`<a href="${j.linkedin}" target="_blank" title="LinkedIn" style="color:#0077B5;text-decoration:none;font-size:12px;font-weight:700">in</a>`);
+    if(j.instagram) socials.push(`<a href="${j.instagram.startsWith('http')?j.instagram:'https://instagram.com/'+j.instagram.replace('@','')}" target="_blank" title="Instagram" style="color:#E4405F;text-decoration:none;font-size:12px">📷</a>`);
+    h+=`<div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border)">
+      ${j.photoUrl?`<img src="${j.photoUrl}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:'<div style="width:48px;height:48px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">👤</div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${j.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${j.role||''}</div>
+        ${j.bio?`<div style="font-size:10px;color:var(--text3);margin-top:2px;line-height:1.4;max-height:2.8em;overflow:hidden">${j.bio}</div>`:''}
+        ${socials.length?`<div style="display:flex;gap:10px;margin-top:4px">${socials.join('')}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="editGlobalJournalist('${j.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteGlobalJournalist('${j.id}','${(j.name||'').replace(/'/g,"\\'")}')">✕</button>
+      </div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+// --- GLOBAL JOURNALIST CRUD ---
+async function saveJournalistsTitle(){
+  const val=document.getElementById('jr-block-title').value.trim()||'Vos reporters';
+  saving(true);
+  await evRef().update({journalistsTitle:val});
+  toast('Titre mis à jour');
+}
+async function addGlobalJournalist(){
+  const name=document.getElementById('jr-name').value.trim();
+  if(!name){toast('Le nom est requis','error');return;}
+  saving(true);
+  await db.collection('journalists').add({
+    name,
+    role:document.getElementById('jr-role').value.trim(),
+    bio:document.getElementById('jr-bio').value.trim(),
+    photoUrl:document.getElementById('jr-photo').value.trim(),
+    profileUrl:document.getElementById('jr-profile').value.trim(),
+    twitter:document.getElementById('jr-twitter').value.trim(),
+    linkedin:document.getElementById('jr-linkedin').value.trim(),
+    instagram:document.getElementById('jr-instagram').value.trim(),
+    created_at:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  ['jr-name','jr-role','jr-bio','jr-photo','jr-profile','jr-twitter','jr-linkedin','jr-instagram'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+  toast('Fiche créée');
+}
+
+function editGlobalJournalist(id){
+  const j=journalistsGlobalData.find(x=>x.id===id);if(!j)return;
+  openModal(`<h3>Modifier la fiche journaliste</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-jr-name" value="${j.name||''}"></div>
+      <div class="form-row"><label class="form-label">Fonction / Titre</label><input class="form-input" id="m-jr-role" value="${j.role||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="m-jr-bio" rows="3">${j.bio||''}</textarea></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="m-jr-profile" value="${j.profileUrl||''}"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">𝕏 Twitter</label><input class="form-input" id="m-jr-twitter" value="${j.twitter||''}"></div>
+      <div class="form-row"><label class="form-label">LinkedIn</label><input class="form-input" id="m-jr-linkedin" value="${j.linkedin||''}"></div>
+    </div>
+    <div class="form-row" style="max-width:50%"><label class="form-label">Instagram</label><input class="form-input" id="m-jr-instagram" value="${j.instagram||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveGlobalJournalist('${id}')">💾 Enregistrer</button>
+    </div>`);
+}
+
+async function saveGlobalJournalist(id){
+  saving(true);
+  await db.collection('journalists').doc(id).update({
+    name:document.getElementById('m-jr-name').value.trim(),
+    role:document.getElementById('m-jr-role').value.trim(),
+    bio:document.getElementById('m-jr-bio').value.trim(),
+    photoUrl:document.getElementById('m-jr-photo').value.trim(),
+    profileUrl:document.getElementById('m-jr-profile').value.trim(),
+    twitter:document.getElementById('m-jr-twitter').value.trim(),
+    linkedin:document.getElementById('m-jr-linkedin').value.trim(),
+    instagram:document.getElementById('m-jr-instagram').value.trim()
+  });
+  closeModal();toast('Fiche modifiée');
+}
+
+async function deleteGlobalJournalist(id,name){
+  if(!confirm('Supprimer la fiche de '+name+' du répertoire ? Elle sera aussi retirée de tous les événements.'))return;
+  saving(true);
+  // Remove from all events that reference this journalist
+  const evSnap=await db.collection('events').get();
+  const batch=db.batch();
+  evSnap.forEach(doc=>{
+    const d=doc.data();
+    const ej=d.eventJournalists||[];
+    if(ej.some(x=>x.globalId===id)){
+      batch.update(doc.ref,{eventJournalists:ej.filter(x=>x.globalId!==id)});
+    }
+  });
+  batch.delete(db.collection('journalists').doc(id));
+  await batch.commit();
+  toast('Fiche supprimée');
+}
+
+// --- EVENT ASSIGNMENT ---
+async function assignJournalist(){
+  const sel=document.getElementById('assign-journalist-sel');
+  const gid=sel?sel.value:'';
+  if(!gid){toast('Choisissez un journaliste','error');return;}
+  saving(true);
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const ej=ev.eventJournalists||[];
+  ej.push({globalId:gid,order:ej.length});
+  await evRef().update({eventJournalists:ej});
+  toast('Journaliste assigné');
+}
+
+async function unassignJournalist(gid){
+  saving(true);
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let ej=(ev.eventJournalists||[]).filter(x=>x.globalId!==gid);
+  ej=ej.map((x,i)=>({...x,order:i}));
+  await evRef().update({eventJournalists:ej});
+  toast('Journaliste retiré');
+}
+
+async function moveEventJournalist(gid,dir){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let ej=[...(ev.eventJournalists||[])].sort((a,b)=>(a.order||0)-(b.order||0));
+  const idx=ej.findIndex(x=>x.globalId===gid);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=ej.length)return;
+  [ej[idx],ej[newIdx]]=[ej[newIdx],ej[idx]];
+  ej=ej.map((x,i)=>({...x,order:i}));
+  saving(true);
+  await evRef().update({eventJournalists:ej});
+  toast('Ordre modifié');
+}
+
 // ==================== ACCÈS ====================
 function renderAccess(el){
   if(!isSuperAdmin()){el.innerHTML='<div class="page-title">Accès refusé</div>';return;}
@@ -2633,6 +2917,7 @@ function renderAccess(el){
     {key:'citations',icon:'💬',label:'Citations'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
+    {key:'journalistes',icon:'👤',label:'Journalistes'},
     {key:'media',icon:'📷',label:'Médiathèque'},
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
