@@ -567,11 +567,20 @@ function render(data){
     return `<div class="flash fi"${flashLink}><span class="flash-badge">${ICO.zap} FLASH</span><span class="flash-text">${event.flash_text}</span>${event.flash_link?'<span style="margin-left:auto;flex-shrink:0;font-size:11px;color:rgba(255,255,255,.6)">→</span>':''}</div>`;
   }
 
+  // Scheduling: filter out entries with scheduledAt in the future
+  function _isPublished(entry){
+    if(!entry.scheduledAt) return true;
+    const sd=entry.scheduledAt?.toDate?entry.scheduledAt.toDate():(entry.scheduledAt?.seconds?new Date(entry.scheduledAt.seconds*1000):new Date(entry.scheduledAt));
+    return !isNaN(sd)&&sd.getTime()<=Date.now();
+  }
+
   function mkLive(){
     if(mod.live===false || !live || !live.length) return '';
+    const pubLive=live.filter(_isPublished);
+    if(!pubLive.length) return '';
     let o = `<div class="sl fi">Fil live — Minute par minute</div><div class="live-feed fi">`;
-    const vis = live.slice(0, LIVE_VISIBLE);
-    const ext = live.slice(LIVE_VISIBLE);
+    const vis = pubLive.slice(0, LIVE_VISIBLE);
+    const ext = pubLive.slice(LIVE_VISIBLE);
     vis.forEach(e => { o += mkLiveEntry(e); });
     if(ext.length){
       o += `<div class="live-expand" id="live-expand">`;
@@ -588,6 +597,8 @@ function render(data){
 
   function mkCitations(){
     if(mod.citations===false || !citations || !citations.length) return '';
+    const pubCitations=citations.filter(_isPublished);
+    if(!pubCitations.length) return '';
     let o = `<div class="sl fi">Ce qu'ils ont dit</div>`;
     function mkCitGroup(group){
       let out = '';
@@ -643,13 +654,13 @@ function render(data){
     }
     if(rubriques && rubriques.length){
       rubriques.forEach(rub => {
-        const rc = citations.filter(c => c.rubrique === rub.id);
+        const rc = pubCitations.filter(c => c.rubrique === rub.id);
         if(!rc.length) return;
         o += renderCitBlock(rc, rub.name, rub.icon, rub.color, rub.bg);
       });
     }
     const rubIds = new Set((rubriques||[]).map(r=>r.id));
-    const orphans = citations.filter(c => !c.rubrique || !rubIds.has(c.rubrique));
+    const orphans = pubCitations.filter(c => !c.rubrique || !rubIds.has(c.rubrique));
     if(orphans.length){
       o += renderCitBlock(orphans, 'Verbatims', '💬', '#475569', '#F1F5F9');
     }
@@ -1045,6 +1056,25 @@ async function init(){
       rtRender();
     }, err => console.warn('[TourMaG Live] journalists onSnapshot error:', err.message));
   }catch(e){ console.warn('[TourMaG Live] Cannot subscribe to journalists:', e.message); }
+
+  // Timer: check every 30s if scheduled entries should now be visible
+  var _lastScheduleCheck=Date.now();
+  setInterval(()=>{
+    const now=Date.now();
+    // Check if any live or citation has a scheduledAt between last check and now
+    const hasNewLive=(rtState.live||[]).some(e=>{
+      if(!e.scheduledAt) return false;
+      const sd=e.scheduledAt?.toDate?e.scheduledAt.toDate():(e.scheduledAt?.seconds?new Date(e.scheduledAt.seconds*1000):new Date(e.scheduledAt));
+      return !isNaN(sd)&&sd.getTime()<=now&&sd.getTime()>_lastScheduleCheck;
+    });
+    const hasNewCit=(rtState.citations||[]).some(c=>{
+      if(!c.scheduledAt) return false;
+      const sd=c.scheduledAt?.toDate?c.scheduledAt.toDate():(c.scheduledAt?.seconds?new Date(c.scheduledAt.seconds*1000):new Date(c.scheduledAt));
+      return !isNaN(sd)&&sd.getTime()<=now&&sd.getTime()>_lastScheduleCheck;
+    });
+    _lastScheduleCheck=now;
+    if(hasNewLive||hasNewCit) rtRender();
+  },30000);
 }
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
 
