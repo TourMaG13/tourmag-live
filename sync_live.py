@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 # CONFIG
 # ============================================================
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 2000
 AI_PAUSE = 3  # secondes entre appels API
 
