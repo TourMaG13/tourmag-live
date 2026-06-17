@@ -253,6 +253,27 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .flash-text{font-size:14px;font-weight:500;color:rgba(255,255,255,.9);flex:1;line-height:1.4}
 @media(max-width:768px){.flash{flex-wrap:wrap;gap:8px;padding:10px 12px}.flash-text{font-size:12px;order:3;flex-basis:100%}}
 
+/* ==================== JOURNALISTES ==================== */
+.jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--hero-color);margin-bottom:14px}
+.jr-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.jr-hd .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FEF3C7;color:#92400E}
+.jr-hd .ci svg{width:16px;height:16px}
+.jr-hd .ct{font-family:'Josefin Sans';font-size:15px;font-weight:700}
+.jr-card{padding:16px;border-bottom:1px solid var(--border)}
+.jr-card:last-child{border-bottom:none}
+.jr-top{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.jr-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
+.jr-avatar-placeholder{width:56px;height:56px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border)}
+.jr-name{font-family:'Josefin Sans';font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
+.jr-role{font-size:11px;color:var(--acc);font-weight:600;margin-top:1px}
+.jr-bio{font-size:11px;line-height:1.6;color:var(--text2);margin-bottom:8px}
+.jr-socials{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.jr-social-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text3);text-decoration:none;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--border);transition:all .15s}
+.jr-social-link:hover{border-color:var(--acc);color:var(--acc)}
+.jr-profile-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--acc2);text-decoration:none;margin-top:6px;transition:color .15s}
+.jr-profile-link:hover{color:var(--acc)}
+@media(max-width:768px){.jr-avatar,.jr-avatar-placeholder{width:44px;height:44px}.jr-name{font-size:13px}.jr-bio{font-size:10px}}
+
 /* ==================== FOOTER ==================== */
 .ft{font-size:10px;color:var(--text3);text-align:center;padding:20px 0;border-top:1px solid var(--border);margin-top:24px}
 .ft a{color:var(--acc2);text-decoration:none}
@@ -287,7 +308,8 @@ const ICO = {
   clipboard:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>',
   user:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   chevDown:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
-  play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+  play:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  pen:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
 };
 
 // ============================================================
@@ -490,7 +512,7 @@ window.scrollVidCar = function(carId,dir){
 };
 
 function render(data){
-  const {event, essential, live, rubriques, citations, articles, programme, timeline, videos} = data;
+  const {event, essential, live, rubriques, citations, articles, programme, timeline, videos, journalists} = data;
   const mod = event.modules || {};
   let h = '';
 
@@ -794,14 +816,49 @@ function render(data){
     return o;
   }
 
-  const blockRenderers = {hero:mkHero,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles};
+  // ===== JOURNALISTES =====
+  function mkJournalists(){
+    if(mod.journalists===false || !journalists || !journalists.length) return '';
+    let o = `<div class="jr-block fi"><div class="jr-hd"><div class="ci">${ICO.pen}</div><span class="ct">Vos reporters</span></div>`;
+    journalists.forEach(j=>{
+      o+=`<div class="jr-card">
+        <div class="jr-top">
+          ${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="${j.name||''}" onerror="this.className='jr-avatar-placeholder';this.innerHTML='${ICO.user}';">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}
+          <div>
+            <div class="jr-name">${j.name||''}</div>
+            ${j.role?`<div class="jr-role">${j.role}</div>`:''}
+          </div>
+        </div>
+        ${j.bio?`<div class="jr-bio">${j.bio}</div>`:''}`;
+      // Social links
+      const socials=[];
+      if(j.twitter){
+        const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');
+        socials.push(`<a class="jr-social-link" href="${tw}" target="_blank" rel="noopener">𝕏</a>`);
+      }
+      if(j.linkedin){
+        socials.push(`<a class="jr-social-link" href="${j.linkedin}" target="_blank" rel="noopener" style="color:#0077B5">in LinkedIn</a>`);
+      }
+      if(j.instagram){
+        const ig=j.instagram.startsWith('http')?j.instagram:'https://instagram.com/'+j.instagram.replace('@','');
+        socials.push(`<a class="jr-social-link" href="${ig}" target="_blank" rel="noopener" style="color:#E4405F">📷 Instagram</a>`);
+      }
+      if(socials.length) o+=`<div class="jr-socials">${socials.join('')}</div>`;
+      if(j.profileUrl) o+=`<a class="jr-profile-link" href="${j.profileUrl}" target="_blank" rel="noopener">Voir ses articles sur TourMaG →</a>`;
+      o+=`</div>`;
+    });
+    o+=`</div>`;
+    return o;
+  }
+
+  const blockRenderers = {hero:mkHero,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists};
 
   // Use stored zone assignments or defaults
-  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side'};
+  const defaultZones={hero:'main',flash:'main',live:'main',citations:'main',videos:'main',programme:'side',articles:'side',journalists:'side'};
   const blockZones=event.blockZones||defaultZones;
-  const allBlockKeys=['hero','flash','live','citations','videos','programme','articles'];
+  const allBlockKeys=['hero','flash','live','citations','videos','programme','articles','journalists'];
 
-  const fullBlockOrder = event.blockOrder || ['hero','flash','live','citations','programme','articles'];
+  const fullBlockOrder = event.blockOrder || ['hero','flash','live','citations','programme','articles','journalists'];
   const orderedKeys=[...fullBlockOrder];
   const migIdx=orderedKeys.indexOf('essential');
   if(migIdx>=0){
@@ -887,13 +944,13 @@ function render(data){
 async function init(){
   if(DEMO){
     await new Promise(r => setTimeout(r, 600));
-    render({event:DEMO_EVENT,essential:DEMO_ESSENTIAL,live:DEMO_LIVE,rubriques:DEMO_RUBRIQUES,citations:DEMO_CITATIONS,articles:DEMO_ARTICLES,programme:DEMO_PROGRAMME,timeline:DEMO_TIMELINE,videos:DEMO_VIDEOS});
+    render({event:DEMO_EVENT,essential:DEMO_ESSENTIAL,live:DEMO_LIVE,rubriques:DEMO_RUBRIQUES,citations:DEMO_CITATIONS,articles:DEMO_ARTICLES,programme:DEMO_PROGRAMME,timeline:DEMO_TIMELINE,videos:DEMO_VIDEOS,journalists:[]});
     return;
   }
   const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
   const ec=db.collection('events').doc(eventId);
-  const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS] = await Promise.all([
+  const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,jrS] = await Promise.all([
     ec.get(),
     ec.collection('essential').get(),
     ec.collection('live').get(),
@@ -902,11 +959,17 @@ async function init(){
     ec.collection('articles').get(),
     ec.collection('programme').get(),
     ec.collection('timeline').get(),
-    ec.collection('videos').get()
+    ec.collection('videos').get(),
+    db.collection('journalists').get()
   ]);
   if(!evS.exists){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Événement introuvable</div></div>'; return; }
   const ev=evS.data();
   function toArr(s){ const a=[]; s.forEach(d=>a.push({id:d.id,...d.data()})); return a; }
+  var _allGlobalJournalists=toArr(jrS);
+  function resolveJournalists(evData,globalArr){
+    const ej=evData.eventJournalists||[];
+    return ej.sort((a,b)=>(a.order||0)-(b.order||0)).map(x=>globalArr.find(g=>g.id===x.globalId)).filter(Boolean);
+  }
   const _mois={'janv':0,'févr':1,'mars':2,'avr':3,'mai':4,'juin':5,'juil':6,'août':7,'sept':8,'oct':9,'nov':10,'déc':11,'janvier':0,'février':1,'avril':3,'juillet':6,'septembre':8,'octobre':9,'novembre':10,'décembre':11};
   function tsVal(v){
     try{
@@ -928,10 +991,11 @@ async function init(){
   const pr=toArr(prS).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||''));
   const tl=toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0));
   const vi=toArr(viS).sort((a,b)=>(a.order||0)-(b.order||0));
-  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi});
+  const jr=resolveJournalists(ev,_allGlobalJournalists);
+  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr});
 
-  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi};
-  function rtRender(){ render(rtState); }
+  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr};
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); }
 
   ec.collection('live').onSnapshot(snap => {
     rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
@@ -965,9 +1029,14 @@ async function init(){
     rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));
     rtRender();
   });
-  // Event doc (flash, modules, status)
+  // Event doc (flash, modules, status, eventJournalists)
   ec.onSnapshot(snap => {
     if(snap.exists){ rtState.event=snap.data(); rtRender(); }
+  });
+  // Global journalists collection
+  db.collection('journalists').onSnapshot(snap => {
+    _allGlobalJournalists=toArr(snap);
+    rtRender();
   });
 }
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
