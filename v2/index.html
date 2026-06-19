@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
-:root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#F8F9FB;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626}
+:root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 img{display:block}a{text-decoration:none}
@@ -362,6 +362,7 @@ img{display:block}a{text-decoration:none}
 .social-float a:hover{border-color:var(--acc);color:var(--acc);transform:scale(1.1)}
 @media(max-width:960px){.social-float{display:none}}
 body.is-embed .social-float{display:none}
+body.is-embed{background:transparent}
 
 /* ==================== FOOTER ==================== */
 .ft{font-size:10px;color:var(--text3);text-align:center;padding:18px 0 28px;border-top:1px solid var(--border);margin-top:20px}
@@ -403,6 +404,11 @@ const ICO = {
   pen:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
   mic:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
   camera:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  radio:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>',
+  fileText:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  msgCircle:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+  playCircle:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
+  image:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
   socialX:'<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
   socialWa:'<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.091.546 4.06 1.496 5.773L0 24l6.351-1.46A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.86 0-3.63-.5-5.166-1.404l-.37-.22-3.834.882.958-3.502-.24-.382A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75S21.75 6.615 21.75 12s-4.365 9.75-9.75 9.75z"/></svg>',
   socialMail:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>'
@@ -607,7 +613,7 @@ function render(data){
     if(mod.live===false || !live || !live.length) return '';
     const pubLive=live.filter(_isPublished);
     if(!pubLive.length) return '';
-    let o = `<div id="section-live"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08)">🔴</div><h2>Fil Live</h2><div class="sec-title-line"></div><p>Minute par minute, depuis l'événement</p></div></div><div class="live-feed fi">`;
+    let o = `<div id="section-live"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>Fil Live</h2><div class="sec-title-line"></div><p>Minute par minute, depuis l'événement</p></div></div><div class="live-feed fi">`;
     const vis = pubLive.slice(0, LIVE_VISIBLE);
     const ext = pubLive.slice(LIVE_VISIBLE);
     vis.forEach((e,i) => { o += mkLiveEntry(e, i===0); });
@@ -633,7 +639,7 @@ function render(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     const artTitle = event.articlesTitle || 'Nos articles';
     const artSub = event.articlesSubtitle || "L'événement vu par la rédaction";
-    let o = `<div id="section-articles"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08)">📰</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div></div>`;
+    let o = `<div id="section-articles"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div></div>`;
     const va = articles.slice(0, ART_VIS);
     const ea = articles.slice(ART_VIS);
     o += `<div class="art-bento fi">`;
@@ -674,7 +680,7 @@ function render(data){
     if(mod.citations===false || !citations || !citations.length) return '';
     const pubCitations=citations.filter(_isPublished);
     if(!pubCitations.length) return '';
-    let o = `<div id="section-citations"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08)">💬</div><h2>Verbatims</h2><div class="sec-title-line"></div><p>Ce qu'ils ont dit</p></div></div>`;
+    let o = `<div id="section-citations"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>Verbatims</h2><div class="sec-title-line"></div><p>Ce qu'ils ont dit</p></div></div>`;
 
     // Featured citation (first one with avatar)
     const featured = pubCitations.find(c => c.featured || (c.avatar && pubCitations.indexOf(c)===0));
@@ -772,7 +778,7 @@ function render(data){
     if(mod.videos===false || !videos || !videos.length) return '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
-    let o=`<div id="section-videos"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08)">▶️</div><h2>Vidéos</h2><div class="sec-title-line"></div><p>Reportages et temps forts en images</p></div></div>`;
+    let o=`<div id="section-videos"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>Vidéos</h2><div class="sec-title-line"></div><p>Reportages et temps forts en images</p></div></div>`;
 
     function mkVidEmbed(v){
       const platform=v.platform||'youtube';const isShort=v.type==='short';
@@ -838,7 +844,7 @@ function render(data){
     if(mod.gallery===false) return '';
     const photos = event.gallery || [];
     if(!photos.length) return '';
-    let o = `<div id="section-gallery"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08)">📸</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>En images</p></div></div>`;
+    let o = `<div id="section-gallery"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>En images</p></div></div>`;
     if(photos.length >= 3){
       o += `<div class="gallery-grid fi">`;
       photos.slice(0,3).forEach(p => { o += `<img src="${p.url||p}" alt="${p.caption||''}" onerror="this.remove()">`; });
@@ -1065,7 +1071,9 @@ function sendHeight(){
 window.addEventListener('load',()=>{
   document.documentElement.style.overflow='visible';document.body.style.overflow='visible';
   sendHeight();
-  new MutationObserver(sendHeight).observe(document.body,{childList:true,subtree:true});
+  // Fire multiple times during initial load to catch async content
+  [100,300,600,1000,2000,4000].forEach(d=>setTimeout(sendHeight,d));
+  new MutationObserver(()=>{sendHeight();setTimeout(sendHeight,100);}).observe(document.body,{childList:true,subtree:true,attributes:true});
   new ResizeObserver(sendHeight).observe(document.body);
   setInterval(sendHeight,1500);
 });
