@@ -5,12 +5,17 @@
   
   EMBED SNIPPET — à coller sur TourMaG.com :
   
-  <iframe src="https://tourmag13.github.io/tourmag-live/?event=EVENT_ID"
-    style="width:100%;border:none;min-height:280px" id="tourmag-live-EVENT_ID-w"></iframe>
+  <iframe src="https://tourmag13.github.io/tourmag-live/v2/?event=EVENT_ID"
+    style="width:100%;border:none;min-height:280px" id="tourmag-live-v2-w"></iframe>
   <script>
   window.addEventListener('message',function(e){
-    if(e.data&&(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
-      document.getElementById('tourmag-live-EVENT_ID-w').style.height=e.data.height+'px';
+    if(!e.data) return;
+    if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
+      document.getElementById('tourmag-live-v2-w').style.height=e.data.height+'px';
+    }
+    if(e.data.type==='tourmag-live-fullwidth'){
+      var f=document.getElementById('tourmag-live-v2-w');
+      if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
     }
   });
   </script>
@@ -136,6 +141,7 @@ img{display:block}a{text-decoration:none}
 @media(max-width:960px){.layout{grid-template-columns:1fr;gap:20px}}
 .main-col{min-width:0;max-width:100%;overflow:hidden}.side-col{min-width:0}
 @media(max-width:960px){.side-col{order:10}}
+.side-col>*:first-child{margin-top:8px}
 
 /* ==================== LIVE FEED ==================== */
 .live-feed{position:relative}
@@ -320,11 +326,11 @@ img{display:block}a{text-decoration:none}
 
 /* ==================== GALERIE ==================== */
 .gallery-grid{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:200px 170px;gap:10px}
-.gallery-grid img{width:100%;height:100%;object-fit:cover;border-radius:14px;border:2px solid var(--pri);transition:transform .2s}
+.gallery-grid img{width:100%;height:100%;object-fit:cover;border-radius:14px;transition:transform .2s}
 .gallery-grid img:hover{transform:scale(1.015)}
 .gallery-grid img:first-child{grid-row:1/3}
 .gallery-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-.gallery-extra img{width:100%;height:150px;object-fit:cover;border-radius:14px;border:2px solid var(--pri);transition:transform .2s}
+.gallery-extra img{width:100%;height:150px;object-fit:cover;border-radius:14px;transition:transform .2s}
 .gallery-extra img:hover{transform:scale(1.015)}
 @media(max-width:768px){.gallery-grid{grid-template-columns:1fr;grid-template-rows:auto}.gallery-grid img:first-child{grid-row:auto;height:180px}.gallery-grid img{height:150px}.gallery-extra{grid-template-columns:1fr 1fr}}
 
@@ -888,6 +894,18 @@ function render(data){
   const orderedKeys = [...fullBlockOrder];
   // Migration: remove old 'essential'/'timeline' if hero handles them
   const migIdx=orderedKeys.indexOf('timeline');if(migIdx>=0)orderedKeys.splice(migIdx,1);
+  // Smart insertion: essential and kpis belong right after hero, not at the end
+  function insertAfter(key, afterKey){
+    if(orderedKeys.includes(key)) return;
+    const idx=orderedKeys.indexOf(afterKey);
+    orderedKeys.splice(idx>=0?idx+1:0, 0, key);
+  }
+  insertAfter('kpis','hero');
+  insertAfter('essential','kpis');
+  insertAfter('flash','essential');
+  insertAfter('interviews','articles');
+  insertAfter('gallery','videos');
+  insertAfter('sponsors','gallery');
   allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
   const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
 
@@ -1062,17 +1080,20 @@ async function init(){
 }
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
 
-// IFRAME RESIZE
+// IFRAME RESIZE + FULL-WIDTH
 function sendHeight(){
   const h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,document.documentElement.offsetHeight);
   window.parent.postMessage({type:'tourmag-live-resize',height:h},'*');
   window.parent.postMessage({type:'setHeight',height:h},'*');
 }
+function requestFullWidth(){
+  window.parent.postMessage({type:'tourmag-live-fullwidth'},'*');
+}
 window.addEventListener('load',()=>{
   document.documentElement.style.overflow='visible';document.body.style.overflow='visible';
   sendHeight();
-  // Fire multiple times during initial load to catch async content
-  [100,300,600,1000,2000,4000].forEach(d=>setTimeout(sendHeight,d));
+  requestFullWidth();
+  [100,300,600,1000,2000,4000].forEach(d=>setTimeout(()=>{sendHeight();requestFullWidth();},d));
   new MutationObserver(()=>{sendHeight();setTimeout(sendHeight,100);}).observe(document.body,{childList:true,subtree:true,attributes:true});
   new ResizeObserver(sendHeight).observe(document.body);
   setInterval(sendHeight,1500);
