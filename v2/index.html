@@ -561,13 +561,13 @@ function render(data){
     if(event.location) o += `<span class="hero-meta-item">${ICO.mapPin} ${event.location}</span>`;
     if(event.dates) o += `<span class="hero-meta-item">${ICO.calendar} ${event.dates}</span>`;
     o += `</div>`;
-    // Hero tags
-    const eventTags = event.tags || [];
-    if(eventTags.length){
+    // Hero tags (separate from live feed tag colors)
+    const heroTags = event.heroTags || [];
+    if(heroTags.length){
       o += `<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">`;
-      eventTags.forEach(t => {
-        const c = t.color || '#fff';
-        const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c};color:#fff;background:${c}30"` : ` style="border-color:rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1)"`;
+      heroTags.filter(t=>t&&t.name).forEach(t => {
+        const c = t.color || 'rgba(255,255,255,.3)';
+        const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c};color:#fff;background:${c}40"` : ` style="border-color:rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1)"`;
         o += `<span class="hero-tag"${link}>${t.name}</span>`;
       });
       o += `</div>`;
