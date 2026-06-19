@@ -869,6 +869,14 @@ function modifyEvent(id){
         <div class="form-row"><label class="form-label">Articles visibles (avant accordéon)</label><input type="number" class="form-input" id="m-ev-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px"></div>
         <div class="form-row"><label class="form-label">Titre section Interviews</label><input class="form-input" id="m-ev-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
       </div>
+      <div class="form-row"><label class="form-label">Taille médaillons citations</label>
+        <select class="form-input" id="m-ev-cit-size" style="width:200px">
+          <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
+          <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px) — défaut</option>
+          <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
+          <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
 }
@@ -889,7 +897,8 @@ async function updateEvent(id){
     articlesTitle:document.getElementById('m-ev-art-title').value.trim(),
     articlesSubtitle:document.getElementById('m-ev-art-sub').value.trim(),
     articlesVisibleCount:parseInt(document.getElementById('m-ev-art-count').value)||4,
-    interviewsTitle:document.getElementById('m-ev-itw-title').value.trim()
+    interviewsTitle:document.getElementById('m-ev-itw-title').value.trim(),
+    citationAvatarSize:parseInt(document.getElementById('m-ev-cit-size').value)||80
   });
   closeModal();toast('Enregistré');
 }
@@ -990,6 +999,16 @@ function renderModules(el){
       <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Aperçu du rendu</div>
       <div id="block-preview-zone" style="font-size:11px;color:var(--text2);line-height:2"></div>
     </div>
+    <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">📌 Ancrage de la sidebar</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">La sidebar (programme, reporters) se positionne à côté de ce bloc :</div>
+      <select class="form-input" id="sidebar-anchor" style="max-width:300px">
+        ${['live','essential','flash','citations','articles','videos'].map(k=>{
+          const b=allBlocks.find(x=>x.key===k);
+          return `<option value="${k}"${(ev?.sidebarAnchor||'live')===k?' selected':''}>${b?b.icon+' '+b.label:k}</option>`;
+        }).join('')}
+      </select>
+    </div>
   </div>`;
   el.innerHTML=h;
   updateBlockPreview();
@@ -1015,7 +1034,10 @@ function updateBlockPreview(){
     const zone=sel?sel.value:'main';
     const label=item.querySelector('[style*="flex:1"]')?.textContent||key;
     const icon=item.querySelectorAll('span')[1]?.textContent||'';
-    if(zone==='full'){
+    if(zone==='max'){
+      flushTwoCols();
+      preview+='<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;padding:3px 8px;margin:2px 0;font-size:10px;text-align:center">🖥 '+icon+' '+label+' <span style="font-size:8px;color:#92400E">(viewport)</span></div>';
+    } else if(zone==='full'){
       flushTwoCols();
       preview+='<div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:4px;padding:3px 8px;margin:2px 0;font-size:10px;text-align:center">⬛ '+icon+' '+label+'</div>';
     } else if(zone==='side'){
@@ -1096,9 +1118,10 @@ async function saveUnifiedBlockOrder(){
   });
   if(!newOrder.length)return;
   saving(true);
+  const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
   const ev=eventsData.find(e=>e.id===currentEventId);
-  if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;}
-  await evRef().update({blockOrder:newOrder,blockZones:newZones});
+  if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;}
+  await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor});
   toast('Disposition mise à jour');
 }
 async function toggleModule(key,val){
@@ -3500,10 +3523,12 @@ function renderGallery(el){
   photos.forEach((p,i)=>{
     const url=typeof p==='string'?p:p.url||'';
     const caption=typeof p==='object'?p.caption||'':'';
+    const copyright=typeof p==='object'?p.copyright||'':'';
     h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
       <img src="${url}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9" onerror="this.style.display='none'">
       <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'">
-      <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende (optionnel)" style="width:160px" data-gal-cap="${i}">
+      <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende" style="width:120px" data-gal-cap="${i}">
+      <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}">
       <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>
     </div>`;
   });
@@ -3534,15 +3559,16 @@ function addGalleryRow(url){
   const i=list.children.length;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:160px" data-gal-cap="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
 async function saveGallery(){
   const urls=document.querySelectorAll('[data-gal-url]');
   const caps=document.querySelectorAll('[data-gal-cap]');
+  const crs=document.querySelectorAll('[data-gal-cr]');
   const gallery=[];
   urls.forEach((u,i)=>{
-    if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||''});
+    if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||'',copyright:crs[i]?.value.trim()||''});
   });
   saving(true);
   try{ await evRef().update({gallery}); toast('Galerie enregistrée ('+gallery.length+' photos)'); }
