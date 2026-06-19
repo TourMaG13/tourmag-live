@@ -61,7 +61,8 @@ img{display:block}a{text-decoration:none}
 @media(max-width:768px){.sticky-nav-inner{padding:0 10px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch}.sticky-nav a{font-size:8px;padding:14px 6px}.sticky-nav-brand{font-size:11px;max-width:160px}}
 
 /* ==================== HERO SPLIT ==================== */
-.hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:var(--hero-h,460px);overflow:hidden;background:linear-gradient(135deg,var(--hero-bg1) 0%,var(--hero-bg2) 50%,var(--hero-bg1) 100%)}
+.hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:460px;overflow:hidden;background:linear-gradient(135deg,var(--hero-bg1) 0%,var(--hero-bg2) 50%,var(--hero-bg1) 100%)}
+.hero-split[data-h]{min-height:0;height:var(--hero-h)}
 .hero-split.no-image{grid-template-columns:1fr}
 .hero-split-text{display:flex;flex-direction:column;justify-content:center;padding:44px 42px 36px;position:relative}
 .hero-split-text::before{content:'';position:absolute;top:-40px;left:-40px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,132,44,.1) 0%,transparent 70%);pointer-events:none}
@@ -551,8 +552,10 @@ function render(data){
   // ===== HERO =====
   function mkHero(){
     const hasImage = !!event.hero_image;
-    const hh = event.hero_height || 460;
-    let o = `<div class="hero-split${hasImage?'':' no-image'} fi" style="--hero-h:${hh}px"><div class="hero-split-text">`;
+    console.log("[TourMaG Live] hero_height:", event.hero_height, typeof event.hero_height);
+    const hh = event.hero_height;
+    const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
+    let o = `<div class="hero-split${hasImage?'':' no-image'} fi" ${heroStyle}><div class="hero-split-text">`;
     o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">Dossier spécial TourMaG</span></div>`;
     if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
     if(event.title) o += `<h1 class="hero-title">${event.title}</h1>`;
