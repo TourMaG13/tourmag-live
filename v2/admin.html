@@ -3487,7 +3487,7 @@ function renderGallery(el){
     const caption=typeof p==='object'?p.caption||'':'';
     h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
       <img src="${url}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9" onerror="this.style.display='none'">
-      <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}">
+      <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'">
       <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende (optionnel)" style="width:160px" data-gal-cap="${i}">
       <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>
     </div>`;
@@ -3503,9 +3503,8 @@ function addGalleryRow(url){
   const i=list.children.length;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`<div style="width:60px;height:40px;border-radius:6px;background:#F1F5F9;flex-shrink:0"></div><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}"><input class="form-input" placeholder="Légende" style="width:160px" data-gal-cap="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:160px" data-gal-cap="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
-  if(url) div.querySelector('input').value=url;
 }
 async function saveGallery(){
   const urls=document.querySelectorAll('[data-gal-url]');
@@ -3514,7 +3513,9 @@ async function saveGallery(){
   urls.forEach((u,i)=>{
     if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||''});
   });
-  saving(true);await evRef().update({gallery});toast('Galerie enregistrée');
+  saving(true);
+  try{ await evRef().update({gallery}); toast('Galerie enregistrée ('+gallery.length+' photos)'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveGallery error:',e); }
 }
 
 // ==================== PARTENAIRES / SPONSORS ====================
@@ -3560,7 +3561,9 @@ async function saveSponsors(){
   names.forEach((n,i)=>{
     if(n.value.trim()||logos[i]?.value.trim()) sponsors.push({name:n.value.trim(),logo_url:logos[i]?.value.trim()||'',url:urls[i]?.value.trim()||'',order:i*10});
   });
-  saving(true);await evRef().update({sponsors,sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim()});toast('Partenaires enregistrés');
+  saving(true);
+  try{ await evRef().update({sponsors,sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim()}); toast('Partenaires enregistrés ('+sponsors.length+')'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveSponsors error:',e); }
 }
 
 // ==================== WIDGET ====================
