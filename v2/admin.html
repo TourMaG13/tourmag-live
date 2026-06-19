@@ -860,22 +860,53 @@ function modifyEvent(id){
     <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
     <div class="form-row"><label class="form-label">Hauteur du hero (px)</label><input type="number" class="form-input" id="m-ev-hero-height" value="${ev.hero_height||460}" min="200" max="800" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur minimale du bandeau en pixels. Défaut : 460px.</div></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Personnalisation des titres</div>
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Timeline</div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Titre section Articles</label><input class="form-input" id="m-ev-art-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
-        <div class="form-row"><label class="form-label">Sous-titre Articles</label><input class="form-input" id="m-ev-art-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
+        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur de fond</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-bg" value="${ev.timelineBgColor||'#0B2636'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">${ev.timelineBgColor||'hérite du hero'}</span></div></div>
+        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur des puces</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-dot" value="${ev.timelineDotColor||'#E8842C'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div></div>
+        <div class="form-row"><label class="form-label"><input type="checkbox" id="m-ev-tl-custom" ${ev.timelineBgColor?'checked':''}> Personnaliser le fond</label><div style="font-size:9px;color:var(--text3)">Si décoché, la timeline hérite du gradient hero.</div></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Titres des sections</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Fil Live — titre</label><input class="form-input" id="m-ev-live-title" value="${ev.liveTitle||''}" placeholder="Fil Live"></div>
+        <div class="form-row"><label class="form-label">Fil Live — sous-titre</label><input class="form-input" id="m-ev-live-sub" value="${ev.liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
       </div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Articles visibles (avant accordéon)</label><input type="number" class="form-input" id="m-ev-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px"></div>
-        <div class="form-row"><label class="form-label">Titre section Interviews</label><input class="form-input" id="m-ev-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
+        <div class="form-row"><label class="form-label">Articles — titre</label><input class="form-input" id="m-ev-art-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
+        <div class="form-row"><label class="form-label">Articles — sous-titre</label><input class="form-input" id="m-ev-art-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
       </div>
-      <div class="form-row"><label class="form-label">Taille médaillons citations</label>
-        <select class="form-input" id="m-ev-cit-size" style="width:200px">
-          <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
-          <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px) — défaut</option>
-          <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
-          <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
-        </select>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Interviews — titre</label><input class="form-input" id="m-ev-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
+        <div class="form-row"><label class="form-label">Interviews — sous-titre</label><input class="form-input" id="m-ev-itw-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Verbatims — titre</label><input class="form-input" id="m-ev-cit-title" value="${ev.citationsTitle||''}" placeholder="Verbatims"></div>
+        <div class="form-row"><label class="form-label">Verbatims — sous-titre</label><input class="form-input" id="m-ev-cit-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit"></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Vidéos — titre</label><input class="form-input" id="m-ev-vid-title" value="${ev.videosTitle||''}" placeholder="Vidéos"></div>
+        <div class="form-row"><label class="form-label">Vidéos — sous-titre</label><input class="form-input" id="m-ev-vid-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts"></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Galerie — titre</label><input class="form-input" id="m-ev-gal-title" value="${ev.galleryTitle||''}" placeholder="Galerie"></div>
+        <div class="form-row"><label class="form-label">Galerie — sous-titre</label><input class="form-input" id="m-ev-gal-sub" value="${ev.gallerySubtitle||''}" placeholder="En images"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Réglages visuels</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Articles visibles (accordéon)</label><input type="number" class="form-input" id="m-ev-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px"></div>
+        <div class="form-row"><label class="form-label">Hauteur galerie (px)</label><input type="number" class="form-input" id="m-ev-gal-height" value="${ev.galleryHeight||260}" min="100" max="500" style="width:80px"></div>
+        <div class="form-row"><label class="form-label">Taille médaillons citations</label>
+          <select class="form-input" id="m-ev-cit-size" style="width:160px">
+            <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
+            <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px)</option>
+            <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
+            <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
+          </select>
+        </div>
       </div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
@@ -899,10 +930,22 @@ async function updateEvent(id){
     logo_url:document.getElementById('m-ev-logo').value,
     hero_image:document.getElementById('m-ev-hero-image').value.trim(),
     hero_height:parseInt(document.getElementById('m-ev-hero-height').value)||460,
+    timelineBgColor:document.getElementById('m-ev-tl-custom').checked?document.getElementById('m-ev-tl-bg').value:'',
+    timelineDotColor:document.getElementById('m-ev-tl-dot').value||'#E8842C',
+    liveTitle:document.getElementById('m-ev-live-title').value.trim(),
+    liveSubtitle:document.getElementById('m-ev-live-sub').value.trim(),
     articlesTitle:document.getElementById('m-ev-art-title').value.trim(),
     articlesSubtitle:document.getElementById('m-ev-art-sub').value.trim(),
     articlesVisibleCount:parseInt(document.getElementById('m-ev-art-count').value)||4,
     interviewsTitle:document.getElementById('m-ev-itw-title').value.trim(),
+    interviewsSubtitle:document.getElementById('m-ev-itw-sub').value.trim(),
+    citationsTitle:document.getElementById('m-ev-cit-title').value.trim(),
+    citationsSubtitle:document.getElementById('m-ev-cit-sub').value.trim(),
+    videosTitle:document.getElementById('m-ev-vid-title').value.trim(),
+    videosSubtitle:document.getElementById('m-ev-vid-sub').value.trim(),
+    galleryTitle:document.getElementById('m-ev-gal-title').value.trim(),
+    gallerySubtitle:document.getElementById('m-ev-gal-sub').value.trim(),
+    galleryHeight:parseInt(document.getElementById('m-ev-gal-height').value)||260,
     citationAvatarSize:parseInt(document.getElementById('m-ev-cit-size').value)||80,
     heroTags:(function(){var ns=document.querySelectorAll('[data-ht-name]'),cs=document.querySelectorAll('[data-ht-color]'),ls=document.querySelectorAll('[data-ht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
   });
@@ -946,9 +989,10 @@ function renderModules(el){
   const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',sponsors:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
-    {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
+    {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
     {key:'kpis',icon:'📊',label:'Chiffres clés'},
     {key:'flash',icon:'⚡',label:'Bandeau Flash'},
+    {key:'essential',icon:'🧠',label:'Points essentiels (IA)'},
     {key:'live',icon:'📡',label:'Fil live'},
     {key:'citations',icon:'💬',label:'Citations'},
     {key:'articles',icon:'📰',label:'Articles liés'},
