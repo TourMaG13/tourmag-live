@@ -1132,8 +1132,15 @@ async function saveUnifiedBlockOrder(){
 }
 async function toggleModule(key,val){
   saving(true);
-  await evRef().update({[`modules.${key}`]:val});
-  toast(val?'Activé':'Désactivé');
+  console.log('[toggleModule]', key, val, 'eventId:', currentEventId);
+  try{
+    await evRef().update({[`modules.${key}`]:val});
+    console.log('[toggleModule] OK — modules.'+key+'='+val);
+    toast(val?'Module activé':'Module désactivé');
+  }catch(e){
+    console.error('[toggleModule] ERREUR:', e);
+    toast('Erreur: '+e.message,'error');
+  }
 }
 
 // ==================== TAGS ====================
