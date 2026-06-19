@@ -794,7 +794,7 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    blockZones:{hero:'full',kpis:'full',flash:'main',live:'main',citations:'main',articles:'main',interviews:'full',videos:'main',gallery:'main',programme:'side',journalists:'side',sponsors:'full'},
+    blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
   currentEventId=ref.id;
@@ -858,6 +858,7 @@ function modifyEvent(id){
     </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
     <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
+    <div class="form-row"><label class="form-label">Hauteur du hero (px)</label><input type="number" class="form-input" id="m-ev-hero-height" value="${ev.hero_height||460}" min="200" max="800" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur minimale du bandeau en pixels. Défaut : 460px.</div></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Personnalisation des titres</div>
       <div class="form-row-inline">
@@ -884,6 +885,7 @@ async function updateEvent(id){
     color:document.getElementById('m-ev-color').value,
     logo_url:document.getElementById('m-ev-logo').value,
     hero_image:document.getElementById('m-ev-hero-image').value.trim(),
+    hero_height:parseInt(document.getElementById('m-ev-hero-height').value)||460,
     articlesTitle:document.getElementById('m-ev-art-title').value.trim(),
     articlesSubtitle:document.getElementById('m-ev-art-sub').value.trim(),
     articlesVisibleCount:parseInt(document.getElementById('m-ev-art-count').value)||4,
@@ -926,7 +928,7 @@ function renderModules(el){
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'full',kpis:'full',flash:'main',live:'main',citations:'main',videos:'main',interviews:'full',gallery:'main',programme:'side',articles:'main',journalists:'side',sponsors:'full'};
+  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',sponsors:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (essentiel + timeline)'},
@@ -971,7 +973,8 @@ function renderModules(el){
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${b.label}</span>
       ${dis?'<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px">OFF</span>':''}
       <select class="block-zone-sel" data-key="${key}" style="font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;background:#fff;font-family:Poppins;cursor:pointer">
-        <option value="full"${zone==='full'?' selected':''}>⬛ Pleine largeur</option>
+        <option value="max"${zone==='max'?' selected':''}>🖥 Largeur max (viewport)</option>
+        <option value="full"${zone==='full'?' selected':''}>⬛ Pleine largeur (conteneur)</option>
         <option value="main"${zone==='main'?' selected':''}>◀ Col. principale</option>
         <option value="side"${zone==='side'?' selected':''}>▶ Sidebar</option>
       </select>
@@ -1757,7 +1760,7 @@ function renderArticles(el){
       <div class="form-row" style="width:150px;margin-bottom:0"><label class="form-label">Label (optionnel)</label><input class="form-input" id="rss-label" placeholder="TourMaG"></div>
       <button class="btn btn-primary btn-sm" style="height:42px" onclick="addRssFeed()">＋ Ajouter</button>
     </div>
-    ${rssFeeds.length?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button><button class="btn btn-ghost" onclick="fixMissingImages()">🖼 Images manquantes</button><button class="btn btn-ghost" onclick="fixEnglishDates()">📅 Dates en anglais</button><button class="btn btn-ghost" onclick="debugRssImages()">🔍 Diagnostiquer</button></div>`:''}
+    ${rssFeeds.length?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button><button class="btn btn-ghost" onclick="upgradeImagesToHD()">🖼 Upgrader images HD</button><button class="btn btn-ghost" onclick="fixMissingImages()">🖼 Images manquantes</button><button class="btn btn-ghost" onclick="fixEnglishDates()">📅 Dates en anglais</button><button class="btn btn-ghost" onclick="debugRssImages()">🔍 Diagnostiquer</button></div>`:''}
     <div id="rss-preview" style="margin-top:12px"></div>
   </div>
 
@@ -1876,9 +1879,9 @@ async function fetchAllRss(){
         // Sérialiser le XML brut de l'item pour chercher les URLs directement
         const itemXml=new XMLSerializer().serializeToString(item);
 
-        // 1. PRIORITÉ : URL contenant "imagette" (TourMaG)
+        // 1. PRIORITÉ : URL contenant "imagette" (TourMaG) → upgrader en "grande"
         const imagetteMatch=itemXml.match(/https?:\/\/[^"'\s<>]*imagette[^"'\s<>]*/i);
-        if(imagetteMatch) image=imagetteMatch[0];
+        if(imagetteMatch) image=imagetteMatch[0].replace(/imagette/gi,'grande');
 
         // 2. Balise photo:imgsrc (TourMaG custom tag)
         if(!image){
@@ -1932,6 +1935,18 @@ async function fetchAllRss(){
   if(imported) toast(imported+' article'+(imported>1?'s':'')+' importé'+(imported>1?'s':''));
 }
 
+async function upgradeImagesToHD(){
+  const articles=articlesData.filter(a=>a.image&&/imagette/i.test(a.image));
+  if(!articles.length){toast('Aucune image "imagette" à upgrader','info');return;}
+  if(!confirm(`Upgrader ${articles.length} image(s) de "imagette" vers "grande" (haute résolution) ?`))return;
+  saving(true);let count=0;
+  for(const a of articles){
+    const newUrl=a.image.replace(/imagette/gi,'grande');
+    await subCol('articles').doc(a.id).update({image:newUrl});
+    count++;
+  }
+  toast(`${count} image(s) upgradée(s) en HD`);
+}
 async function fixEnglishDates(){
   const enToFr={Jan:'janv.',Feb:'févr.',Mar:'mars',Apr:'avr.',May:'mai',Jun:'juin',Jul:'juil.',Aug:'août',Sep:'sept.',Oct:'oct.',Nov:'nov.',Dec:'déc.',
     January:'janv.',February:'févr.',March:'mars',April:'avr.',June:'juin',July:'juil.',August:'août',September:'sept.',October:'oct.',November:'nov.',December:'déc.'};
@@ -3609,7 +3624,7 @@ async function saveSponsorsConfig(){
 // ==================== WIDGET ====================
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const baseUrl='https://tourmag13.github.io/tourmag-live';
+  const baseUrl='https://tourmag13.github.io/tourmag-live/v2';
   const frontUrl=baseUrl+'/index.html?event='+currentEventId;
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
@@ -3652,16 +3667,21 @@ function renderWidget(el){
 
   <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe)</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.</p>
-    <div style="position:relative"><textarea class="form-input" rows="8" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+    <div style="position:relative"><textarea class="form-input" rows="12" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
-  if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
+  if(!e.data) return;
+  if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
     document.getElementById('${iframeId}').style.height=e.data.height+'px';
+  }
+  if(e.data.type==='tourmag-live-fullwidth'){
+    var f=document.getElementById('${iframeId}');
+    if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
   }
 });
 &lt;/script&gt;</textarea>
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')">📋 Copier</button></div>
-    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">💡 Pour élargir le dashboard au-delà du conteneur CMS, ajoutez cette règle CSS dans votre page (remplacez XXXXX par le numéro du module CMS) :<br><code style="background:var(--bg);padding:2px 6px;border-radius:3px">.mod_XXXXX .cel1 { width:1200px!important; margin-left:-97px!important; }</code></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">💡 L'iframe s'étend automatiquement en pleine largeur grâce au message <code>tourmag-live-fullwidth</code>. Le redimensionnement en hauteur est automatique.</div>
   </div>
 
   <div class="admin-card"><h3>📦 Option 2 — Widget encart compact (iframe)</h3>
