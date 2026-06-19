@@ -75,6 +75,8 @@ img{display:block}a{text-decoration:none}
 .hero-meta-row{display:flex;gap:16px;flex-wrap:wrap}
 .hero-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.5)}
 .hero-meta-item svg{width:14px;height:14px;stroke:rgba(255,255,255,.4)}
+.hero-tag{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1);transition:all .15s;display:inline-block}
+.hero-tag:hover{opacity:.8}
 .hero-split-image{position:relative;overflow:hidden}
 .hero-split-image img{width:100%;height:100%;object-fit:cover}
 .hero-split-image::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--hero-bg1) 0%,transparent 30%)}
@@ -249,8 +251,8 @@ img{display:block}a{text-decoration:none}
 .citation-text{font-size:12px;line-height:1.7;color:rgba(255,255,255,.8);font-style:italic;position:relative;z-index:1;margin-bottom:12px;padding-left:10px}
 .citation-text strong{color:#FDBA74;font-weight:600;font-style:normal}
 .citation-author{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-.citation-avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(232,132,44,.3);box-shadow:0 2px 10px rgba(0,0,0,.2);flex-shrink:0}
-.citation-avatar-placeholder{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:20px;font-weight:700;color:rgba(255,255,255,.3)}
+.citation-avatar{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;object-fit:cover;border:2px solid rgba(232,132,44,.3);box-shadow:0 2px 10px rgba(0,0,0,.2);flex-shrink:0}
+.citation-avatar-placeholder{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:20px;font-weight:700;color:rgba(255,255,255,.3)}
 .citation-card-large{display:flex;flex-direction:column}
 .citation-photo-large{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px}
 .citation-info{flex:1}
@@ -523,6 +525,9 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
+  // Citation avatar size
+  const citAvatarPx = event.citationAvatarSize || 80;
+  document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
 
   // Build tag color lookup
   const eventTags = event.tags || [];
@@ -546,8 +551,8 @@ function render(data){
   // ===== HERO =====
   function mkHero(){
     const hasImage = !!event.hero_image;
-    const heroH = event.hero_height ? `style="--hero-h:${event.hero_height}px"` : '';
-    let o = `<div class="hero-split${hasImage?'':' no-image'} fi" ${heroH}><div class="hero-split-text">`;
+    const hh = event.hero_height || 460;
+    let o = `<div class="hero-split${hasImage?'':' no-image'} fi" style="--hero-h:${hh}px"><div class="hero-split-text">`;
     o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">Dossier spécial TourMaG</span></div>`;
     if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
     if(event.title) o += `<h1 class="hero-title">${event.title}</h1>`;
@@ -555,11 +560,24 @@ function render(data){
     o += `<div class="hero-meta-row">`;
     if(event.location) o += `<span class="hero-meta-item">${ICO.mapPin} ${event.location}</span>`;
     if(event.dates) o += `<span class="hero-meta-item">${ICO.calendar} ${event.dates}</span>`;
-    o += `</div></div>`;
+    o += `</div>`;
+    // Hero tags
+    const eventTags = event.tags || [];
+    if(eventTags.length){
+      o += `<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">`;
+      eventTags.forEach(t => {
+        const c = t.color || '#fff';
+        const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c};color:#fff;background:${c}30"` : ` style="border-color:rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1)"`;
+        o += `<span class="hero-tag"${link}>${t.name}</span>`;
+      });
+      o += `</div>`;
+    }
+    o += `</div>`;
     if(hasImage) o += `<div class="hero-split-image"><img src="${event.hero_image}" alt="" onerror="this.parentElement.remove()"></div>`;
     o += `</div>`;
 
     // Timeline
+    console.log('[TourMaG Live] Timeline data:', timeline?.length || 0, 'items', timeline);
     if(mod.timeline!==false && timeline && timeline.length){
       const tlCount = Math.min(timeline.length, 6);
       o += `<div class="hero-tl"><div class="hero-tl-inner"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
@@ -568,6 +586,8 @@ function render(data){
         o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot"></div><div class="hero-tl-date">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
       o += `</div><div class="hero-tl-ia">Frise générée par IA · Synthèse automatique</div></div></div>`;
+    } else {
+      console.log('[TourMaG Live] Timeline NOT rendered. mod.timeline=', mod.timeline, 'timeline=', timeline);
     }
     return o;
   }
@@ -852,18 +872,24 @@ function render(data){
     const photos = event.gallery || [];
     if(!photos.length) return '';
     let o = `<div id="section-gallery"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>En images</p></div></div>`;
+    function galImg(p){
+      const url=typeof p==='string'?p:p.url||'';
+      const cap=typeof p==='object'?p.caption||'':'';
+      const cr=typeof p==='object'?p.copyright||'':'';
+      return `<div style="position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
+    }
     if(photos.length >= 3){
       o += `<div class="gallery-grid fi">`;
-      photos.slice(0,3).forEach(p => { o += `<img src="${p.url||p}" alt="${p.caption||''}" onerror="this.remove()">`; });
+      photos.slice(0,3).forEach(p => { o += galImg(p); });
       o += `</div>`;
       if(photos.length > 3){
         o += `<div class="gallery-extra fi">`;
-        photos.slice(3,9).forEach(p => { o += `<img src="${p.url||p}" alt="${p.caption||''}" onerror="this.remove()">`; });
+        photos.slice(3,9).forEach(p => { o += galImg(p); });
         o += `</div>`;
       }
     } else {
       o += `<div class="gallery-extra fi">`;
-      photos.forEach(p => { o += `<img src="${p.url||p}" alt="${p.caption||''}" onerror="this.remove()">`; });
+      photos.forEach(p => { o += galImg(p); });
       o += `</div>`;
     }
     return o;
@@ -924,12 +950,18 @@ function render(data){
   function rb(k){ const fn=blockRenderers[k]; return fn ? fn() : ''; }
 
   const allSideKeys = validKeys.filter(k => getZone(k) === 'side');
+  const sidebarAnchor = event.sidebarAnchor || 'live';
   let _sideRendered = false, _inDash = false, _mainBuf = [];
 
+  function _shouldRenderSide(){
+    // Render sidebar when the anchor block is in the current mainBuf
+    if(_sideRendered || !allSideKeys.length) return false;
+    return _mainBuf.includes(sidebarAnchor);
+  }
   function _flushMain(){
     if(!_mainBuf.length) return;
     if(!_inDash){ h+='<div class="dash">'; _inDash=true; }
-    if(!_sideRendered && allSideKeys.length){
+    if(_shouldRenderSide()){
       h+='<div class="layout"><div class="main-col">';
       _mainBuf.forEach(k=>{ h+=rb(k); });
       h+='</div><div class="side-col">';
