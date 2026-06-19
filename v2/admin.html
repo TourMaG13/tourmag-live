@@ -3493,10 +3493,26 @@ function renderGallery(el){
     </div>`;
   });
   h+=`</div>
-    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button>${mkMediaPickerBtn('gallery-pick','📷 Depuis la médiathèque')}</div>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGallery()">💾 Enregistrer la galerie</button></div>
   </div>`;
   el.innerHTML=h;
+}
+function pickGalleryFromMedia(){
+  if(!mediaData.length){toast('Aucune image dans la médiathèque. Ajoutez-en d\'abord dans l\'onglet Médiathèque.','error');return;}
+  let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:12px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
+  mh+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">';
+  mediaData.forEach((m,i)=>{
+    mh+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickGalleryItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'"><img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()"></div>`;
+  });
+  mh+='</div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>';
+  openModal(mh);
+}
+function pickGalleryItem(idx){
+  const m=mediaData[idx];if(!m)return;
+  closeModal();
+  addGalleryRow(m.url);
+  toast('Photo ajoutée — pensez à enregistrer');
 }
 function addGalleryRow(url){
   const list=document.getElementById('gallery-list');if(!list)return;
