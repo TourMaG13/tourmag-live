@@ -143,9 +143,8 @@ img{display:block}a{text-decoration:none}
 /* ==================== LAYOUT ==================== */
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
 @media(max-width:960px){.layout{grid-template-columns:1fr;gap:20px}}
-.main-col{min-width:0;max-width:100%;overflow:hidden}.side-col{min-width:0}
+.main-col{min-width:0;max-width:100%}.side-col{min-width:0}
 @media(max-width:960px){.side-col{order:10}}
-.side-col>*:first-child{margin-top:20px}
 .side-col>*+*{margin-top:14px}
 .itw-section{margin-top:36px}
 .sec-title{padding:44px 0 28px}
@@ -210,6 +209,16 @@ img{display:block}a{text-decoration:none}
 .voir-plus:hover{background:#FFF7ED}
 .cd-expand{display:none}.cd-expand.open{display:block}
 @media(max-width:768px){.art-bento{grid-template-columns:1fr}.art-card.featured{grid-template-columns:1fr}.art-card.featured .art-card-img{min-height:180px;height:180px}}
+/* Compact articles in sidebar */
+.side-col .art-bento{grid-template-columns:1fr;gap:10px}
+.side-col .art-card.featured{grid-template-columns:1fr}
+.side-col .art-card-img{height:100px}
+.side-col .art-card.featured .art-card-img{min-height:100px;height:100px}
+.side-col .art-card-body{padding:10px 12px}
+.side-col .art-card-title{font-size:12px}
+.side-col .art-card.featured .art-card-title{font-size:13px}
+.side-col .art-card-excerpt{font-size:10px;-webkit-line-clamp:2}
+.side-col .art-card-cta{display:none}
 
 /* ==================== INTERVIEWS (full-width bandeau) ==================== */
 .itw-section{background:linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2));padding:40px 0}
