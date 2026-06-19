@@ -878,6 +878,11 @@ function modifyEvent(id){
         </select>
       </div>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Tags du hero (badges cliquables)</div>
+      <div id="hero-tags-list">${(ev.heroTags||[]).map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input class="form-input" value="${(t.name||'').replace(/"/g,'&quot;')}" placeholder="Nom" style="width:120px" data-ht-name="${i}"><input type="color" value="${t.color||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" data-ht-color="${i}"><input class="form-input" value="${(t.link||'').replace(/"/g,'&quot;')}" placeholder="URL (optionnel)" style="flex:1;font-size:10px" data-ht-link="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
+      <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=\\'form-input\\' placeholder=\\'Nom\\' style=\\'width:120px\\' data-ht-name=\\''+i+'\\'><input type=\\'color\\' value=\\'#E8842C\\' style=\\'width:34px;height:30px;border:none;cursor:pointer;border-radius:4px\\' data-ht-color=\\''+i+'\\'><input class=\\'form-input\\' placeholder=\\'URL (optionnel)\\' style=\\'flex:1;font-size:10px\\' data-ht-link=\\''+i+'\\'><button class=\\'btn btn-danger btn-xs\\' onclick=\\'this.parentElement.remove()\\'>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
+    </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
 }
 
@@ -898,7 +903,8 @@ async function updateEvent(id){
     articlesSubtitle:document.getElementById('m-ev-art-sub').value.trim(),
     articlesVisibleCount:parseInt(document.getElementById('m-ev-art-count').value)||4,
     interviewsTitle:document.getElementById('m-ev-itw-title').value.trim(),
-    citationAvatarSize:parseInt(document.getElementById('m-ev-cit-size').value)||80
+    citationAvatarSize:parseInt(document.getElementById('m-ev-cit-size').value)||80,
+    heroTags:(function(){var ns=document.querySelectorAll('[data-ht-name]'),cs=document.querySelectorAll('[data-ht-color]'),ls=document.querySelectorAll('[data-ht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
   });
   closeModal();toast('Enregistré');
 }
