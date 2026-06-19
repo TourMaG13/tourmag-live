@@ -3545,41 +3545,65 @@ function renderSponsors(el){
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="sp-sub" value="${(ev.sponsorsSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Cette couverture est réalisée avec le soutien de…"></div>
     </div>
   </div>
-  <div class="admin-card"><h3>Logos</h3><div id="sponsors-list">`;
+  <div class="admin-card"><h3>Logos partenaires</h3>
+  <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="addSponsor()">＋ Ajouter un partenaire</button></div>`;
+  if(!sponsors.length) h+=`<div class="empty"><div class="text">Aucun partenaire ajouté</div></div>`;
   sponsors.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((s,i)=>{
-    h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-      ${s.logo_url?`<img src="${s.logo_url}" style="height:28px;flex-shrink:0;opacity:.5" onerror="this.style.display='none'">`:''}
-      <input class="form-input" value="${(s.name||'').replace(/"/g,'&quot;')}" placeholder="Nom" style="width:140px" data-sp-name="${i}">
-      <input class="form-input" value="${(s.logo_url||'').replace(/"/g,'&quot;')}" placeholder="URL du logo" style="flex:1" data-sp-logo="${i}">
-      <input class="form-input" value="${(s.url||'').replace(/"/g,'&quot;')}" placeholder="URL du site (optionnel)" style="width:180px" data-sp-url="${i}">
-      <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>
+    h+=`<div class="list-item" style="align-items:center;gap:12px">
+      ${s.logo_url?`<img src="${s.logo_url}" style="height:32px;flex-shrink:0;opacity:.6" onerror="this.style.display='none'">`:'<div style="width:40px;height:32px;border-radius:6px;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3)">🤝</div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px">${s.name||'Sans nom'}</div>
+        ${s.url?`<div style="font-size:10px;color:var(--text3)">${s.url}</div>`:''}
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editSponsor(${i})">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="removeSponsor(${i})">🗑</button>
+      </div>
     </div>`;
   });
-  h+=`</div>
-    <button class="btn btn-ghost btn-sm" onclick="addSponsorRow()" style="margin-top:6px">＋ Ajouter un partenaire</button>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveSponsors()">💾 Enregistrer les partenaires</button></div>
-  </div>`;
+  h+=`<div style="margin-top:14px"><button class="btn btn-primary" onclick="saveSponsorsConfig()">💾 Enregistrer la configuration</button></div></div>`;
   el.innerHTML=h;
 }
-function addSponsorRow(){
-  const list=document.getElementById('sponsors-list');if(!list)return;
-  const i=list.children.length;
-  const div=document.createElement('div');
-  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`<input class="form-input" placeholder="Nom" style="width:140px" data-sp-name="${i}"><input class="form-input" placeholder="URL du logo" style="flex:1" data-sp-logo="${i}"><input class="form-input" placeholder="URL du site" style="width:180px" data-sp-url="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
-  list.appendChild(div);
+function addSponsor(){
+  openModal(`<h3>Nouveau partenaire</h3>
+    <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
+    <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${((eventsData.find(e=>e.id===currentEventId)?.sponsors||[]).length+1)*10}" style="width:80px"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor()">💾 Ajouter</button></div>`);
 }
-async function saveSponsors(){
-  const names=document.querySelectorAll('[data-sp-name]');
-  const logos=document.querySelectorAll('[data-sp-logo]');
-  const urls=document.querySelectorAll('[data-sp-url]');
-  const sponsors=[];
-  names.forEach((n,i)=>{
-    if(n.value.trim()||logos[i]?.value.trim()) sponsors.push({name:n.value.trim(),logo_url:logos[i]?.value.trim()||'',url:urls[i]?.value.trim()||'',order:i*10});
-  });
+function editSponsor(idx){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const s=(ev.sponsors||[])[idx];if(!s)return;
+  openModal(`<h3>Modifier le partenaire</h3>
+    <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
+    <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${s.order||0}" style="width:80px"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor(${idx})">💾 Enregistrer</button></div>`);
+}
+async function saveSponsor(editIdx){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const sponsors=[...(ev.sponsors||[])];
+  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),order:parseInt(document.getElementById('m-sp-order').value)||0};
+  if(editIdx!==undefined&&editIdx!==null) sponsors[editIdx]=data;
+  else sponsors.push(data);
   saving(true);
-  try{ await evRef().update({sponsors,sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim()}); toast('Partenaires enregistrés ('+sponsors.length+')'); }
-  catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveSponsors error:',e); }
+  try{ await evRef().update({sponsors}); closeModal(); toast(editIdx!==undefined?'Partenaire modifié':'Partenaire ajouté'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveSponsor:',e); }
+}
+async function removeSponsor(idx){
+  if(!confirm('Supprimer ce partenaire ?'))return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const sponsors=(ev.sponsors||[]).filter((_,i)=>i!==idx);
+  saving(true);
+  try{ await evRef().update({sponsors}); toast('Partenaire supprimé'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function saveSponsorsConfig(){
+  saving(true);
+  try{ await evRef().update({sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim()}); toast('Configuration enregistrée'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
 // ==================== WIDGET ====================
