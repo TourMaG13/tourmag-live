@@ -274,6 +274,25 @@ img{display:block}a{text-decoration:none}
 .citation-role{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
 .citation-sep{border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
 
+/* ==================== CITATIONS PREMIUM ==================== */
+.citation-card-pm{background:#fff;padding:22px 18px 18px;position:relative;overflow:hidden;border:var(--cit-bw,2.5px) solid var(--cit-accent,#E8842C)}
+.citation-card-pm-a{border-radius:16px 0 16px 0}
+.citation-card-pm-b{border-radius:0 16px 0 16px}
+.citation-card-pm .cit-pm-quote{position:absolute;top:10px;right:14px;pointer-events:none;z-index:0}
+.citation-card-pm .cit-pm-inner{position:relative;z-index:1}
+.citation-card-pm .cit-pm-badge{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cit-accent,#E8842C);background:color-mix(in srgb, var(--cit-accent,#E8842C) 8%, transparent);padding:3px 10px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.citation-card-pm .cit-pm-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.citation-card-pm .cit-pm-avatar{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;object-fit:cover;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);flex-shrink:0}
+.citation-card-pm .cit-pm-avatar-ph{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;background:#EDF2F7;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:20px;font-weight:700;color:#4A5568}
+.citation-card-pm .cit-pm-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#1A202C}
+.citation-card-pm .cit-pm-role{font-size:10px;color:#A0AEC0;margin-top:1px}
+.citation-card-pm .cit-pm-text{font-family:'Playfair Display';font-style:italic;font-size:var(--cit-ts,13px);line-height:1.7;color:#4A5568;position:relative;z-index:1}
+.citation-card-pm .cit-pm-text strong{color:var(--cit-accent,#E8842C);font-weight:600;font-style:normal}
+.citation-card-pm .cit-pm-sep{border:none;border-top:1px solid #E2E8F0;margin:14px 0}
+.citation-card-pm.citation-card-large{display:flex;flex-direction:column}
+.citation-card-pm .cit-pm-photo-large{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px}
+@media(max-width:768px){.citation-card-pm{padding:18px 14px}}
+
 /* ==================== SIDEBAR CARDS ==================== */
 .cd{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-bottom:14px}
 .cd .hd{display:flex;align-items:center;gap:8px;padding:12px 14px}
@@ -542,6 +561,12 @@ function render(data){
   // Citation avatar size
   const citAvatarPx = event.citationAvatarSize || 80;
   document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
+  // Citation premium settings
+  if(event.citationAccentColor) document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor);
+  if(event.citationTextSize) document.documentElement.style.setProperty('--cit-ts', event.citationTextSize + 'px');
+  if(event.citationBorderWidth) document.documentElement.style.setProperty('--cit-bw', event.citationBorderWidth + 'px');
+  const _citStyle = event.citationStyle || 'classic';
+  const _citQuoteSize = event.citationQuoteSize || 'medium';
 
   // Build tag color lookup
   const eventTags = event.tags || [];
@@ -722,6 +747,13 @@ function render(data){
   // ===== CITATIONS =====
   const CIT_VISIBLE = event.citVisibleCount || 6;
   var _citAccordionCounter = 0;
+  // SVG quote icon for premium cards
+  function citQuoteSVG(){
+    const col = event.citationAccentColor || '#E8842C';
+    const sizes = {small:{w:30,h:24,s:.68},medium:{w:44,h:36,s:1},large:{w:58,h:48,s:1.32}};
+    const sz = sizes[_citQuoteSize] || sizes.medium;
+    return `<svg class="cit-pm-quote" width="${sz.w}" height="${sz.h}" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 21.6C0 10.08 6.72 2.16 17.28 0l1.92 4.32C12.48 6.24 9.12 11.52 8.64 17.28H17.28V36H0V21.6Z" fill="${col}"/><path d="M25.92 21.6C25.92 10.08 32.64 2.16 43.2 0l1.92 4.32c-6.72 1.92-10.08 7.2-10.56 12.96h8.64V36H25.92V21.6Z" fill="${col}"/></svg>`;
+  }
   function mkCitations(){
     if(mod.citations===false || !citations || !citations.length) return '';
     const pubCitations=citations.filter(_isPublished);
@@ -741,10 +773,31 @@ function render(data){
     }
 
     // Rest of citations by rubrique
-    function mkCitGroup(group){
+    function mkCitGroup(group, idx){
       let out = '';
       const c0 = group[0];
       const isLarge = c0.photoFormat === 'large';
+
+      // ---- PREMIUM STYLE ----
+      if(_citStyle === 'premium'){
+        const variant = (idx||0) % 2 === 0 ? 'citation-card-pm-a' : 'citation-card-pm-b';
+        if(isLarge && c0.avatar){
+          out += `<div class="citation-card-pm ${variant} citation-card-large">${citQuoteSVG()}<div class="cit-pm-inner"><img class="cit-pm-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div style="margin-bottom:12px"><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div>`;
+        } else {
+          out += `<div class="citation-card-pm ${variant}">${citQuoteSVG()}<div class="cit-pm-inner">`;
+          const rubMatch = (rubriques||[]).find(r=>r.id===c0.rubrique);
+          if(rubMatch) out += `<div class="cit-pm-badge">${rubMatch.name||''}</div>`;
+          out += `<div class="cit-pm-top">`;
+          if(c0.avatar) out += `<img class="cit-pm-avatar" src="${c0.avatar}" alt="" onerror="this.style.display='none'">`;
+          else { const ini=(c0.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); out += `<div class="cit-pm-avatar-ph">${ini||ICO.user}</div>`; }
+          out += `<div><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div></div>`;
+        }
+        group.forEach((c,i) => { if(i>0) out += `<hr class="cit-pm-sep">`; out += `<div class="cit-pm-text">${c.text}</div>`; });
+        out += `</div></div>`;
+        return out;
+      }
+
+      // ---- CLASSIC STYLE (original) ----
       if(isLarge && c0.avatar){
         out += `<div class="citation-card citation-card-large"><img class="citation-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div class="citation-info" style="margin-bottom:12px"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div>`;
       } else {
@@ -767,7 +820,7 @@ function render(data){
       const groups = groupByPerson(rc);
       const accId = 'cit-acc-'+(_citAccordionCounter++);
       let out = `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rubBg};color:${rubColor}">${rubIcon}</div><div class="rubrique-name">${rubName}</div><span class="rubrique-count" style="background:${rubColor}">${rc.length}</span></div><div class="citation-grid">`;
-      const cards = groups.map(g => mkCitGroup(g));
+      const cards = groups.map((g,gi) => mkCitGroup(g, gi));
       const visCards = cards.slice(0,CIT_VISIBLE), extraCards = cards.slice(CIT_VISIBLE);
       visCards.forEach(c => { out += c; });
       if(extraCards.length){
