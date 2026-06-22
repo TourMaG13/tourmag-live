@@ -1235,6 +1235,7 @@ function renderLive(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="live-s-title" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveTitle||''}" placeholder="Fil Live"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="live-s-sub" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="live-s-show-title" ${(eventsData.find(e=>e.id===currentEventId)||{}).liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
     </details>
@@ -1422,7 +1423,8 @@ async function saveLiveSettings(){
   saving(true);
   await evRef().update({
     liveTitle:document.getElementById('live-s-title').value.trim(),
-    liveSubtitle:document.getElementById('live-s-sub').value.trim()
+    liveSubtitle:document.getElementById('live-s-sub').value.trim(),
+    liveShowTitle:document.getElementById('live-s-show-title').checked
   });
   toast('Réglages fil live enregistrés');
 }
@@ -1453,6 +1455,7 @@ function renderCitations(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="cit-s-title" value="${ev.citationsTitle||''}" placeholder="Verbatims"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="cit-s-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="cit-s-show-title" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style des cartes</div>
@@ -1622,6 +1625,7 @@ async function saveCitSettings(){
   await evRef().update({
     citationsTitle:document.getElementById('cit-s-title').value.trim(),
     citationsSubtitle:document.getElementById('cit-s-sub').value.trim(),
+    citationsShowTitle:document.getElementById('cit-s-show-title').checked,
     citationStyle:document.getElementById('cit-s-style').value||'classic',
     citationAccentColor:document.getElementById('cit-s-accent').value||'#E8842C',
     citationBorderWidth:parseFloat(document.getElementById('cit-s-bw').value)||2.5,
@@ -1881,9 +1885,15 @@ function renderArticles(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="art-s-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="art-s-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="art-s-show-title" ${ev.articlesShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
-    <div class="form-row" style="max-width:200px"><label class="form-label">Articles visibles avant accordéon</label>
-      <input type="number" class="form-input" id="art-s-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px">
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:200px"><label class="form-label">Articles visibles avant accordéon</label>
+        <input type="number" class="form-input" id="art-s-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px">
+      </div>
+      <div class="form-row" style="max-width:200px"><label class="form-label">Taille titre article (px)</label>
+        <input type="number" class="form-input" id="art-s-tsize" value="${ev.articlesTitleSize||14}" min="10" max="24" style="width:80px">
+      </div>
     </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveArtSettings()">💾 Enregistrer</button></div>
     </details>
@@ -1975,7 +1985,9 @@ async function saveArtSettings(){
   await evRef().update({
     articlesTitle:document.getElementById('art-s-title').value.trim(),
     articlesSubtitle:document.getElementById('art-s-sub').value.trim(),
-    articlesVisibleCount:parseInt(document.getElementById('art-s-count').value)||4
+    articlesShowTitle:document.getElementById('art-s-show-title').checked,
+    articlesVisibleCount:parseInt(document.getElementById('art-s-count').value)||4,
+    articlesTitleSize:parseInt(document.getElementById('art-s-tsize').value)||14
   });
   toast('Réglages articles enregistrés');
 }
@@ -2478,6 +2490,17 @@ function renderIAHTML(){
 
   let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
 
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="ess-s-title" value="${ev.essentialTitle||''}" placeholder="L'essentiel"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="ess-s-sub" value="${ev.essentialSubtitle||''}" placeholder="Les points clés à retenir"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="ess-s-show-title" ${ev.essentialShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveEssSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
+
   <div class="admin-card"><h3>🤖 Génération IA</h3>
     <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     ${iaEssentialEnabled?`<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2570,6 +2593,15 @@ async function toggleIATimeline(val){
   toast(val?'IA timeline activée':'IA timeline désactivée');
 }
 
+async function saveEssSettings(){
+  saving(true);
+  await evRef().update({
+    essentialTitle:document.getElementById('ess-s-title').value.trim(),
+    essentialSubtitle:document.getElementById('ess-s-sub').value.trim(),
+    essentialShowTitle:document.getElementById('ess-s-show-title').checked
+  });
+  toast('Réglages essentiels enregistrés');
+}
 // ==================== VIDÉOS ====================
 function parseVideoUrl(url){
   let m;
@@ -2630,6 +2662,7 @@ function renderVideos(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="vid-s-title" value="${ev.videosTitle||''}" placeholder="Vidéos"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="vid-s-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="vid-s-show-title" ${ev.videosShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveVidSettings()">💾 Enregistrer</button></div>
     </details>
@@ -2908,10 +2941,21 @@ function renderJournalistes(el){
 
   let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
 
-  <div class="admin-card"><h3>⚙️ Affichage</h3>
-    <div class="form-row" style="max-width:400px"><label class="form-label">Titre du bloc (côté public)</label>
-      <div style="display:flex;gap:6px"><input class="form-input" id="jr-block-title" value="${ev.journalistsTitle||'Vos reporters'}" placeholder="Vos reporters"><button class="btn btn-primary btn-sm" onclick="saveJournalistsTitle()">💾</button></div>
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre du bloc</label>
+        <input class="form-input" id="jr-s-title" value="${ev.journalistsTitle||'Vos reporters'}" placeholder="Vos reporters">
+      </div>
+      <div class="form-row"><label class="form-label">Taille nom (px)</label>
+        <input type="number" class="form-input" id="jr-s-nsize" value="${ev.journalistsNameSize||13}" min="10" max="20" style="width:70px">
+      </div>
+      <div class="form-row"><label class="form-label">Taille poste (px)</label>
+        <input type="number" class="form-input" id="jr-s-rsize" value="${ev.journalistsRoleSize||10}" min="8" max="16" style="width:70px">
+      </div>
     </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveJrSettings()">💾 Enregistrer</button></div>
+    </details>
   </div>
 
   <div class="admin-card"><h3>📌 Assignés à cet événement (${assignedList.length})</h3>`;
@@ -3000,11 +3044,14 @@ function renderJournalistes(el){
 }
 
 // --- GLOBAL JOURNALIST CRUD ---
-async function saveJournalistsTitle(){
-  const val=document.getElementById('jr-block-title').value.trim()||'Vos reporters';
+async function saveJrSettings(){
   saving(true);
-  await evRef().update({journalistsTitle:val});
-  toast('Titre mis à jour');
+  await evRef().update({
+    journalistsTitle:document.getElementById('jr-s-title').value.trim()||'Vos reporters',
+    journalistsNameSize:parseInt(document.getElementById('jr-s-nsize').value)||13,
+    journalistsRoleSize:parseInt(document.getElementById('jr-s-rsize').value)||10
+  });
+  toast('Réglages journalistes enregistrés');
 }
 async function addGlobalJournalist(){
   const name=document.getElementById('jr-name').value.trim();
@@ -3558,7 +3605,8 @@ async function saveVidSettings(){
   saving(true);
   await evRef().update({
     videosTitle:document.getElementById('vid-s-title').value.trim(),
-    videosSubtitle:document.getElementById('vid-s-sub').value.trim()
+    videosSubtitle:document.getElementById('vid-s-sub').value.trim(),
+    videosShowTitle:document.getElementById('vid-s-show-title').checked
   });
   toast('Réglages vidéos enregistrés');
 }
@@ -3573,6 +3621,7 @@ function renderInterviews(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="itw-s-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="itw-s-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="itw-s-show-title" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveItwSettings()">💾 Enregistrer</button></div>
     </details>
@@ -3682,7 +3731,8 @@ async function saveItwSettings(){
   saving(true);
   await evRef().update({
     interviewsTitle:document.getElementById('itw-s-title').value.trim(),
-    interviewsSubtitle:document.getElementById('itw-s-sub').value.trim()
+    interviewsSubtitle:document.getElementById('itw-s-sub').value.trim(),
+    interviewsShowTitle:document.getElementById('itw-s-show-title').checked
   });
   toast('Réglages interviews enregistrés');
 }
@@ -3697,6 +3747,7 @@ function renderGallery(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="gal-s-title" value="${ev.galleryTitle||''}" placeholder="Galerie"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="gal-s-sub" value="${ev.gallerySubtitle||''}" placeholder="En images"></div>
+      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="gal-s-show-title" ${ev.galleryShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label>
       <input type="number" class="form-input" id="gal-s-height" value="${ev.galleryHeight||260}" min="100" max="500" style="width:80px">
@@ -3766,6 +3817,7 @@ async function saveGalSettings(){
   await evRef().update({
     galleryTitle:document.getElementById('gal-s-title').value.trim(),
     gallerySubtitle:document.getElementById('gal-s-sub').value.trim(),
+    galleryShowTitle:document.getElementById('gal-s-show-title').checked,
     galleryHeight:parseInt(document.getElementById('gal-s-height').value)||260
   });
   toast('Réglages galerie enregistrés');
