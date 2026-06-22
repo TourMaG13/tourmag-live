@@ -99,7 +99,7 @@ img{display:block}a{text-decoration:none}
 
 /* ==================== KPI BAR ==================== */
 .kpi-bar{max-width:1200px;margin:-22px auto 0;padding:0 28px;position:relative;z-index:2}
-.kpi-bar-inner{display:grid;grid-template-columns:repeat(var(--kpi-cols,4),1fr);gap:0;background:var(--card);border-radius:14px;padding:16px 8px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.kpi-bar-inner{display:grid;grid-template-columns:repeat(var(--kpi-cols,4),1fr);gap:0;background:var(--card);border-radius:14px;margin-top:10px;padding:16px 8px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
 .kpi{text-align:center;padding:4px 10px;border-right:1px solid var(--border)}.kpi:last-child{border-right:none}
 .kpi-num{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:var(--pri);line-height:1}
 .kpi-label{font-size:9px;color:var(--text3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
@@ -192,8 +192,8 @@ img{display:block}a{text-decoration:none}
 .art-card.featured .art-card-img{height:100%;min-height:240px}
 .art-card-body{padding:16px;display:flex;flex-direction:column}
 .art-card-tag{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
-.art-card-title{font-family:'Josefin Sans';font-size:var(--art-ts,14px);font-weight:700;color:var(--text);line-height:1.35;margin-bottom:6px}
-.art-card.featured .art-card-title{font-size:var(--art-ts-feat,18px)}
+.art-card-title{font-family:'Josefin Sans';font-size:14px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:6px}
+.art-card.featured .art-card-title{font-size:18px}
 .art-card-excerpt{font-size:11px;line-height:1.6;color:var(--text2);margin-bottom:10px;flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .art-card-byline{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px}
 .art-card-byline-avatar{width:22px;height:22px;border-radius:50%;background:rgba(232,132,44,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--acc);flex-shrink:0}
@@ -270,28 +270,9 @@ img{display:block}a{text-decoration:none}
 .citation-card-large{display:flex;flex-direction:column}
 .citation-photo-large{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px}
 .citation-info{flex:1}
-.citation-name{font-family:'Josefin Sans';font-size:var(--cit-ns,12px);font-weight:700;color:#fff}
-.citation-role{font-size:var(--cit-rs,10px);color:rgba(255,255,255,.4);margin-top:1px}
+.citation-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#fff}
+.citation-role{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
 .citation-sep{border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
-
-/* ==================== CITATIONS PREMIUM ==================== */
-.citation-card-pm{background:#fff;padding:22px 18px 18px;position:relative;overflow:hidden;border:var(--cit-bw,2.5px) solid var(--cit-accent,#E8842C)}
-.citation-card-pm-a{border-radius:16px 0 16px 0}
-.citation-card-pm-b{border-radius:0 16px 0 16px}
-.citation-card-pm .cit-pm-quote{position:absolute;top:10px;right:14px;pointer-events:none;z-index:0}
-.citation-card-pm .cit-pm-inner{position:relative;z-index:1}
-.citation-card-pm .cit-pm-badge{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cit-accent,#E8842C);background:color-mix(in srgb, var(--cit-accent,#E8842C) 8%, transparent);padding:3px 10px;border-radius:4px;display:inline-block;margin-bottom:8px}
-.citation-card-pm .cit-pm-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.citation-card-pm .cit-pm-avatar{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;object-fit:cover;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);flex-shrink:0}
-.citation-card-pm .cit-pm-avatar-ph{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;background:#EDF2F7;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:20px;font-weight:700;color:#4A5568}
-.citation-card-pm .cit-pm-name{font-family:'Josefin Sans';font-size:var(--cit-ns,12px);font-weight:700;color:#1A202C}
-.citation-card-pm .cit-pm-role{font-size:var(--cit-rs,10px);color:#A0AEC0;margin-top:1px}
-.citation-card-pm .cit-pm-text{font-family:'Playfair Display';font-style:italic;font-size:var(--cit-ts,13px);line-height:1.7;color:#4A5568;position:relative;z-index:1}
-.citation-card-pm .cit-pm-text strong{color:var(--cit-accent,#E8842C);font-weight:600;font-style:normal}
-.citation-card-pm .cit-pm-sep{border:none;border-top:1px solid #E2E8F0;margin:14px 0}
-.citation-card-pm.citation-card-large{display:flex;flex-direction:column}
-.citation-card-pm .cit-pm-photo-large{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px}
-@media(max-width:768px){.citation-card-pm{padding:18px 14px}}
 
 /* ==================== SIDEBAR CARDS ==================== */
 .cd{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-bottom:14px}
@@ -370,7 +351,7 @@ img{display:block}a{text-decoration:none}
 @media(max-width:768px){.gallery-grid{grid-template-columns:1fr;grid-template-rows:auto}.gallery-grid img:first-child{grid-row:auto;height:180px}.gallery-grid img{height:150px}.gallery-extra{grid-template-columns:1fr 1fr}}
 
 /* ==================== JOURNALISTES ==================== */
-.jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
+.jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-bottom:14px}
 .jr-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .jr-hd .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FEF3C7;color:#92400E}
 .jr-hd .ci svg{width:16px;height:16px}
@@ -379,8 +360,8 @@ img{display:block}a{text-decoration:none}
 .jr-top{display:flex;align-items:center;gap:12px;margin-bottom:5px}
 .jr-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
 .jr-avatar-placeholder{width:46px;height:46px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border)}
-.jr-name{font-family:'Josefin Sans';font-size:var(--jr-ns,13px);font-weight:700;color:var(--text);line-height:1.3}
-.jr-role{font-size:var(--jr-rs,10px);color:var(--acc);font-weight:600;margin-top:1px}
+.jr-name{font-family:'Josefin Sans';font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.jr-role{font-size:10px;color:var(--acc);font-weight:600;margin-top:1px}
 .jr-bio{font-size:12.5px;line-height:1.55;color:var(--text2);margin-bottom:6px}
 .jr-socials{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .jr-social-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text3);text-decoration:none;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--border);transition:all .15s}
@@ -561,26 +542,12 @@ function render(data){
   // Citation avatar size
   const citAvatarPx = event.citationAvatarSize || 80;
   document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
-  // Citation premium settings
-  if(event.citationAccentColor) document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor);
-  if(event.citationTextSize) document.documentElement.style.setProperty('--cit-ts', event.citationTextSize + 'px');
-  if(event.citationBorderWidth) document.documentElement.style.setProperty('--cit-bw', event.citationBorderWidth + 'px');
-  if(event.citationNameSize) document.documentElement.style.setProperty('--cit-ns', event.citationNameSize + 'px');
-  if(event.citationRoleSize) document.documentElement.style.setProperty('--cit-rs', event.citationRoleSize + 'px');
-  const _citStyle = event.citationStyle || 'classic';
-  const _citQuoteSize = event.citationQuoteSize || 'medium';
-  const _citFeatBg = event.citationFeaturedBg || '#0F2B3C';
 
   // Build tag color lookup
   const eventTags = event.tags || [];
   const tagColorMap = {};
   eventTags.forEach(t => { if(t&&t.name&&t.color) tagColorMap[t.name.toUpperCase()]=t.color; });
   _tagColorMap = tagColorMap;
-  // Article title size
-  if(event.articlesTitleSize) { document.documentElement.style.setProperty('--art-ts', event.articlesTitleSize + 'px'); document.documentElement.style.setProperty('--art-ts-feat', Math.round(event.articlesTitleSize * 1.28) + 'px'); }
-  // Journalist name/role size
-  if(event.journalistsNameSize) document.documentElement.style.setProperty('--jr-ns', event.journalistsNameSize + 'px');
-  if(event.journalistsRoleSize) document.documentElement.style.setProperty('--jr-rs', event.journalistsRoleSize + 'px');
 
   // Resolve journalist photo map for live avatars
   const jrPhotoMap = {};
@@ -637,7 +604,7 @@ function render(data){
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer"` : '';
         o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDot}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
-      o += `</div></div></div>`;
+      o += `</div><div class="hero-tl-ia">Frise générée par IA · Synthèse automatique</div></div></div>`;
     } else {
       console.log('[TourMaG Live] Timeline NOT rendered. mod.timeline=', mod.timeline, 'timeline=', timeline);
     }
@@ -658,14 +625,14 @@ function render(data){
   function mkEssential(){
     if(mod.essential===false || !essential || !essential.length) return '';
     const defaultColors=['#3B82F6','#DC2626','#D97706','#059669','#7C3AED','#0891B2','#EA580C','#6366F1','#0D9488','#DB2777'];
-    let o = '';
-    if(event.essentialShowTitle!==false) o += `<div id="section-essential"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(5,150,105,.08);color:#059669">${ICO.clipboard}</div><h2>${event.essentialTitle||"L'essentiel"}</h2><div class="sec-title-line"></div><p>${event.essentialSubtitle||'Les points clés à retenir'}</p></div></div>`;
-    o += `<div class="ess-grid fi">`;
+    let o = `<div class="ess-grid fi">`;
     essential.forEach((p,i) => {
       const tc = tagColorMap[(p.tag||'').toUpperCase()] || defaultColors[i % defaultColors.length];
       o += `<div class="ess-card" style="border-left-color:${tc}"><div class="ess-top"><div class="ess-num" style="color:${tc}">${String(i+1).padStart(2,'0')}</div><span class="ess-tag" style="background:${tc}20;color:${tc}">${p.tag||''}</span></div><div class="ess-txt">${p.text}</div></div>`;
     });
     o += `</div>`;
+    const hasIA = essential.some(p => p.source === 'ia');
+    if(hasIA) o += `<div class="ess-ia fi">Synthèse IA · Mise à jour automatique</div>`;
     return o;
   }
 
@@ -692,7 +659,7 @@ function render(data){
     if(mod.live===false || !live || !live.length) return '';
     const pubLive=live.filter(_isPublished);
     if(!pubLive.length) return '';
-    let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
+    let o = `<div id="section-live"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div></div><div class="live-feed fi">`;
     const vis = pubLive.slice(0, LIVE_VISIBLE);
     const ext = pubLive.slice(LIVE_VISIBLE);
     vis.forEach((e,i) => { o += mkLiveEntry(e, i===0); });
@@ -718,7 +685,7 @@ function render(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     const artTitle = event.articlesTitle || 'Nos articles';
     const artSub = event.articlesSubtitle || "L'événement vu par la rédaction";
-    let o = `<div id="section-articles">${event.articlesShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div>`:""}</div>`;
+    let o = `<div id="section-articles"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div></div>`;
     const va = articles.slice(0, ART_VIS);
     const ea = articles.slice(ART_VIS);
     o += `<div class="art-bento fi">`;
@@ -737,7 +704,7 @@ function render(data){
     if(mod.interviews===false || !interviews || !interviews.length) return '';
     const itwTitle = event.interviewsTitle || 'Interviews';
     const itwSub = event.interviewsSubtitle || 'Rencontres et visions sur l\'évolution du métier';
-    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner">${event.interviewsShowTitle!==false?`<div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p>${itwSub}</p></div>`:``}`;
+    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner"><div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p>${itwSub}</p></div>`;
     interviews.forEach(itw => {
       const avatarHtml = itw.photo_url ? `<img class="itw-avatar" src="${itw.photo_url}" alt="" onerror="this.remove()">` : '';
       o += `<div class="itw-card"><div class="itw-body">`;
@@ -755,79 +722,29 @@ function render(data){
   // ===== CITATIONS =====
   const CIT_VISIBLE = event.citVisibleCount || 6;
   var _citAccordionCounter = 0;
-  // SVG quote icon for premium cards
-  function citQuoteSVG(){
-    const col = event.citationAccentColor || '#E8842C';
-    const sizes = {small:{w:30,h:24,s:.68},medium:{w:44,h:36,s:1},large:{w:58,h:48,s:1.32}};
-    const sz = sizes[_citQuoteSize] || sizes.medium;
-    return `<svg class="cit-pm-quote" width="${sz.w}" height="${sz.h}" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 21.6C0 10.08 6.72 2.16 17.28 0l1.92 4.32C12.48 6.24 9.12 11.52 8.64 17.28H17.28V36H0V21.6Z" fill="${col}"/><path d="M25.92 21.6C25.92 10.08 32.64 2.16 43.2 0l1.92 4.32c-6.72 1.92-10.08 7.2-10.56 12.96h8.64V36H25.92V21.6Z" fill="${col}"/></svg>`;
-  }
   function mkCitations(){
     if(mod.citations===false || !citations || !citations.length) return '';
     const pubCitations=citations.filter(_isPublished);
     if(!pubCitations.length) return '';
-    let o = `<div id="section-citations">${event.citationsShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div>`:""}</div>`;
+    let o = `<div id="section-citations"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div></div>`;
 
-    // Featured citation (explicitly marked with featured:true)
-    const featured = pubCitations.find(c => c.featured);
+    // Featured citation (first one with avatar)
+    const featured = pubCitations.find(c => c.featured || (c.avatar && pubCitations.indexOf(c)===0));
     if(featured){
-      const rubMatch = (rubriques||[]).find(r=>r.id===featured.rubrique);
-
-      if(_citStyle === 'premium'){
-        // Premium featured citation
-        const accentCol = event.citationAccentColor || '#E8842C';
-        const bgCol = _citFeatBg;
-        // Auto-detect text color from bg luminance
-        const _lum = (function(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const l=v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);return 0.2126*l(r)+0.7152*l(g)+0.0722*l(b);})(bgCol);
-        const _dark = _lum > 0.4;
-        const txtCol = _dark ? '#1A202C' : 'rgba(255,255,255,.85)';
-        const nameCol = _dark ? '#1A202C' : '#fff';
-        const roleCol = _dark ? '#4A5568' : 'rgba(255,255,255,.45)';
-        const ini = (featured.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const avatarHtml = featured.avatar
-          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" style="border-color:${accentCol};box-shadow:0 0 0 4px ${accentCol}33" onerror="this.style.display='none'">`
-          : `<div class="cit-hero-avatar-placeholder" style="color:${roleCol}">${ini}</div>`;
-        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0;position:relative;overflow:hidden">${citQuoteSVG().replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.25"')}${avatarHtml}<div class="cit-hero-body" style="position:relative;z-index:1">`;
-        if(rubMatch) o += `<span class="cit-hero-badge" style="background:${accentCol}">${rubMatch.name||''}</span>`;
-        o += `<div class="cit-hero-text" style="font-size:var(--cit-ts,16px);color:${txtCol}">${featured.text}</div><div class="cit-hero-name" style="font-size:var(--cit-ns,14px);color:${nameCol}">${featured.name}</div><div class="cit-hero-role" style="font-size:var(--cit-rs,11px);color:${roleCol}">${featured.role||''}</div></div></div>`;
-      } else {
-        // Classic featured citation
-        const ini = (featured.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        const avatarHtml = featured.avatar
-          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.style.display='none'">`
-          : `<div class="cit-hero-avatar-placeholder">${ini}</div>`;
-        o += `<div class="cit-hero fi">${avatarHtml}<div class="cit-hero-body">`;
-        if(rubMatch) o += `<span class="cit-hero-badge">${rubMatch.name||''}</span>`;
-        o += `<div class="cit-hero-text">${featured.text}</div><div class="cit-hero-name">${featured.name}</div><div class="cit-hero-role">${featured.role||''}</div></div></div>`;
-      }
+      const avatarHtml = featured.avatar
+        ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
+        : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
+      const rubName = (rubriques||[]).find(r=>r.id===featured.rubrique);
+      o += `<div class="cit-hero fi">${avatarHtml}<div class="cit-hero-body">`;
+      if(rubName) o += `<span class="cit-hero-badge">${rubName.name||''}</span>`;
+      o += `<div class="cit-hero-text">${featured.text}</div><div class="cit-hero-name">${featured.name}</div><div class="cit-hero-role">${featured.role||''}</div></div></div>`;
     }
 
     // Rest of citations by rubrique
-    function mkCitGroup(group, idx){
+    function mkCitGroup(group){
       let out = '';
       const c0 = group[0];
       const isLarge = c0.photoFormat === 'large';
-
-      // ---- PREMIUM STYLE ----
-      if(_citStyle === 'premium'){
-        const variant = (idx||0) % 2 === 0 ? 'citation-card-pm-a' : 'citation-card-pm-b';
-        if(isLarge && c0.avatar){
-          out += `<div class="citation-card-pm ${variant} citation-card-large">${citQuoteSVG()}<div class="cit-pm-inner"><img class="cit-pm-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div style="margin-bottom:12px"><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div>`;
-        } else {
-          out += `<div class="citation-card-pm ${variant}">${citQuoteSVG()}<div class="cit-pm-inner">`;
-          const rubMatch = (rubriques||[]).find(r=>r.id===c0.rubrique);
-          if(rubMatch) out += `<div class="cit-pm-badge">${rubMatch.name||''}</div>`;
-          out += `<div class="cit-pm-top">`;
-          if(c0.avatar) out += `<img class="cit-pm-avatar" src="${c0.avatar}" alt="" onerror="this.style.display='none'">`;
-          else { const ini=(c0.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); out += `<div class="cit-pm-avatar-ph">${ini||ICO.user}</div>`; }
-          out += `<div><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div></div>`;
-        }
-        group.forEach((c,i) => { if(i>0) out += `<hr class="cit-pm-sep">`; out += `<div class="cit-pm-text">${c.text}</div>`; });
-        out += `</div></div>`;
-        return out;
-      }
-
-      // ---- CLASSIC STYLE (original) ----
       if(isLarge && c0.avatar){
         out += `<div class="citation-card citation-card-large"><img class="citation-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div class="citation-info" style="margin-bottom:12px"><div class="citation-name">${c0.name}</div><div class="citation-role">${c0.role||''}</div></div>`;
       } else {
@@ -850,7 +767,7 @@ function render(data){
       const groups = groupByPerson(rc);
       const accId = 'cit-acc-'+(_citAccordionCounter++);
       let out = `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rubBg};color:${rubColor}">${rubIcon}</div><div class="rubrique-name">${rubName}</div><span class="rubrique-count" style="background:${rubColor}">${rc.length}</span></div><div class="citation-grid">`;
-      const cards = groups.map((g,gi) => mkCitGroup(g, gi));
+      const cards = groups.map(g => mkCitGroup(g));
       const visCards = cards.slice(0,CIT_VISIBLE), extraCards = cards.slice(CIT_VISIBLE);
       visCards.forEach(c => { out += c; });
       if(extraCards.length){
@@ -907,7 +824,7 @@ function render(data){
     if(mod.videos===false || !videos || !videos.length) return '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
-    let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
+    let o=`<div id="section-videos"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div></div>`;
 
     function mkVidEmbed(v){
       const platform=v.platform||'youtube';const isShort=v.type==='short';
@@ -973,7 +890,7 @@ function render(data){
     if(mod.gallery===false) return '';
     const photos = event.gallery || [];
     if(!photos.length) return '';
-    let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
+    let o = `<div id="section-gallery"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div></div>`;
     const galH = event.galleryHeight || 260;
     function galImg(p){
       const url=typeof p==='string'?p:p.url||'';
