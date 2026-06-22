@@ -192,8 +192,8 @@ img{display:block}a{text-decoration:none}
 .art-card.featured .art-card-img{height:100%;min-height:240px}
 .art-card-body{padding:16px;display:flex;flex-direction:column}
 .art-card-tag{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
-.art-card-title{font-family:'Josefin Sans';font-size:14px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:6px}
-.art-card.featured .art-card-title{font-size:18px}
+.art-card-title{font-family:'Josefin Sans';font-size:var(--art-ts,14px);font-weight:700;color:var(--text);line-height:1.35;margin-bottom:6px}
+.art-card.featured .art-card-title{font-size:var(--art-ts-feat,18px)}
 .art-card-excerpt{font-size:11px;line-height:1.6;color:var(--text2);margin-bottom:10px;flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .art-card-byline{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px}
 .art-card-byline-avatar{width:22px;height:22px;border-radius:50%;background:rgba(232,132,44,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--acc);flex-shrink:0}
@@ -379,8 +379,8 @@ img{display:block}a{text-decoration:none}
 .jr-top{display:flex;align-items:center;gap:12px;margin-bottom:5px}
 .jr-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
 .jr-avatar-placeholder{width:46px;height:46px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border)}
-.jr-name{font-family:'Josefin Sans';font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
-.jr-role{font-size:10px;color:var(--acc);font-weight:600;margin-top:1px}
+.jr-name{font-family:'Josefin Sans';font-size:var(--jr-ns,13px);font-weight:700;color:var(--text);line-height:1.3}
+.jr-role{font-size:var(--jr-rs,10px);color:var(--acc);font-weight:600;margin-top:1px}
 .jr-bio{font-size:12.5px;line-height:1.55;color:var(--text2);margin-bottom:6px}
 .jr-socials{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .jr-social-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text3);text-decoration:none;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--border);transition:all .15s}
@@ -576,6 +576,11 @@ function render(data){
   const tagColorMap = {};
   eventTags.forEach(t => { if(t&&t.name&&t.color) tagColorMap[t.name.toUpperCase()]=t.color; });
   _tagColorMap = tagColorMap;
+  // Article title size
+  if(event.articlesTitleSize) { document.documentElement.style.setProperty('--art-ts', event.articlesTitleSize + 'px'); document.documentElement.style.setProperty('--art-ts-feat', Math.round(event.articlesTitleSize * 1.28) + 'px'); }
+  // Journalist name/role size
+  if(event.journalistsNameSize) document.documentElement.style.setProperty('--jr-ns', event.journalistsNameSize + 'px');
+  if(event.journalistsRoleSize) document.documentElement.style.setProperty('--jr-rs', event.journalistsRoleSize + 'px');
 
   // Resolve journalist photo map for live avatars
   const jrPhotoMap = {};
@@ -632,7 +637,7 @@ function render(data){
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer"` : '';
         o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDot}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
-      o += `</div><div class="hero-tl-ia">Frise générée par IA · Synthèse automatique</div></div></div>`;
+      o += `</div></div></div>`;
     } else {
       console.log('[TourMaG Live] Timeline NOT rendered. mod.timeline=', mod.timeline, 'timeline=', timeline);
     }
@@ -653,14 +658,14 @@ function render(data){
   function mkEssential(){
     if(mod.essential===false || !essential || !essential.length) return '';
     const defaultColors=['#3B82F6','#DC2626','#D97706','#059669','#7C3AED','#0891B2','#EA580C','#6366F1','#0D9488','#DB2777'];
-    let o = `<div class="ess-grid fi">`;
+    let o = '';
+    if(event.essentialShowTitle!==false) o += `<div id="section-essential"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(5,150,105,.08);color:#059669">${ICO.clipboard}</div><h2>${event.essentialTitle||'L\\'essentiel'}</h2><div class="sec-title-line"></div><p>${event.essentialSubtitle||'Les points clés à retenir'}</p></div></div>`;
+    o += `<div class="ess-grid fi">`;
     essential.forEach((p,i) => {
       const tc = tagColorMap[(p.tag||'').toUpperCase()] || defaultColors[i % defaultColors.length];
       o += `<div class="ess-card" style="border-left-color:${tc}"><div class="ess-top"><div class="ess-num" style="color:${tc}">${String(i+1).padStart(2,'0')}</div><span class="ess-tag" style="background:${tc}20;color:${tc}">${p.tag||''}</span></div><div class="ess-txt">${p.text}</div></div>`;
     });
     o += `</div>`;
-    const hasIA = essential.some(p => p.source === 'ia');
-    if(hasIA) o += `<div class="ess-ia fi">Synthèse IA · Mise à jour automatique</div>`;
     return o;
   }
 
@@ -687,7 +692,7 @@ function render(data){
     if(mod.live===false || !live || !live.length) return '';
     const pubLive=live.filter(_isPublished);
     if(!pubLive.length) return '';
-    let o = `<div id="section-live"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div></div><div class="live-feed fi">`;
+    let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
     const vis = pubLive.slice(0, LIVE_VISIBLE);
     const ext = pubLive.slice(LIVE_VISIBLE);
     vis.forEach((e,i) => { o += mkLiveEntry(e, i===0); });
@@ -713,7 +718,7 @@ function render(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     const artTitle = event.articlesTitle || 'Nos articles';
     const artSub = event.articlesSubtitle || "L'événement vu par la rédaction";
-    let o = `<div id="section-articles"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div></div>`;
+    let o = `<div id="section-articles">${event.articlesShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div>`:""}</div>`;
     const va = articles.slice(0, ART_VIS);
     const ea = articles.slice(ART_VIS);
     o += `<div class="art-bento fi">`;
@@ -732,7 +737,7 @@ function render(data){
     if(mod.interviews===false || !interviews || !interviews.length) return '';
     const itwTitle = event.interviewsTitle || 'Interviews';
     const itwSub = event.interviewsSubtitle || 'Rencontres et visions sur l\'évolution du métier';
-    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner"><div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p>${itwSub}</p></div>`;
+    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner">${event.interviewsShowTitle!==false?`<div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p>${itwSub}</p></div>`;
     interviews.forEach(itw => {
       const avatarHtml = itw.photo_url ? `<img class="itw-avatar" src="${itw.photo_url}" alt="" onerror="this.remove()">` : '';
       o += `<div class="itw-card"><div class="itw-body">`;
@@ -761,7 +766,7 @@ function render(data){
     if(mod.citations===false || !citations || !citations.length) return '';
     const pubCitations=citations.filter(_isPublished);
     if(!pubCitations.length) return '';
-    let o = `<div id="section-citations"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div></div>`;
+    let o = `<div id="section-citations">${event.citationsShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div>`:""}</div>`;
 
     // Featured citation (explicitly marked with featured:true)
     const featured = pubCitations.find(c => c.featured);
@@ -772,17 +777,25 @@ function render(data){
         // Premium featured citation
         const accentCol = event.citationAccentColor || '#E8842C';
         const bgCol = _citFeatBg;
+        // Auto-detect text color from bg luminance
+        const _lum = (function(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const l=v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);return 0.2126*l(r)+0.7152*l(g)+0.0722*l(b);})(bgCol);
+        const _dark = _lum > 0.4;
+        const txtCol = _dark ? '#1A202C' : 'rgba(255,255,255,.85)';
+        const nameCol = _dark ? '#1A202C' : '#fff';
+        const roleCol = _dark ? '#4A5568' : 'rgba(255,255,255,.45)';
+        const ini = (featured.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
         const avatarHtml = featured.avatar
-          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" style="border-color:${accentCol};box-shadow:0 0 0 4px ${accentCol}33" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
-          : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
-        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0">${citQuoteSVG().replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.3"')}${avatarHtml}<div class="cit-hero-body">`;
+          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" style="border-color:${accentCol};box-shadow:0 0 0 4px ${accentCol}33" onerror="this.style.display='none'">`
+          : `<div class="cit-hero-avatar-placeholder" style="color:${roleCol}">${ini}</div>`;
+        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0;position:relative;overflow:hidden">${citQuoteSVG().replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.25"')}${avatarHtml}<div class="cit-hero-body" style="position:relative;z-index:1">`;
         if(rubMatch) o += `<span class="cit-hero-badge" style="background:${accentCol}">${rubMatch.name||''}</span>`;
-        o += `<div class="cit-hero-text" style="font-size:var(--cit-ts,16px)">${featured.text}</div><div class="cit-hero-name" style="font-size:var(--cit-ns,14px)">${featured.name}</div><div class="cit-hero-role" style="font-size:var(--cit-rs,11px)">${featured.role||''}</div></div></div>`;
+        o += `<div class="cit-hero-text" style="font-size:var(--cit-ts,16px);color:${txtCol}">${featured.text}</div><div class="cit-hero-name" style="font-size:var(--cit-ns,14px);color:${nameCol}">${featured.name}</div><div class="cit-hero-role" style="font-size:var(--cit-rs,11px);color:${roleCol}">${featured.role||''}</div></div></div>`;
       } else {
         // Classic featured citation
+        const ini = (featured.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
         const avatarHtml = featured.avatar
-          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
-          : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
+          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.style.display='none'">`
+          : `<div class="cit-hero-avatar-placeholder">${ini}</div>`;
         o += `<div class="cit-hero fi">${avatarHtml}<div class="cit-hero-body">`;
         if(rubMatch) o += `<span class="cit-hero-badge">${rubMatch.name||''}</span>`;
         o += `<div class="cit-hero-text">${featured.text}</div><div class="cit-hero-name">${featured.name}</div><div class="cit-hero-role">${featured.role||''}</div></div></div>`;
@@ -894,7 +907,7 @@ function render(data){
     if(mod.videos===false || !videos || !videos.length) return '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
-    let o=`<div id="section-videos"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div></div>`;
+    let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
 
     function mkVidEmbed(v){
       const platform=v.platform||'youtube';const isShort=v.type==='short';
@@ -960,7 +973,7 @@ function render(data){
     if(mod.gallery===false) return '';
     const photos = event.gallery || [];
     if(!photos.length) return '';
-    let o = `<div id="section-gallery"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div></div>`;
+    let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
     const galH = event.galleryHeight || 260;
     function galImg(p){
       const url=typeof p==='string'?p:p.url||'';
