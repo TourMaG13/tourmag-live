@@ -99,7 +99,7 @@ img{display:block}a{text-decoration:none}
 
 /* ==================== KPI BAR ==================== */
 .kpi-bar{max-width:1200px;margin:-22px auto 0;padding:0 28px;position:relative;z-index:2}
-.kpi-bar-inner{display:grid;grid-template-columns:repeat(var(--kpi-cols,4),1fr);gap:0;background:var(--card);border-radius:14px;margin-top:10px;padding:16px 8px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.kpi-bar-inner{display:grid;grid-template-columns:repeat(var(--kpi-cols,4),1fr);gap:0;background:var(--card);border-radius:14px;padding:16px 8px;margin-top:10px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
 .kpi{text-align:center;padding:4px 10px;border-right:1px solid var(--border)}.kpi:last-child{border-right:none}
 .kpi-num{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:var(--pri);line-height:1}
 .kpi-label{font-size:9px;color:var(--text3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
@@ -215,8 +215,8 @@ img{display:block}a{text-decoration:none}
 .side-col .art-card-img{height:100px}
 .side-col .art-card.featured .art-card-img{min-height:100px;height:100px}
 .side-col .art-card-body{padding:10px 12px}
-.side-col .art-card-title{font-size:12px}
-.side-col .art-card.featured .art-card-title{font-size:13px}
+.side-col .art-card-title{font-size:var(--art-ts,12px)}
+.side-col .art-card.featured .art-card-title{font-size:var(--art-ts,13px)}
 .side-col .art-card-excerpt{font-size:10px;-webkit-line-clamp:2}
 .side-col .art-card-cta{display:none}
 
@@ -562,11 +562,11 @@ function render(data){
   const citAvatarPx = event.citationAvatarSize || 80;
   document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
   // Citation premium settings
-  if(event.citationAccentColor) document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor);
-  if(event.citationTextSize) document.documentElement.style.setProperty('--cit-ts', event.citationTextSize + 'px');
-  if(event.citationBorderWidth) document.documentElement.style.setProperty('--cit-bw', event.citationBorderWidth + 'px');
-  if(event.citationNameSize) document.documentElement.style.setProperty('--cit-ns', event.citationNameSize + 'px');
-  if(event.citationRoleSize) document.documentElement.style.setProperty('--cit-rs', event.citationRoleSize + 'px');
+  document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor || '#E8842C');
+  document.documentElement.style.setProperty('--cit-ts', (event.citationTextSize || 13) + 'px');
+  document.documentElement.style.setProperty('--cit-bw', (event.citationBorderWidth || 2.5) + 'px');
+  document.documentElement.style.setProperty('--cit-ns', (event.citationNameSize || 12) + 'px');
+  document.documentElement.style.setProperty('--cit-rs', (event.citationRoleSize || 10) + 'px');
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
   const _citFeatBg = event.citationFeaturedBg || '#0F2B3C';
@@ -577,10 +577,12 @@ function render(data){
   eventTags.forEach(t => { if(t&&t.name&&t.color) tagColorMap[t.name.toUpperCase()]=t.color; });
   _tagColorMap = tagColorMap;
   // Article title size
-  if(event.articlesTitleSize) { document.documentElement.style.setProperty('--art-ts', event.articlesTitleSize + 'px'); document.documentElement.style.setProperty('--art-ts-feat', Math.round(event.articlesTitleSize * 1.28) + 'px'); }
+  const _artTs = event.articlesTitleSize || 14;
+  document.documentElement.style.setProperty('--art-ts', _artTs + 'px');
+  document.documentElement.style.setProperty('--art-ts-feat', Math.round(_artTs * 1.28) + 'px');
   // Journalist name/role size
-  if(event.journalistsNameSize) document.documentElement.style.setProperty('--jr-ns', event.journalistsNameSize + 'px');
-  if(event.journalistsRoleSize) document.documentElement.style.setProperty('--jr-rs', event.journalistsRoleSize + 'px');
+  document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 13) + 'px');
+  document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 10) + 'px');
 
   // Resolve journalist photo map for live avatars
   const jrPhotoMap = {};
