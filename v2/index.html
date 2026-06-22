@@ -270,8 +270,8 @@ img{display:block}a{text-decoration:none}
 .citation-card-large{display:flex;flex-direction:column}
 .citation-photo-large{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:12px}
 .citation-info{flex:1}
-.citation-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#fff}
-.citation-role{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.citation-name{font-family:'Josefin Sans';font-size:var(--cit-ns,12px);font-weight:700;color:#fff}
+.citation-role{font-size:var(--cit-rs,10px);color:rgba(255,255,255,.4);margin-top:1px}
 .citation-sep{border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
 
 /* ==================== CITATIONS PREMIUM ==================== */
@@ -284,8 +284,8 @@ img{display:block}a{text-decoration:none}
 .citation-card-pm .cit-pm-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .citation-card-pm .cit-pm-avatar{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;object-fit:cover;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);flex-shrink:0}
 .citation-card-pm .cit-pm-avatar-ph{width:var(--cit-av,80px);height:var(--cit-av,80px);border-radius:50%;background:#EDF2F7;border:3px solid var(--cit-accent,#E8842C);box-shadow:0 0 0 3px color-mix(in srgb, var(--cit-accent,#E8842C) 18%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:20px;font-weight:700;color:#4A5568}
-.citation-card-pm .cit-pm-name{font-family:'Josefin Sans';font-size:12px;font-weight:700;color:#1A202C}
-.citation-card-pm .cit-pm-role{font-size:10px;color:#A0AEC0;margin-top:1px}
+.citation-card-pm .cit-pm-name{font-family:'Josefin Sans';font-size:var(--cit-ns,12px);font-weight:700;color:#1A202C}
+.citation-card-pm .cit-pm-role{font-size:var(--cit-rs,10px);color:#A0AEC0;margin-top:1px}
 .citation-card-pm .cit-pm-text{font-family:'Playfair Display';font-style:italic;font-size:var(--cit-ts,13px);line-height:1.7;color:#4A5568;position:relative;z-index:1}
 .citation-card-pm .cit-pm-text strong{color:var(--cit-accent,#E8842C);font-weight:600;font-style:normal}
 .citation-card-pm .cit-pm-sep{border:none;border-top:1px solid #E2E8F0;margin:14px 0}
@@ -565,8 +565,11 @@ function render(data){
   if(event.citationAccentColor) document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor);
   if(event.citationTextSize) document.documentElement.style.setProperty('--cit-ts', event.citationTextSize + 'px');
   if(event.citationBorderWidth) document.documentElement.style.setProperty('--cit-bw', event.citationBorderWidth + 'px');
+  if(event.citationNameSize) document.documentElement.style.setProperty('--cit-ns', event.citationNameSize + 'px');
+  if(event.citationRoleSize) document.documentElement.style.setProperty('--cit-rs', event.citationRoleSize + 'px');
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
+  const _citFeatBg = event.citationFeaturedBg || '#0F2B3C';
 
   // Build tag color lookup
   const eventTags = event.tags || [];
@@ -760,16 +763,30 @@ function render(data){
     if(!pubCitations.length) return '';
     let o = `<div id="section-citations"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div></div>`;
 
-    // Featured citation (first one with avatar)
-    const featured = pubCitations.find(c => c.featured || (c.avatar && pubCitations.indexOf(c)===0));
+    // Featured citation (explicitly marked with featured:true)
+    const featured = pubCitations.find(c => c.featured);
     if(featured){
-      const avatarHtml = featured.avatar
-        ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
-        : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
-      const rubName = (rubriques||[]).find(r=>r.id===featured.rubrique);
-      o += `<div class="cit-hero fi">${avatarHtml}<div class="cit-hero-body">`;
-      if(rubName) o += `<span class="cit-hero-badge">${rubName.name||''}</span>`;
-      o += `<div class="cit-hero-text">${featured.text}</div><div class="cit-hero-name">${featured.name}</div><div class="cit-hero-role">${featured.role||''}</div></div></div>`;
+      const rubMatch = (rubriques||[]).find(r=>r.id===featured.rubrique);
+
+      if(_citStyle === 'premium'){
+        // Premium featured citation
+        const accentCol = event.citationAccentColor || '#E8842C';
+        const bgCol = _citFeatBg;
+        const avatarHtml = featured.avatar
+          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" style="border-color:${accentCol};box-shadow:0 0 0 4px ${accentCol}33" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
+          : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
+        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0">${citQuoteSVG().replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.3"')}${avatarHtml}<div class="cit-hero-body">`;
+        if(rubMatch) o += `<span class="cit-hero-badge" style="background:${accentCol}">${rubMatch.name||''}</span>`;
+        o += `<div class="cit-hero-text" style="font-size:var(--cit-ts,16px)">${featured.text}</div><div class="cit-hero-name" style="font-size:var(--cit-ns,14px)">${featured.name}</div><div class="cit-hero-role" style="font-size:var(--cit-rs,11px)">${featured.role||''}</div></div></div>`;
+      } else {
+        // Classic featured citation
+        const avatarHtml = featured.avatar
+          ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" onerror="this.className='cit-hero-avatar-placeholder';this.innerHTML='${ICO.user}'">`
+          : `<div class="cit-hero-avatar-placeholder">${ICO.user}</div>`;
+        o += `<div class="cit-hero fi">${avatarHtml}<div class="cit-hero-body">`;
+        if(rubMatch) o += `<span class="cit-hero-badge">${rubMatch.name||''}</span>`;
+        o += `<div class="cit-hero-text">${featured.text}</div><div class="cit-hero-name">${featured.name}</div><div class="cit-hero-role">${featured.role||''}</div></div></div>`;
+      }
     }
 
     // Rest of citations by rubrique
