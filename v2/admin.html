@@ -868,48 +868,6 @@ function modifyEvent(id){
       </div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Titres des sections</div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Fil Live — titre</label><input class="form-input" id="m-ev-live-title" value="${ev.liveTitle||''}" placeholder="Fil Live"></div>
-        <div class="form-row"><label class="form-label">Fil Live — sous-titre</label><input class="form-input" id="m-ev-live-sub" value="${ev.liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
-      </div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Articles — titre</label><input class="form-input" id="m-ev-art-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
-        <div class="form-row"><label class="form-label">Articles — sous-titre</label><input class="form-input" id="m-ev-art-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
-      </div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Interviews — titre</label><input class="form-input" id="m-ev-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
-        <div class="form-row"><label class="form-label">Interviews — sous-titre</label><input class="form-input" id="m-ev-itw-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
-      </div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Verbatims — titre</label><input class="form-input" id="m-ev-cit-title" value="${ev.citationsTitle||''}" placeholder="Verbatims"></div>
-        <div class="form-row"><label class="form-label">Verbatims — sous-titre</label><input class="form-input" id="m-ev-cit-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit"></div>
-      </div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Vidéos — titre</label><input class="form-input" id="m-ev-vid-title" value="${ev.videosTitle||''}" placeholder="Vidéos"></div>
-        <div class="form-row"><label class="form-label">Vidéos — sous-titre</label><input class="form-input" id="m-ev-vid-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts"></div>
-      </div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Galerie — titre</label><input class="form-input" id="m-ev-gal-title" value="${ev.galleryTitle||''}" placeholder="Galerie"></div>
-        <div class="form-row"><label class="form-label">Galerie — sous-titre</label><input class="form-input" id="m-ev-gal-sub" value="${ev.gallerySubtitle||''}" placeholder="En images"></div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Réglages visuels</div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Articles visibles (accordéon)</label><input type="number" class="form-input" id="m-ev-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px"></div>
-        <div class="form-row"><label class="form-label">Hauteur galerie (px)</label><input type="number" class="form-input" id="m-ev-gal-height" value="${ev.galleryHeight||260}" min="100" max="500" style="width:80px"></div>
-        <div class="form-row"><label class="form-label">Taille médaillons citations</label>
-          <select class="form-input" id="m-ev-cit-size" style="width:160px">
-            <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
-            <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px)</option>
-            <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
-            <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Tags du hero (badges cliquables)</div>
       <div id="hero-tags-list">${(ev.heroTags||[]).map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input class="form-input" value="${(t.name||'').replace(/"/g,'&quot;')}" placeholder="Nom" style="width:120px" data-ht-name="${i}"><input type="color" value="${t.color||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" data-ht-color="${i}"><input class="form-input" value="${(t.link||'').replace(/"/g,'&quot;')}" placeholder="URL (optionnel)" style="flex:1;font-size:10px" data-ht-link="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
       <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=\\'form-input\\' placeholder=\\'Nom\\' style=\\'width:120px\\' data-ht-name=\\''+i+'\\'><input type=\\'color\\' value=\\'#E8842C\\' style=\\'width:34px;height:30px;border:none;cursor:pointer;border-radius:4px\\' data-ht-color=\\''+i+'\\'><input class=\\'form-input\\' placeholder=\\'URL (optionnel)\\' style=\\'flex:1;font-size:10px\\' data-ht-link=\\''+i+'\\'><button class=\\'btn btn-danger btn-xs\\' onclick=\\'this.parentElement.remove()\\'>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
@@ -932,21 +890,6 @@ async function updateEvent(id){
     hero_height:parseInt(document.getElementById('m-ev-hero-height').value)||460,
     timelineBgColor:document.getElementById('m-ev-tl-custom').checked?document.getElementById('m-ev-tl-bg').value:'',
     timelineDotColor:document.getElementById('m-ev-tl-dot').value||'#E8842C',
-    liveTitle:document.getElementById('m-ev-live-title').value.trim(),
-    liveSubtitle:document.getElementById('m-ev-live-sub').value.trim(),
-    articlesTitle:document.getElementById('m-ev-art-title').value.trim(),
-    articlesSubtitle:document.getElementById('m-ev-art-sub').value.trim(),
-    articlesVisibleCount:parseInt(document.getElementById('m-ev-art-count').value)||4,
-    interviewsTitle:document.getElementById('m-ev-itw-title').value.trim(),
-    interviewsSubtitle:document.getElementById('m-ev-itw-sub').value.trim(),
-    citationsTitle:document.getElementById('m-ev-cit-title').value.trim(),
-    citationsSubtitle:document.getElementById('m-ev-cit-sub').value.trim(),
-    videosTitle:document.getElementById('m-ev-vid-title').value.trim(),
-    videosSubtitle:document.getElementById('m-ev-vid-sub').value.trim(),
-    galleryTitle:document.getElementById('m-ev-gal-title').value.trim(),
-    gallerySubtitle:document.getElementById('m-ev-gal-sub').value.trim(),
-    galleryHeight:parseInt(document.getElementById('m-ev-gal-height').value)||260,
-    citationAvatarSize:parseInt(document.getElementById('m-ev-cit-size').value)||80,
     heroTags:(function(){var ns=document.querySelectorAll('[data-ht-name]'),cs=document.querySelectorAll('[data-ht-color]'),ls=document.querySelectorAll('[data-ht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
   });
   closeModal();toast('Enregistré');
@@ -1286,6 +1229,17 @@ function renderLive(el){
   const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}">${n}</option>`;}).join('');
 
   let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
+
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="live-s-title" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveTitle||''}" placeholder="Fil Live"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="live-s-sub" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
+
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="live-text" rows="3"></textarea></div>
     <div class="form-row-inline">
@@ -1464,6 +1418,14 @@ async function saveRubrique(id){
   closeModal();toast('Modifié');
 }
 
+async function saveLiveSettings(){
+  saving(true);
+  await evRef().update({
+    liveTitle:document.getElementById('live-s-title').value.trim(),
+    liveSubtitle:document.getElementById('live-s-sub').value.trim()
+  });
+  toast('Réglages fil live enregistrés');
+}
 // ==================== CITATIONS ====================
 var _citDraft={text:'',name:'',role:'',rub:'',avatar:''};
 function _saveCitDraft(){
@@ -1486,15 +1448,85 @@ function renderCitations(el){
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
 
-  <div class="admin-card"><h3>⚙️ Affichage</h3>
-    <div class="form-row" style="max-width:340px"><label class="form-label">Citations visibles par rubrique avant accordéon</label>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="1" max="20" value="${citVisible}" id="cit-visible-range" oninput="document.getElementById('cit-visible-val').textContent=this.value" style="flex:1">
-        <span id="cit-visible-val" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${citVisible}</span>
-        <button class="btn btn-primary btn-sm" onclick="saveCitVisible()">💾</button>
-      </div>
-      <div style="font-size:9px;color:var(--text3);margin-top:4px">Au-delà de ce nombre, un bouton « Voir plus » pliera les citations suivantes.</div>
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details id="cit-settings-details"><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="cit-s-title" value="${ev.citationsTitle||''}" placeholder="Verbatims"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="cit-s-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit"></div>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style des cartes</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Style</label>
+          <select class="form-input" id="cit-s-style" style="width:180px">
+            <option value="classic"${(ev.citationStyle||'classic')==='classic'?' selected':''}>Classique (fond sombre)</option>
+            <option value="premium"${ev.citationStyle==='premium'?' selected':''}>Premium (carte blanche)</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Couleur d'accent</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="color" id="cit-s-accent" value="${ev.citationAccentColor||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" oninput="document.getElementById('cit-s-accent-lbl').textContent=this.value">
+            <span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)" id="cit-s-accent-lbl">${ev.citationAccentColor||'#E8842C'}</span>
+          </div>
+        </div>
+        <div class="form-row"><label class="form-label">Épaisseur bordure (px)</label>
+          <input type="number" class="form-input" id="cit-s-bw" value="${ev.citationBorderWidth||2.5}" min="1" max="6" step="0.5" style="width:70px">
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Typographie</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Taille texte citation (px)</label>
+          <input type="number" class="form-input" id="cit-s-tsize" value="${ev.citationTextSize||13}" min="10" max="20" style="width:70px">
+        </div>
+        <div class="form-row"><label class="form-label">Taille nom (px)</label>
+          <input type="number" class="form-input" id="cit-s-nsize" value="${ev.citationNameSize||12}" min="10" max="20" style="width:70px">
+        </div>
+        <div class="form-row"><label class="form-label">Taille poste (px)</label>
+          <input type="number" class="form-input" id="cit-s-rsize" value="${ev.citationRoleSize||10}" min="8" max="16" style="width:70px">
+        </div>
+        <div class="form-row"><label class="form-label">Taille guillemets</label>
+          <select class="form-input" id="cit-s-qsize" style="width:120px">
+            <option value="small"${ev.citationQuoteSize==='small'?' selected':''}>Petit</option>
+            <option value="medium"${(ev.citationQuoteSize||'medium')==='medium'?' selected':''}>Moyen</option>
+            <option value="large"${ev.citationQuoteSize==='large'?' selected':''}>Grand</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Photos & accordéon</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Taille médaillons</label>
+          <select class="form-input" id="cit-s-avsize" style="width:160px">
+            <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
+            <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px)</option>
+            <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
+            <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
+          </select>
+        </div>
+        <div class="form-row" style="max-width:260px"><label class="form-label">Citations visibles avant accordéon</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="1" max="20" value="${citVisible}" id="cit-s-visible" oninput="document.getElementById('cit-s-visible-lbl').textContent=this.value" style="flex:1">
+            <span id="cit-s-visible-lbl" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${citVisible}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Citation mise en avant</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Fond de la citation vedette</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="color" id="cit-s-feat-bg" value="${ev.citationFeaturedBg||'#0F2B3C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px">
+          </div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">Cochez ⭐ sur une citation ci-dessous pour la mettre en avant. Elle s'affichera en grand au-dessus de la grille.</div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveCitSettings()">💾 Enregistrer les réglages</button></div>
+    </details>
   </div>
 
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
@@ -1531,6 +1563,7 @@ function renderCitations(el){
       <div class="cit-item-role">${c.role||''}${rub?' · '+rub.icon+' '+rub.name:''}${dateStr?' · <span style="opacity:.5">'+dateStr+'</span>':''}</div>
       ${schedBadge}
       <div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="toggleFeaturedCitation('${c.id}')" title="Mettre en avant" style="${c.featured?'background:#FEF3C7;border-color:#F59E0B':''}">⭐${c.featured?' Vedette':''}</button>
         <button class="btn btn-ghost btn-xs" onclick="editCitation('${c.id}')">✏️ Modifier</button>
         <button class="btn btn-danger btn-xs" onclick="deleteCitation('${c.id}')">✕</button>
       </div>
@@ -1584,11 +1617,34 @@ async function saveCitEdit(id){
   closeModal();toast('Modifié');
 }
 async function deleteCitation(id){if(!confirm('Supprimer cette citation ?'))return;saving(true);await subCol('citations').doc(id).delete();toast('Supprimé');}
-async function saveCitVisible(){
-  const val=parseInt(document.getElementById('cit-visible-range').value)||6;
+async function saveCitSettings(){
   saving(true);
-  await evRef().update({citVisibleCount:val});
-  toast('Seuil mis à jour : '+val+' citations');
+  await evRef().update({
+    citationsTitle:document.getElementById('cit-s-title').value.trim(),
+    citationsSubtitle:document.getElementById('cit-s-sub').value.trim(),
+    citationStyle:document.getElementById('cit-s-style').value||'classic',
+    citationAccentColor:document.getElementById('cit-s-accent').value||'#E8842C',
+    citationBorderWidth:parseFloat(document.getElementById('cit-s-bw').value)||2.5,
+    citationTextSize:parseInt(document.getElementById('cit-s-tsize').value)||13,
+    citationNameSize:parseInt(document.getElementById('cit-s-nsize').value)||12,
+    citationRoleSize:parseInt(document.getElementById('cit-s-rsize').value)||10,
+    citationQuoteSize:document.getElementById('cit-s-qsize').value||'medium',
+    citationAvatarSize:parseInt(document.getElementById('cit-s-avsize').value)||80,
+    citVisibleCount:parseInt(document.getElementById('cit-s-visible').value)||6,
+    citationFeaturedBg:document.getElementById('cit-s-feat-bg').value||'#0F2B3C'
+  });
+  toast('Réglages citations enregistrés');
+}
+async function toggleFeaturedCitation(id){
+  saving(true);
+  const c=citationsData.find(x=>x.id===id);if(!c)return;
+  const newVal=!c.featured;
+  // Remove featured from all others first
+  const batch=db.batch();
+  citationsData.forEach(x=>{if(x.featured&&x.id!==id) batch.update(subCol('citations').doc(x.id),{featured:false});});
+  batch.update(subCol('citations').doc(id),{featured:newVal});
+  await batch.commit();
+  toast(newVal?'Citation mise en avant':'Citation retirée de la une');
 }
 
 // ==================== PROGRAMME ====================
@@ -1820,6 +1876,19 @@ function renderArticles(el){
 
   let h=`<div class="page-title">Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
 
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="art-s-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="art-s-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
+    </div>
+    <div class="form-row" style="max-width:200px"><label class="form-label">Articles visibles avant accordéon</label>
+      <input type="number" class="form-input" id="art-s-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px">
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveArtSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
+
   <!-- AJOUT MANUEL -->
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
@@ -1901,6 +1970,15 @@ async function saveArticleEdit(id){
   closeModal();toast('Modifié');
 }
 async function deleteArticle(id){if(!confirm('Supprimer cet article ?'))return;saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');}
+async function saveArtSettings(){
+  saving(true);
+  await evRef().update({
+    articlesTitle:document.getElementById('art-s-title').value.trim(),
+    articlesSubtitle:document.getElementById('art-s-sub').value.trim(),
+    articlesVisibleCount:parseInt(document.getElementById('art-s-count').value)||4
+  });
+  toast('Réglages articles enregistrés');
+}
 
 // --- RSS ---
 async function addRssFeed(){
@@ -2546,6 +2624,16 @@ function renderVideos(el){
   const sections=ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
 
   let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
+
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="vid-s-title" value="${ev.videosTitle||''}" placeholder="Vidéos"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="vid-s-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveVidSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
 
   <div class="admin-card"><h3>📂 Sections</h3>
     <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
@@ -3466,11 +3554,30 @@ function renderGuide(el){
   });
 }
 
+async function saveVidSettings(){
+  saving(true);
+  await evRef().update({
+    videosTitle:document.getElementById('vid-s-title').value.trim(),
+    videosSubtitle:document.getElementById('vid-s-sub').value.trim()
+  });
+  toast('Réglages vidéos enregistrés');
+}
 // ==================== INTERVIEWS ====================
 function renderInterviews(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const items=interviewsData||[];
   let h=`<div class="page-title">🎙️ Interviews</div><div class="page-desc">Ajoutez des interviews à mettre en avant sur le dashboard. Chaque interview peut renvoyer vers un article complet.</div>
+
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="itw-s-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="itw-s-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveItwSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
+
   <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="addInterview()">＋ Nouvelle interview</button></div>`;
   if(!items.length) h+=`<div class="empty"><div class="text">Aucune interview</div></div>`;
   items.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((itw,i)=>{
@@ -3571,11 +3678,33 @@ async function saveKpis(){
   saving(true);await evRef().update({kpis});toast('Chiffres clés enregistrés');
 }
 
+async function saveItwSettings(){
+  saving(true);
+  await evRef().update({
+    interviewsTitle:document.getElementById('itw-s-title').value.trim(),
+    interviewsSubtitle:document.getElementById('itw-s-sub').value.trim()
+  });
+  toast('Réglages interviews enregistrés');
+}
 // ==================== GALERIE PHOTOS ====================
 function renderGallery(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const photos=ev.gallery||[];
   let h=`<div class="page-title">📸 Galerie photos</div><div class="page-desc">Ajoutez des photos d'ambiance. Elles s'affichent en grille sur le dashboard. Activez/désactivez via le module "Galerie photos".</div>
+
+  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
+    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="gal-s-title" value="${ev.galleryTitle||''}" placeholder="Galerie"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="gal-s-sub" value="${ev.gallerySubtitle||''}" placeholder="En images"></div>
+    </div>
+    <div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label>
+      <input type="number" class="form-input" id="gal-s-height" value="${ev.galleryHeight||260}" min="100" max="500" style="width:80px">
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveGalSettings()">💾 Enregistrer</button></div>
+    </details>
+  </div>
+
   <div class="admin-card"><h3>Photos</h3><div id="gallery-list">`;
   photos.forEach((p,i)=>{
     const url=typeof p==='string'?p:p.url||'';
@@ -3632,6 +3761,15 @@ async function saveGallery(){
   catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveGallery error:',e); }
 }
 
+async function saveGalSettings(){
+  saving(true);
+  await evRef().update({
+    galleryTitle:document.getElementById('gal-s-title').value.trim(),
+    gallerySubtitle:document.getElementById('gal-s-sub').value.trim(),
+    galleryHeight:parseInt(document.getElementById('gal-s-height').value)||260
+  });
+  toast('Réglages galerie enregistrés');
+}
 // ==================== PARTENAIRES / SPONSORS ====================
 function renderSponsors(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
