@@ -820,10 +820,11 @@ function renderEvents(el){
   <div class="event-cards">`;
   eventsData.forEach(ev=>{
     const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
+    const modeBadge=ev.mode==='expedition'?'<span style="font-size:9px;font-weight:600;color:#fff;background:#D97706;padding:2px 8px;border-radius:10px;margin-left:6px">🧭 Expédition</span>':'';
     const baseUrl=window.location.origin+window.location.pathname.replace('admin.html','');
     const widgetUrl=baseUrl+'widget.html?event='+ev.id;
     h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
-      <div class="event-card-title">${ev.internalName||ev.title||'Sans titre'}${st}</div>
+      <div class="event-card-title">${ev.internalName||ev.title||'Sans titre'}${st}${modeBadge}</div>
       <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
       <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -908,6 +909,9 @@ function modifyEvent(id){
         <option value="upcoming"${ev.status==='upcoming'?' selected':''}>À venir</option>
         <option value="live"${ev.status==='live'?' selected':''}>En direct</option>
         <option value="ended"${ev.status==='ended'?' selected':''}>Terminé</option></select></div>
+      <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-ev-mode">
+        <option value="live"${ev.mode!=='expedition'?' selected':''}>Live classique</option>
+        <option value="expedition"${ev.mode==='expedition'?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:9px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
       <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
     </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
@@ -938,6 +942,7 @@ async function updateEvent(id){
     location:document.getElementById('m-ev-location').value,
     dates:document.getElementById('m-ev-dates').value,
     status:document.getElementById('m-ev-status').value,
+    mode:document.getElementById('m-ev-mode').value,
     color:document.getElementById('m-ev-color').value,
     logo_url:document.getElementById('m-ev-logo').value,
     hero_image:document.getElementById('m-ev-hero-image').value.trim(),
