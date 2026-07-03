@@ -446,7 +446,6 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-hero-tag:hover{border-color:rgba(255,255,255,.5)}
 .exp-hero-photo{position:relative;overflow:hidden}
 .exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.exp-hero-photo::before{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(to right,var(--exp-ink) 0%,transparent 25%);pointer-events:none}
 .exp-hero-credit{position:absolute;bottom:12px;right:14px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.7);background:rgba(17,17,17,.5);padding:4px 8px}
 
 /* Counters */
@@ -465,12 +464,16 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
 .exp-map-wrap{position:relative}
 #exp-routemap{height:520px;border:1px solid var(--exp-ink);filter:grayscale(1) contrast(1.04)}
-.exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.94);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;line-height:2}
-.exp-map-legend b{font-family:'Archivo',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px}
-.exp-lg-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
-.exp-lg-done{background:#111}
-.exp-lg-now{background:var(--exp-accent);box-shadow:0 0 0 3px rgba(255,108,0,.25)}
-.exp-lg-next{background:#fff;border:2px solid #111}
+.exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;line-height:1.4;min-width:170px}
+.exp-map-legend b{font-family:'Archivo',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--exp-line)}
+.exp-lg-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.exp-lg-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.exp-lg-line{display:inline-block;width:22px;height:0;flex-shrink:0;border-top:3px solid}
+.exp-lg-done .exp-lg-dot{background:#111}
+.exp-lg-now .exp-lg-dot{background:var(--exp-accent);box-shadow:0 0 0 3px rgba(255,108,0,.25)}
+.exp-lg-next .exp-lg-dot{background:#fff;border:2px solid #111}
+.exp-lg-done .exp-lg-line{border-color:var(--exp-accent);border-style:solid}
+.exp-lg-next .exp-lg-line{border-color:#111;border-style:dashed}
 .exp-pulse-marker{width:16px;height:16px;border-radius:50%;background:var(--exp-accent);border:2px solid #fff;animation:exp-pulse 1.6s infinite}
 .exp-map-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--exp-grey);letter-spacing:.06em;margin-top:10px;text-align:right}
 body.mode-expedition .leaflet-popup-content-wrapper{border-radius:4px;border:1px solid #111;box-shadow:none;font-family:'Archivo',sans-serif}
@@ -520,18 +523,22 @@ body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
 .exp-card-socials a:hover{border-color:var(--exp-accent);color:var(--exp-accent)}
 
 /* Route list */
-.exp-route{list-style:none;padding:0;margin:0}
-.exp-route li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--exp-line);font-size:13px;transition:color .2s}
-.exp-route li:last-child{border-bottom:none}
-.exp-route .stop{font-weight:600;display:flex;align-items:center;gap:8px}
-.exp-route .stop::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--exp-ink);flex-shrink:0}
-.exp-route li.done .stop::before{background:var(--exp-ink);border-color:var(--exp-ink)}
-.exp-route li.now .stop::before{background:var(--exp-accent);border-color:var(--exp-accent);box-shadow:0 0 0 3px rgba(255,108,0,.2)}
-.exp-route .dist{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey);font-size:12px;white-space:nowrap}
-.exp-route li.now .stop{color:var(--exp-accent)}
-.exp-route li.done{color:#9a968f}
-.exp-route li.is-route .stop::before{border-radius:2px;width:6px;height:6px}
-.exp-route li.is-route .stop{font-size:12.5px}
+.exp-route{list-style:none;padding:0 0 0 20px;margin:0;position:relative}
+.exp-route::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:var(--exp-line)}
+.exp-route li{position:relative;padding:10px 0 10px 22px;font-size:13px;transition:all .2s}
+.exp-route li::before{content:'';position:absolute;left:-17px;top:14px;width:9px;height:9px;border-radius:50%;border:2px solid var(--exp-ink);background:var(--exp-paper);z-index:1;transition:all .2s}
+.exp-route li::after{content:'';position:absolute;left:-14px;top:23px;bottom:-10px;width:2px;background:transparent;z-index:0}
+.exp-route-name{font-weight:600;font-size:13px;line-height:1.3}
+.exp-route-detail{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--exp-grey);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.exp-route li.done::before{background:var(--exp-ink);border-color:var(--exp-ink)}
+.exp-route li.done .exp-route-name{color:#9a968f}
+.exp-route li.done::after{background:var(--exp-ink)}
+.exp-route li.now{background:rgba(255,108,0,.05);margin-left:-10px;margin-right:-10px;padding-left:32px;padding-right:10px;border-radius:0}
+.exp-route li.now::before{background:var(--exp-accent);border-color:var(--exp-accent);box-shadow:0 0 0 4px rgba(255,108,0,.15);width:11px;height:11px;left:-18px;top:13px}
+.exp-route li.now .exp-route-name{color:var(--exp-accent);font-weight:700}
+.exp-route li.is-route::before{border-radius:2px;width:7px;height:7px}
+.exp-route li.is-route .exp-route-name{font-size:12px}
+.exp-route-arrow{color:var(--exp-accent);font-weight:700;margin:0 2px}
 
 /* CTA card */
 .exp-card-cta{background:var(--exp-ink);color:#fff;border:none}
@@ -661,7 +668,6 @@ body.mode-expedition .social-float{display:none}
   .exp-hero h1{font-size:clamp(28px,7vw,44px)}
   .exp-hero-tagline{font-size:14px}
   .exp-hero-photo{height:260px}
-  .exp-hero-photo::before{background:linear-gradient(to top,var(--exp-ink) 0%,transparent 30%)}
   .exp-counters{grid-template-columns:repeat(2,1fr)}
   .exp-counter:nth-child(2){border-right:none}
   .exp-mapsec{padding:40px 20px 8px}
@@ -1469,6 +1475,23 @@ function renderExpedition(data){
   const pubCitations = (citations||[]).filter(_isPublished);
   const sortedEtapes = (etapes||[]).sort((a,b)=>(a.order||0)-(b.order||0));
 
+  // Auto-compute status from dates (overrides manual status when dates are set)
+  const _today = new Date(); _today.setHours(0,0,0,0);
+  sortedEtapes.forEach(et => {
+    if(!et.date) return; // no date → keep manual status
+    const d0 = new Date(et.date); d0.setHours(0,0,0,0);
+    if(et.dateEnd){
+      const d1 = new Date(et.dateEnd); d1.setHours(0,0,0,0);
+      if(_today < d0) et.status = 'next';
+      else if(_today > d1) et.status = 'done';
+      else et.status = 'now';
+    } else {
+      if(_today < d0) et.status = 'next';
+      else if(_today.getTime() === d0.getTime()) et.status = 'now';
+      else et.status = 'done';
+    }
+  });
+
   // Compute counters dynamically
   const counters = [];
   const totalKm = exp.totalKm;
@@ -1572,9 +1595,11 @@ function renderExpedition(data){
         <div id="exp-routemap"></div>
         <div class="exp-map-legend">
           <b>Légende</b>
-          <span class="exp-lg-dot exp-lg-done"></span>Étapes franchies<br>
-          <span class="exp-lg-dot exp-lg-now"></span>Position actuelle<br>
-          <span class="exp-lg-dot exp-lg-next"></span>Étapes à venir
+          <div class="exp-lg-row exp-lg-done"><span class="exp-lg-dot"></span><span>Étape franchie</span></div>
+          <div class="exp-lg-row exp-lg-now"><span class="exp-lg-dot"></span><span>Position actuelle</span></div>
+          <div class="exp-lg-row exp-lg-next"><span class="exp-lg-dot"></span><span>Étape à venir</span></div>
+          <div class="exp-lg-row exp-lg-done"><span class="exp-lg-line"></span><span>Trajet effectué</span></div>
+          <div class="exp-lg-row exp-lg-next"><span class="exp-lg-line"></span><span>Trajet à venir</span></div>
         </div>
       </div>
     </section>`;
@@ -1636,15 +1661,23 @@ function renderExpedition(data){
     });
   }
 
-  // Route/étapes list
+  // Route/étapes list — vertical timeline
   if(sortedEtapes.length){
     h += `<div class="exp-card">
       <div class="exp-card-label">Itinéraire</div>
       <ul class="exp-route">`;
     sortedEtapes.forEach(et => {
       const isRoute = et.type === 'route' && et.nameEnd;
-      const label = isRoute ? `${et.name} → ${et.nameEnd}` : et.name;
-      h += `<li class="${et.status||'next'}${isRoute?' is-route':''}"><span class="stop">${label}</span><span class="dist">${et.km||''}</span></li>`;
+      const nameHtml = isRoute
+        ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}`
+        : et.name;
+      const details = [];
+      if(et.dateLabel) details.push(et.dateLabel);
+      if(et.km) details.push(et.km);
+      h += `<li class="${et.status||'next'}${isRoute?' is-route':''}">
+        <div class="exp-route-name">${nameHtml}</div>
+        ${details.length ? `<div class="exp-route-detail">${details.map(d=>`<span>${d}</span>`).join('')}</div>` : ''}
+      </li>`;
     });
     h += `</ul></div>`;
   }
@@ -1866,11 +1899,26 @@ function renderExpedition(data){
       if(w.status==='done' || w.status==='now') doneCoords.push(w.coord);
       if(w.status==='now' || w.status==='next') futureCoords.push(w.coord);
     });
-    if(futureCoords.length>1) L.polyline(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}).addTo(map);
-    if(doneCoords.length>1) L.polyline(doneCoords, {color:accent, weight:3.5, opacity:.95}).addTo(map);
 
-    // Markers
+    // Hover-interactive polylines
+    function addPolyHover(coords, baseOpts, hoverOpts){
+      if(coords.length<2) return;
+      const bg = L.polyline(coords, {...baseOpts, weight:(baseOpts.weight||2)+8, opacity:0}).addTo(map);
+      const fg = L.polyline(coords, baseOpts).addTo(map);
+      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); });
+      bg.on('mouseout', function(){ fg.setStyle(baseOpts); });
+    }
+    addPolyHover(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}, {color:'#555', weight:4, opacity:.8});
+    addPolyHover(doneCoords, {color:accent, weight:3.5, opacity:.85}, {color:accent, weight:5.5, opacity:1});
+
+    // Markers with hover popup
     const allCoords = [];
+    function bindHover(marker, popupContent){
+      marker.bindPopup(popupContent);
+      marker.on('mouseover', function(e){ this.openPopup(); });
+      marker.on('mouseout', function(e){ this.closePopup(); });
+    }
+
     sortedEtapes.forEach(s => {
       if(!s.lat || !s.lng) return;
       const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
@@ -1879,10 +1927,8 @@ function renderExpedition(data){
       allCoords.push([s.lat,s.lng]);
       let mDep;
       if(s.status==='now' && !isRoute){
-        // Stop "now" → pulse
         mDep = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
       } else if(s.status==='now' && isRoute){
-        // Route "now" → small filled dot at departure (already left)
         mDep = L.circleMarker([s.lat,s.lng], {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5});
       } else if(s.status==='done'){
         mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
@@ -1892,21 +1938,22 @@ function renderExpedition(data){
       const depPopup = isRoute
         ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
         : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
-      mDep.addTo(map).bindPopup(depPopup);
+      mDep.addTo(map);
+      bindHover(mDep, depPopup);
 
       // — Arrival marker (route only)
       if(isRoute){
         allCoords.push([s.latEnd,s.lngEnd]);
         let mArr;
         if(s.status==='now'){
-          // Currently en route → pulse at arrival (destination)
           mArr = L.marker([s.latEnd,s.lngEnd], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
         } else if(s.status==='done'){
           mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
         } else {
           mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
         }
-        mArr.addTo(map).bindPopup(`<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
+        mArr.addTo(map);
+        bindHover(mArr, `<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
       }
     });
 
