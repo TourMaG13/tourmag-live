@@ -596,6 +596,24 @@ body.mode-expedition .sticky-nav{display:none}
 body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
+/* Interviews */
+.exp-interviews{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-itw-grid{display:flex;flex-direction:column;gap:16px;margin-top:38px}
+.exp-itw-card{display:flex;align-items:center;gap:28px;padding:28px 32px;border:1px solid var(--exp-line);background:var(--exp-paper);transition:transform .2s,box-shadow .2s}
+.exp-itw-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.exp-itw-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--exp-accent);opacity:.95}
+.exp-itw-avatar-ph{width:88px;height:88px;border-radius:50%;flex-shrink:0;background:var(--exp-stone);display:flex;align-items:center;justify-content:center;font-family:'Libre Caslon Display',serif;font-size:28px;color:var(--exp-grey)}
+.exp-itw-body{flex:1;min-width:0}
+.exp-itw-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--exp-paper);background:var(--exp-ink);padding:3px 10px;display:inline-block;margin-bottom:10px}
+.exp-itw-name{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:22px;line-height:1.15;margin-bottom:4px}
+.exp-itw-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--exp-grey);margin-bottom:10px}
+.exp-itw-quote{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:15px;line-height:1.6;color:#333;margin-bottom:10px;max-width:55ch}
+.exp-itw-quote::before{content:'« ';color:var(--exp-accent);font-weight:600}
+.exp-itw-quote::after{content:' »';color:var(--exp-accent);font-weight:600}
+.exp-itw-bio{font-size:12px;line-height:1.55;color:var(--exp-grey);margin-bottom:12px;max-width:55ch}
+.exp-itw-cta{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--exp-ink);padding:6px 16px;border:1px solid var(--exp-ink);display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:all .2s}
+.exp-itw-cta:hover{background:var(--exp-ink);color:var(--exp-paper)}
+
 /* ===== EXPEDITION RESPONSIVE ===== */
 @media(max-width:940px){
   .exp-main{grid-template-columns:1fr;padding:44px 20px;gap:40px}
@@ -608,7 +626,7 @@ body.mode-expedition .social-float{display:none}
   .exp-gallery-grid .exp-gal-item{height:200px}
   .exp-gallery-extra{grid-template-columns:1fr 1fr}
   .exp-gallery-extra .exp-gal-item{height:150px}
-  .exp-articles,.exp-videos,.exp-verbatims{padding-left:20px;padding-right:20px}
+  .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery{padding-left:20px;padding-right:20px}
 }
 @media(max-width:860px){
   .exp-cobrand{padding:12px 16px}
@@ -622,6 +640,10 @@ body.mode-expedition .social-float{display:none}
   #exp-routemap{height:380px}
   .exp-map-legend{font-size:10px;padding:10px 12px}
   .exp-section-head h2{font-size:26px}
+  .exp-itw-card{flex-direction:column;text-align:center;gap:16px;padding:24px 20px}
+  .exp-itw-avatar,.exp-itw-avatar-ph{width:72px;height:72px}
+  .exp-itw-name{font-size:19px}
+  .exp-itw-quote,.exp-itw-bio{max-width:none}
 }
 @media(max-width:480px){
   .exp-counters{grid-template-columns:1fr}
@@ -1399,7 +1421,7 @@ function render(data){
 var _expMapInstance = null;
 
 function renderExpedition(data){
-  const {event,live,articles,journalists,etapes,citations,videos} = data;
+  const {event,live,articles,journalists,etapes,citations,videos,interviews} = data;
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
@@ -1594,6 +1616,35 @@ function renderExpedition(data){
           </div>
         </div>
       </div>`;
+    });
+    h += `</div></section>`;
+  }
+
+  // ===== INTERVIEWS =====
+  const pubInterviews = (interviews||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+  if(mod.interviews!==false && pubInterviews.length){
+    h += `<section class="exp-interviews">`;
+    if(event.interviewsShowTitle!==false){
+      h += `<div class="exp-section-head"><h2>${event.interviewsTitle||'Interviews'}</h2><div class="rule"></div></div>`;
+      h += `<p class="exp-section-sub">${event.interviewsSubtitle||'Rencontres et regards croisés'}</p>`;
+    }
+    h += `<div class="exp-itw-grid">`;
+    pubInterviews.forEach(itw => {
+      const ini = (itw.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      h += `<div class="exp-itw-card">`;
+      if(itw.photo_url){
+        h += `<img class="exp-itw-avatar" src="${itw.photo_url}" alt="" onerror="this.style.display='none'">`;
+      } else {
+        h += `<div class="exp-itw-avatar-ph">${ini}</div>`;
+      }
+      h += `<div class="exp-itw-body">`;
+      if(itw.tag) h += `<span class="exp-itw-tag">${itw.tag}</span>`;
+      h += `<div class="exp-itw-name">${itw.name||''}</div>`;
+      if(itw.role) h += `<div class="exp-itw-role">${itw.role}</div>`;
+      if(itw.quote) h += `<div class="exp-itw-quote">${itw.quote}</div>`;
+      if(itw.bio) h += `<div class="exp-itw-bio">${itw.bio}</div>`;
+      if(itw.link) h += `<a class="exp-itw-cta" href="${itw.link}" target="_blank" rel="noopener">Lire l'interview ▸</a>`;
+      h += `</div></div>`;
     });
     h += `</div></section>`;
   }
