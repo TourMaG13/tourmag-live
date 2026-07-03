@@ -3855,9 +3855,9 @@ function renderEtapes(el){
         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
           <span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3);width:24px;text-align:center">${i+1}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:600;font-size:13px">${et.name||'Sans nom'}</div>
-            <div style="font-size:11px;color:var(--text3)">${et.dateLabel||''} · ${et.km||''} · <span style="${statusClass}">${statusLabels[et.status]||'⬜ À venir'}</span></div>
-            <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${et.lat||'?'}, ${et.lng||'?'}</div>
+            <div style="font-weight:600;font-size:13px">${et.name||'Sans nom'}${et.type==='route'&&et.nameEnd?` <span style="color:var(--acc)">→</span> ${et.nameEnd}`:''}</div>
+            <div style="font-size:11px;color:var(--text3)">${et.type==='route'?'🚗 Jour de route · ':''}${et.dateLabel||''} · ${et.km||''} · <span style="${statusClass}">${statusLabels[et.status]||'⬜ À venir'}</span></div>
+            <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${et.lat||'?'}, ${et.lng||'?'}${et.type==='route'&&et.latEnd?` → ${et.latEnd}, ${et.lngEnd}`:''}</div>
           </div>
         </div>
         <div class="list-item-actions">
@@ -3879,14 +3879,30 @@ function renderEtapes(el){
   // Add new étape form
   h+=`<details style="margin-top:16px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--acc)">+ Ajouter une étape</summary>
     <div style="margin-top:12px;padding:16px;border:1px dashed var(--border);border-radius:8px">
+      <div class="form-row" style="margin-bottom:14px">
+        <label class="form-label">Type d'étape</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-sm" id="new-etape-type-stop" onclick="toggleNewEtapeType('stop')" style="background:var(--acc);color:#fff;border-color:var(--acc)">📍 Sur place</button>
+          <button class="btn btn-sm btn-ghost" id="new-etape-type-route" onclick="toggleNewEtapeType('route')">🚗 Jour de route</button>
+        </div>
+        <input type="hidden" id="new-etape-type" value="stop">
+      </div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Nom du lieu</label><input class="form-input" id="new-etape-name" placeholder="Adelaïde"></div>
+        <div class="form-row"><label class="form-label" id="new-etape-name-label">Nom du lieu</label><input class="form-input" id="new-etape-name" placeholder="Adelaïde"></div>
         <div class="form-row"><label class="form-label">Date / label</label><input class="form-input" id="new-etape-date" placeholder="24 juillet · départ"></div>
       </div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Latitude</label><input class="form-input" type="number" step="any" id="new-etape-lat" placeholder="-34.9285"></div>
-        <div class="form-row"><label class="form-label">Longitude</label><input class="form-input" type="number" step="any" id="new-etape-lng" placeholder="138.6007"></div>
+        <div class="form-row"><label class="form-label" id="new-etape-lat-label">Latitude</label><input class="form-input" type="number" step="any" id="new-etape-lat" placeholder="-34.9285"></div>
+        <div class="form-row"><label class="form-label" id="new-etape-lng-label">Longitude</label><input class="form-input" type="number" step="any" id="new-etape-lng" placeholder="138.6007"></div>
         <div class="form-row"><label class="form-label">Km</label><input class="form-input" id="new-etape-km" placeholder="510 km"></div>
+      </div>
+      <div id="new-etape-arrival-fields" style="display:none;border-top:1px dashed var(--border);padding-top:12px;margin-top:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--acc);margin-bottom:8px;letter-spacing:.5px">🏁 POINT D'ARRIVÉE</div>
+        <div class="form-row"><label class="form-label">Nom du lieu d'arrivée</label><input class="form-input" id="new-etape-name-end" placeholder="Blue Mountains"></div>
+        <div class="form-row-inline">
+          <div class="form-row"><label class="form-label">Latitude arrivée</label><input class="form-input" type="number" step="any" id="new-etape-lat-end" placeholder="-33.7150"></div>
+          <div class="form-row"><label class="form-label">Longitude arrivée</label><input class="form-input" type="number" step="any" id="new-etape-lng-end" placeholder="150.3120"></div>
+        </div>
       </div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Statut</label><select class="form-input" id="new-etape-status"><option value="next">À venir</option><option value="now">En cours</option><option value="done">Franchie</option></select></div>
@@ -3926,12 +3942,39 @@ async function saveExpeditionSettings(){
   toast('Paramètres expédition enregistrés');
 }
 
+function toggleNewEtapeType(type){
+  document.getElementById('new-etape-type').value = type;
+  const stopBtn = document.getElementById('new-etape-type-stop');
+  const routeBtn = document.getElementById('new-etape-type-route');
+  const arrivalFields = document.getElementById('new-etape-arrival-fields');
+  const nameLabel = document.getElementById('new-etape-name-label');
+  const latLabel = document.getElementById('new-etape-lat-label');
+  const lngLabel = document.getElementById('new-etape-lng-label');
+  if(type==='route'){
+    routeBtn.style.background='var(--acc)';routeBtn.style.color='#fff';routeBtn.style.borderColor='var(--acc)';routeBtn.className='btn btn-sm';
+    stopBtn.style.background='';stopBtn.style.color='';stopBtn.style.borderColor='';stopBtn.className='btn btn-sm btn-ghost';
+    arrivalFields.style.display='';
+    nameLabel.textContent='Lieu de départ';
+    latLabel.textContent='Latitude départ';
+    lngLabel.textContent='Longitude départ';
+  } else {
+    stopBtn.style.background='var(--acc)';stopBtn.style.color='#fff';stopBtn.style.borderColor='var(--acc)';stopBtn.className='btn btn-sm';
+    routeBtn.style.background='';routeBtn.style.color='';routeBtn.style.borderColor='';routeBtn.className='btn btn-sm btn-ghost';
+    arrivalFields.style.display='none';
+    nameLabel.textContent='Nom du lieu';
+    latLabel.textContent='Latitude';
+    lngLabel.textContent='Longitude';
+  }
+}
+
 async function addEtape(){
   const name=document.getElementById('new-etape-name').value.trim();
   if(!name){toast('Nom requis','error');return;}
   saving(true);
-  await subCol('etapes').add({
+  const type = document.getElementById('new-etape-type').value;
+  const data = {
     name,
+    type: type || 'stop',
     dateLabel: document.getElementById('new-etape-date').value.trim(),
     lat: parseFloat(document.getElementById('new-etape-lat').value)||0,
     lng: parseFloat(document.getElementById('new-etape-lng').value)||0,
@@ -3939,7 +3982,13 @@ async function addEtape(){
     status: document.getElementById('new-etape-status').value,
     order: parseInt(document.getElementById('new-etape-order').value)||etapesData.length+1,
     description: document.getElementById('new-etape-desc').value.trim()
-  });
+  };
+  if(type==='route'){
+    data.nameEnd = document.getElementById('new-etape-name-end').value.trim();
+    data.latEnd = parseFloat(document.getElementById('new-etape-lat-end').value)||0;
+    data.lngEnd = parseFloat(document.getElementById('new-etape-lng-end').value)||0;
+  }
+  await subCol('etapes').add(data);
   toast('Étape ajoutée');
 }
 
@@ -3968,15 +4017,32 @@ async function editEtape(id){
     return;
   }
   row.dataset.editing='1';
+  const isRoute = et.type==='route';
   row.innerHTML=`<div style="width:100%">
+    <div class="form-row" style="margin-bottom:10px">
+      <label class="form-label">Type d'étape</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-sm${isRoute?' btn-ghost':''}" id="edit-etape-type-stop-${id}" onclick="toggleEditEtapeType('${id}','stop')" ${isRoute?'':'style="background:var(--acc);color:#fff;border-color:var(--acc)"'}>📍 Sur place</button>
+        <button class="btn btn-sm${isRoute?'':' btn-ghost'}" id="edit-etape-type-route-${id}" onclick="toggleEditEtapeType('${id}','route')" ${isRoute?'style="background:var(--acc);color:#fff;border-color:var(--acc)"':''}>🚗 Jour de route</button>
+      </div>
+      <input type="hidden" id="edit-etape-type-${id}" value="${et.type||'stop'}">
+    </div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="edit-etape-name-${id}" value="${(et.name||'').replace(/"/g,'&quot;')}"></div>
+      <div class="form-row"><label class="form-label" id="edit-etape-name-label-${id}">${isRoute?'Lieu de départ':'Nom'}</label><input class="form-input" id="edit-etape-name-${id}" value="${(et.name||'').replace(/"/g,'&quot;')}"></div>
       <div class="form-row"><label class="form-label">Date / label</label><input class="form-input" id="edit-etape-date-${id}" value="${(et.dateLabel||'').replace(/"/g,'&quot;')}"></div>
     </div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Lat</label><input class="form-input" type="number" step="any" id="edit-etape-lat-${id}" value="${et.lat||''}"></div>
-      <div class="form-row"><label class="form-label">Lng</label><input class="form-input" type="number" step="any" id="edit-etape-lng-${id}" value="${et.lng||''}"></div>
+      <div class="form-row"><label class="form-label" id="edit-etape-lat-label-${id}">${isRoute?'Lat départ':'Lat'}</label><input class="form-input" type="number" step="any" id="edit-etape-lat-${id}" value="${et.lat||''}"></div>
+      <div class="form-row"><label class="form-label" id="edit-etape-lng-label-${id}">${isRoute?'Lng départ':'Lng'}</label><input class="form-input" type="number" step="any" id="edit-etape-lng-${id}" value="${et.lng||''}"></div>
       <div class="form-row"><label class="form-label">Km</label><input class="form-input" id="edit-etape-km-${id}" value="${(et.km||'').replace(/"/g,'&quot;')}"></div>
+    </div>
+    <div id="edit-etape-arrival-${id}" style="${isRoute?'':'display:none;'}border-top:1px dashed var(--border);padding-top:10px;margin-top:10px">
+      <div style="font-size:11px;font-weight:600;color:var(--acc);margin-bottom:8px;letter-spacing:.5px">🏁 POINT D'ARRIVÉE</div>
+      <div class="form-row"><label class="form-label">Nom arrivée</label><input class="form-input" id="edit-etape-name-end-${id}" value="${(et.nameEnd||'').replace(/"/g,'&quot;')}"></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Lat arrivée</label><input class="form-input" type="number" step="any" id="edit-etape-lat-end-${id}" value="${et.latEnd||''}"></div>
+        <div class="form-row"><label class="form-label">Lng arrivée</label><input class="form-input" type="number" step="any" id="edit-etape-lng-end-${id}" value="${et.lngEnd||''}"></div>
+      </div>
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="edit-etape-order-${id}" value="${et.order||0}"></div>
@@ -3989,17 +4055,56 @@ async function editEtape(id){
   </div>`;
 }
 
+function toggleEditEtapeType(id, type){
+  document.getElementById('edit-etape-type-'+id).value = type;
+  const stopBtn = document.getElementById('edit-etape-type-stop-'+id);
+  const routeBtn = document.getElementById('edit-etape-type-route-'+id);
+  const arrivalFields = document.getElementById('edit-etape-arrival-'+id);
+  const nameLabel = document.getElementById('edit-etape-name-label-'+id);
+  const latLabel = document.getElementById('edit-etape-lat-label-'+id);
+  const lngLabel = document.getElementById('edit-etape-lng-label-'+id);
+  if(type==='route'){
+    routeBtn.style.background='var(--acc)';routeBtn.style.color='#fff';routeBtn.style.borderColor='var(--acc)';routeBtn.className='btn btn-sm';
+    stopBtn.style.background='';stopBtn.style.color='';stopBtn.style.borderColor='';stopBtn.className='btn btn-sm btn-ghost';
+    arrivalFields.style.display='';
+    nameLabel.textContent='Lieu de départ';
+    latLabel.textContent='Lat départ';
+    lngLabel.textContent='Lng départ';
+  } else {
+    stopBtn.style.background='var(--acc)';stopBtn.style.color='#fff';stopBtn.style.borderColor='var(--acc)';stopBtn.className='btn btn-sm';
+    routeBtn.style.background='';routeBtn.style.color='';routeBtn.style.borderColor='';routeBtn.className='btn btn-sm btn-ghost';
+    arrivalFields.style.display='none';
+    nameLabel.textContent='Nom';
+    latLabel.textContent='Lat';
+    lngLabel.textContent='Lng';
+  }
+}
+
 async function saveEtapeEdit(id){
   saving(true);
-  await subCol('etapes').doc(id).update({
+  const type = document.getElementById('edit-etape-type-'+id).value;
+  const data = {
     name: document.getElementById('edit-etape-name-'+id).value.trim(),
+    type: type || 'stop',
     dateLabel: document.getElementById('edit-etape-date-'+id).value.trim(),
     lat: parseFloat(document.getElementById('edit-etape-lat-'+id).value)||0,
     lng: parseFloat(document.getElementById('edit-etape-lng-'+id).value)||0,
     km: document.getElementById('edit-etape-km-'+id).value.trim(),
     order: parseInt(document.getElementById('edit-etape-order-'+id).value)||0,
     description: document.getElementById('edit-etape-desc-'+id).value.trim()
-  });
+  };
+  if(type==='route'){
+    data.nameEnd = document.getElementById('edit-etape-name-end-'+id).value.trim();
+    data.latEnd = parseFloat(document.getElementById('edit-etape-lat-end-'+id).value)||0;
+    data.lngEnd = parseFloat(document.getElementById('edit-etape-lng-end-'+id).value)||0;
+  } else {
+    // Clean up route fields if switching back to stop
+    data.nameEnd = '';
+    data.latEnd = 0;
+    data.lngEnd = 0;
+    data.type = 'stop';
+  }
+  await subCol('etapes').doc(id).update(data);
   toast('Étape mise à jour');
 }
 
