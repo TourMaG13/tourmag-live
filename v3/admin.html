@@ -392,14 +392,16 @@ function applyTabVisibility(){
   const isExpedition = ev?.mode === 'expedition';
 
   // Expedition mode: tabs to hide and rename map
-  const expHiddenTabs = ['programme','flash','essentiel','sponsors','rubriques','widget'];
+  const expHiddenTabs = ['programme','flash','essentiel','rubriques','widget'];
   const expRenameMap = {
     live: {label:'Fil de route', icon:'🗺️'},
     citations: {label:'Verbatims', icon:'💬'},
     journalistes: {label:'Reporters', icon:'👤'},
-    kpis: {label:'Compteurs', icon:'📊'}
+    kpis: {label:'Compteurs', icon:'📊'},
+    sponsors: {label:'Partenaires', icon:'🤝'}
   };
-  // Keep original labels for restore
+  // Expedition sidebar order (matches front-end rendering order)
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','media','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -453,6 +455,21 @@ function applyTabVisibility(){
       item.style.display='';
     }
   });
+
+  // Reorder sidebar tabs in expedition mode to match front-end rendering order
+  if(isExpedition){
+    const sidebar = document.querySelector('.sidebar-item[data-tab]')?.parentElement;
+    if(sidebar){
+      const tabItems = {};
+      sidebar.querySelectorAll('.sidebar-item[data-tab]').forEach(el => { tabItems[el.dataset.tab] = el; });
+      // Move items in expTabOrder to the end of sidebar, preserving order
+      expTabOrder.forEach(tab => {
+        if(tabItems[tab] && tabItems[tab].style.display !== 'none'){
+          sidebar.appendChild(tabItems[tab]);
+        }
+      });
+    }
+  }
 
   // Also hide sidebar sections if all their items are hidden
   document.querySelectorAll('.sidebar-section').forEach(sec=>{
@@ -984,7 +1001,11 @@ async function saveFlash(){
 function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
-  const mods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'}];
+  const isExp = ev?.mode === 'expedition';
+  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'}];
+  const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes'};
+  const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
   const blockOrder=ev?.blockOrder||defaultOrder;
@@ -1018,9 +1039,14 @@ function renderModules(el){
   let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
   <div class="admin-card"><h3>🧩 Visibilité</h3>`;
   mods.forEach(m=>{const checked=mod[m.key]!==false;h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${checked?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
-  h+=`</div>
+  h+=`</div>`;
 
-  <div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+  if(isExp){
+    h+=`<div class="admin-card"><h3>↕️ Ordre des blocs</h3>
+      <div class="page-desc">En mode expédition, l'ordre des blocs est fixe : Hero → Compteurs → Carte → Fil de route → Verbatims → Interviews → Vidéos → Galerie → Articles → Partenaires. Utilisez les toggles ci-dessus pour masquer des sections.</div>
+    </div>`;
+  } else {
+  h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
     <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
     <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
 
@@ -1062,6 +1088,7 @@ function renderModules(el){
       </select>
     </div>
   </div>`;
+  } // end else (classic mode block order)
   el.innerHTML=h;
   updateBlockPreview();
   initUnifiedBlockDrag();
@@ -3850,22 +3877,38 @@ function renderEtapes(el){
     h+=`<div class="list-items">`;
     etapesData.forEach((et,i)=>{
       const statusLabels={done:'✅ Franchie',now:'🔶 En cours',next:'⬜ À venir'};
-      const statusClass=et.status==='done'?'color:var(--green)':et.status==='now'?'color:var(--acc)':'color:var(--text3)';
+      // Compute auto-status for display
+      const hasAutoDate = !!et.date;
+      let autoStatus = et.status;
+      if(hasAutoDate){
+        const _td = new Date(); _td.setHours(0,0,0,0);
+        const _d0 = new Date(et.date); _d0.setHours(0,0,0,0);
+        if(et.dateEnd){
+          const _d1 = new Date(et.dateEnd); _d1.setHours(0,0,0,0);
+          autoStatus = _td < _d0 ? 'next' : _td > _d1 ? 'done' : 'now';
+        } else {
+          autoStatus = _td < _d0 ? 'next' : _td.getTime()===_d0.getTime() ? 'now' : 'done';
+        }
+      }
+      const displayStatus = hasAutoDate ? autoStatus : et.status;
+      const statusClass=displayStatus==='done'?'color:var(--green)':displayStatus==='now'?'color:var(--acc)':'color:var(--text3)';
+      const autoTag = hasAutoDate ? `<span style="font-size:9px;background:rgba(8,145,178,.1);color:var(--acc);padding:1px 6px;border-radius:3px;margin-left:4px">auto</span>` : '';
+      const dateInfo = et.date ? ` · 📅 ${et.date}${et.dateEnd?' → '+et.dateEnd:''}` : '';
       h+=`<div class="list-item" id="etape-${et.id}">
         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
           <span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3);width:24px;text-align:center">${i+1}</span>
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:13px">${et.name||'Sans nom'}${et.type==='route'&&et.nameEnd?` <span style="color:var(--acc)">→</span> ${et.nameEnd}`:''}</div>
-            <div style="font-size:11px;color:var(--text3)">${et.type==='route'?'🚗 Jour de route · ':''}${et.dateLabel||''} · ${et.km||''} · <span style="${statusClass}">${statusLabels[et.status]||'⬜ À venir'}</span></div>
-            <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${et.lat||'?'}, ${et.lng||'?'}${et.type==='route'&&et.latEnd?` → ${et.latEnd}, ${et.lngEnd}`:''}</div>
+            <div style="font-size:11px;color:var(--text3)">${et.type==='route'?'🚗 Jour de route · ':''}${et.dateLabel||''} · ${et.km||''} · <span style="${statusClass}">${statusLabels[displayStatus]||'⬜ À venir'}</span>${autoTag}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${et.lat||'?'}, ${et.lng||'?'}${et.type==='route'&&et.latEnd?` → ${et.latEnd}, ${et.lngEnd}`:''}${dateInfo}</div>
           </div>
         </div>
         <div class="list-item-actions">
-          <select style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px" onchange="updateEtapeStatus('${et.id}',this.value)">
+          ${hasAutoDate?`<span style="font-size:10px;color:var(--text3);white-space:nowrap" title="Statut calculé automatiquement via les dates">🤖 Auto</span>`:`<select style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px" onchange="updateEtapeStatus('${et.id}',this.value)">
             <option value="next"${et.status==='next'?' selected':''}>À venir</option>
             <option value="now"${et.status==='now'?' selected':''}>En cours</option>
             <option value="done"${et.status==='done'?' selected':''}>Franchie</option>
-          </select>
+          </select>`}
           <button class="btn btn-xs btn-ghost" onclick="editEtape('${et.id}')">✏️</button>
           <button class="btn btn-xs btn-ghost" onclick="deleteEtape('${et.id}')" style="color:var(--red)">🗑</button>
         </div>
@@ -3905,7 +3948,12 @@ function renderEtapes(el){
         </div>
       </div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Statut</label><select class="form-input" id="new-etape-status"><option value="next">À venir</option><option value="now">En cours</option><option value="done">Franchie</option></select></div>
+        <div class="form-row"><label class="form-label">📅 Date début <span style="font-size:9px;color:var(--text3)">(auto-statut)</span></label><input class="form-input" type="date" id="new-etape-date-start"></div>
+        <div class="form-row"><label class="form-label">📅 Date fin <span style="font-size:9px;color:var(--text3)">(optionnel, multi-jours)</span></label><input class="form-input" type="date" id="new-etape-date-end"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:12px;padding:6px 10px;background:rgba(8,145,178,.06);border-left:3px solid var(--acc)">💡 Si une date est renseignée, le statut se calcule automatiquement. Sinon, le statut manuel ci-dessous s'applique.</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Statut (manuel)</label><select class="form-input" id="new-etape-status"><option value="next">À venir</option><option value="now">En cours</option><option value="done">Franchie</option></select></div>
         <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="new-etape-order" value="${etapesData.length+1}"></div>
       </div>
       <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="2"></textarea></div>
@@ -3976,6 +4024,8 @@ async function addEtape(){
     name,
     type: type || 'stop',
     dateLabel: document.getElementById('new-etape-date').value.trim(),
+    date: document.getElementById('new-etape-date-start').value || '',
+    dateEnd: document.getElementById('new-etape-date-end').value || '',
     lat: parseFloat(document.getElementById('new-etape-lat').value)||0,
     lng: parseFloat(document.getElementById('new-etape-lng').value)||0,
     km: document.getElementById('new-etape-km').value.trim(),
@@ -4045,6 +4095,10 @@ async function editEtape(id){
       </div>
     </div>
     <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">📅 Date début</label><input class="form-input" type="date" id="edit-etape-date-start-${id}" value="${et.date||''}"></div>
+      <div class="form-row"><label class="form-label">📅 Date fin</label><input class="form-input" type="date" id="edit-etape-date-end-${id}" value="${et.dateEnd||''}"></div>
+    </div>
+    <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="edit-etape-order-${id}" value="${et.order||0}"></div>
       <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="edit-etape-desc-${id}" value="${(et.description||'').replace(/"/g,'&quot;')}"></div>
     </div>
@@ -4087,6 +4141,8 @@ async function saveEtapeEdit(id){
     name: document.getElementById('edit-etape-name-'+id).value.trim(),
     type: type || 'stop',
     dateLabel: document.getElementById('edit-etape-date-'+id).value.trim(),
+    date: document.getElementById('edit-etape-date-start-'+id).value || '',
+    dateEnd: document.getElementById('edit-etape-date-end-'+id).value || '',
     lat: parseFloat(document.getElementById('edit-etape-lat-'+id).value)||0,
     lng: parseFloat(document.getElementById('edit-etape-lng-'+id).value)||0,
     km: document.getElementById('edit-etape-km-'+id).value.trim(),
