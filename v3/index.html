@@ -520,6 +520,8 @@ body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
 .exp-route .dist{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey);font-size:12px;white-space:nowrap}
 .exp-route li.now .stop{color:var(--exp-accent)}
 .exp-route li.done{color:#9a968f}
+.exp-route li.is-route .stop::before{border-radius:2px;width:6px;height:6px}
+.exp-route li.is-route .stop{font-size:12.5px}
 
 /* CTA card */
 .exp-card-cta{background:var(--exp-ink);color:#fff;border:none}
@@ -1582,7 +1584,9 @@ function renderExpedition(data){
       <div class="exp-card-label">Itinéraire</div>
       <ul class="exp-route">`;
     sortedEtapes.forEach(et => {
-      h += `<li class="${et.status||'next'}"><span class="stop">${et.name}</span><span class="dist">${et.km||''}</span></li>`;
+      const isRoute = et.type === 'route' && et.nameEnd;
+      const label = isRoute ? `${et.name} → ${et.nameEnd}` : et.name;
+      h += `<li class="${et.status||'next'}${isRoute?' is-route':''}"><span class="stop">${label}</span><span class="dist">${et.km||''}</span></li>`;
     });
     h += `</ul></div>`;
   }
@@ -1755,26 +1759,65 @@ function renderExpedition(data){
       attribution:'© OpenStreetMap © CARTO', maxZoom:12
     }).addTo(map);
 
-    const doneCoords = sortedEtapes.filter(s=>s.status==='done'||s.status==='now').map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
-    const nowIdx = sortedEtapes.findIndex(s=>s.status==='now');
-    const futureCoords = sortedEtapes.filter((_,i)=>i>=Math.max(nowIdx,0)).map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
+    // Build ordered waypoint chain (handles both stop & route étapes)
+    const chain = [];
+    sortedEtapes.forEach(s => {
+      if(!s.lat || !s.lng) return;
+      chain.push({coord:[s.lat,s.lng], status:s.status, etape:s, isEnd:false});
+      if(s.type==='route' && s.latEnd && s.lngEnd){
+        chain.push({coord:[s.latEnd,s.lngEnd], status:s.status, etape:s, isEnd:true});
+      }
+    });
 
+    // Polylines — done (solid accent) & future (dashed black)
+    // "now" points appear in both so the lines connect at the current position
+    const doneCoords=[], futureCoords=[];
+    chain.forEach(w => {
+      if(w.status==='done' || w.status==='now') doneCoords.push(w.coord);
+      if(w.status==='now' || w.status==='next') futureCoords.push(w.coord);
+    });
     if(futureCoords.length>1) L.polyline(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}).addTo(map);
     if(doneCoords.length>1) L.polyline(doneCoords, {color:accent, weight:3.5, opacity:.95}).addTo(map);
 
+    // Markers
     const allCoords = [];
     sortedEtapes.forEach(s => {
-      if(!s.lat||!s.lng) return;
+      if(!s.lat || !s.lng) return;
+      const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
+
+      // — Departure / single point marker
       allCoords.push([s.lat,s.lng]);
-      let m;
-      if(s.status==='now'){
-        m = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+      let mDep;
+      if(s.status==='now' && !isRoute){
+        // Stop "now" → pulse
+        mDep = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+      } else if(s.status==='now' && isRoute){
+        // Route "now" → small filled dot at departure (already left)
+        mDep = L.circleMarker([s.lat,s.lng], {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5});
       } else if(s.status==='done'){
-        m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
+        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
       } else {
-        m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
+        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
       }
-      m.addTo(map).bindPopup(`<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`);
+      const depPopup = isRoute
+        ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
+        : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
+      mDep.addTo(map).bindPopup(depPopup);
+
+      // — Arrival marker (route only)
+      if(isRoute){
+        allCoords.push([s.latEnd,s.lngEnd]);
+        let mArr;
+        if(s.status==='now'){
+          // Currently en route → pulse at arrival (destination)
+          mArr = L.marker([s.latEnd,s.lngEnd], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+        } else if(s.status==='done'){
+          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
+        } else {
+          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
+        }
+        mArr.addTo(map).bindPopup(`<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
+      }
     });
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
