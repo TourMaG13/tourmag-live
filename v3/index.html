@@ -458,7 +458,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-counter-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--exp-grey);margin-top:10px}
 
 /* Map section */
-.exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 8px}
+.exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 48px}
 .exp-section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
 .exp-section-head h2{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:34px;white-space:nowrap}
 .exp-section-head .rule{flex:1;height:1px;background:var(--exp-ink)}
@@ -481,6 +481,8 @@ body.mode-expedition .leaflet-popup-content-wrapper{border-radius:4px;border:1px
 body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
 .exp-pop-name{font-family:'Libre Caslon Display',serif;font-size:17px;margin-bottom:3px}
 .exp-pop-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6B66;letter-spacing:.06em}
+body.mode-expedition .exp-seg-tip{border-radius:4px;border:1px solid #111;box-shadow:none;font-family:'Archivo',sans-serif;padding:0}
+body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 
 /* Main layout */
 .exp-main{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
@@ -500,10 +502,10 @@ body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
 .exp-entry p a{color:var(--exp-accent);text-decoration:none;font-weight:600;font-size:13px}
 .exp-entry p a:hover{text-decoration:underline}
 .exp-entry .verbatim{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:17.5px;line-height:1.55;color:var(--exp-ink);border-left:2px solid var(--exp-accent);padding-left:18px;margin:14px 0;max-width:56ch;display:block}
-.exp-entry-photo{margin-top:16px;border:1px solid var(--exp-line);overflow:hidden}
-.exp-entry-photo img{width:100%;height:280px;object-fit:cover;filter:saturate(1.04);transition:transform .4s}
-.exp-entry-photo:hover img{transform:scale(1.02)}
-.exp-entry-photo figcaption{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--exp-grey);padding:9px 12px;display:flex;justify-content:space-between;background:var(--exp-stone)}
+.exp-entry-photo{margin-top:16px;border:none;overflow:visible;background:#fff;padding:6px 6px 28px;box-shadow:2px 3px 12px rgba(0,0,0,.1),-1px -1px 4px rgba(0,0,0,.03);transform:rotate(-0.8deg);transition:transform .3s}
+.exp-entry-photo:hover{transform:rotate(0deg)}
+.exp-entry-photo img{width:100%;height:280px;object-fit:cover;filter:saturate(1.04);display:block}
+.exp-entry-photo figcaption{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--exp-grey);padding:10px 4px 0;display:flex;justify-content:space-between;background:none}
 .exp-entry-km{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--exp-grey);margin-top:8px}
 .exp-entry.exp-entry-latest::before{background:var(--exp-accent);border-color:var(--exp-accent);box-shadow:0 0 0 4px rgba(255,108,0,.2);animation:exp-pulse 1.6s infinite}
 .exp-voir-plus{display:block;width:100%;text-align:center;padding:16px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);cursor:pointer;border:none;background:none;transition:opacity .2s}
@@ -643,7 +645,8 @@ body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
 /* Interviews */
-.exp-interviews{max-width:none;margin:0 auto;padding:48px 32px;background:rgba(255,108,0,.05)}
+.exp-interviews{max-width:none;margin:0 auto;padding:48px 32px 64px;background:rgba(255,108,0,.05)}
+.exp-interviews .exp-section-head,.exp-interviews .exp-section-sub{max-width:1200px;margin-left:auto;margin-right:auto}
 .exp-interviews .exp-section-head .rule{background:var(--exp-accent)}
 .exp-itw-grid{display:flex;flex-direction:column;gap:16px;margin-top:38px;max-width:1200px;margin-left:auto;margin-right:auto}
 .exp-itw-card{display:flex;align-items:center;gap:28px;padding:28px 32px;border:1px solid var(--exp-line);border-left:4px solid var(--exp-accent);background:var(--exp-paper);transition:transform .2s,box-shadow .2s}
@@ -686,7 +689,7 @@ body.mode-expedition .social-float{display:none}
   .exp-hero-photo{height:260px}
   .exp-counters{grid-template-columns:repeat(2,1fr)}
   .exp-counter:nth-child(2){border-right:none}
-  .exp-mapsec{padding:40px 20px 8px}
+  .exp-mapsec{padding:40px 20px 40px}
   #exp-routemap{height:380px}
   .exp-map-legend{font-size:10px;padding:10px 12px}
   .exp-section-head h2{font-size:26px}
@@ -701,6 +704,7 @@ body.mode-expedition .social-float{display:none}
   .exp-counter:last-child{border-bottom:none}
   #exp-routemap{height:300px}
   .exp-entry-photo img{height:200px}
+  .exp-entry-photo{padding:4px 4px 20px;transform:rotate(-0.5deg)}
 }
 </style>
 </head>
@@ -1790,24 +1794,25 @@ function renderExpedition(data){
       }
     });
 
-    // Polylines — done (solid accent) & future (dashed black)
-    // "now" points appear in both so the lines connect at the current position
-    const doneCoords=[], futureCoords=[];
-    chain.forEach(w => {
-      if(w.status==='done' || w.status==='now') doneCoords.push(w.coord);
-      if(w.status==='now' || w.status==='next') futureCoords.push(w.coord);
-    });
-
-    // Hover-interactive polylines
-    function addPolyHover(coords, baseOpts, hoverOpts){
-      if(coords.length<2) return;
-      const bg = L.polyline(coords, {...baseOpts, weight:(baseOpts.weight||2)+8, opacity:0}).addTo(map);
-      const fg = L.polyline(coords, baseOpts).addTo(map);
-      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); });
-      bg.on('mouseout', function(){ fg.setStyle(baseOpts); });
+    // Polylines — one segment per consecutive pair, with tooltip
+    for(let i=0; i<chain.length-1; i++){
+      const w0=chain[i], w1=chain[i+1];
+      const seg=[w0.coord, w1.coord];
+      const isDone = w0.status==='done' || w0.status==='now';
+      const et = w0.etape;
+      const label = et.type==='route' && et.nameEnd
+        ? `${et.name} → ${et.nameEnd}` : et.name||'';
+      const tipHtml = `<div class="exp-pop-name">${label}</div><div class="exp-pop-meta">${et.dateLabel||''} · ${et.km||''}</div>`;
+      const baseOpts = isDone
+        ? {color:accent, weight:3.5, opacity:.85}
+        : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
+      const hoverOpts = {color:accent, weight:5.5, opacity:1, dashArray:null};
+      const bg = L.polyline(seg, {...baseOpts, weight:(baseOpts.weight||2)+10, opacity:0}).addTo(map);
+      const fg = L.polyline(seg, baseOpts).addTo(map);
+      fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
+      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); fg.openTooltip(); });
+      bg.on('mouseout', function(){ fg.setStyle(baseOpts); fg.closeTooltip(); });
     }
-    addPolyHover(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}, {color:'#555', weight:4, opacity:.8});
-    addPolyHover(doneCoords, {color:accent, weight:3.5, opacity:.85}, {color:accent, weight:5.5, opacity:1});
 
     // Markers with hover popup
     const allCoords = [];
