@@ -1392,6 +1392,12 @@ function render(data){
     h += `</div></div>`; // close sidebar + main
 
     // ===== SHARED MODULES (reuse live renderers) =====
+    // In expedition mode, ensure all data-bearing modules are enabled
+    mod.citations = true;
+    mod.interviews = true;
+    mod.videos = true;
+    mod.gallery = true;
+
     const citHtml = mkCitations();
     if(citHtml) h += `<div class="dash">${citHtml}</div>`;
 
