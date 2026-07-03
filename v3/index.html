@@ -572,6 +572,34 @@ body.mode-expedition .sticky-nav{display:none}
 body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
+/* ===== OVERRIDES: live modules in expedition context ===== */
+body.mode-expedition .sec-title h2{font-family:'Libre Caslon Display',serif;font-weight:400;text-transform:none;letter-spacing:0}
+body.mode-expedition .sec-title p{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey)}
+body.mode-expedition .sec-title-icon{display:none}
+body.mode-expedition .sec-title-line{background:var(--exp-ink)}
+body.mode-expedition .itw-section{background:var(--exp-stone);padding:40px 28px;border-radius:0;margin:0}
+body.mode-expedition .itw-section-hd h2{font-family:'Libre Caslon Display',serif;color:var(--exp-ink);text-transform:none;letter-spacing:0}
+body.mode-expedition .itw-section-hd .itw-line{background:var(--exp-accent)}
+body.mode-expedition .itw-section-hd p{color:var(--exp-grey)}
+body.mode-expedition .itw-card{border:1px solid var(--exp-line);background:var(--exp-paper)}
+body.mode-expedition .itw-name{font-family:'Libre Caslon Display',serif;color:var(--exp-ink)}
+body.mode-expedition .itw-quote{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
+body.mode-expedition .itw-badge{background:var(--exp-accent)}
+body.mode-expedition .itw-bio{color:var(--exp-grey)}
+body.mode-expedition .itw-cta{color:var(--exp-accent)}
+body.mode-expedition .vid-block .vid-hd .vid-title{font-family:'Libre Caslon Display',serif}
+body.mode-expedition .vid-caption{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey)}
+body.mode-expedition .rubrique-block .rubrique-header{font-family:'Archivo',sans-serif}
+body.mode-expedition .rubrique-name{font-family:'Libre Caslon Display',serif}
+body.mode-expedition .citation-card,.citation-card-pm{font-family:'Archivo',sans-serif}
+body.mode-expedition .citation-text,.cit-pm-text{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
+body.mode-expedition .citation-name,.cit-pm-name{font-family:'Archivo',sans-serif;color:var(--exp-ink)}
+body.mode-expedition .cit-hero{border-color:var(--exp-accent)}
+body.mode-expedition .cit-hero-text{font-family:'Libre Caslon Text',serif}
+body.mode-expedition .cit-hero-badge{background:var(--exp-accent)}
+body.mode-expedition .gallery-grid img,.gallery-extra img{border-radius:4px}
+body.mode-expedition .voir-plus{color:var(--exp-accent);font-family:'IBM Plex Mono',monospace}
+
 /* ===== EXPEDITION RESPONSIVE ===== */
 @media(max-width:940px){
   .exp-main{grid-template-columns:1fr;padding:44px 20px;gap:40px}
@@ -762,8 +790,8 @@ function render(data){
     document.body.classList.add('mode-live');
   }
 
-  // Apply hero color
-  if(event.color) applyHeroColor(event.color);
+  // Apply hero color (live mode only)
+  if(!isExpedition && event.color) applyHeroColor(event.color);
   // Citation avatar size
   const citAvatarPx = event.citationAvatarSize || 80;
   document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
