@@ -1668,7 +1668,10 @@ function renderExpedition(data){
   _b.citations = function(){
     if(mod.citations===false || !pubCitations.length) return '';
     let o = `<section class="exp-verbatims"><div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p><div class="exp-verbatim-grid">`;
-    pubCitations.forEach(c => { o += `<blockquote class="exp-verbatim"><p>${c.quote||''}</p><footer>— <strong>${c.author||''}</strong>${c.role?`, ${c.role}`:''}</footer></blockquote>`; });
+    pubCitations.forEach(c => {
+      const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      o += `<div class="exp-verbatim-card"><div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">${c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`}<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
+    });
     return o + `</div></section>`;
   };
 
