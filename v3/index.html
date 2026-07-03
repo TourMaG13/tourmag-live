@@ -616,6 +616,13 @@ body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
 .exp-lightbox-prev{left:20px}
 .exp-lightbox-next{right:20px}
 
+/* Sponsors / Partenaires */
+.exp-sponsors{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-sponsors-grid{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:38px;padding:32px;border:1px solid var(--exp-line)}
+.exp-sponsors-grid img{height:36px;opacity:.4;filter:grayscale(100%);transition:all .3s;cursor:pointer}
+.exp-sponsors-grid img:hover{opacity:.9;filter:none}
+.exp-sponsors-grid span{font-family:'Archivo',sans-serif;font-size:16px;font-weight:700;color:var(--exp-grey);letter-spacing:.5px}
+
 /* Footer */
 .exp-footer{border-top:1px solid var(--exp-ink);padding:34px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px}
 .exp-footer-brand{display:flex;align-items:center;gap:12px}
@@ -659,7 +666,7 @@ body.mode-expedition .social-float{display:none}
   .exp-gallery-grid .exp-gal-item{height:200px}
   .exp-gallery-extra{grid-template-columns:1fr 1fr}
   .exp-gallery-extra .exp-gal-item{height:150px}
-  .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery{padding-left:20px;padding-right:20px}
+  .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery,.exp-sponsors{padding-left:20px;padding-right:20px}
 }
 @media(max-width:860px){
   .exp-cobrand{padding:12px 16px}
@@ -1522,10 +1529,11 @@ function renderExpedition(data){
   let h = '';
 
   // ===== COBRAND HEADER =====
+  const hasPartner = brand.partnerName || brand.partnerLogo;
   h += `<header class="exp-cobrand">
     <div class="exp-cobrand-left">
       ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="${brand.partnerName||''}" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span class="exp-cobrand-x">×</span><span class="exp-cobrand-tm">TOURMAG</span>` : `<span class="exp-cobrand-tm">TOURMAG</span>`}
+      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
     </div>
     ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
   </header>`;
@@ -1859,14 +1867,31 @@ function renderExpedition(data){
     h += `</div></section>`;
   }
 
+  // ===== SPONSORS / PARTENAIRES =====
+  const sponsors = (event.sponsors||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+  if(mod.sponsors!==false && sponsors.length){
+    h += `<section class="exp-sponsors">`;
+    h += `<div class="exp-section-head"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div>`;
+    h += `<p class="exp-section-sub">${event.sponsorsSubtitle||'Cette expédition est réalisée avec le soutien de'}</p>`;
+    h += `<div class="exp-sponsors-grid">`;
+    sponsors.forEach(s => {
+      if(s.logo_url){
+        const click = s.url ? ` onclick="window.open('${s.url}','_blank')"` : '';
+        h += `<img src="${s.logo_url}" alt="${s.name||''}"${click} onerror="this.remove()">`;
+      } else if(s.name){
+        h += `<span>${s.name}</span>`;
+      }
+    });
+    h += `</div></section>`;
+  }
+
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
     <div class="exp-footer-brand">
       ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="" onerror="this.remove()">` : ''}
-      <span class="exp-cobrand-x">×</span>
-      <span class="exp-cobrand-tm" style="font-size:13px">TOURMAG</span>
+      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
     </div>
-    <small>${exp.footerCredits||'Powered by TourMaG Live'}</small>
+    <small>${exp.footerCredits||''}</small>
   </footer>`;
 
   // ===== INJECT HTML =====
