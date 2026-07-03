@@ -1525,13 +1525,11 @@ function renderExpedition(data){
 
   // ===== COBRAND HEADER =====
   const hasPartner = brand.partnerName || brand.partnerLogo;
-  h += `<header class="exp-cobrand">
-    <div class="exp-cobrand-left">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="${brand.partnerName||''}" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
-    </div>
-    ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
-  </header>`;
+  let cobrandLeft = '';
+  if(brand.partnerLogo) cobrandLeft += '<img src="'+brand.partnerLogo+'" alt="'+(brand.partnerName||'')+'" onerror="this.remove()">';
+  if(brand.partnerName) cobrandLeft += '<span style="font-family:Archivo,sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">'+brand.partnerName+'</span>';
+  const livePill = event.status==='live' ? '<div class="exp-live-pill"><span class="exp-live-dot"></span>'+(exp.liveLabel||'En direct')+'</div>' : '';
+  h += `<header class="exp-cobrand"><div class="exp-cobrand-left">${cobrandLeft}</div>${livePill}</header>`;
 
   // ===== HERO =====
   const hasHeroImage = !!event.hero_image;
@@ -1640,7 +1638,11 @@ function renderExpedition(data){
     if(!reporters.length) return '';
     let o = '';
     reporters.forEach(reporter => {
-      o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+      const photoHtml = reporter.photoUrl ? '<img src="'+reporter.photoUrl+'" alt="" onerror="this.remove()">' : '';
+      const roleHtml = reporter.role ? '<div class="exp-reporter-role">'+reporter.role+'</div>' : '';
+      const bioHtml = reporter.bio ? '<p>'+reporter.bio+'</p>' : '';
+      o += '<div class="exp-card"><div class="exp-card-label">'+(reporters.length>1?'Reporter':'Votre reporter')+'</div>';
+      o += '<div class="exp-reporter">'+photoHtml+'<div><div class="exp-reporter-name">'+(reporter.name||'')+'</div>'+roleHtml+'</div></div>'+bioHtml;
       const socials = [];
       if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener">𝕏</a>`);}
       if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener">LinkedIn</a>`);
@@ -1771,8 +1773,10 @@ function renderExpedition(data){
   // Assemble blocks with zone-based layout (full / main / side)
   const defaultExpOrder = ['kpis','etapes','live','journalists','etapes_list','cta','citations','interviews','videos','gallery','articles','sponsors'];
   const defaultExpZones = {kpis:'full',etapes:'full',live:'main',journalists:'side',etapes_list:'side',cta:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full'};
-  const expBlockOrder = event.blockOrder || defaultExpOrder;
-  const expBlockZones = event.blockZones || defaultExpZones;
+  // Use event config only if it has expedition-specific keys, otherwise use defaults
+  const hasExpKeys = event.blockOrder && event.blockOrder.some(k => ['etapes','etapes_list','journalists','cta'].includes(k));
+  const expBlockOrder = hasExpKeys ? event.blockOrder : defaultExpOrder;
+  const expBlockZones = hasExpKeys && event.blockZones ? event.blockZones : defaultExpZones;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
 
@@ -1794,13 +1798,10 @@ function renderExpedition(data){
   _flushGrid();
 
   // ===== FOOTER =====
-  h += `<footer class="exp-footer">
-    <div class="exp-footer-brand">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
-    </div>
-    <small>${exp.footerCredits||''}</small>
-  </footer>`;
+  let footerBrand = '';
+  if(brand.partnerLogo) footerBrand += '<img src="'+brand.partnerLogo+'" alt="" onerror="this.remove()">';
+  if(brand.partnerName) footerBrand += '<span style="font-family:Archivo,sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em">'+brand.partnerName+'</span>';
+  h += '<footer class="exp-footer"><div class="exp-footer-brand">'+footerBrand+'</div><small>'+(exp.footerCredits||'')+'</small></footer>';
 
   // ===== INJECT HTML =====
   document.getElementById('app').innerHTML = h;
