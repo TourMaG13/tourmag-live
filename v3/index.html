@@ -450,6 +450,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-hero-credit{position:absolute;bottom:12px;right:14px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.7);background:rgba(17,17,17,.5);padding:4px 8px}
 
 /* Counters */
+:root{--exp-block-gap:64px}
 .exp-counters{display:grid;grid-template-columns:repeat(var(--exp-counter-cols,4),1fr);border-bottom:1px solid var(--exp-line)}
 .exp-counter{padding:30px 20px;text-align:center;border-right:1px solid var(--exp-line)}
 .exp-counter:last-child{border-right:none}
@@ -458,7 +459,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-counter-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--exp-grey);margin-top:10px}
 
 /* Map section */
-.exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 48px}
+.exp-mapsec{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
 .exp-section-head h2{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:34px;white-space:nowrap}
 .exp-section-head .rule{flex:1;height:1px;background:var(--exp-ink)}
@@ -485,7 +486,8 @@ body.mode-expedition .exp-seg-tip{border-radius:4px;border:1px solid #111;box-sh
 body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 
 /* Main layout */
-.exp-main{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
+.exp-main{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
+.exp-main-col{min-width:0}
 
 /* Fil de route */
 .exp-feed{position:relative;padding-left:34px}
@@ -558,7 +560,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-card-cta .exp-btn:hover{opacity:.85}
 
 /* Videos */
-.exp-videos{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-videos{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-vid-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:38px}
 .exp-vid-item{position:relative}
 .exp-vid-frame{position:relative;width:100%;padding-top:56.25%;border:1px solid var(--exp-line);overflow:hidden;background:#000}
@@ -578,20 +580,20 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-vid-caption{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);margin-top:8px;letter-spacing:.04em}
 
 /* Verbatims section */
-.exp-verbatims{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-verbatims{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-verbatim-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:38px}
 .exp-verbatim-card{border-left:2px solid var(--exp-accent);padding:22px 24px;background:var(--exp-stone);position:relative}
 .exp-verbatim-card::before{content:'\201C';position:absolute;top:10px;right:16px;font-family:'Libre Caslon Display',serif;font-size:60px;color:var(--exp-accent);opacity:.12;line-height:1;pointer-events:none}
 .exp-verbatim-text{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:15px;line-height:1.65;color:var(--exp-ink);margin-bottom:14px}
 .exp-verbatim-text strong{color:var(--exp-accent);font-weight:600;font-style:normal}
 .exp-verbatim-author{display:flex;align-items:center;gap:10px}
-.exp-verbatim-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-accent)}
-.exp-verbatim-avatar-ph{width:36px;height:36px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--exp-grey)}
+.exp-verbatim-avatar{width:var(--exp-cit-av,36px);height:var(--exp-cit-av,36px);border-radius:50%;object-fit:cover;border:2px solid var(--exp-accent)}
+.exp-verbatim-avatar-ph{width:var(--exp-cit-av,36px);height:var(--exp-cit-av,36px);border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--exp-grey)}
 .exp-verbatim-name{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px}
 .exp-verbatim-role{font-size:11px;color:var(--exp-grey)}
 
 /* Articles grid */
-.exp-articles{max-width:1200px;margin:0 auto;padding:0 32px 80px}
+.exp-articles{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-art-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:38px}
 .exp-art{border:1px solid var(--exp-line);transition:transform .2s,box-shadow .2s;cursor:pointer}
 .exp-art:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.08)}
@@ -603,7 +605,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-art h4{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:18.5px;line-height:1.25;margin-top:8px}
 
 /* Gallery */
-.exp-gallery{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-gallery{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-gallery-grid{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:280px calc(280px * 0.5 - 5px);gap:10px;margin-top:38px}
 .exp-gallery-grid .exp-gal-item:first-child{grid-row:1/3}
 .exp-gal-item{position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--exp-line);background:var(--exp-stone)}
@@ -627,7 +629,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-lightbox-next{right:20px}
 
 /* Sponsors / Partenaires */
-.exp-sponsors{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-sponsors{max-width:1200px;margin:0 auto;padding:var(--exp-block-gap) 32px}
 .exp-sponsors-grid{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:38px;padding:32px;border:1px solid var(--exp-line)}
 .exp-sponsors-grid img{height:36px;opacity:.4;filter:grayscale(100%);transition:all .3s;cursor:pointer}
 .exp-sponsors-grid img:hover{opacity:.9;filter:none}
@@ -645,7 +647,7 @@ body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
 /* Interviews */
-.exp-interviews{max-width:none;margin:0 auto;padding:48px 32px 64px;background:rgba(255,108,0,.05)}
+.exp-interviews{max-width:none;margin:0 auto;padding:var(--exp-block-gap) 32px;background:rgba(255,108,0,.05)}
 .exp-interviews .exp-section-head,.exp-interviews .exp-section-sub{max-width:1200px;margin-left:auto;margin-right:auto}
 .exp-interviews .exp-section-head .rule{background:var(--exp-accent)}
 .exp-itw-grid{display:flex;flex-direction:column;gap:16px;margin-top:38px;max-width:1200px;margin-left:auto;margin-right:auto}
@@ -1486,6 +1488,7 @@ function renderExpedition(data){
   document.body.classList.add('mode-expedition');
   document.body.classList.remove('mode-live');
   document.documentElement.style.setProperty('--exp-accent', accent);
+  if(event.citationAvatarSize) document.documentElement.style.setProperty('--exp-cit-av', event.citationAvatarSize + 'px');
 
   const jrPhotoMap = {};
   (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
@@ -1608,8 +1611,9 @@ function renderExpedition(data){
     </section>`;
   };
 
+  // --- Live (fil de route only) ---
   _b.live = function(){
-    let o = `<div class="exp-main"><div>`;
+    let o = '';
     o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
     o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
     if(pubLive.length){
@@ -1627,49 +1631,58 @@ function renderExpedition(data){
     } else {
       o += `<p style="color:var(--exp-grey);font-family:'Libre Caslon Text',serif;font-style:italic;padding:40px 0">L'expédition n'a pas encore commencé. Revenez bientôt…</p>`;
     }
-    o += `</div><div class="exp-side">`;
-    // Reporters
-    const reporters = journalists||[];
-    if(reporters.length){
-      reporters.forEach(reporter => {
-        o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
-        const socials = [];
-        if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener">𝕏</a>`);}
-        if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener">LinkedIn</a>`);
-        if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener">Instagram</a>`);}
-        if(socials.length) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
-        if(reporter.profileUrl) o += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
-        o += `</div>`;
-      });
-    }
-    // Itinerary accordion
-    if(sortedEtapes.length){
-      const EXP_ITIN_VIS = 5;
-      let nIdx = sortedEtapes.findIndex(et => et.status === 'now');
-      if(nIdx < 0) nIdx = sortedEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
-      if(nIdx < 0) nIdx = 0;
-      const wS = Math.max(0, Math.min(nIdx - 2, sortedEtapes.length - EXP_ITIN_VIS));
-      const wE = Math.min(sortedEtapes.length, wS + EXP_ITIN_VIS);
-      const before = sortedEtapes.slice(0, wS), visible = sortedEtapes.slice(wS, wE), after = sortedEtapes.slice(wE);
-      function mkEtapeLi(et){
-        const isRoute = et.type==='route' && et.nameEnd;
-        const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
-        const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
-        return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
-      }
-      o += `<div class="exp-card"><div class="exp-card-label">Itinéraire</div><ul class="exp-route">`;
-      if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
-      visible.forEach(et => { o += mkEtapeLi(et); });
-      if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
-      o += `</ul></div>`;
-    }
-    // CTA
-    if(exp.cta) o += `<div class="exp-card exp-card-cta"><div class="exp-card-label">${exp.cta.label||'Ne rien manquer'}</div><p>${exp.cta.text||''}</p>${exp.cta.btnText&&exp.cta.btnUrl?`<a class="exp-btn" href="${exp.cta.btnUrl}" target="_blank">${exp.cta.btnText}</a>`:''}</div>`;
-    o += `</div></div>`;
     return o;
   };
 
-  _b.citations = function(){
+  // --- Journalists / Reporters ---
+  _b.journalists = function(){
+    const reporters = journalists||[];
+    if(!reporters.length) return '';
+    let o = '';
+    reporters.forEach(reporter => {
+      o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+      const socials = [];
+      if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener">𝕏</a>`);}
+      if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener">LinkedIn</a>`);
+      if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener">Instagram</a>`);}
+      if(socials.length) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
+      if(reporter.profileUrl) o += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
+      o += `</div>`;
+    });
+    return o;
+  };
+
+  // --- Etapes list / Itinerary ---
+  _b.etapes_list = function(){
+    if(!sortedEtapes.length) return '';
+    const EXP_ITIN_VIS = 5;
+    let nIdx = sortedEtapes.findIndex(et => et.status === 'now');
+    if(nIdx < 0) nIdx = sortedEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
+    if(nIdx < 0) nIdx = 0;
+    const wS = Math.max(0, Math.min(nIdx - 2, sortedEtapes.length - EXP_ITIN_VIS));
+    const wE = Math.min(sortedEtapes.length, wS + EXP_ITIN_VIS);
+    const before = sortedEtapes.slice(0, wS), visible = sortedEtapes.slice(wS, wE), after = sortedEtapes.slice(wE);
+    function mkEtapeLi(et){
+      const isRoute = et.type==='route' && et.nameEnd;
+      const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
+      const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
+      return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
+    }
+    let o = `<div class="exp-card"><div class="exp-card-label">Itinéraire</div><ul class="exp-route">`;
+    if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
+    visible.forEach(et => { o += mkEtapeLi(et); });
+    if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
+    o += `</ul></div>`;
+    return o;
+  };
+
+  // --- CTA ---
+  _b.cta = function(){
+    if(!exp.cta) return '';
+    return `<div class="exp-card exp-card-cta"><div class="exp-card-label">${exp.cta.label||'Ne rien manquer'}</div><p>${exp.cta.text||''}</p>${exp.cta.btnText&&exp.cta.btnUrl?`<a class="exp-btn" href="${exp.cta.btnUrl}" target="_blank">${exp.cta.btnText}</a>`:''}</div>`;
+  };
+
+  // --- Citations / Verbatims ---
     if(mod.citations===false || !pubCitations.length) return '';
     let o = `<section class="exp-verbatims"><div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p><div class="exp-verbatim-grid">`;
     pubCitations.forEach(c => {
@@ -1755,12 +1768,30 @@ function renderExpedition(data){
     return o+`</div></section>`;
   };
 
-  // Assemble blocks in configured order
-  const defaultExpOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'];
+  // Assemble blocks with zone-based layout (full / main / side)
+  const defaultExpOrder = ['kpis','etapes','live','journalists','etapes_list','cta','citations','interviews','videos','gallery','articles','sponsors'];
+  const defaultExpZones = {kpis:'full',etapes:'full',live:'main',journalists:'side',etapes_list:'side',cta:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full'};
   const expBlockOrder = event.blockOrder || defaultExpOrder;
+  const expBlockZones = event.blockZones || defaultExpZones;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
-  finalOrder.forEach(key => { if(_b[key]) h += _b[key](); });
+
+  let _gridOpen = false, _mainBuf = '', _sideBuf = '';
+  function _flushGrid(){
+    if(!_gridOpen) return;
+    h += `<div class="exp-main"><div class="exp-main-col">${_mainBuf}</div><div class="exp-side">${_sideBuf}</div></div>`;
+    _mainBuf = ''; _sideBuf = ''; _gridOpen = false;
+  }
+  finalOrder.forEach(key => {
+    if(!_b[key]) return;
+    const html = _b[key]();
+    if(!html) return;
+    const zone = expBlockZones[key] || 'full';
+    if(zone === 'full'){ _flushGrid(); h += html; }
+    else if(zone === 'main'){ _gridOpen = true; _mainBuf += html; }
+    else if(zone === 'side'){ _gridOpen = true; _sideBuf += html; }
+  });
+  _flushGrid();
 
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
@@ -1794,71 +1825,88 @@ function renderExpedition(data){
       }
     });
 
-    // Polylines — one segment per consecutive pair, with tooltip
-    for(let i=0; i<chain.length-1; i++){
-      const w0=chain[i], w1=chain[i+1];
-      const seg=[w0.coord, w1.coord];
-      const isDone = w0.status==='done' || w0.status==='now';
-      const et = w0.etape;
-      const label = et.type==='route' && et.nameEnd
-        ? `${et.name} → ${et.nameEnd}` : et.name||'';
-      const tipHtml = `<div class="exp-pop-name">${label}</div><div class="exp-pop-meta">${et.dateLabel||''} · ${et.km||''}</div>`;
-      const baseOpts = isDone
-        ? {color:accent, weight:3.5, opacity:.85}
-        : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
-      const hoverOpts = {color:accent, weight:5.5, opacity:1, dashArray:null};
-      const bg = L.polyline(seg, {...baseOpts, weight:(baseOpts.weight||2)+10, opacity:0}).addTo(map);
-      const fg = L.polyline(seg, baseOpts).addTo(map);
-      fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
-      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); fg.openTooltip(); });
-      bg.on('mouseout', function(){ fg.setStyle(baseOpts); fg.closeTooltip(); });
-    }
-
-    // Markers with hover popup
+    // Markers first — store refs by coord key for segment hover
     const allCoords = [];
+    const markerMap = {}; // key "lat,lng" → {marker, baseStyle}
+    function coordKey(c){ return c[0].toFixed(5)+','+c[1].toFixed(5); }
     function bindHover(marker, popupContent){
       marker.bindPopup(popupContent);
-      marker.on('mouseover', function(e){ this.openPopup(); });
-      marker.on('mouseout', function(e){ this.closePopup(); });
+      marker.on('mouseover', function(){ this.openPopup(); });
+      marker.on('mouseout', function(){ this.closePopup(); });
     }
 
     sortedEtapes.forEach(s => {
       if(!s.lat || !s.lng) return;
       const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
-
-      // — Departure / single point marker
       allCoords.push([s.lat,s.lng]);
-      let mDep;
+      let mDep, depBase;
       if(s.status==='now' && !isRoute){
         mDep = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+        depBase = null; // divIcon, can't restyle
       } else if(s.status==='now' && isRoute){
-        mDep = L.circleMarker([s.lat,s.lng], {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5});
+        depBase = {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5};
+        mDep = L.circleMarker([s.lat,s.lng], depBase);
       } else if(s.status==='done'){
-        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
+        depBase = {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1};
+        mDep = L.circleMarker([s.lat,s.lng], depBase);
       } else {
-        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
+        depBase = {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1};
+        mDep = L.circleMarker([s.lat,s.lng], depBase);
       }
+      mDep.addTo(map);
       const depPopup = isRoute
         ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
         : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
-      mDep.addTo(map);
       bindHover(mDep, depPopup);
+      markerMap[coordKey([s.lat,s.lng])] = {marker:mDep, base:depBase};
 
-      // — Arrival marker (route only)
       if(isRoute){
         allCoords.push([s.latEnd,s.lngEnd]);
-        let mArr;
+        let mArr, arrBase;
         if(s.status==='now'){
           mArr = L.marker([s.latEnd,s.lngEnd], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+          arrBase = null;
         } else if(s.status==='done'){
-          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
+          arrBase = {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1};
+          mArr = L.circleMarker([s.latEnd,s.lngEnd], arrBase);
         } else {
-          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
+          arrBase = {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1};
+          mArr = L.circleMarker([s.latEnd,s.lngEnd], arrBase);
         }
         mArr.addTo(map);
         bindHover(mArr, `<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
+        markerMap[coordKey([s.latEnd,s.lngEnd])] = {marker:mArr, base:arrBase};
       }
     });
+
+    // Segments — one per consecutive pair, wide hitbox, highlight endpoints
+    const accentHi = {color:accent, fillColor:accent, fillOpacity:1, weight:2, radius:7};
+    for(let i=0; i<chain.length-1; i++){
+      const w0=chain[i], w1=chain[i+1];
+      const seg=[w0.coord, w1.coord];
+      const isDone = w0.status==='done' || w0.status==='now';
+      const et = w0.etape;
+      const label = et.type==='route'&&et.nameEnd ? `${et.name} → ${et.nameEnd}` : et.name||'';
+      const tipHtml = `<div class="exp-pop-name">${label}</div><div class="exp-pop-meta">${et.dateLabel||''} · ${et.km||''}</div>`;
+      const baseOpts = isDone
+        ? {color:accent, weight:3.5, opacity:.85}
+        : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
+      const hoverOpts = {color:accent, weight:5.5, opacity:1, dashArray:null};
+      const bg = L.polyline(seg, {color:'transparent', weight:24, opacity:0}).addTo(map);
+      const fg = L.polyline(seg, baseOpts).addTo(map);
+      fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
+      const m0 = markerMap[coordKey(w0.coord)], m1 = markerMap[coordKey(w1.coord)];
+      bg.on('mouseover', function(){
+        fg.setStyle(hoverOpts); fg.openTooltip();
+        if(m0 && m0.base && m0.marker.setStyle) m0.marker.setStyle(accentHi);
+        if(m1 && m1.base && m1.marker.setStyle) m1.marker.setStyle(accentHi);
+      });
+      bg.on('mouseout', function(){
+        fg.setStyle(baseOpts); fg.closeTooltip();
+        if(m0 && m0.base && m0.marker.setStyle) m0.marker.setStyle(m0.base);
+        if(m1 && m1.base && m1.marker.setStyle) m1.marker.setStyle(m1.base);
+      });
+    }
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
   }
