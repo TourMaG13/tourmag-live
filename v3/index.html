@@ -429,7 +429,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 
 /* Hero */
 .exp-hero{position:relative;overflow:hidden;background:var(--exp-ink)}
-.exp-hero-img{width:100%;height:62vh;min-height:440px;object-fit:cover;opacity:.92}
+.exp-hero-img{width:100%;height:460px;object-fit:cover;opacity:.92}
 .exp-hero-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(17,17,17,.05) 30%,rgba(17,17,17,.82) 100%)}
 .exp-hero-inner{position:absolute;left:0;right:0;bottom:0;padding:42px 48px;color:#fff;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px}
 .exp-hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--exp-accent);margin-bottom:14px}
@@ -583,6 +583,7 @@ body.mode-expedition .social-float{display:none}
 }
 @media(max-width:860px){
   .exp-cobrand{padding:12px 16px}
+  .exp-hero-img{height:320px!important}
   .exp-hero-inner{padding:28px 22px;flex-direction:column;align-items:flex-start}
   .exp-hero-meta{text-align:left}
   .exp-hero h1{font-size:clamp(32px,8vw,52px)}
@@ -745,17 +746,21 @@ function _isPublished(entry){
 function render(data){
   const {event,essential,live,rubriques,citations,articles,programme,timeline,videos,journalists,interviews,etapes} = data;
 
-  // ===== MODE BRANCHING =====
-  if(event.mode === 'expedition'){
-    renderExpedition(data);
-    return;
-  }
-
+  // ===== MODE DETECTION =====
+  const isExpedition = event.mode === 'expedition';
   const mod = event.modules || {};
 
-  // Ensure live mode styling
-  document.body.classList.remove('mode-expedition');
-  document.body.classList.add('mode-live');
+  if(isExpedition){
+    document.body.classList.add('mode-expedition');
+    document.body.classList.remove('mode-live');
+    const exp = event.expedition || {};
+    const brand = exp.branding || {};
+    const accent = brand.accentColor || '#FF6C00';
+    document.documentElement.style.setProperty('--exp-accent', accent);
+  } else {
+    document.body.classList.remove('mode-expedition');
+    document.body.classList.add('mode-live');
+  }
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
@@ -1217,6 +1222,261 @@ function render(data){
     return o;
   }
 
+  // ============================================================
+  // EXPEDITION ASSEMBLY (uses shared mkVideos, mkCitations, etc.)
+  // ============================================================
+  if(isExpedition){
+    const exp = event.expedition || {};
+    const brand = exp.branding || {};
+    const accent = brand.accentColor || '#FF6C00';
+    const sortedEtapes = (etapes||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+    const pubLive = (live||[]).filter(_isPublished);
+
+    const jrPhotoMap = {};
+    (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
+
+    // KPIs: only from back-office kpis module — no auto-generated counters
+    const kpis = event.kpis || [];
+    const kpisSorted = [...kpis].sort((a,b)=>(a.order||0)-(b.order||0));
+    if(kpisSorted.length) document.documentElement.style.setProperty('--exp-counter-cols', Math.min(kpisSorted.length, 4));
+
+    // Hero height from event settings
+    const heroH = event.hero_height || 460;
+
+    let h = '';
+
+    // ===== COBRAND HEADER =====
+    h += `<header class="exp-cobrand">
+      <div class="exp-cobrand-left">
+        ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="${brand.partnerName||''}" onerror="this.remove()">` : ''}
+        ${brand.partnerName ? `<span class="exp-cobrand-x">×</span><span class="exp-cobrand-tm">TOURMAG</span>` : `<span class="exp-cobrand-tm">TOURMAG</span>`}
+      </div>
+      ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
+    </header>`;
+
+    // ===== HERO =====
+    h += `<section class="exp-hero">`;
+    if(event.hero_image) h += `<img class="exp-hero-img" src="${event.hero_image}" alt="" style="height:${heroH}px;min-height:0" onerror="this.style.display='none'">`;
+    h += `<div class="exp-hero-veil"></div>`;
+    if(exp.photoCredit) h += `<div class="exp-hero-credit">Photo : © ${exp.photoCredit}</div>`;
+    h += `<div class="exp-hero-inner"><div>`;
+    if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
+    h += `<h1>${exp.editorialTitle || event.title || ''}</h1>`;
+    if(exp.tagline) h += `<p class="exp-hero-tagline">${exp.tagline}</p>`;
+    h += `</div><div class="exp-hero-meta">`;
+    if(event.dates) h += `<strong>${event.dates}</strong><br>`;
+    if(event.location) h += `${event.location}<br>`;
+    if(event.subtitle) h += `${event.subtitle}`;
+    h += `</div></div></section>`;
+
+    // ===== COUNTERS (KPIs from back-office only) =====
+    if(kpisSorted.length){
+      h += `<section class="exp-counters">`;
+      kpisSorted.forEach(k => {
+        h += `<div class="exp-counter"><div class="exp-counter-num">${k.value||''}</div><div class="exp-counter-label">${k.label||''}</div></div>`;
+      });
+      h += `</section>`;
+    }
+
+    // ===== MAP =====
+    if(sortedEtapes.length && mod.etapes!==false){
+      h += `<section class="exp-mapsec">
+        <div class="exp-section-head"><h2>${exp.mapTitle||'La route, en direct'}</h2><div class="rule"></div></div>
+        <p class="exp-section-sub">${exp.mapSubtitle||'Suivez l\'expédition étape par étape. Le point orange, c\'est ici et maintenant.'}</p>
+        <div class="exp-map-wrap">
+          <div id="exp-routemap"></div>
+          <div class="exp-map-legend">
+            <b>Légende</b>
+            <span class="exp-lg-dot exp-lg-done"></span>Étapes franchies<br>
+            <span class="exp-lg-dot exp-lg-now"></span>Position actuelle<br>
+            <span class="exp-lg-dot exp-lg-next"></span>Étapes à venir
+          </div>
+        </div>
+      </section>`;
+    }
+
+    // ===== MAIN LAYOUT (fil de route + sidebar) =====
+    h += `<div class="exp-main"><div>`;
+    h += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
+    h += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
+
+    if(pubLive.length){
+      const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
+      const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
+      const extraEntries = pubLive.slice(EXP_LIVE_VIS);
+
+      h += `<div class="exp-feed">`;
+      visEntries.forEach((entry,idx) => { h += _mkExpEntry(entry, sortedEtapes, jrPhotoMap, idx===0); });
+      if(extraEntries.length){
+        h += `<div class="exp-expand" id="exp-feed-expand">`;
+        extraEntries.forEach(entry => { h += _mkExpEntry(entry, sortedEtapes, jrPhotoMap, false); });
+        h += `</div>`;
+        h += `<button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length})">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
+      }
+      h += `</div>`;
+    } else {
+      h += `<p style="color:var(--exp-grey);font-family:'Libre Caslon Text',serif;font-style:italic;padding:40px 0">L'expédition n'a pas encore commencé. Revenez bientôt…</p>`;
+    }
+    h += `</div>`;
+
+    // ===== SIDEBAR =====
+    h += `<div class="exp-side">`;
+    // Reporter cards (reuse mkJournalists for content but wrap in expedition styling)
+    const reporters = journalists||[];
+    if(reporters.length){
+      reporters.forEach(reporter => {
+        h += `<div class="exp-card">
+          <div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div>
+          <div class="exp-reporter">
+            ${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}
+            <div>
+              <div class="exp-reporter-name">${reporter.name||''}</div>
+              ${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}
+            </div>
+          </div>
+          ${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+        const socials = [];
+        if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener">𝕏</a>`);}
+        if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener">LinkedIn</a>`);
+        if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener">Instagram</a>`);}
+        if(socials.length) h += `<div class="exp-card-socials">${socials.join('')}</div>`;
+        h += `</div>`;
+      });
+    }
+    // Route list
+    if(sortedEtapes.length){
+      h += `<div class="exp-card">
+        <div class="exp-card-label">Itinéraire</div>
+        <ul class="exp-route">`;
+      sortedEtapes.forEach(et => {
+        h += `<li class="${et.status||'next'}"><span class="stop">${et.name}</span><span class="dist">${et.km||''}</span></li>`;
+      });
+      h += `</ul></div>`;
+    }
+    // CTA card
+    if(exp.cta && exp.cta.text){
+      h += `<div class="exp-card exp-card-cta">
+        <div class="exp-card-label">${exp.cta.label||'Ne rien manquer'}</div>
+        <p>${exp.cta.text}</p>
+        ${exp.cta.btnText && exp.cta.btnUrl ? `<a class="exp-btn" href="${exp.cta.btnUrl}" target="_blank">${exp.cta.btnText}</a>` : ''}
+      </div>`;
+    }
+    h += `</div></div>`; // close sidebar + main
+
+    // ===== SHARED MODULES (reuse live renderers) =====
+    const citHtml = mkCitations();
+    if(citHtml) h += `<div class="dash">${citHtml}</div>`;
+
+    const itwHtml = mkInterviews();
+    if(itwHtml) h += itwHtml;
+
+    const vidHtml = mkVideos();
+    if(vidHtml) h += `<div class="dash">${vidHtml}</div>`;
+
+    const galHtml = mkGallery();
+    if(galHtml) h += `<div class="dash">${galHtml}</div>`;
+
+    // ===== ARTICLES =====
+    if(mod.articles!==false && articles && articles.length){
+      h += `<section class="exp-articles">
+        <div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div>
+        <p class="exp-section-sub">${event.articlesSubtitle||'Les articles liés à cette expédition'}</p>
+        <div class="exp-art-grid">`;
+      articles.forEach(a => {
+        const link = a.link ? ` onclick="window.open('${a.link}','_blank')"` : '';
+        h += `<div class="exp-art"${link}>
+          ${a.image ? `<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>` : ''}
+          <div class="exp-art-body">
+            <div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div>
+            <h4>${a.title||''}</h4>
+          </div>
+        </div>`;
+      });
+      h += `</div></section>`;
+    }
+
+    // ===== FOOTER =====
+    h += `<footer class="exp-footer">
+      <div class="exp-footer-brand">
+        ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="" onerror="this.remove()">` : ''}
+        <span class="exp-cobrand-x">×</span>
+        <span class="exp-cobrand-tm" style="font-size:13px">TOURMAG</span>
+      </div>
+      <small>${exp.footerCredits||'Powered by TourMaG Live'}</small>
+    </footer>`;
+
+    // Inject
+    document.getElementById('app').innerHTML = h;
+
+    // Init Leaflet map
+    if(sortedEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
+      if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
+      const map = L.map('exp-routemap', {scrollWheelZoom:false});
+      _expMapInstance = map;
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution:'© OpenStreetMap © CARTO', maxZoom:12
+      }).addTo(map);
+      const doneCoords = sortedEtapes.filter(s=>s.status==='done'||s.status==='now').map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
+      const nowIdx = sortedEtapes.findIndex(s=>s.status==='now');
+      const futureCoords = sortedEtapes.filter((_,i)=>i>=Math.max(nowIdx,0)).map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
+      if(futureCoords.length>1) L.polyline(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}).addTo(map);
+      if(doneCoords.length>1) L.polyline(doneCoords, {color:accent, weight:3.5, opacity:.95}).addTo(map);
+      const allCoords = [];
+      sortedEtapes.forEach(s => {
+        if(!s.lat||!s.lng) return;
+        allCoords.push([s.lat,s.lng]);
+        let m;
+        if(s.status==='now'){
+          m = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+        } else if(s.status==='done'){
+          m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
+        } else {
+          m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
+        }
+        m.addTo(map).bindPopup(`<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`);
+      });
+      if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+    }
+
+    // Instagram embeds
+    if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
+    window._socialParseTimer = setTimeout(()=>{
+      try{if(window.instgrm&&window.instgrm.Embeds) window.instgrm.Embeds.process();}catch(e){}
+    },400);
+    if(typeof sendHeight==='function') setTimeout(sendHeight, 100);
+    return;
+  }
+
+  // ===== Expedition entry builder (hoisted, available for expedition branch) =====
+  function _mkExpEntry(entry, etapes, jrPhotoMap, isFirst){
+    const etape = entry.etape ? (etapes||[]).find(e=>e.id===entry.etape) : null;
+    let o = `<div class="exp-entry${isFirst?' now':''}">`;
+    o += `<div class="exp-entry-meta">`;
+    o += `<span>${fmtTime(entry.time)}</span>`;
+    if(entry.tag) o += `<span class="tag">${entry.tag}</span>`;
+    if(entry.journalist) o += `<span>${entry.journalist}</span>`;
+    if(etape) o += `<span>📍 ${etape.name}</span>`;
+    o += `</div>`;
+    if(entry.title) o += `<h3>${entry.title}</h3>`;
+    if(entry.text){
+      let txt = entry.text.replace(/«\s*([^»]+)\s*»/g, '<span class="verbatim">« $1 »</span>');
+      if(entry.url) txt += ` <a href="${entry.url}" target="_blank">→ Lire la suite</a>`;
+      o += `<p>${txt}</p>`;
+    }
+    if(entry.image){
+      o += `<figure class="exp-entry-photo">
+        <img src="${entry.image}" alt="" style="height:${entry.image_height||280}px;object-position:${entry.image_position||'center center'}" onerror="this.parentElement.remove()">
+        <figcaption>
+          <span>${entry.image_caption||''}</span>
+          <span>${entry.image_credit ? '© '+entry.image_credit : ''}</span>
+        </figcaption>
+      </figure>`;
+    }
+    if(etape && etape.km) o += `<div class="exp-entry-km">${etape.km}</div>`;
+    o += `</div>`;
+    return o;
+  }
+
   // ===== LAYOUT ASSEMBLY — 4 zones: main, side, full, max =====
   // main  = colonne principale (dans layout 2 colonnes)
   // side  = sidebar droite
@@ -1364,310 +1624,10 @@ function render(data){
 }
 
 // ============================================================
-// EXPEDITION RENDER ENGINE
+// EXPEDITION UTILITIES
 // ============================================================
 var _expMapInstance = null;
 
-function renderExpedition(data){
-  const {event,live,articles,journalists,etapes,citations,videos} = data;
-  const exp = event.expedition || {};
-  const brand = exp.branding || {};
-  const accent = brand.accentColor || '#FF6C00';
-  const mod = event.modules || {};
-
-  // Apply expedition mode to body
-  document.body.classList.add('mode-expedition');
-  document.body.classList.remove('mode-live');
-  document.documentElement.style.setProperty('--exp-accent', accent);
-
-  const jrPhotoMap = {};
-  (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
-
-  // Filter published entries
-  const pubLive = (live||[]).filter(_isPublished);
-  const pubCitations = (citations||[]).filter(_isPublished);
-  const sortedEtapes = (etapes||[]).sort((a,b)=>(a.order||0)-(b.order||0));
-
-  // Compute counters dynamically
-  const counters = [];
-  const totalKm = exp.totalKm;
-  if(totalKm) counters.push({value: typeof totalKm==='number'?totalKm.toLocaleString('fr-FR'):totalKm, label:'Kilomètres'});
-
-  if(exp.dateStart && exp.dateEnd){
-    const s = new Date(exp.dateStart), e = new Date(exp.dateEnd);
-    const days = Math.round(Math.abs(e - s) / 86400000);
-    if(days) counters.push({value:days, label:'Jours de route'});
-  }
-  if(sortedEtapes.length) counters.push({value:sortedEtapes.length, label:'Étapes'});
-
-  if(exp.dateStart){
-    const startDate = new Date(exp.dateStart);
-    const today = new Date(); today.setHours(0,0,0,0); startDate.setHours(0,0,0,0);
-    const diffDays = Math.round((startDate - today) / 86400000);
-    let cl='', lbl='';
-    if(diffDays > 0){ cl=`J-${diffDays}`; lbl='Avant le départ'; }
-    else if(diffDays === 0){ cl='Jour J'; lbl="C'est parti"; }
-    else { cl=`J+${Math.abs(diffDays)}`; lbl='En route'; }
-    counters.push({value:`<em>${cl}</em>`, label:lbl});
-  }
-  // Custom counters from event
-  if(event.kpis && event.kpis.length) event.kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(k=>counters.push({value:k.value,label:k.label}));
-
-  document.documentElement.style.setProperty('--exp-counter-cols', Math.min(counters.length, 4));
-
-  let h = '';
-
-  // ===== COBRAND HEADER =====
-  h += `<header class="exp-cobrand">
-    <div class="exp-cobrand-left">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="${brand.partnerName||''}" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span class="exp-cobrand-x">×</span><span class="exp-cobrand-tm">TOURMAG</span>` : `<span class="exp-cobrand-tm">TOURMAG</span>`}
-    </div>
-    ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
-  </header>`;
-
-  // ===== HERO =====
-  h += `<section class="exp-hero">`;
-  if(event.hero_image) h += `<img class="exp-hero-img" src="${event.hero_image}" alt="" onerror="this.style.display='none'">`;
-  h += `<div class="exp-hero-veil"></div>`;
-  if(exp.photoCredit) h += `<div class="exp-hero-credit">Photo : © ${exp.photoCredit}</div>`;
-  h += `<div class="exp-hero-inner"><div>`;
-  if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
-  h += `<h1>${exp.editorialTitle || event.title || ''}</h1>`;
-  if(exp.tagline) h += `<p class="exp-hero-tagline">${exp.tagline}</p>`;
-  h += `</div><div class="exp-hero-meta">`;
-  if(event.dates) h += `<strong>${event.dates}</strong><br>`;
-  if(event.location) h += `${event.location}<br>`;
-  if(event.subtitle) h += `${event.subtitle}`;
-  h += `</div></div></section>`;
-
-  // ===== COUNTERS =====
-  if(counters.length){
-    h += `<section class="exp-counters">`;
-    counters.forEach(c => {
-      h += `<div class="exp-counter"><div class="exp-counter-num">${c.value}</div><div class="exp-counter-label">${c.label}</div></div>`;
-    });
-    h += `</section>`;
-  }
-
-  // ===== MAP =====
-  if(sortedEtapes.length && mod.etapes!==false){
-    h += `<section class="exp-mapsec">
-      <div class="exp-section-head"><h2>${exp.mapTitle||'La route, en direct'}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${exp.mapSubtitle||'Suivez l\'expédition étape par étape. Le point orange, c\'est ici et maintenant.'}</p>
-      <div class="exp-map-wrap">
-        <div id="exp-routemap"></div>
-        <div class="exp-map-legend">
-          <b>Légende</b>
-          <span class="exp-lg-dot exp-lg-done"></span>Étapes franchies<br>
-          <span class="exp-lg-dot exp-lg-now"></span>Position actuelle<br>
-          <span class="exp-lg-dot exp-lg-next"></span>Étapes à venir
-        </div>
-      </div>
-    </section>`;
-  }
-
-  // ===== MAIN LAYOUT (fil de route + sidebar) =====
-  h += `<div class="exp-main"><div>`;
-
-  // Section title
-  h += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
-  h += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
-
-  // Fil de route entries
-  if(pubLive.length){
-    const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
-    const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
-    const extraEntries = pubLive.slice(EXP_LIVE_VIS);
-
-    h += `<div class="exp-feed">`;
-    visEntries.forEach(entry => { h += mkExpEntry(entry, sortedEtapes, jrPhotoMap); });
-    if(extraEntries.length){
-      h += `<div class="exp-expand" id="exp-feed-expand">`;
-      extraEntries.forEach(entry => { h += mkExpEntry(entry, sortedEtapes, jrPhotoMap); });
-      h += `</div>`;
-      h += `<button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length})">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
-    }
-    h += `</div>`;
-  } else {
-    h += `<p style="color:var(--exp-grey);font-family:'Libre Caslon Text',serif;font-style:italic;padding:40px 0">L'expédition n'a pas encore commencé. Revenez bientôt…</p>`;
-  }
-
-  h += `</div>`;
-
-  // ===== SIDEBAR =====
-  h += `<div class="exp-side">`;
-
-  // Reporter cards (support multiple journalists)
-  const reporters = journalists||[];
-  if(reporters.length){
-    reporters.forEach(reporter => {
-      h += `<div class="exp-card">
-        <div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div>
-        <div class="exp-reporter">
-          ${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}
-          <div>
-            <div class="exp-reporter-name">${reporter.name||''}</div>
-            ${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}
-          </div>
-        </div>
-        ${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
-      // Social links
-      const socials = [];
-      if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener">𝕏</a>`);}
-      if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener">LinkedIn</a>`);
-      if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener">Instagram</a>`);}
-      if(socials.length) h += `<div class="exp-card-socials">${socials.join('')}</div>`;
-      if(reporter.profileUrl) h += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
-      h += `</div>`;
-    });
-  }
-
-  // Route/étapes list
-  if(sortedEtapes.length){
-    h += `<div class="exp-card">
-      <div class="exp-card-label">Itinéraire</div>
-      <ul class="exp-route">`;
-    sortedEtapes.forEach(et => {
-      h += `<li class="${et.status||'next'}"><span class="stop">${et.name}</span><span class="dist">${et.km||''}</span></li>`;
-    });
-    h += `</ul></div>`;
-  }
-
-  // CTA card (configurable)
-  if(exp.cta){
-    h += `<div class="exp-card exp-card-cta">
-      <div class="exp-card-label">${exp.cta.label||'Ne rien manquer'}</div>
-      <p>${exp.cta.text||''}</p>
-      ${exp.cta.btnText && exp.cta.btnUrl ? `<a class="exp-btn" href="${exp.cta.btnUrl}" target="_blank">${exp.cta.btnText}</a>` : ''}
-    </div>`;
-  }
-
-  h += `</div></div>`; // close sidebar + main layout
-
-  // ===== VERBATIMS =====
-  if(mod.citations!==false && pubCitations.length){
-    h += `<section class="exp-verbatims">
-      <div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${event.citationsSubtitle||'Les voix du terrain'}</p>
-      <div class="exp-verbatim-grid">`;
-    pubCitations.forEach(c => {
-      const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      h += `<div class="exp-verbatim-card">
-        <div class="exp-verbatim-text">${c.text||''}</div>
-        <div class="exp-verbatim-author">
-          ${c.avatar ? `<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">` : `<div class="exp-verbatim-avatar-ph">${ini}</div>`}
-          <div>
-            <div class="exp-verbatim-name">${c.name||''}</div>
-            ${c.role ? `<div class="exp-verbatim-role">${c.role}</div>` : ''}
-          </div>
-        </div>
-      </div>`;
-    });
-    h += `</div></section>`;
-  }
-
-  // ===== VIDEOS =====
-  if(mod.videos!==false && videos && videos.length){
-    h += `<section class="exp-videos">
-      <div class="exp-section-head"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>
-      <div class="exp-vid-grid">`;
-    videos.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(v => {
-      h += `<div class="exp-vid-item">`;
-      if(v.ytId){
-        const embedUrl = v.embedUrl || `https://www.youtube.com/embed/${v.ytId}`;
-        h += `<div class="exp-vid-frame"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
-      } else if(v.url){
-        h += `<div class="exp-vid-frame" style="cursor:pointer" onclick="window.open('${v.url}','_blank')"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--exp-ink)"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><polygon points="5 3 19 12 5 21"/></svg></div></div></div>`;
-      }
-      if(v.caption) h += `<div class="exp-vid-caption">${v.caption}</div>`;
-      h += `</div>`;
-    });
-    h += `</div></section>`;
-  }
-
-  // ===== ARTICLES =====
-  if(mod.articles!==false && articles && articles.length){
-    h += `<section class="exp-articles">
-      <div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${event.articlesSubtitle||'Les articles liés à cette expédition'}</p>
-      <div class="exp-art-grid">`;
-    articles.forEach(a => {
-      const link = a.link ? ` onclick="window.open('${a.link}','_blank')"` : '';
-      h += `<div class="exp-art"${link}>
-        ${a.image ? `<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>` : ''}
-        <div class="exp-art-body">
-          <div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div>
-          <h4>${a.title||''}</h4>
-        </div>
-      </div>`;
-    });
-    h += `</div></section>`;
-  }
-
-  // ===== FOOTER =====
-  h += `<footer class="exp-footer">
-    <div class="exp-footer-brand">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="" onerror="this.remove()">` : ''}
-      <span class="exp-cobrand-x">×</span>
-      <span class="exp-cobrand-tm" style="font-size:13px">TOURMAG</span>
-    </div>
-    <small>${exp.footerCredits||'Powered by TourMaG Live'}</small>
-  </footer>`;
-
-  // ===== INJECT HTML =====
-  document.getElementById('app').innerHTML = h;
-
-  // ===== INIT LEAFLET MAP =====
-  if(sortedEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
-    if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
-
-    const map = L.map('exp-routemap', {scrollWheelZoom:false});
-    _expMapInstance = map;
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution:'© OpenStreetMap © CARTO', maxZoom:12
-    }).addTo(map);
-
-    const doneCoords = sortedEtapes.filter(s=>s.status==='done'||s.status==='now').map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
-    const nowIdx = sortedEtapes.findIndex(s=>s.status==='now');
-    const futureCoords = sortedEtapes.filter((_,i)=>i>=Math.max(nowIdx,0)).map(s=>[s.lat,s.lng]).filter(c=>c[0]&&c[1]);
-
-    if(futureCoords.length>1) L.polyline(futureCoords, {color:'#111', weight:2, dashArray:'6 8', opacity:.55}).addTo(map);
-    if(doneCoords.length>1) L.polyline(doneCoords, {color:accent, weight:3.5, opacity:.95}).addTo(map);
-
-    const allCoords = [];
-    sortedEtapes.forEach(s => {
-      if(!s.lat||!s.lng) return;
-      allCoords.push([s.lat,s.lng]);
-      let m;
-      if(s.status==='now'){
-        m = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
-      } else if(s.status==='done'){
-        m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
-      } else {
-        m = L.circleMarker([s.lat,s.lng], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
-      }
-      m.addTo(map).bindPopup(`<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`);
-    });
-
-    if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
-  }
-
-  // Fade-in observer
-  const obs = new IntersectionObserver(es=>{
-    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
-  },{threshold:.06});
-  document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
-
-  // Instagram embeds
-  if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
-  window._socialParseTimer = setTimeout(()=>{
-    try{if(window.instgrm&&window.instgrm.Embeds) window.instgrm.Embeds.process();}catch(e){}
-  },400);
-}
-
-// Expedition toggle (simpler than live, no chevron SVG)
 window.toggleExpExpand = function(expandId, btnId, count){
   const el=document.getElementById(expandId), btn=document.getElementById(btnId);
   if(!el||!btn) return;
@@ -1676,50 +1636,8 @@ window.toggleExpExpand = function(expandId, btnId, count){
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
 
-// Expedition entry builder
-function mkExpEntry(entry, etapes, jrPhotoMap){
-  const jrKey = (entry.journalist||'').toLowerCase().trim();
-  const jrPhoto = jrPhotoMap[jrKey] || '';
-  const etape = entry.etape ? (etapes||[]).find(e=>e.id===entry.etape) : null;
-  const isNow = etape && etape.status === 'now';
-
-  let o = `<div class="exp-entry${isNow?' now':''}">`;
-  o += `<div class="exp-entry-meta">`;
-  o += `<span>${fmtTime(entry.time)}</span>`;
-  if(entry.tag) o += `<span class="tag">${entry.tag}</span>`;
-  if(entry.journalist) o += `<span>${entry.journalist}</span>`;
-  if(etape) o += `<span>📍 ${etape.name}</span>`;
-  o += `</div>`;
-
-  if(entry.title) o += `<h3>${entry.title}</h3>`;
-
-  if(entry.text){
-    let txt = entry.text;
-    // Wrap «...» in verbatim spans
-    txt = txt.replace(/«\s*([^»]+)\s*»/g, '<span class="verbatim">« $1 »</span>');
-    // Support links
-    if(entry.url) txt += ` <a href="${entry.url}" target="_blank">→ Lire la suite</a>`;
-    o += `<p>${txt}</p>`;
-  }
-
-  if(entry.image){
-    o += `<figure class="exp-entry-photo">
-      <img src="${entry.image}" alt="" style="height:${entry.image_height||280}px;object-position:${entry.image_position||'center center'}" onerror="this.parentElement.remove()">
-      <figcaption>
-        <span>${entry.image_caption||''}</span>
-        <span>${entry.image_credit ? '© '+entry.image_credit : ''}</span>
-      </figcaption>
-    </figure>`;
-  }
-
-  if(etape && etape.km) o += `<div class="exp-entry-km">${etape.km}</div>`;
-
-  o += `</div>`;
-  return o;
-}
-
 // ============================================================
-// INIT
+// INIT (CLEANUP MARKER — residual removed)
 // ============================================================
 async function init(){
   const eventId = new URLSearchParams(window.location.search).get('event');
