@@ -1042,9 +1042,40 @@ function renderModules(el){
   h+=`</div>`;
 
   if(isExp){
+    // In expedition mode, show expedition-specific block order
+    const expBlocks = [
+      {key:'kpis',icon:'📊',label:'Compteurs'},
+      {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
+      {key:'live',icon:'🗺️',label:'Fil de route + Sidebar'},
+      {key:'citations',icon:'💬',label:'Verbatims'},
+      {key:'interviews',icon:'🎙️',label:'Interviews'},
+      {key:'videos',icon:'🎬',label:'Vidéos'},
+      {key:'gallery',icon:'📸',label:'Galerie photos'},
+      {key:'articles',icon:'📰',label:'Articles'},
+      {key:'sponsors',icon:'🤝',label:'Partenaires'}
+    ];
+    const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'];
+    const expOrder = blockOrder.filter(k=>expBlocks.find(b=>b.key===k));
+    expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
+    const expMap = Object.fromEntries(expBlocks.map(b=>[b.key,b]));
+
     h+=`<div class="admin-card"><h3>↕️ Ordre des blocs</h3>
-      <div class="page-desc">En mode expédition, l'ordre des blocs est fixe : Hero → Compteurs → Carte → Fil de route → Verbatims → Interviews → Vidéos → Galerie → Articles → Partenaires. Utilisez les toggles ci-dessus pour masquer des sections.</div>
-    </div>`;
+      <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour réorganiser l'affichage de la page expédition. Le hero et le footer restent fixes.</div>
+      <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
+    expOrder.forEach((key,i)=>{
+      const b=expMap[key]; if(!b) return;
+      const dis=mod[b.key]===false;
+      h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:#FFF">
+        <span class="block-drag-handle">⠿</span><span style="font-size:14px">${b.icon}</span>
+        <span style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${b.label}</span>
+        ${dis?'<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px">OFF</span>':''}
+        <div style="display:flex;gap:2px">
+          <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
+          <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===expOrder.length-1?' disabled':''}>▼</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div></div>`;
   } else {
   h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
     <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
