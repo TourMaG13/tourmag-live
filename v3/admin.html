@@ -1293,7 +1293,13 @@ async function saveUnifiedBlockOrder(){
   if(isExp){
     // Expedition: save to dedicated expBlockOrder field
     if(ev) ev.expBlockOrder=newOrder;
-    await evRef().update({expBlockOrder:newOrder});
+    try{
+      await evRef().update({expBlockOrder:newOrder});
+      console.log('[saveBlockOrder] ✅ expBlockOrder saved to Firestore');
+    }catch(e){
+      console.error('[saveBlockOrder] ❌ Firestore write failed:', e);
+      toast('Erreur sauvegarde: '+e.message,'error');
+    }
   } else {
     // Classic: save blockOrder + zones + sidebar anchor
     const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
