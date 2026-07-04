@@ -512,6 +512,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-voir-plus{display:block;width:100%;text-align:center;padding:16px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);cursor:pointer;border:none;background:none;transition:opacity .2s}
 .exp-voir-plus:hover{opacity:.7}
 .exp-expand{display:none}.exp-expand.open{display:block}
+.exp-art-grid.exp-expand{display:none}.exp-art-grid.exp-expand.open{display:grid}
 
 /* Sidebar */
 .exp-side{display:flex;flex-direction:column;gap:30px;position:sticky;top:70px;align-self:start}
@@ -586,9 +587,10 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-verbatim-text{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:var(--cit-ts,15px);line-height:1.65;color:var(--exp-ink);margin-bottom:14px}
 .exp-verbatim-text strong{color:var(--exp-accent);font-weight:600;font-style:normal}
 .exp-verbatim-author{display:flex;align-items:center;gap:10px}
-.exp-verbatim-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-accent)}
-.exp-verbatim-avatar-ph{width:36px;height:36px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--exp-grey)}
-.exp-verbatim-name{font-family:'Archivo',sans-serif;font-weight:700;font-size:var(--cit-ns,13px)}
+.exp-verbatim-avatar{width:var(--cit-av,36px);height:var(--cit-av,36px);border-radius:50%;object-fit:cover;border:2px solid var(--exp-accent)}
+.exp-verbatim-avatar-ph{width:var(--cit-av,36px);height:var(--cit-av,36px);border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--exp-grey)}
+.exp-verbatim-avatar-large{width:100%;height:140px;object-fit:cover;border-radius:6px;margin-bottom:12px}
+.exp-verbatim-name{font-family:'Libre Caslon Display',serif;font-weight:700;font-size:var(--cit-ns,13px)}
 .exp-verbatim-role{font-size:var(--cit-rs,11px);color:var(--exp-grey)}
 
 /* Articles grid */
@@ -1677,7 +1679,12 @@ function renderExpedition(data){
     o += `<div class="exp-verbatim-grid">`;
     pubCitations.forEach(c => {
       const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      o += `<div class="exp-verbatim-card"><div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">${c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`}<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
+      const isLarge = c.photoFormat === 'large';
+      o += `<div class="exp-verbatim-card">`;
+      if(isLarge && c.avatar) o += `<img class="exp-verbatim-avatar-large" src="${c.avatar}" alt="" onerror="this.remove()">`;
+      o += `<div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">`;
+      if(!isLarge){ o += c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`; }
+      o += `<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
     });
     return o + `</div></section>`;
   };
