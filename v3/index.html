@@ -1541,12 +1541,10 @@ function renderExpedition(data){
   // Badge row (live + label)
   h += `<div class="exp-hero-badge-row">`;
   if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
-  h += `<span class="exp-hero-badge-label">Dossier spécial TourMaG</span>`;
   h += `</div>`;
 
   if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
   h += `<h1>${exp.editorialTitle || event.title || ''}</h1>`;
-  if(exp.tagline) h += `<p class="exp-hero-tagline">${exp.tagline}</p>`;
   if(event.subtitle) h += `<p class="exp-hero-subtitle">${event.subtitle}</p>`;
 
   // Meta row (location + dates)
@@ -1668,8 +1666,6 @@ function renderExpedition(data){
       if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
       o += `</ul></div>`;
     }
-    // CTA
-    if(exp.cta) o += `<div class="exp-card exp-card-cta"><div class="exp-card-label">${exp.cta.label||'Ne rien manquer'}</div><p>${exp.cta.text||''}</p>${exp.cta.btnText&&exp.cta.btnUrl?`<a class="exp-btn" href="${exp.cta.btnUrl}" target="_blank">${exp.cta.btnText}</a>`:''}</div>`;
     o += `</div></div>`;
     return o;
   };
