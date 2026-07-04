@@ -582,13 +582,13 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-verbatim-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:38px}
 .exp-verbatim-card{border-left:2px solid var(--exp-accent);padding:22px 24px;background:var(--exp-stone);position:relative}
 .exp-verbatim-card::before{content:'\201C';position:absolute;top:10px;right:16px;font-family:'Libre Caslon Display',serif;font-size:60px;color:var(--exp-accent);opacity:.12;line-height:1;pointer-events:none}
-.exp-verbatim-text{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:15px;line-height:1.65;color:var(--exp-ink);margin-bottom:14px}
+.exp-verbatim-text{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:var(--cit-ts,15px);line-height:1.65;color:var(--exp-ink);margin-bottom:14px}
 .exp-verbatim-text strong{color:var(--exp-accent);font-weight:600;font-style:normal}
 .exp-verbatim-author{display:flex;align-items:center;gap:10px}
 .exp-verbatim-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-accent)}
 .exp-verbatim-avatar-ph{width:36px;height:36px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--exp-grey)}
-.exp-verbatim-name{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px}
-.exp-verbatim-role{font-size:11px;color:var(--exp-grey)}
+.exp-verbatim-name{font-family:'Archivo',sans-serif;font-weight:700;font-size:var(--cit-ns,13px)}
+.exp-verbatim-role{font-size:var(--cit-rs,11px);color:var(--exp-grey)}
 
 /* Articles grid */
 .exp-articles{max-width:1200px;margin:0 auto;padding:0 32px 80px}
@@ -613,7 +613,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
 .exp-gal-caption{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(17,17,17,.7));font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:rgba(255,255,255,.85);letter-spacing:.04em;opacity:0;transition:opacity .3s}
 .exp-gal-item:hover .exp-gal-caption{opacity:1}
 .exp-gallery-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-.exp-gallery-extra .exp-gal-item{height:180px}
+.exp-gallery-extra .exp-gal-item{height:var(--gal-h,180px)}
 .exp-gallery-extra .exp-gal-item img{height:100%}
 .exp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(17,17,17,.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
 .exp-lightbox.open{opacity:1;pointer-events:auto}
@@ -851,6 +851,24 @@ function _isPublished(entry){
 function render(data){
   const {event,essential,live,rubriques,citations,articles,programme,timeline,videos,journalists,interviews,etapes} = data;
 
+  // ===== SHARED CSS VARIABLES (applied for ALL modes) =====
+  // Citation settings
+  document.documentElement.style.setProperty('--cit-av', (event.citationAvatarSize || 80) + 'px');
+  document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor || '#E8842C');
+  document.documentElement.style.setProperty('--cit-ts', (event.citationTextSize || 13) + 'px');
+  document.documentElement.style.setProperty('--cit-bw', (event.citationBorderWidth || 2.5) + 'px');
+  document.documentElement.style.setProperty('--cit-ns', (event.citationNameSize || 12) + 'px');
+  document.documentElement.style.setProperty('--cit-rs', (event.citationRoleSize || 10) + 'px');
+  // Article title size
+  const _artTs = event.articlesTitleSize || 14;
+  document.documentElement.style.setProperty('--art-ts', _artTs + 'px');
+  document.documentElement.style.setProperty('--art-ts-feat', Math.round(_artTs * 1.28) + 'px');
+  // Journalist name/role size
+  document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 13) + 'px');
+  document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 10) + 'px');
+  // Gallery height
+  document.documentElement.style.setProperty('--gal-h', (event.galleryHeight || 260) + 'px');
+
   // ===== MODE BRANCHING =====
   if(event.mode === 'expedition'){
     renderExpedition(data);
@@ -865,15 +883,7 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
-  // Citation avatar size
-  const citAvatarPx = event.citationAvatarSize || 80;
-  document.documentElement.style.setProperty('--cit-av', citAvatarPx + 'px');
-  // Citation premium settings
-  document.documentElement.style.setProperty('--cit-accent', event.citationAccentColor || '#E8842C');
-  document.documentElement.style.setProperty('--cit-ts', (event.citationTextSize || 13) + 'px');
-  document.documentElement.style.setProperty('--cit-bw', (event.citationBorderWidth || 2.5) + 'px');
-  document.documentElement.style.setProperty('--cit-ns', (event.citationNameSize || 12) + 'px');
-  document.documentElement.style.setProperty('--cit-rs', (event.citationRoleSize || 10) + 'px');
+  // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
   const _citFeatBg = event.citationFeaturedBg || '#0F2B3C';
@@ -883,13 +893,6 @@ function render(data){
   const tagColorMap = {};
   eventTags.forEach(t => { if(t&&t.name&&t.color) tagColorMap[t.name.toUpperCase()]=t.color; });
   _tagColorMap = tagColorMap;
-  // Article title size
-  const _artTs = event.articlesTitleSize || 14;
-  document.documentElement.style.setProperty('--art-ts', _artTs + 'px');
-  document.documentElement.style.setProperty('--art-ts-feat', Math.round(_artTs * 1.28) + 'px');
-  // Journalist name/role size
-  document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 13) + 'px');
-  document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 10) + 'px');
 
   // Resolve journalist photo map for live avatars
   const jrPhotoMap = {};
@@ -1610,8 +1613,10 @@ function renderExpedition(data){
 
   _b.live = function(){
     let o = `<div class="exp-main"><div>`;
-    o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
-    o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
+    if(event.liveShowTitle!==false){
+      o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
+      o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
+    }
     if(pubLive.length){
       const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
       const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
@@ -1671,7 +1676,9 @@ function renderExpedition(data){
 
   _b.citations = function(){
     if(mod.citations===false || !pubCitations.length) return '';
-    let o = `<section class="exp-verbatims"><div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p><div class="exp-verbatim-grid">`;
+    let o = `<section class="exp-verbatims">`;
+    if(event.citationsShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p>`;
+    o += `<div class="exp-verbatim-grid">`;
     pubCitations.forEach(c => {
       const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       o += `<div class="exp-verbatim-card"><div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">${c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`}<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
@@ -1702,7 +1709,8 @@ function renderExpedition(data){
   _b.videos = function(){
     if(mod.videos===false || !videos || !videos.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
-    let o = `<section class="exp-videos"><div class="exp-section-head"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
+    let o = `<section class="exp-videos">`;
+    if(event.videosShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
       let out='';
@@ -1739,7 +1747,9 @@ function renderExpedition(data){
 
   _b.articles = function(){
     if(mod.articles===false || !articles || !articles.length) return '';
-    let o=`<section class="exp-articles"><div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p><div class="exp-art-grid">`;
+    let o=`<section class="exp-articles">`;
+    if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
+    o+=`<div class="exp-art-grid">`;
     articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||'')).forEach(a=>{
       const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
       o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
