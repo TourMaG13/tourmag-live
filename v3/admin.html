@@ -899,6 +899,7 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
+    expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'],
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -1112,7 +1113,8 @@ function renderModules(el){
       {key:'sponsors',icon:'🤝',label:'Partenaires'}
     ];
     const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'];
-    const expOrder = blockOrder.filter(k=>expBlocks.find(b=>b.key===k));
+    const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
+    const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
     const expMap = Object.fromEntries(expBlocks.map(b=>[b.key,b]));
 
@@ -1285,10 +1287,18 @@ async function saveUnifiedBlockOrder(){
   });
   if(!newOrder.length)return;
   saving(true);
-  const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
   const ev=eventsData.find(e=>e.id===currentEventId);
-  if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;}
-  await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor});
+  const isExp = ev?.mode === 'expedition';
+  if(isExp){
+    // Expedition: save to dedicated expBlockOrder field
+    if(ev) ev.expBlockOrder=newOrder;
+    await evRef().update({expBlockOrder:newOrder});
+  } else {
+    // Classic: save blockOrder + zones + sidebar anchor
+    const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
+    if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;}
+    await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor});
+  }
   toast('Disposition mise à jour');
 }
 async function toggleModule(key,val){
