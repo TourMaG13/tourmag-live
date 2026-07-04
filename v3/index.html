@@ -1524,11 +1524,10 @@ function renderExpedition(data){
   let h = '';
 
   // ===== COBRAND HEADER =====
-  const hasPartner = brand.partnerName || brand.partnerLogo;
   h += `<header class="exp-cobrand">
     <div class="exp-cobrand-left">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="${brand.partnerName||''}" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
+      ${event.logo_url ? `<img src="${event.logo_url}" alt="${event.title||''}" onerror="this.remove()">` : ''}
+      ${event.title ? `<span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">${event.title}</span>` : ''}
     </div>
     ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
   </header>`;
@@ -1544,7 +1543,7 @@ function renderExpedition(data){
   h += `</div>`;
 
   if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
-  h += `<h1>${exp.editorialTitle || event.title || ''}</h1>`;
+  h += `<h1>${event.title || ''}</h1>`;
   if(event.subtitle) h += `<p class="exp-hero-subtitle">${event.subtitle}</p>`;
 
   // Meta row (location + dates)
@@ -1771,8 +1770,8 @@ function renderExpedition(data){
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
     <div class="exp-footer-brand">
-      ${brand.partnerLogo ? `<img src="${brand.partnerLogo}" alt="" onerror="this.remove()">` : ''}
-      ${brand.partnerName ? `<span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em">${brand.partnerName}</span>` : ''}
+      ${event.logo_url ? `<img src="${event.logo_url}" alt="" onerror="this.remove()">` : ''}
+      ${event.title ? `<span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em">${event.title}</span>` : ''}
     </div>
     <small>${exp.footerCredits||''}</small>
   </footer>`;
