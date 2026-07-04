@@ -1289,15 +1289,13 @@ async function saveUnifiedBlockOrder(){
   saving(true);
   const ev=eventsData.find(e=>e.id===currentEventId);
   const isExp = ev?.mode === 'expedition';
-  console.log('[saveBlockOrder] currentEventId:', currentEventId, 'ev.mode:', ev?.mode, 'isExp:', isExp, 'newOrder:', newOrder);
   if(isExp){
     // Expedition: save to dedicated expBlockOrder field
     if(ev) ev.expBlockOrder=newOrder;
     try{
       await evRef().update({expBlockOrder:newOrder});
-      console.log('[saveBlockOrder] ✅ expBlockOrder saved to Firestore');
     }catch(e){
-      console.error('[saveBlockOrder] ❌ Firestore write failed:', e);
+      console.error('[saveBlockOrder] Error:', e);
       toast('Erreur sauvegarde: '+e.message,'error');
     }
   } else {
@@ -4032,7 +4030,6 @@ function renderEtapes(el){
     <details open><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Paramètres généraux</summary>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre éditorial</label><input class="form-input" id="exp-editorial-title" value="${(exp.editorialTitle||'').replace(/"/g,'&quot;')}" placeholder="L'Âme de la Terre"></div>
-      <div class="form-row"><label class="form-label">Tagline</label><input class="form-input" id="exp-tagline" value="${(exp.tagline||'').replace(/"/g,'&quot;')}" placeholder="Une route. Des voix. Un regard."></div>
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="exp-eyebrow" value="${(exp.eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"></div>
@@ -4055,15 +4052,6 @@ function renderEtapes(el){
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Label live pill</label><input class="form-input" id="exp-live-label" value="${(exp.liveLabel||'').replace(/"/g,'&quot;')}" placeholder="En direct"></div>
       <div class="form-row"><label class="form-label">Crédits footer</label><input class="form-input" id="exp-footer-credits" value="${(exp.footerCredits||'').replace(/"/g,'&quot;')}"></div>
-    </div>
-    <h4 style="margin:16px 0 8px;font-size:12px;color:var(--text2)">Card CTA sidebar</h4>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Label CTA</label><input class="form-input" id="exp-cta-label" value="${((exp.cta||{}).label||'').replace(/"/g,'&quot;')}" placeholder="Ne rien manquer"></div>
-      <div class="form-row"><label class="form-label">Texte CTA</label><input class="form-input" id="exp-cta-text" value="${((exp.cta||{}).text||'').replace(/"/g,'&quot;')}"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Bouton texte</label><input class="form-input" id="exp-cta-btn-text" value="${((exp.cta||{}).btnText||'').replace(/"/g,'&quot;')}"></div>
-      <div class="form-row"><label class="form-label">Bouton URL</label><input class="form-input" id="exp-cta-btn-url" value="${(exp.cta||{}).btnUrl||''}"></div>
     </div>
     <button class="btn btn-primary" onclick="saveExpeditionSettings()" style="margin-top:12px">💾 Enregistrer les paramètres</button>
     </details>
@@ -4168,7 +4156,6 @@ async function saveExpeditionSettings(){
   saving(true);
   await evRef().update({
     'expedition.editorialTitle': document.getElementById('exp-editorial-title').value.trim(),
-    'expedition.tagline': document.getElementById('exp-tagline').value.trim(),
     'expedition.eyebrow': document.getElementById('exp-eyebrow').value.trim(),
     'expedition.photoCredit': document.getElementById('exp-photo-credit').value.trim(),
     'expedition.dateStart': document.getElementById('exp-date-start').value,
@@ -4180,11 +4167,7 @@ async function saveExpeditionSettings(){
     'expedition.mapTitle': document.getElementById('exp-map-title').value.trim(),
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
     'expedition.liveLabel': document.getElementById('exp-live-label').value.trim(),
-    'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim(),
-    'expedition.cta.label': document.getElementById('exp-cta-label').value.trim(),
-    'expedition.cta.text': document.getElementById('exp-cta-text').value.trim(),
-    'expedition.cta.btnText': document.getElementById('exp-cta-btn-text').value.trim(),
-    'expedition.cta.btnUrl': document.getElementById('exp-cta-btn-url').value.trim()
+    'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim()
   });
   toast('Paramètres expédition enregistrés');
 }
