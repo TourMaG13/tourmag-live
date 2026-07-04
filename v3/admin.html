@@ -856,30 +856,38 @@ function renderTab(){
 function renderEvents(el){
   let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>`;
   if(!isClient()) h+=`<div style="margin-bottom:16px"><button class="btn btn-primary" onclick="newEvent()">＋ Nouvel événement</button></div>`;
-  h+=`<div class="event-cards">`;
-  eventsData.forEach(ev=>{
-    const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
-    const modeBadge=ev.mode==='expedition'?'<span style="font-size:9px;font-weight:600;color:#fff;background:#D97706;padding:2px 8px;border-radius:10px;margin-left:6px">🧭 Expédition</span>':'';
-    const baseUrl=window.location.origin+window.location.pathname.replace('admin.html','');
-    const widgetUrl=baseUrl+'widget.html?event='+ev.id;
-    h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
-      <div class="event-card-title">${ev.internalName||ev.title||'Sans titre'}${st}${modeBadge}</div>
-      <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
-      <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>`;
-    if(!isClient()){
-      h+=`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${widgetUrl}');toast('URL widget copiée')">📦 URL widget</button>
-        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${ev.id}');toast('ID copié')">🔑 Copier ID</button>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();modifyEvent('${ev.id}')">✏️ Modifier</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmRemoveEvent('${ev.id}','${(ev.internalName||ev.title||'').replace(/'/g,"\\'")}')">🗑 Supprimer</button>
-      </div>`;
-    }
-    h+=`</div>`;
-  });
-  if(!eventsData.length) h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
-  h+=`</div>`;
+  if(eventsData.length){
+    h+=`<div class="admin-card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--bg);border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Événement</th>
+        <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Lieu</th>
+        <th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Dates</th>
+        <th style="text-align:center;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Statut</th>
+        ${!isClient()?'<th style="text-align:right;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Actions</th>':''}
+      </tr></thead><tbody>`;
+    eventsData.forEach(ev=>{
+      const isActive=ev.id===currentEventId;
+      const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
+      const modeBadge=ev.mode==='expedition'?'<span style="font-size:8px;font-weight:600;color:#D97706;background:#FEF3C7;padding:2px 6px;border-radius:4px;margin-left:6px">🧭 Expédition</span>':'';
+      h+=`<tr style="border-bottom:1px solid var(--border);cursor:pointer;${isActive?'background:#FFF7ED;':''}transition:background .1s" onclick="switchEvent('${ev.id}')" onmouseenter="this.style.background='${isActive?'#FFF7ED':'#F8FAFC'}'" onmouseleave="this.style.background='${isActive?'#FFF7ED':''}'">
+        <td style="padding:10px 14px">
+          <div style="font-weight:600;font-size:13px;color:var(--text)${isActive?';color:var(--acc)':''}">${ev.internalName||ev.title||'Sans titre'}${modeBadge}</div>
+          <div style="font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);margin-top:2px">${ev.id}</div>
+        </td>
+        <td style="padding:10px 14px;color:var(--text2)">${ev.location||'—'}</td>
+        <td style="padding:10px 14px;color:var(--text2)">${ev.dates||'—'}</td>
+        <td style="padding:10px 14px;text-align:center">${st}</td>
+        ${!isClient()?`<td style="padding:10px 14px;text-align:right;white-space:nowrap" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-xs" onclick="modifyEvent('${ev.id}')">✏️</button>
+          <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${ev.id}');toast('ID copié')">🔑</button>
+          <button class="btn btn-danger btn-xs" onclick="confirmRemoveEvent('${ev.id}','${(ev.internalName||ev.title||'').replace(/'/g,"\\'")}')">🗑</button>
+        </td>`:''}
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
+  }
   el.innerHTML=h;
 }
 
@@ -938,6 +946,7 @@ async function executeRemoveEvent(id,title){
 
 function modifyEvent(id){
   const ev=eventsData.find(e=>e.id===id);if(!ev)return;
+  const isExp=ev.mode==='expedition';
   openModal(`<h3>Modifier l'événement</h3>
     <div class="form-row"><label class="form-label">Nom interne (back-office uniquement)</label><input class="form-input" id="m-ev-internal" value="${(ev.internalName||ev.title||'').replace(/"/g,'&quot;')}" placeholder="Ex: Forum des Pionniers 2026"><div style="font-size:9px;color:var(--text3);margin-top:3px">Affiché dans le dropdown, la liste d'événements et la sidebar. Non visible sur le front.</div></div>
     <div class="form-row"><label class="form-label">Titre affiché (front — optionnel)</label><input class="form-input" id="m-ev-title" value="${(ev.title||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide si le logo suffit"><div style="font-size:9px;color:var(--text3);margin-top:3px">S'affiche dans le hero du front à côté du logo. Si vide, seul le logo apparaît.</div></div>
@@ -951,28 +960,51 @@ function modifyEvent(id){
         <option value="upcoming"${ev.status==='upcoming'?' selected':''}>À venir</option>
         <option value="live"${ev.status==='live'?' selected':''}>En direct</option>
         <option value="ended"${ev.status==='ended'?' selected':''}>Terminé</option></select></div>
-      <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-ev-mode">
-        <option value="live"${ev.mode!=='expedition'?' selected':''}>Live classique</option>
-        <option value="expedition"${ev.mode==='expedition'?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:9px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
-      <div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
+      <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-ev-mode" onchange="toggleEventModeFields()">
+        <option value="live"${!isExp?' selected':''}>Live classique</option>
+        <option value="expedition"${isExp?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:9px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
     </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
     <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
-    <div class="form-row"><label class="form-label">Hauteur du hero (px)</label><input type="number" class="form-input" id="m-ev-hero-height" value="${ev.hero_height||460}" min="200" max="800" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur minimale du bandeau en pixels. Défaut : 460px.</div></div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Timeline</div>
+
+    <!-- ===== CLASSIC-ONLY FIELDS ===== -->
+    <div id="m-ev-classic-fields" style="${isExp?'display:none':''}">
       <div class="form-row-inline">
-        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur de fond</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-bg" value="${ev.timelineBgColor||'#0B2636'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">${ev.timelineBgColor||'hérite du hero'}</span></div></div>
-        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur des puces</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-dot" value="${ev.timelineDotColor||'#E8842C'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div></div>
-        <div class="form-row"><label class="form-label"><input type="checkbox" id="m-ev-tl-custom" ${ev.timelineBgColor?'checked':''}> Personnaliser le fond</label><div style="font-size:9px;color:var(--text3)">Si décoché, la timeline hérite du gradient hero.</div></div>
+        <div class="form-row"><label class="form-label">Couleur (gradient hero)</label><input type="color" class="form-input" id="m-ev-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
+        <div class="form-row"><label class="form-label">Hauteur du hero (px)</label><input type="number" class="form-input" id="m-ev-hero-height" value="${ev.hero_height||460}" min="200" max="800" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur minimale du bandeau. Défaut : 460px.</div></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Timeline</div>
+        <div class="form-row-inline">
+          <div class="form-row" style="max-width:200px"><label class="form-label">Couleur de fond</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-bg" value="${ev.timelineBgColor||'#0B2636'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">${ev.timelineBgColor||'hérite du hero'}</span></div></div>
+          <div class="form-row" style="max-width:200px"><label class="form-label">Couleur des puces</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="m-ev-tl-dot" value="${ev.timelineDotColor||'#E8842C'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div></div>
+          <div class="form-row"><label class="form-label"><input type="checkbox" id="m-ev-tl-custom" ${ev.timelineBgColor?'checked':''}> Personnaliser le fond</label><div style="font-size:9px;color:var(--text3)">Si décoché, la timeline hérite du gradient hero.</div></div>
+        </div>
       </div>
     </div>
+
+    <!-- ===== EXPEDITION INFO ===== -->
+    <div id="m-ev-exp-fields" style="${isExp?'':'display:none'}">
+      <div style="margin-top:10px;padding:14px 16px;background:#FFF7ED;border:1px solid #FDE68A;border-radius:8px">
+        <div style="font-size:12px;font-weight:600;color:#92400E;margin-bottom:4px">🧭 Mode expédition</div>
+        <div style="font-size:11px;color:#78350F;line-height:1.6">Les réglages spécifiques à l'expédition (couleur accent, partenaire, carte, CTA…) se trouvent dans l'onglet <strong>📍 Étapes</strong> → section « Paramètres de l'expédition ».</div>
+      </div>
+    </div>
+
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Tags du hero (badges cliquables)</div>
       <div id="hero-tags-list">${(ev.heroTags||[]).map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input class="form-input" value="${(t.name||'').replace(/"/g,'&quot;')}" placeholder="Nom" style="width:120px" data-ht-name="${i}"><input type="color" value="${t.color||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" data-ht-color="${i}"><input class="form-input" value="${(t.link||'').replace(/"/g,'&quot;')}" placeholder="URL (optionnel)" style="flex:1;font-size:10px" data-ht-link="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
       <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=\\'form-input\\' placeholder=\\'Nom\\' style=\\'width:120px\\' data-ht-name=\\''+i+'\\'><input type=\\'color\\' value=\\'#E8842C\\' style=\\'width:34px;height:30px;border:none;cursor:pointer;border-radius:4px\\' data-ht-color=\\''+i+'\\'><input class=\\'form-input\\' placeholder=\\'URL (optionnel)\\' style=\\'flex:1;font-size:10px\\' data-ht-link=\\''+i+'\\'><button class=\\'btn btn-danger btn-xs\\' onclick=\\'this.parentElement.remove()\\'>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
+}
+
+function toggleEventModeFields(){
+  const mode=document.getElementById('m-ev-mode').value;
+  const classic=document.getElementById('m-ev-classic-fields');
+  const exp=document.getElementById('m-ev-exp-fields');
+  if(classic) classic.style.display=mode==='expedition'?'none':'';
+  if(exp) exp.style.display=mode==='expedition'?'':'none';
 }
 
 async function updateEvent(id){
