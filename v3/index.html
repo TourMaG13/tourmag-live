@@ -1767,7 +1767,7 @@ function renderExpedition(data){
 
   // Assemble blocks in configured order
   const defaultExpOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'];
-  const expBlockOrder = event.blockOrder || defaultExpOrder;
+  const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
   finalOrder.forEach(key => { if(_b[key]) h += _b[key](); });
