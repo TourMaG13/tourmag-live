@@ -294,6 +294,7 @@ const auth=firebase.auth();
 // ============================================================
 var currentEventId='';
 var currentTab='events';
+var currentUserRole='admin'; // 'admin' (full access) or 'client' (restricted to allowedUsers events)
 var eventsData=[];    // [{id, ...data}]
 var liveData=[];
 var citationsData=[];
@@ -346,6 +347,7 @@ auth.onAuthStateChanged(user=>{
     // Verify admin
     db.collection('admins').doc(user.uid).get().then(snap=>{
       if(snap.exists){
+        currentUserRole=(snap.data().role||'admin').toLowerCase();
         document.getElementById('auth-screen').style.display='none';
         document.getElementById('app-shell').style.display='block';
         document.getElementById('topbar-user-email').textContent=user.email;
@@ -358,6 +360,7 @@ auth.onAuthStateChanged(user=>{
   } else {
     document.getElementById('auth-screen').style.display='flex';
     document.getElementById('app-shell').style.display='none';
+    currentUserRole='admin';
     // Cleanup listeners
     unsubs.forEach(u=>u()); unsubs=[];
   }
@@ -376,6 +379,8 @@ function openModal(html){document.getElementById('modal-box').innerHTML=html;doc
 function closeModal(){document.getElementById('modal').classList.remove('show');}
 
 // ==================== ROLES & TAB VISIBILITY ====================
+function isClient(){ return currentUserRole==='client'; }
+
 function isSuperAdmin(){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const superAdmins=ev?.superAdmins||[];
@@ -416,6 +421,13 @@ function applyTabVisibility(){
     // "access" tab only visible to super admins
     if(tab==='access'){
       item.style.display=superAdmin?'':'none';
+      return;
+    }
+
+    // Client role: hide management/system tabs
+    const clientHiddenTabs=['events','modules','widget','access','guide'];
+    if(isClient() && clientHiddenTabs.includes(tab)){
+      item.style.display='none';
       return;
     }
 
@@ -708,15 +720,16 @@ function initApp(){
     const userEmail=(auth.currentUser?.email||'').toLowerCase();
     eventsData=allEvents.filter(ev=>{
       const allowed=ev.allowedUsers||[];
-      // No restriction: everyone sees the event
-      if(!allowed.length) return true;
+      // No restriction defined: admins see it, clients don't (clients need explicit access)
+      if(!allowed.length) return !isClient();
       // User is in allowedUsers list
       if(allowed.some(e=>(e||'').toLowerCase()===userEmail)) return true;
       // User is a superAdmin of this event
       const superAdmins=ev.superAdmins||[];
       if(superAdmins.some(e=>(e||'').toLowerCase()===userEmail)) return true;
       // If no superAdmins defined, treat everyone as super admin (retrocompat)
-      if(!superAdmins.length) return true;
+      // Client-role users are restricted: they only see events where they're in allowedUsers
+      if(!superAdmins.length && !isClient()) return true;
       return false;
     });
     if(!currentEventId && eventsData.length) currentEventId=eventsData[0].id;
@@ -832,9 +845,9 @@ function renderTab(){
 
 // ==================== EVENTS ====================
 function renderEvents(el){
-  let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>
-  <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="newEvent()">＋ Nouvel événement</button></div>
-  <div class="event-cards">`;
+  let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>`;
+  if(!isClient()) h+=`<div style="margin-bottom:16px"><button class="btn btn-primary" onclick="newEvent()">＋ Nouvel événement</button></div>`;
+  h+=`<div class="event-cards">`;
   eventsData.forEach(ev=>{
     const st=ev.status==='live'?'<span class="status-badge live">En direct</span>':ev.status==='ended'?'<span class="status-badge ended">Terminé</span>':'<span class="status-badge upcoming">À venir</span>';
     const modeBadge=ev.mode==='expedition'?'<span style="font-size:9px;font-weight:600;color:#fff;background:#D97706;padding:2px 8px;border-radius:10px;margin-left:6px">🧭 Expédition</span>':'';
@@ -843,15 +856,18 @@ function renderEvents(el){
     h+=`<div class="event-card${ev.id===currentEventId?' active':''}" onclick="switchEvent('${ev.id}')">
       <div class="event-card-title">${ev.internalName||ev.title||'Sans titre'}${st}${modeBadge}</div>
       <div class="event-card-meta">${ev.location||'—'} · ${ev.dates||'—'}</div>
-      <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>
-      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+      <div style="margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);word-break:break-all">ID : ${ev.id}</div>`;
+    if(!isClient()){
+      h+=`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${widgetUrl}');toast('URL widget copiée')">📦 URL widget</button>
         <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();navigator.clipboard.writeText('${ev.id}');toast('ID copié')">🔑 Copier ID</button>
       </div>
       <div style="margin-top:10px;display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();modifyEvent('${ev.id}')">✏️ Modifier</button>
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmRemoveEvent('${ev.id}','${(ev.internalName||ev.title||'').replace(/'/g,"\\'")}')">🗑 Supprimer</button>
-      </div></div>`;
+      </div>`;
+    }
+    h+=`</div>`;
   });
   if(!eventsData.length) h+=`<div class="empty"><div class="text">Aucun événement</div></div>`;
   h+=`</div>`;
