@@ -1289,6 +1289,7 @@ async function saveUnifiedBlockOrder(){
   saving(true);
   const ev=eventsData.find(e=>e.id===currentEventId);
   const isExp = ev?.mode === 'expedition';
+  console.log('[saveBlockOrder] currentEventId:', currentEventId, 'ev.mode:', ev?.mode, 'isExp:', isExp, 'newOrder:', newOrder);
   if(isExp){
     // Expedition: save to dedicated expBlockOrder field
     if(ev) ev.expBlockOrder=newOrder;
