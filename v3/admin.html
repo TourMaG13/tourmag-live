@@ -308,6 +308,7 @@ var videosData=[];
 var interviewsData=[];
 var etapesData=[];     // sous-collection etapes (mode expédition)
 var journalistsGlobalData=[];  // collection globale (réutilisable entre événements)
+var adminsData=[];     // collection admins (gestion des comptes)
 var tagsData=[];      // Stocké dans event doc → tags[]
 
 // Listeners unsubscribe handles
@@ -756,11 +757,19 @@ function initApp(){
     scheduleRender();
   },err=>console.error('onSnapshot error on global journalists',err));
   unsubs.push(u2);
+
+  // Admins collection (user accounts management)
+  const u3=db.collection('admins').onSnapshot(snap=>{
+    adminsData=[];
+    snap.forEach(d=>adminsData.push({id:d.id,...d.data()}));
+    scheduleRender();
+  },err=>console.error('onSnapshot error on admins',err));
+  unsubs.push(u3);
 }
 
 function subscribeSubCollections(){
-  // Unsubscribe previous sub-collection listeners (indices 2+), keep global listeners (events=0, journalists=1)
-  while(unsubs.length>2) unsubs.pop()();
+  // Unsubscribe previous sub-collection listeners (indices 3+), keep global listeners (events=0, journalists=1, admins=2)
+  while(unsubs.length>3) unsubs.pop()();
 
   if(!currentEventId){ subCollectionsEventId=''; return; }
   subCollectionsEventId=currentEventId;
@@ -3323,6 +3332,42 @@ function renderAccess(el){
 
   let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Définissez les super admins et choisissez les onglets visibles pour les autres utilisateurs.</div>
 
+  <div class="admin-card"><h3>🔑 Comptes utilisateurs</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Gérez les comptes qui ont accès au back-office. Les comptes <strong>admin</strong> voient tous les événements. Les comptes <strong>client</strong> ne voient que les événements où ils sont dans la liste d'accès restreint.</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+  const currentEmail=(auth.currentUser?.email||'').toLowerCase();
+  if(adminsData.length){
+    adminsData.forEach(a=>{
+      const email=(a.email||a.id).toLowerCase();
+      const role=(a.role||'admin');
+      const isMe=email===currentEmail;
+      const roleBadge=role==='client'
+        ?'<span style="font-size:9px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:2px 8px;border-radius:10px">client</span>'
+        :'<span style="font-size:9px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:2px 8px;border-radius:10px">admin</span>';
+      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <span style="font-size:12px;font-family:'IBM Plex Mono';flex:1">${a.email||'<span style=color:var(--text3)>'+a.id+'</span>'}</span>
+        ${roleBadge}
+        ${isMe?'<span style="font-size:8px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:3px">vous</span>':''}
+        ${!isMe?`<button class="btn btn-ghost btn-xs" onclick="toggleAccountRole('${a.id}','${role}')" title="Changer le rôle">${role==='client'?'⬆️ → admin':'⬇️ → client'}</button>
+        <button class="btn btn-danger btn-xs" onclick="confirmRemoveAccount('${a.id}','${(a.email||a.id).replace(/'/g,"\\'")}')" title="Désactiver">✕</button>`:''}
+      </div>`;
+    });
+  } else {
+    h+=`<div style="font-size:11px;color:var(--text3);padding:8px">Chargement…</div>`;
+  }
+  h+=`</div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px">➕ Créer un nouveau compte</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <div><label style="font-size:9px;color:var(--text3)">Email</label><input class="form-input" id="acc-new-email" placeholder="client@exemple.com" style="width:220px"></div>
+        <div><label style="font-size:9px;color:var(--text3)">Mot de passe</label><input class="form-input" id="acc-new-pass" type="text" placeholder="••••••••" style="width:160px"></div>
+        <div><label style="font-size:9px;color:var(--text3)">Rôle</label><select class="form-input" id="acc-new-role" style="width:100px"><option value="client">Client</option><option value="admin">Admin</option></select></div>
+        <button class="btn btn-primary btn-sm" onclick="createAccount()" style="height:34px">Créer</button>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:6px">💡 Le compte sera immédiatement utilisable. Pensez à ajouter l'email dans la section « Accès restreint » de l'événement concerné pour les comptes client.</div>
+    </div>
+  </div>
+
   <div class="admin-card"><h3>👑 Super administrateurs</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Les super admins voient tous les onglets et ont accès à cette page. Si la liste est vide, tout le monde a un accès complet.</div>
     <div id="access-admins-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
@@ -3439,6 +3484,64 @@ async function removeAllowedUser(idx){
   if(ev) ev.allowedUsers=allowedUsers;
   renderTab();
   toast('Utilisateur retiré');
+}
+
+// ==================== ACCOUNT MANAGEMENT ====================
+async function createAccount(){
+  const email=document.getElementById('acc-new-email').value.trim().toLowerCase();
+  const pass=document.getElementById('acc-new-pass').value;
+  const role=document.getElementById('acc-new-role').value;
+  if(!email||!email.includes('@')){toast('Email invalide','error');return;}
+  if(!pass||pass.length<6){toast('Mot de passe trop court (min. 6 caractères)','error');return;}
+  // Check if email already exists in admins
+  if(adminsData.some(a=>(a.email||'').toLowerCase()===email)){toast('Ce compte existe déjà','error');return;}
+  saving(true);
+  try{
+    // Use a secondary Firebase app to avoid signing out the current user
+    let secondaryApp;
+    try{ secondaryApp=firebase.app('AccountCreator'); }catch(e){ secondaryApp=firebase.initializeApp(firebase.app().options,'AccountCreator'); }
+    const secondaryAuth=secondaryApp.auth();
+    const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+    await db.collection('admins').doc(cred.user.uid).set({
+      email:email,
+      role:role,
+      created_at:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await secondaryAuth.signOut();
+    document.getElementById('acc-new-email').value='';
+    document.getElementById('acc-new-pass').value='';
+    toast('Compte créé — '+email+' ('+role+')');
+    renderTab();
+  }catch(e){
+    if(e.code==='auth/email-already-in-use') toast('Cet email est déjà utilisé dans Firebase Auth','error');
+    else toast('Erreur : '+e.message,'error');
+  }
+}
+
+async function toggleAccountRole(uid,currentRole){
+  const newRole=currentRole==='client'?'admin':'client';
+  saving(true);
+  await db.collection('admins').doc(uid).update({role:newRole});
+  toast('Rôle modifié → '+newRole);
+}
+
+function confirmRemoveAccount(uid,email){
+  openModal(`<h3 style="color:var(--red)">⚠️ Désactiver un compte</h3>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:12px">Vous allez désactiver le compte <strong>${email}</strong>.</p>
+    <p style="font-size:12px;line-height:1.7;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+      L'utilisateur ne pourra plus se connecter au back-office. Son compte Firebase Auth restera actif mais sans accès.
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger" onclick="executeRemoveAccount('${uid}','${email.replace(/'/g,"\\'")}')">🗑 Désactiver</button>
+    </div>`);
+}
+
+async function executeRemoveAccount(uid,email){
+  closeModal();
+  saving(true);
+  await db.collection('admins').doc(uid).delete();
+  toast('Compte désactivé — '+email);
 }
 
 // ==================== GUIDE ====================
