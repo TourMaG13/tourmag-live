@@ -4029,9 +4029,6 @@ function renderEtapes(el){
   h+=`<div class="admin-card"><h3>🗺️ Paramètres de l'expédition</h3>
     <details open><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Paramètres généraux</summary>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre éditorial</label><input class="form-input" id="exp-editorial-title" value="${(exp.editorialTitle||'').replace(/"/g,'&quot;')}" placeholder="L'Âme de la Terre"></div>
-    </div>
-    <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="exp-eyebrow" value="${(exp.eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"></div>
       <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="exp-photo-credit" value="${(exp.photoCredit||'').replace(/"/g,'&quot;')}"></div>
     </div>
@@ -4041,8 +4038,6 @@ function renderEtapes(el){
       <div class="form-row"><label class="form-label">Km total</label><input class="form-input" type="number" id="exp-total-km" value="${exp.totalKm||''}"></div>
     </div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Nom partenaire</label><input class="form-input" id="exp-partner-name" value="${((exp.branding||{}).partnerName||'').replace(/"/g,'&quot;')}"></div>
-      <div class="form-row"><label class="form-label">Logo partenaire (URL)</label><input class="form-input" id="exp-partner-logo" value="${(exp.branding||{}).partnerLogo||''}"></div>
       <div class="form-row"><label class="form-label">Couleur accent</label><input class="form-input" type="color" id="exp-accent-color" value="${(exp.branding||{}).accentColor||'#FF6C00'}" style="height:42px;padding:4px"></div>
     </div>
     <div class="form-row-inline">
@@ -4155,14 +4150,11 @@ function renderEtapes(el){
 async function saveExpeditionSettings(){
   saving(true);
   await evRef().update({
-    'expedition.editorialTitle': document.getElementById('exp-editorial-title').value.trim(),
     'expedition.eyebrow': document.getElementById('exp-eyebrow').value.trim(),
     'expedition.photoCredit': document.getElementById('exp-photo-credit').value.trim(),
     'expedition.dateStart': document.getElementById('exp-date-start').value,
     'expedition.dateEnd': document.getElementById('exp-date-end').value,
     'expedition.totalKm': parseInt(document.getElementById('exp-total-km').value)||0,
-    'expedition.branding.partnerName': document.getElementById('exp-partner-name').value.trim(),
-    'expedition.branding.partnerLogo': document.getElementById('exp-partner-logo').value.trim(),
     'expedition.branding.accentColor': document.getElementById('exp-accent-color').value,
     'expedition.mapTitle': document.getElementById('exp-map-title').value.trim(),
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
