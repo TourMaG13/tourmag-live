@@ -169,7 +169,7 @@ select.form-input{cursor:pointer}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:200;display:none;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal-box{background:var(--card);border-radius:var(--rl);padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-box{background:var(--card);border-radius:var(--rl);padding:24px;width:90%;max-width:680px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .modal-box h3{font-family:'Josefin Sans';font-size:16px;font-weight:700;margin-bottom:16px}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 
@@ -984,11 +984,14 @@ function modifyEvent(id){
       </div>
     </div>
 
-    <!-- ===== EXPEDITION INFO ===== -->
+    <!-- ===== EXPEDITION FIELDS ===== -->
     <div id="m-ev-exp-fields" style="${isExp?'':'display:none'}">
-      <div style="margin-top:10px;padding:14px 16px;background:#FFF7ED;border:1px solid #FDE68A;border-radius:8px">
-        <div style="font-size:12px;font-weight:600;color:#92400E;margin-bottom:4px">🧭 Mode expédition</div>
-        <div style="font-size:11px;color:#78350F;line-height:1.6">Les réglages spécifiques à l'expédition (couleur accent, partenaire, carte, CTA…) se trouvent dans l'onglet <strong>📍 Étapes</strong> → section « Paramètres de l'expédition ».</div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Hero expédition</div>
+        <div class="form-row-inline">
+          <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="m-ev-eyebrow" value="${((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"><div style="font-size:9px;color:var(--text3);margin-top:3px">Petite mention en capitales au-dessus du titre.</div></div>
+          <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="m-ev-photo-credit" value="${((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')}" placeholder="© Photographe"></div>
+        </div>
       </div>
     </div>
 
@@ -1010,7 +1013,7 @@ function toggleEventModeFields(){
 
 async function updateEvent(id){
   saving(true);
-  await db.collection('events').doc(id).update({
+  const updateData = {
     internalName:document.getElementById('m-ev-internal').value,
     title:document.getElementById('m-ev-title').value,
     subtitle:document.getElementById('m-ev-subtitle').value,
@@ -1025,7 +1028,13 @@ async function updateEvent(id){
     timelineBgColor:document.getElementById('m-ev-tl-custom').checked?document.getElementById('m-ev-tl-bg').value:'',
     timelineDotColor:document.getElementById('m-ev-tl-dot').value||'#E8842C',
     heroTags:(function(){var ns=document.querySelectorAll('[data-ht-name]'),cs=document.querySelectorAll('[data-ht-color]'),ls=document.querySelectorAll('[data-ht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
-  });
+  };
+  // Expedition-specific fields
+  const eyebrowEl=document.getElementById('m-ev-eyebrow');
+  const photoCreditEl=document.getElementById('m-ev-photo-credit');
+  if(eyebrowEl) updateData['expedition.eyebrow']=eyebrowEl.value.trim();
+  if(photoCreditEl) updateData['expedition.photoCredit']=photoCreditEl.value.trim();
+  await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
 }
 
@@ -4029,10 +4038,6 @@ function renderEtapes(el){
   h+=`<div class="admin-card"><h3>🗺️ Paramètres de l'expédition</h3>
     <details open><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Paramètres généraux</summary>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="exp-eyebrow" value="${(exp.eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"></div>
-      <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="exp-photo-credit" value="${(exp.photoCredit||'').replace(/"/g,'&quot;')}"></div>
-    </div>
-    <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Date départ (ISO)</label><input class="form-input" type="date" id="exp-date-start" value="${exp.dateStart||''}"></div>
       <div class="form-row"><label class="form-label">Date retour (ISO)</label><input class="form-input" type="date" id="exp-date-end" value="${exp.dateEnd||''}"></div>
       <div class="form-row"><label class="form-label">Km total</label><input class="form-input" type="number" id="exp-total-km" value="${exp.totalKm||''}"></div>
@@ -4150,8 +4155,6 @@ function renderEtapes(el){
 async function saveExpeditionSettings(){
   saving(true);
   await evRef().update({
-    'expedition.eyebrow': document.getElementById('exp-eyebrow').value.trim(),
-    'expedition.photoCredit': document.getElementById('exp-photo-credit').value.trim(),
     'expedition.dateStart': document.getElementById('exp-date-start').value,
     'expedition.dateEnd': document.getElementById('exp-date-end').value,
     'expedition.totalKm': parseInt(document.getElementById('exp-total-km').value)||0,
