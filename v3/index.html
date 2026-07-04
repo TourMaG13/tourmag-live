@@ -1542,8 +1542,8 @@ function renderExpedition(data){
   if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
   h += `</div>`;
 
-  if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
   if(event.logo_url) h += `<img src="${event.logo_url}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
+  if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
   h += `<h1>${event.title || ''}</h1>`;
   if(event.subtitle) h += `<p class="exp-hero-subtitle">${event.subtitle}</p>`;
 
@@ -1745,12 +1745,25 @@ function renderExpedition(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     let o=`<section class="exp-articles">`;
     if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
+    const sorted=articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
+    const visCount=event.articlesVisibleCount||4;
+    const visArts=sorted.slice(0,visCount);
+    const extraArts=sorted.slice(visCount);
     o+=`<div class="exp-art-grid">`;
-    articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||'')).forEach(a=>{
+    visArts.forEach(a=>{
       const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
       o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
     });
-    return o+`</div></section>`;
+    o+=`</div>`;
+    if(extraArts.length){
+      o+=`<div class="exp-art-grid exp-expand" id="exp-art-expand">`;
+      extraArts.forEach(a=>{
+        const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
+        o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
+      });
+      o+=`</div><button class="exp-voir-plus" id="exp-art-btn" onclick="toggleExpExpand('exp-art-expand','exp-art-btn',${extraArts.length})">▾ Voir les ${extraArts.length} autres articles</button>`;
+    }
+    return o+`</section>`;
   };
 
   _b.sponsors = function(){
