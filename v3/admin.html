@@ -4076,8 +4076,35 @@ function renderContact(el){
     </div>
     ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer le contact</button></div>
+  </div>
+  <div class="admin-card" style="margin-top:16px"><h3>🎨 Personnalisation visuelle</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Couleur de fond</label><div style="display:flex;gap:8px"><input type="color" id="ct-bg-color" value="${ct.bg_color||'#F5F4F2'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-bg-color-txt" value="${(ct.bg_color||'').replace(/"/g,'&quot;')}" placeholder="#F5F4F2" style="flex:1" oninput="document.getElementById('ct-bg-color').value=this.value"></div></div>
+      <div class="form-group"><label class="form-label">Couleur du texte</label><div style="display:flex;gap:8px"><input type="color" id="ct-text-color" value="${ct.text_color||'#111111'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-text-color-txt" value="${(ct.text_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1" oninput="document.getElementById('ct-text-color').value=this.value"></div></div>
+    </div>
+    <div class="form-group"><label class="form-label">Image de fond (URL, optionnel — remplace la couleur)</label><input class="form-input" id="ct-bg-image" value="${(ct.bg_image||'').replace(/"/g,'&quot;')}" placeholder="https://... (laisser vide pour couleur unie)"></div>
+    <div id="ct-preview" style="margin-top:12px;padding:20px 24px;border-radius:8px;border:1px solid #e5e5e5;min-height:60px;background:${ct.bg_color||'#F5F4F2'};color:${ct.text_color||'#111'};font-family:sans-serif;font-size:14px;${ct.bg_image?`background-image:url('${ct.bg_image}');background-size:cover;background-position:center;`:''}" >
+      <strong>Aperçu</strong> — ${ct.name||'Nom'} · ${ct.email||'email@test.com'}
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer</button></div>
   </div>`;
   el.innerHTML=h;
+  // Sync color pickers ↔ text inputs
+  ['bg','text'].forEach(k=>{
+    const picker=document.getElementById('ct-'+k+'-color');
+    const txt=document.getElementById('ct-'+k+'-color-txt');
+    if(picker&&txt){picker.addEventListener('input',()=>{txt.value=picker.value;updateCtPreview()});txt.addEventListener('input',()=>{updateCtPreview()});}
+  });
+  document.getElementById('ct-bg-image')?.addEventListener('input',updateCtPreview);
+}
+function updateCtPreview(){
+  const p=document.getElementById('ct-preview');if(!p)return;
+  const bg=document.getElementById('ct-bg-color')?.value||'#F5F4F2';
+  const tx=document.getElementById('ct-text-color')?.value||'#111';
+  const im=document.getElementById('ct-bg-image')?.value||'';
+  p.style.backgroundColor=bg;p.style.color=tx;
+  p.style.backgroundImage=im?`url('${im}')`:'none';
+  if(im){p.style.backgroundSize='cover';p.style.backgroundPosition='center';}
 }
 async function saveContact(){
   saving(true);
@@ -4088,7 +4115,10 @@ async function saveContact(){
     photo_url:document.getElementById('ct-photo').value.trim(),
     message:document.getElementById('ct-msg').value.trim(),
     email:document.getElementById('ct-email').value.trim(),
-    phone:document.getElementById('ct-phone').value.trim()
+    phone:document.getElementById('ct-phone').value.trim(),
+    bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
+    bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
+    text_color:document.getElementById('ct-text-color-txt')?.value.trim()||''
   };
   await evRef().update({contact});
   toast('Contact enregistré');
