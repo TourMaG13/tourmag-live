@@ -4068,7 +4068,7 @@ function renderContact(el){
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="ct-name" value="${(ct.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
     <div class="form-group"><label class="form-label">Rôle / titre</label><input class="form-input" id="ct-role" value="${(ct.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
-    <div class="form-group"><label class="form-label">Photo (URL)</label><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+    <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ct-photo')}${mkUploadBtn('ct-photo')}</div></div>
     <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="ct-msg" rows="3" placeholder="Pour obtenir les photos de l'expédition, contactez-moi directement.">${ct.message||''}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ct-email" value="${(ct.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
@@ -4079,23 +4079,22 @@ function renderContact(el){
   </div>
   <div class="admin-card" style="margin-top:16px"><h3>🎨 Personnalisation visuelle</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group"><label class="form-label">Couleur de fond</label><div style="display:flex;gap:8px"><input type="color" id="ct-bg-color" value="${ct.bg_color||'#F5F4F2'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-bg-color-txt" value="${(ct.bg_color||'').replace(/"/g,'&quot;')}" placeholder="#F5F4F2" style="flex:1" oninput="document.getElementById('ct-bg-color').value=this.value"></div></div>
-      <div class="form-group"><label class="form-label">Couleur du texte (général)</label><div style="display:flex;gap:8px"><input type="color" id="ct-text-color" value="${ct.text_color||'#111111'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-text-color-txt" value="${(ct.text_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1" oninput="document.getElementById('ct-text-color').value=this.value"></div></div>
+      <div class="form-group"><label class="form-label">Couleur de fond</label><div style="display:flex;gap:8px"><input type="color" id="ct-bg-color" value="${ct.bg_color||'#F5F4F2'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-bg-color-txt" value="${(ct.bg_color||'').replace(/"/g,'&quot;')}" placeholder="#F5F4F2" style="flex:1"></div></div>
+      <div class="form-group"><label class="form-label">Image de fond (URL, optionnel)</label><input class="form-input" id="ct-bg-image" value="${(ct.bg_image||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div class="form-group"><label class="form-label">Couleur du titre</label><div style="display:flex;gap:6px"><input type="color" id="ct-title-color" value="${ct.title_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-title-color-txt" value="${(ct.title_color||'').replace(/"/g,'&quot;')}" placeholder="" style="flex:1;font-size:11px"></div></div>
-      <div class="form-group"><label class="form-label">Couleur du nom</label><div style="display:flex;gap:6px"><input type="color" id="ct-name-color" value="${ct.name_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-name-color-txt" value="${(ct.name_color||'').replace(/"/g,'&quot;')}" placeholder="" style="flex:1;font-size:11px"></div></div>
-      <div class="form-group"><label class="form-label">Couleur boutons</label><div style="display:flex;gap:6px"><input type="color" id="ct-btn-color" value="${ct.btn_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-btn-color-txt" value="${(ct.btn_color||'').replace(/"/g,'&quot;')}" placeholder="" style="flex:1;font-size:11px"></div></div>
+      <div class="form-group"><label class="form-label">Couleur nom/prénom</label><div style="display:flex;gap:6px"><input type="color" id="ct-name-color" value="${ct.name_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-name-color-txt" value="${(ct.name_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1;font-size:11px"></div></div>
+      <div class="form-group"><label class="form-label">Couleur fonction</label><div style="display:flex;gap:6px"><input type="color" id="ct-role-color" value="${ct.role_color||'#6E6B66'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-role-color-txt" value="${(ct.role_color||'').replace(/"/g,'&quot;')}" placeholder="#6E6B66" style="flex:1;font-size:11px"></div></div>
+      <div class="form-group"><label class="form-label">Couleur boutons</label><div style="display:flex;gap:6px"><input type="color" id="ct-btn-color" value="${ct.btn_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-btn-color-txt" value="${(ct.btn_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1;font-size:11px"></div></div>
     </div>
-    <div class="form-group"><label class="form-label">Image de fond (URL, optionnel — remplace la couleur)</label><input class="form-input" id="ct-bg-image" value="${(ct.bg_image||'').replace(/"/g,'&quot;')}" placeholder="https://... (laisser vide pour couleur unie)"></div>
-    <div id="ct-preview" style="margin-top:12px;padding:20px 24px;border-radius:8px;border:1px solid #e5e5e5;min-height:60px;background:${ct.bg_color||'#F5F4F2'};color:${ct.text_color||'#111'};font-family:sans-serif;font-size:14px;${ct.bg_image?`background-image:url('${ct.bg_image}');background-size:cover;background-position:center;`:''}" >
-      <strong style="color:${ct.name_color||'inherit'}">Aperçu</strong> <span style="color:${ct.title_color||'inherit'}">— ${ct.role||'Rôle'}</span> · <span style="border:1px solid ${ct.btn_color||'#111'};padding:2px 8px;color:${ct.btn_color||'#111'};font-size:12px">${ct.email||'email@test.com'}</span>
+    <div id="ct-preview" style="margin-top:12px;padding:20px 24px;border-radius:8px;border:1px solid #e5e5e5;min-height:60px;background:${ct.bg_color||'#F5F4F2'};font-family:sans-serif;font-size:14px;${ct.bg_image?`background-image:url('${ct.bg_image}');background-size:cover;background-position:center;`:''}" >
+      <strong style="color:${ct.name_color||'#111'}">Nom Prénom</strong> · <span style="color:${ct.role_color||'#6E6B66'}">Fonction</span> · <span style="border:1px solid ${ct.btn_color||'#111'};padding:2px 8px;color:${ct.btn_color||'#111'};font-size:12px">Bouton</span>
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer</button></div>
   </div>`;
   el.innerHTML=h;
   // Sync color pickers ↔ text inputs
-  ['bg','text','title','name','btn'].forEach(k=>{
+  ['bg','name','role','btn'].forEach(k=>{
     const picker=document.getElementById('ct-'+k+'-color');
     const txt=document.getElementById('ct-'+k+'-color-txt');
     if(picker&&txt){picker.addEventListener('input',()=>{txt.value=picker.value;updateCtPreview()});txt.addEventListener('input',()=>{if(txt.value.match(/^#[0-9a-fA-F]{6}$/))picker.value=txt.value;updateCtPreview()});}
@@ -4105,11 +4104,14 @@ function renderContact(el){
 function updateCtPreview(){
   const p=document.getElementById('ct-preview');if(!p)return;
   const bg=document.getElementById('ct-bg-color')?.value||'#F5F4F2';
-  const tx=document.getElementById('ct-text-color')?.value||'#111';
   const im=document.getElementById('ct-bg-image')?.value||'';
-  p.style.backgroundColor=bg;p.style.color=tx;
+  const nc=document.getElementById('ct-name-color')?.value||'#111';
+  const rc=document.getElementById('ct-role-color')?.value||'#6E6B66';
+  const bc=document.getElementById('ct-btn-color')?.value||'#111';
+  p.style.backgroundColor=bg;
   p.style.backgroundImage=im?`url('${im}')`:'none';
   if(im){p.style.backgroundSize='cover';p.style.backgroundPosition='center';}
+  p.innerHTML=`<strong style="color:${nc}">Nom Prénom</strong> · <span style="color:${rc}">Fonction</span> · <span style="border:1px solid ${bc};padding:2px 8px;color:${bc};font-size:12px">Bouton</span>`;
 }
 async function saveContact(){
   saving(true);
@@ -4123,9 +4125,8 @@ async function saveContact(){
     phone:document.getElementById('ct-phone').value.trim(),
     bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
     bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
-    text_color:document.getElementById('ct-text-color-txt')?.value.trim()||'',
-    title_color:document.getElementById('ct-title-color-txt')?.value.trim()||'',
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
+    role_color:document.getElementById('ct-role-color-txt')?.value.trim()||'',
     btn_color:document.getElementById('ct-btn-color-txt')?.value.trim()||''
   };
   await evRef().update({contact});
@@ -4257,7 +4258,7 @@ function renderEtapes(el){
         <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="new-etape-order" value="${etapesData.length+1}"></div>
       </div>
       <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="2"></textarea></div>
-      <div class="form-row"><label class="form-label">Photo d'illustration (URL, optionnel)</label><input class="form-input" id="new-etape-photo" placeholder="https://..."></div>
+      <div class="form-row"><label class="form-label">Photo d'illustration (optionnel)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="new-etape-photo" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('new-etape-photo')}${mkUploadBtn('new-etape-photo')}</div></div>
       <button class="btn btn-primary" onclick="addEtape()">Ajouter l'étape</button>
     </div>
   </details>`;
@@ -4394,7 +4395,7 @@ async function editEtape(id){
       <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="edit-etape-order-${id}" value="${et.order||0}"></div>
       <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="edit-etape-desc-${id}" value="${(et.description||'').replace(/"/g,'&quot;')}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Photo d'illustration (URL)</label><input class="form-input" id="edit-etape-photo-${id}" value="${(et.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+    <div class="form-row"><label class="form-label">Photo d'illustration</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="edit-etape-photo-${id}" value="${(et.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('edit-etape-photo-'+id)}${mkUploadBtn('edit-etape-photo-'+id)}</div></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="saveEtapeEdit('${id}')">💾 Enregistrer</button>
       <button class="btn btn-ghost btn-sm" onclick="editEtape('${id}')">Annuler</button>
