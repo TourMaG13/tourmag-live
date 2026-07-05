@@ -465,7 +465,8 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-section-head .rule{flex:1;height:1px;background:var(--exp-ink)}
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
 .exp-map-wrap{position:relative}
-#exp-routemap{height:520px;border:1px solid var(--exp-ink);filter:grayscale(1) contrast(1.04)}
+#exp-routemap{height:520px;border:1px solid var(--exp-ink)}
+#exp-routemap .leaflet-tile-pane{filter:grayscale(1) contrast(1.04)}
 .exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;line-height:1.4;min-width:170px}
 .exp-map-legend b{font-family:'Archivo',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--exp-line)}
 .exp-lg-row{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -488,17 +489,19 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-counter-countdown .exp-counter-num{color:var(--cd-color,var(--exp-accent))}
 .exp-counter-countdown .exp-counter-label{color:var(--cd-color,var(--exp-accent));opacity:.8}
 .exp-contact{max-width:1200px;margin:0 auto;padding:48px 32px}
-.exp-contact-card{display:flex;align-items:center;gap:28px;padding:32px 36px;border:1px solid var(--exp-line);background:var(--exp-warm)}
+.exp-contact-card{display:flex;align-items:center;gap:28px;padding:32px 36px;border:1px solid var(--exp-line);background:var(--exp-stone);background-size:cover;background-position:center}
 .exp-contact-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-line);flex-shrink:0}
 .exp-contact-photo-ph{width:80px;height:80px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Archivo',sans-serif;font-size:28px;font-weight:600;color:var(--exp-grey)}
 .exp-contact-body{flex:1;min-width:0}
 .exp-contact-name{font-family:'Libre Caslon Display',serif;font-size:22px;margin-bottom:2px}
-.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--exp-grey);margin-bottom:10px}
-.exp-contact-msg{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:14.5px;line-height:1.6;margin-bottom:14px}
+.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px}
+.exp-contact-msg{font-family:'Libre Caslon Text',serif;font-style:italic;opacity:.8;font-size:14.5px;line-height:1.6;margin-bottom:14px}
 .exp-contact-actions{display:flex;gap:12px;flex-wrap:wrap}
-.exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid var(--exp-ink);background:transparent;color:var(--exp-ink);text-decoration:none;transition:all .2s}
-.exp-contact-btn:hover{background:var(--exp-ink);color:var(--exp-warm)}
+.exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid currentColor;background:transparent;color:inherit;text-decoration:none;transition:all .2s}
+.exp-contact-btn:hover{background:currentColor}
+.exp-contact-btn:hover span{color:var(--_ct-bg,var(--exp-stone))}
 .exp-contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
 @media(max-width:768px){.exp-contact{padding:32px 20px}.exp-contact-card{flex-direction:column;text-align:center;padding:28px 24px;gap:18px}.exp-contact-actions{justify-content:center}}
 
 /* Main layout */
@@ -1827,8 +1830,18 @@ function renderExpedition(data){
     const ct = event.contact;
     if(mod.contact===false || !ct || (!ct.email && !ct.phone)) return '';
     const ini = (ct.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    // Custom styling
+    const bgC = ct.bg_color || '';
+    const bgI = ct.bg_image || '';
+    const txC = ct.text_color || '';
+    let cardStyle = '';
+    if(bgC) cardStyle += `background-color:${bgC};--_ct-bg:${bgC};`;
+    if(bgI) cardStyle += `background-image:url('${bgI}');`;
+    if(txC) cardStyle += `color:${txC};`;
+    if(!bgC && !txC) cardStyle += '--_ct-bg:var(--exp-stone);';
+
     let o = `<section class="exp-contact"><div class="exp-section-head"><h2>${ct.title||'Contact'}</h2><div class="rule"></div></div>`;
-    o += `<div class="exp-contact-card">`;
+    o += `<div class="exp-contact-card"${cardStyle?` style="${cardStyle}"`:''}>`;
     if(ct.photo_url) o += `<img class="exp-contact-photo" src="${ct.photo_url}" alt="" onerror="this.outerHTML='<div class=\\'exp-contact-photo-ph\\'>${ini}</div>'">`;
     else if(ini) o += `<div class="exp-contact-photo-ph">${ini}</div>`;
     o += `<div class="exp-contact-body">`;
@@ -1836,8 +1849,8 @@ function renderExpedition(data){
     if(ct.role) o += `<div class="exp-contact-role">${ct.role}</div>`;
     if(ct.message) o += `<div class="exp-contact-msg">${ct.message}</div>`;
     o += `<div class="exp-contact-actions">`;
-    if(ct.email) o += `<a class="exp-contact-btn" href="mailto:${ct.email}"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>${ct.email}</a>`;
-    if(ct.phone) o += `<a class="exp-contact-btn" href="tel:${ct.phone}"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>${ct.phone}</a>`;
+    if(ct.email) o += `<a class="exp-contact-btn" href="mailto:${ct.email}"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg><span>${ct.email}</span></a>`;
+    if(ct.phone) o += `<a class="exp-contact-btn" href="tel:${ct.phone}"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><span>${ct.phone}</span></a>`;
     o += `</div></div></div></section>`;
     return o;
   };
