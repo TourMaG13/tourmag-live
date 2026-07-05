@@ -479,11 +479,13 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-pulse-marker{width:16px;height:16px;border-radius:50%;background:var(--exp-accent);border:2px solid #fff;animation:exp-pulse 1.6s infinite}
 .exp-map-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--exp-grey);letter-spacing:.06em;margin-top:10px;text-align:right}
 body.mode-expedition .leaflet-popup-content-wrapper{border-radius:4px;border:1px solid #111;box-shadow:none;font-family:'Archivo',sans-serif}
-body.mode-expedition .leaflet-popup-content{margin:12px 16px;font-size:13px}
-.exp-pop-name{font-family:'Libre Caslon Display',serif;font-size:17px;margin-bottom:3px}
-.exp-pop-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6B66;letter-spacing:.06em}
-body.mode-expedition .exp-seg-tip{border-radius:4px;border:1px solid #111;box-shadow:none;font-family:'Archivo',sans-serif;padding:0}
-body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:0}
+body.mode-expedition .leaflet-popup-content{margin:14px 20px;font-size:14px}
+.exp-pop-name{font-family:'Libre Caslon Display',serif;font-size:19px;margin-bottom:4px}
+.exp-pop-meta{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6E6B66;letter-spacing:.06em}
+body.mode-expedition .exp-seg-tip{border-radius:4px;border:1px solid #111;box-shadow:none;font-family:'Archivo',sans-serif;padding:0;min-width:180px}
+body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:10px 14px}
+.exp-start-marker{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--exp-accent);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(255,108,0,.18)}
+.exp-start-marker::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--exp-accent)}
 
 /* Main layout */
 .exp-main{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
@@ -1601,6 +1603,7 @@ function renderExpedition(data){
         <div id="exp-routemap"></div>
         <div class="exp-map-legend">
           <b>Légende</b>
+          <div class="exp-lg-row"><span class="exp-lg-dot" style="background:#fff;border:2.5px solid var(--exp-accent);box-shadow:0 0 0 2px rgba(255,108,0,.2)"></span><span>Point de départ</span></div>
           <div class="exp-lg-row exp-lg-done"><span class="exp-lg-dot"></span><span>Étape franchie</span></div>
           <div class="exp-lg-row exp-lg-now"><span class="exp-lg-dot"></span><span>Position actuelle</span></div>
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-dot"></span><span>Étape à venir</span></div>
@@ -1819,7 +1822,91 @@ function renderExpedition(data){
       }
     });
 
-    // Polylines — one segment per consecutive pair, with tooltip
+    // === MARKERS FIRST (stored by coord key for segment hover linkage) ===
+    const allCoords = [];
+    const markerMap = {};           // "lat,lng" → {marker, baseStyle, isDivIcon}
+    const coordKey = (c) => c[0].toFixed(6)+','+c[1].toFixed(6);
+
+    function bindHover(marker, popupContent){
+      marker.bindPopup(popupContent, {minWidth:160});
+      marker.on('mouseover', function(e){ this.openPopup(); });
+      marker.on('mouseout', function(e){ this.closePopup(); });
+    }
+
+    function storeMarker(coord, marker, baseStyle, isDivIcon){
+      markerMap[coordKey(coord)] = {marker, baseStyle, isDivIcon};
+    }
+
+    // — Start marker (first point of the chain)
+    if(chain.length){
+      const startCoord = chain[0].coord;
+      const startEtape = chain[0].etape;
+      const startName = startEtape.name || 'Départ';
+      allCoords.push(startCoord);
+      const mStart = L.marker(startCoord, {
+        icon: L.divIcon({className:'', html:'<div class="exp-start-marker"></div>', iconSize:[22,22], iconAnchor:[11,11]}),
+        zIndexOffset: 600
+      }).addTo(map);
+      bindHover(mStart, `<div class="exp-pop-name">${startName}</div><div class="exp-pop-meta">Point de départ</div>`);
+      storeMarker(startCoord, mStart, null, true);
+    }
+
+    sortedEtapes.forEach((s, idx) => {
+      if(!s.lat || !s.lng) return;
+      const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
+      const depCoord = [s.lat, s.lng];
+      const ck = coordKey(depCoord);
+
+      // — Departure / single point marker (skip if start marker already placed there)
+      allCoords.push(depCoord);
+      if(!markerMap[ck]){
+        let mDep, baseStyle=null, isDivIcon=false;
+        if(s.status==='now' && !isRoute){
+          mDep = L.marker(depCoord, {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+          isDivIcon = true;
+        } else if(s.status==='now' && isRoute){
+          baseStyle = {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5};
+          mDep = L.circleMarker(depCoord, baseStyle);
+        } else if(s.status==='done'){
+          baseStyle = {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1};
+          mDep = L.circleMarker(depCoord, baseStyle);
+        } else {
+          baseStyle = {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1};
+          mDep = L.circleMarker(depCoord, baseStyle);
+        }
+        const depPopup = isRoute
+          ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
+          : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
+        mDep.addTo(map);
+        bindHover(mDep, depPopup);
+        storeMarker(depCoord, mDep, baseStyle, isDivIcon);
+      }
+
+      // — Arrival marker (route only)
+      if(isRoute){
+        const arrCoord = [s.latEnd, s.lngEnd];
+        allCoords.push(arrCoord);
+        const ak = coordKey(arrCoord);
+        if(!markerMap[ak]){
+          let mArr, baseStyle=null, isDivIcon=false;
+          if(s.status==='now'){
+            mArr = L.marker(arrCoord, {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
+            isDivIcon = true;
+          } else if(s.status==='done'){
+            baseStyle = {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1};
+            mArr = L.circleMarker(arrCoord, baseStyle);
+          } else {
+            baseStyle = {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1};
+            mArr = L.circleMarker(arrCoord, baseStyle);
+          }
+          mArr.addTo(map);
+          bindHover(mArr, `<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
+          storeMarker(arrCoord, mArr, baseStyle, isDivIcon);
+        }
+      }
+    });
+
+    // === POLYLINES — one segment per consecutive pair, linked to endpoint markers ===
     for(let i=0; i<chain.length-1; i++){
       const w0=chain[i], w1=chain[i+1];
       const seg=[w0.coord, w1.coord];
@@ -1831,59 +1918,29 @@ function renderExpedition(data){
       const baseOpts = isDone
         ? {color:accent, weight:3.5, opacity:.85}
         : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
-      const hoverOpts = {color:accent, weight:5.5, opacity:1, dashArray:null};
-      const bg = L.polyline(seg, {...baseOpts, weight:(baseOpts.weight||2)+10, opacity:0}).addTo(map);
+      // Hover: orange, same weight (no jump), solid line
+      const hoverOpts = {color:accent, weight:baseOpts.weight, opacity:1, dashArray:null};
+
+      // Invisible fat hit-area polyline
+      const bg = L.polyline(seg, {weight:20, opacity:0, interactive:true}).addTo(map);
       const fg = L.polyline(seg, baseOpts).addTo(map);
       fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
-      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); fg.openTooltip(); });
-      bg.on('mouseout', function(){ fg.setStyle(baseOpts); fg.closeTooltip(); });
+
+      // Linked markers at both ends
+      const m0 = markerMap[coordKey(w0.coord)];
+      const m1 = markerMap[coordKey(w1.coord)];
+      const highlightMarker = (m) => {
+        if(!m) return;
+        if(!m.isDivIcon && m.marker.setStyle) m.marker.setStyle({color:accent, fillColor:accent, fillOpacity:1});
+      };
+      const restoreMarker = (m) => {
+        if(!m) return;
+        if(!m.isDivIcon && m.baseStyle && m.marker.setStyle) m.marker.setStyle(m.baseStyle);
+      };
+
+      bg.on('mouseover', function(){ fg.setStyle(hoverOpts); fg.openTooltip(); highlightMarker(m0); highlightMarker(m1); });
+      bg.on('mouseout',  function(){ fg.setStyle(baseOpts);  fg.closeTooltip(); restoreMarker(m0);  restoreMarker(m1);  });
     }
-
-    // Markers with hover popup
-    const allCoords = [];
-    function bindHover(marker, popupContent){
-      marker.bindPopup(popupContent);
-      marker.on('mouseover', function(e){ this.openPopup(); });
-      marker.on('mouseout', function(e){ this.closePopup(); });
-    }
-
-    sortedEtapes.forEach(s => {
-      if(!s.lat || !s.lng) return;
-      const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
-
-      // — Departure / single point marker
-      allCoords.push([s.lat,s.lng]);
-      let mDep;
-      if(s.status==='now' && !isRoute){
-        mDep = L.marker([s.lat,s.lng], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
-      } else if(s.status==='now' && isRoute){
-        mDep = L.circleMarker([s.lat,s.lng], {radius:5, color:accent, weight:2, fillColor:accent, fillOpacity:.5});
-      } else if(s.status==='done'){
-        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
-      } else {
-        mDep = L.circleMarker([s.lat,s.lng], {radius:isRoute?4:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
-      }
-      const depPopup = isRoute
-        ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
-        : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
-      mDep.addTo(map);
-      bindHover(mDep, depPopup);
-
-      // — Arrival marker (route only)
-      if(isRoute){
-        allCoords.push([s.latEnd,s.lngEnd]);
-        let mArr;
-        if(s.status==='now'){
-          mArr = L.marker([s.latEnd,s.lngEnd], {icon: L.divIcon({className:'', html:`<div class="exp-pulse-marker" style="background:${accent}"></div>`, iconSize:[16,16], iconAnchor:[8,8]})});
-        } else if(s.status==='done'){
-          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#111', fillOpacity:1});
-        } else {
-          mArr = L.circleMarker([s.latEnd,s.lngEnd], {radius:6, color:'#111', weight:2, fillColor:'#fff', fillOpacity:1});
-        }
-        mArr.addTo(map);
-        bindHover(mArr, `<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
-      }
-    });
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
   }
