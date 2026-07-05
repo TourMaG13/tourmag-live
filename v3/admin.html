@@ -256,6 +256,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Chiffres clés</div>
       <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
       <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
+      <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
@@ -404,10 +405,11 @@ function applyTabVisibility(){
     citations: {label:'Verbatims', icon:'💬'},
     journalistes: {label:'Reporters', icon:'👤'},
     kpis: {label:'Compteurs', icon:'📊'},
-    sponsors: {label:'Partenaires', icon:'🤝'}
+    sponsors: {label:'Partenaires', icon:'🤝'},
+    contact: {label:'Contact', icon:'📞'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','media','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','media','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -844,6 +846,7 @@ function renderTab(){
     case 'kpis':renderKpis(main);break;
     case 'gallery':renderGallery(main);break;
     case 'sponsors':renderSponsors(main);break;
+    case 'contact':renderContact(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
@@ -897,9 +900,9 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'],
+    expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -1069,9 +1072,9 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'}];
-  const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes'};
+  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'}];
+  const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
@@ -1119,9 +1122,10 @@ function renderModules(el){
       {key:'videos',icon:'🎬',label:'Vidéos'},
       {key:'gallery',icon:'📸',label:'Galerie photos'},
       {key:'articles',icon:'📰',label:'Articles'},
-      {key:'sponsors',icon:'🤝',label:'Partenaires'}
+      {key:'sponsors',icon:'🤝',label:'Partenaires'},
+      {key:'contact',icon:'📞',label:'Contact'}
     ];
-    const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors'];
+    const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
@@ -3980,17 +3984,31 @@ async function removeInterview(id){if(!confirm('Supprimer cette interview ?'))re
 function renderKpis(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const kpis=ev.kpis||[];
+  const hasCountdown = kpis.some(k=>k.type==='countdown');
   let h=`<div class="page-title">📊 Chiffres clés</div><div class="page-desc">Ajoutez des chiffres clés qui s'affichent en bandeau sous le hero (ex: "1 200 Exposants"). Activez/désactivez via le module "Chiffres clés".</div>
   <div class="admin-card"><h3>Chiffres</h3><div id="kpis-list">`;
   kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((k,i)=>{
-    h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-      <input class="form-input" value="${(k.value||'').toString().replace(/"/g,'&quot;')}" placeholder="1 200" style="width:120px" data-kpi-val="${i}">
-      <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}">
-      <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
-    </div>`;
+    if(k.type==='countdown'){
+      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px" data-kpi-type="countdown">
+        <span style="font-size:18px">⏳</span>
+        <input type="date" class="form-input" value="${k.targetDate||''}" style="width:160px" data-kpi-date="${i}">
+        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}">
+        <input type="hidden" data-kpi-val="${i}" value="__countdown__">
+        <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
+      </div>`;
+    } else {
+      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input class="form-input" value="${(k.value||'').toString().replace(/"/g,'&quot;')}" placeholder="1 200" style="width:120px" data-kpi-val="${i}">
+        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}">
+        <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
+      </div>`;
+    }
   });
   h+=`</div>
-    <button class="btn btn-ghost btn-sm" onclick="addKpiRow()" style="margin-top:6px">＋ Ajouter un chiffre</button>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="addKpiRow()">＋ Ajouter un chiffre</button>
+      ${hasCountdown?'':'<button class="btn btn-ghost btn-sm" onclick="addCountdownRow()" style="color:#EA580C;border-color:#FDBA74">⏳ Ajouter un compte à rebours</button>'}
+    </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveKpis()">💾 Enregistrer les chiffres clés</button></div>
   </div>`;
   el.innerHTML=h;
@@ -4003,6 +4021,16 @@ function addKpiRow(){
   div.innerHTML=`<input class="form-input" placeholder="1 200" style="width:120px" data-kpi-val="${i}"><input class="form-input" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
+function addCountdownRow(){
+  const list=document.getElementById('kpis-list');if(!list)return;
+  if(list.querySelector('[data-kpi-type="countdown"]')){toast('Un seul compte à rebours autorisé');return;}
+  const i=list.children.length;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px';
+  div.setAttribute('data-kpi-type','countdown');
+  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  list.appendChild(div);
+}
 async function removeKpi(idx){
   const ev=eventsData.find(e=>e.id===currentEventId);if(!ev)return;
   const kpis=(ev.kpis||[]).filter((_,i)=>i!==idx);
@@ -4011,12 +4039,55 @@ async function removeKpi(idx){
 async function saveKpis(){
   const vals=document.querySelectorAll('[data-kpi-val]');
   const lbls=document.querySelectorAll('[data-kpi-lbl]');
+  const dates=document.querySelectorAll('[data-kpi-date]');
+  const dateMap={};dates.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
   const kpis=[];
   vals.forEach((v,i)=>{
     const lbl=lbls[i];
-    if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10});
+    const idx=v.getAttribute('data-kpi-val');
+    if(v.value==='__countdown__'){
+      const td=dateMap[idx]||'';
+      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',order:i*10});
+    } else {
+      if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10});
+    }
   });
   saving(true);await evRef().update({kpis});toast('Chiffres clés enregistrés');
+}
+
+// ==================== CONTACT ====================
+function renderContact(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const ct=ev.contact||{};
+  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez/désactivez via le module "Contact".</div>
+  <div class="admin-card"><h3>Informations de contact</h3>
+    <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="ct-name" value="${(ct.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
+    <div class="form-group"><label class="form-label">Rôle / titre</label><input class="form-input" id="ct-role" value="${(ct.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
+    <div class="form-group"><label class="form-label">Photo (URL)</label><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="ct-msg" rows="3" placeholder="Pour obtenir les photos de l'expédition, contactez-moi directement.">${ct.message||''}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ct-email" value="${(ct.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
+      <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="ct-phone" value="${(ct.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
+    </div>
+    ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer le contact</button></div>
+  </div>`;
+  el.innerHTML=h;
+}
+async function saveContact(){
+  saving(true);
+  const contact={
+    title:document.getElementById('ct-title').value.trim()||'Contact',
+    name:document.getElementById('ct-name').value.trim(),
+    role:document.getElementById('ct-role').value.trim(),
+    photo_url:document.getElementById('ct-photo').value.trim(),
+    message:document.getElementById('ct-msg').value.trim(),
+    email:document.getElementById('ct-email').value.trim(),
+    phone:document.getElementById('ct-phone').value.trim()
+  };
+  await evRef().update({contact});
+  toast('Contact enregistré');
 }
 
 async function saveItwSettings(){
