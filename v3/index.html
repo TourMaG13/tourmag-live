@@ -479,6 +479,19 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-lg-next .exp-lg-line{border-color:#111;border-style:dashed}
 .exp-pulse-marker{width:16px;height:16px;border-radius:50%;background:var(--exp-accent);border:2px solid #fff;animation:exp-pulse 1.6s infinite}
 .exp-map-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--exp-grey);letter-spacing:.06em;margin-top:10px;text-align:right}
+.exp-map-panel{position:absolute;top:0;right:0;width:320px;height:100%;background:rgba(255,255,255,.97);border-left:1px solid var(--exp-line);z-index:600;overflow-y:auto;transform:translateX(100%);transition:transform .3s ease;box-shadow:-4px 0 20px rgba(0,0,0,.08)}
+.exp-map-panel.open{transform:translateX(0)}
+.exp-map-panel-close{position:absolute;top:10px;right:10px;width:28px;height:28px;border:1px solid var(--exp-line);background:#fff;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--exp-grey);z-index:2}
+.exp-map-panel-close:hover{background:var(--exp-stone)}
+.exp-map-panel-img{width:100%;height:180px;object-fit:cover;display:block}
+.exp-map-panel-body{padding:20px 22px}
+.exp-map-panel-status{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.exp-map-panel-status.done{color:#111}.exp-map-panel-status.now{color:var(--exp-accent)}.exp-map-panel-status.next{color:#999}
+.exp-map-panel-name{font-family:'Libre Caslon Display',serif;font-size:20px;margin-bottom:6px}
+.exp-map-panel-meta{display:flex;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);letter-spacing:.04em;margin-bottom:14px}
+.exp-map-panel-desc{font-family:'Libre Caslon Text',serif;font-size:14px;line-height:1.65;color:#444}
+@media(max-width:768px){.exp-map-panel{width:100%;height:45%;top:auto;bottom:0;transform:translateY(100%);border-left:none;border-top:1px solid var(--exp-line);box-shadow:0 -4px 20px rgba(0,0,0,.1)}.exp-map-panel.open{transform:translateY(0)}.exp-map-panel-img{height:120px}}
+.exp-gallery-extra.exp-expand{display:none}.exp-gallery-extra.exp-expand.open{display:grid}
 body.mode-expedition .leaflet-popup-content-wrapper{border-radius:6px;border:1px solid #111;box-shadow:0 2px 12px rgba(0,0,0,.1);font-family:'Archivo',sans-serif}
 body.mode-expedition .leaflet-popup-content{margin:16px 22px;font-size:14px}
 .exp-pop-name{font-family:'Libre Caslon Display',serif;font-size:19px;margin-bottom:5px}
@@ -493,12 +506,12 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-line);flex-shrink:0}
 .exp-contact-photo-ph{width:80px;height:80px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Archivo',sans-serif;font-size:28px;font-weight:600;color:var(--exp-grey)}
 .exp-contact-body{flex:1;min-width:0}
-.exp-contact-name{font-family:'Libre Caslon Display',serif;font-size:22px;margin-bottom:2px}
-.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px}
+.exp-contact-name{font-family:'Libre Caslon Display',serif;font-size:22px;margin-bottom:2px;color:var(--_ct-name-color,inherit)}
+.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;color:var(--_ct-title-color,inherit)}
 .exp-contact-msg{font-family:'Libre Caslon Text',serif;font-style:italic;opacity:.8;font-size:14.5px;line-height:1.6;margin-bottom:14px}
 .exp-contact-actions{display:flex;gap:12px;flex-wrap:wrap}
-.exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid currentColor;background:transparent;color:inherit;text-decoration:none;transition:all .2s}
-.exp-contact-btn:hover{background:currentColor}
+.exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid var(--_ct-btn-color,currentColor);background:transparent;color:var(--_ct-btn-color,inherit);text-decoration:none;transition:all .2s}
+.exp-contact-btn:hover{background:var(--_ct-btn-color,var(--exp-ink))}
 .exp-contact-btn:hover span{color:var(--_ct-bg,var(--exp-stone))}
 .exp-contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
@@ -1643,6 +1656,10 @@ function renderExpedition(data){
       <p class="exp-section-sub">${exp.mapSubtitle||"Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant."}</p>
       <div class="exp-map-wrap">
         <div id="exp-routemap"></div>
+        <div class="exp-map-panel" id="exp-map-panel">
+          <button class="exp-map-panel-close" onclick="closeExpMapPanel()">✕</button>
+          <div id="exp-map-panel-content"></div>
+        </div>
         <div class="exp-map-legend">
           <b>Légende</b>
           <div class="exp-lg-row"><span class="exp-lg-dot" style="background:var(--exp-accent);box-shadow:0 0 0 2px rgba(255,108,0,.25)"></span><span>Point de départ</span></div>
@@ -1784,11 +1801,18 @@ function renderExpedition(data){
 
   _b.gallery = function(){
     const gp=event.gallery||[]; if(mod.gallery===false || !gp.length) return '';
+    const GALLERY_VIS = 9;
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
-    function gi(p,idx){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; let out=`<div class="exp-gal-item" onclick="openExpLightbox(${idx})"><img src="${url}" alt="${cap}" onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
-    if(gp.length>=3){ o+=`<div class="exp-gallery-grid">${gp.slice(0,3).map((p,i)=>gi(p,i)).join('')}</div>`; if(gp.length>3)o+=`<div class="exp-gallery-extra">${gp.slice(3,9).map((p,i)=>gi(p,i+3)).join('')}</div>`; }
-    else { o+=`<div class="exp-gallery-extra">${gp.map((p,i)=>gi(p,i)).join('')}</div>`; }
+    function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item" onclick="openExpLightbox(${idx})"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+    const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
+    const extraPhotos = gp.slice(GALLERY_VIS);
+    if(visPhotos.length>=3){ o+=`<div class="exp-gallery-grid">${visPhotos.slice(0,3).map((p,i)=>gi(p,i,false)).join('')}</div>`; if(visPhotos.length>3) o+=`<div class="exp-gallery-extra">${visPhotos.slice(3).map((p,i)=>gi(p,i+3,false)).join('')}</div>`; }
+    else { o+=`<div class="exp-gallery-extra">${visPhotos.map((p,i)=>gi(p,i,false)).join('')}</div>`; }
+    if(extraPhotos.length){
+      o+=`<div class="exp-gallery-extra exp-expand" id="exp-gal-expand">${extraPhotos.map((p,i)=>gi(p,i+GALLERY_VIS,true)).join('')}</div>`;
+      o+=`<button class="exp-voir-plus" id="exp-gal-btn" onclick="toggleExpGallery(${extraPhotos.length})">▾ Voir les ${extraPhotos.length} autres photos</button>`;
+    }
     o+=`<div class="exp-lightbox" id="exp-lightbox" onclick="if(event.target===this)closeExpLightbox()"><button class="exp-lightbox-close" onclick="closeExpLightbox()">Fermer</button><button class="exp-lightbox-nav exp-lightbox-prev" onclick="navExpLightbox(-1)">‹</button><img id="exp-lightbox-img" src="" alt=""><button class="exp-lightbox-nav exp-lightbox-next" onclick="navExpLightbox(1)">›</button><div class="exp-lightbox-cap" id="exp-lightbox-cap"></div></div>`;
     return o+`</section>`;
   };
@@ -1830,17 +1854,23 @@ function renderExpedition(data){
     const ct = event.contact;
     if(mod.contact===false || !ct || (!ct.email && !ct.phone)) return '';
     const ini = (ct.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    // Custom styling
     const bgC = ct.bg_color || '';
     const bgI = ct.bg_image || '';
     const txC = ct.text_color || '';
+    const titleC = ct.title_color || '';
+    const nameC = ct.name_color || '';
+    const btnC = ct.btn_color || '';
     let cardStyle = '';
     if(bgC) cardStyle += `background-color:${bgC};--_ct-bg:${bgC};`;
     if(bgI) cardStyle += `background-image:url('${bgI}');`;
     if(txC) cardStyle += `color:${txC};`;
-    if(!bgC && !txC) cardStyle += '--_ct-bg:var(--exp-stone);';
+    if(titleC) cardStyle += `--_ct-title-color:${titleC};`;
+    if(nameC) cardStyle += `--_ct-name-color:${nameC};`;
+    if(btnC) cardStyle += `--_ct-btn-color:${btnC};`;
+    if(!bgC) cardStyle += '--_ct-bg:var(--exp-stone);';
 
-    let o = `<section class="exp-contact"><div class="exp-section-head"><h2>${ct.title||'Contact'}</h2><div class="rule"></div></div>`;
+    let o = `<section class="exp-contact"><div class="exp-section-head"><h2${titleC?` style="color:${titleC}"`:''}>` +
+      `${ct.title||'Contact'}</h2><div class="rule"></div></div>`;
     o += `<div class="exp-contact-card"${cardStyle?` style="${cardStyle}"`:''}>`;
     if(ct.photo_url) o += `<img class="exp-contact-photo" src="${ct.photo_url}" alt="" onerror="this.outerHTML='<div class=\\'exp-contact-photo-ph\\'>${ini}</div>'">`;
     else if(ini) o += `<div class="exp-contact-photo-ph">${ini}</div>`;
@@ -1986,7 +2016,22 @@ function renderExpedition(data){
       bg.on('mouseover', function(e){ fg.setStyle(hoverOpts); fg.openTooltip(e.latlng); hiM(m0); hiM(m1); });
       bg.on('mousemove', function(e){ fg.openTooltip(e.latlng); });
       bg.on('mouseout',  function(){ fg.setStyle(baseOpts); fg.closeTooltip(); loM(m0); loM(m1); });
+      // Click → open side panel with tronçon info
+      bg.on('click', function(){ openExpMapPanel(et); });
     }
+
+    // Click on markers → open side panel with étape info
+    sortedEtapes.forEach(s => {
+      if(!s.lat || !s.lng) return;
+      const dc = [s.lat, s.lng];
+      const mk = markerMap[coordKey(dc)];
+      if(mk && mk.marker){ mk.marker.on('click', function(){ openExpMapPanel(s); }); }
+      if(s.type==='route' && s.latEnd && s.lngEnd){
+        const ac = [s.latEnd, s.lngEnd];
+        const ma = markerMap[coordKey(ac)];
+        if(ma && ma.marker){ ma.marker.on('click', function(){ openExpMapPanel(s); }); }
+      }
+    });
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
   }
@@ -2011,6 +2056,41 @@ window.toggleExpExpand = function(expandId, btnId, count){
   const open=el.classList.toggle('open');
   btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} entrées précédentes`;
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+
+// ===== MAP SIDE PANEL =====
+window.toggleExpGallery = function(count){
+  const el=document.getElementById('exp-gal-expand'), btn=document.getElementById('exp-gal-btn');
+  if(!el||!btn) return;
+  const open=el.classList.toggle('open');
+  btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} autres photos`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+window.openExpMapPanel = function(et){
+  const panel = document.getElementById('exp-map-panel');
+  const content = document.getElementById('exp-map-panel-content');
+  if(!panel || !content) return;
+  const isRoute = et.type==='route' && et.nameEnd;
+  const title = isRoute ? `${et.name} → ${et.nameEnd}` : (et.name||'');
+  const statusLabels = {done:'Étape franchie',now:'En cours',next:'À venir'};
+  const st = et.status||'next';
+  let h = '';
+  if(et.photo_url) h += `<img class="exp-map-panel-img" src="${et.photo_url}" alt="" onerror="this.remove()">`;
+  h += `<div class="exp-map-panel-body">`;
+  h += `<div class="exp-map-panel-status ${st}">${statusLabels[st]||st}</div>`;
+  h += `<div class="exp-map-panel-name">${title}</div>`;
+  h += `<div class="exp-map-panel-meta">`;
+  if(et.dateLabel) h += `<span>📅 ${et.dateLabel}</span>`;
+  if(et.km) h += `<span>📍 ${et.km}</span>`;
+  h += `</div>`;
+  if(et.description) h += `<div class="exp-map-panel-desc">${et.description}</div>`;
+  h += `</div>`;
+  content.innerHTML = h;
+  panel.classList.add('open');
+};
+window.closeExpMapPanel = function(){
+  const panel = document.getElementById('exp-map-panel');
+  if(panel) panel.classList.remove('open');
 };
 
 // ===== EXPEDITION LIGHTBOX =====
