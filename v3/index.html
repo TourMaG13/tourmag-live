@@ -464,7 +464,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-section-head h2{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:34px;white-space:nowrap}
 .exp-section-head .rule{flex:1;height:1px;background:var(--exp-ink)}
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
-.exp-map-wrap{position:relative}
+.exp-map-wrap{position:relative;overflow:hidden}
 #exp-routemap{height:520px;border:1px solid var(--exp-ink)}
 #exp-routemap .leaflet-tile-pane{filter:grayscale(1) contrast(1.04)}
 .exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;line-height:1.4;min-width:170px}
@@ -507,7 +507,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-photo-ph{width:80px;height:80px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Archivo',sans-serif;font-size:28px;font-weight:600;color:var(--exp-grey)}
 .exp-contact-body{flex:1;min-width:0}
 .exp-contact-name{font-family:'Libre Caslon Display',serif;font-size:22px;margin-bottom:2px;color:var(--_ct-name-color,inherit)}
-.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;color:var(--_ct-title-color,inherit)}
+.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;color:var(--_ct-role-color,inherit)}
 .exp-contact-msg{font-family:'Libre Caslon Text',serif;font-style:italic;opacity:.8;font-size:14.5px;line-height:1.6;margin-bottom:14px}
 .exp-contact-actions{display:flex;gap:12px;flex-wrap:wrap}
 .exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid var(--_ct-btn-color,currentColor);background:transparent;color:var(--_ct-btn-color,inherit);text-decoration:none;transition:all .2s}
@@ -1856,20 +1856,18 @@ function renderExpedition(data){
     const ini = (ct.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const bgC = ct.bg_color || '';
     const bgI = ct.bg_image || '';
-    const txC = ct.text_color || '';
-    const titleC = ct.title_color || '';
     const nameC = ct.name_color || '';
+    const roleC = ct.role_color || '';
     const btnC = ct.btn_color || '';
     let cardStyle = '';
     if(bgC) cardStyle += `background-color:${bgC};--_ct-bg:${bgC};`;
     if(bgI) cardStyle += `background-image:url('${bgI}');`;
-    if(txC) cardStyle += `color:${txC};`;
-    if(titleC) cardStyle += `--_ct-title-color:${titleC};`;
     if(nameC) cardStyle += `--_ct-name-color:${nameC};`;
+    if(roleC) cardStyle += `--_ct-role-color:${roleC};`;
     if(btnC) cardStyle += `--_ct-btn-color:${btnC};`;
     if(!bgC) cardStyle += '--_ct-bg:var(--exp-stone);';
 
-    let o = `<section class="exp-contact"><div class="exp-section-head"><h2${titleC?` style="color:${titleC}"`:''}>` +
+    let o = `<section class="exp-contact"><div class="exp-section-head"><h2>` +
       `${ct.title||'Contact'}</h2><div class="rule"></div></div>`;
     o += `<div class="exp-contact-card"${cardStyle?` style="${cardStyle}"`:''}>`;
     if(ct.photo_url) o += `<img class="exp-contact-photo" src="${ct.photo_url}" alt="" onerror="this.outerHTML='<div class=\\'exp-contact-photo-ph\\'>${ini}</div>'">`;
@@ -1930,9 +1928,12 @@ function renderExpedition(data){
     const coordKey = (c) => c[0].toFixed(6)+','+c[1].toFixed(6);
 
     function bindHover(marker, popupContent){
-      marker.bindPopup(popupContent, {minWidth:160});
-      marker.on('mouseover', function(e){ this.openPopup(); });
-      marker.on('mouseout', function(e){ this.closePopup(); });
+      marker.bindTooltip(popupContent, {direction:'top', offset:[0,-8], className:'exp-seg-tip'});
+      marker.on('mouseover', function(e){ this.openTooltip(); });
+      marker.on('mouseout', function(e){ this.closeTooltip(); });
+    }
+    function bindClick(marker, etape){
+      marker.on('click', function(){ openExpMapPanel(etape); });
     }
     function storeMarker(coord, marker, baseStyle, isDivIcon){
       markerMap[coordKey(coord)] = {marker, baseStyle, isDivIcon};
@@ -1945,6 +1946,7 @@ function renderExpedition(data){
       allCoords.push(sc);
       const mS = L.marker(sc, {icon: L.divIcon({className:'', html:'<div class="exp-start-marker"></div>', iconSize:[24,24], iconAnchor:[12,12]}), zIndexOffset:600}).addTo(map);
       bindHover(mS, `<div class="exp-pop-name">${sn}</div><div class="exp-pop-meta">Point de départ</div>`);
+      bindClick(mS, chain[0].etape);
       storeMarker(sc, mS, null, true);
     }
 
@@ -1968,7 +1970,7 @@ function renderExpedition(data){
         const pp = isRoute
           ? `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">Départ · ${s.dateLabel||''}</div>`
           : `<div class="exp-pop-name">${s.name}</div><div class="exp-pop-meta">${s.dateLabel||''} · ${s.km||''}</div>`;
-        m.addTo(map); bindHover(m, pp); storeMarker(dc, m, bs, di);
+        m.addTo(map); bindHover(m, pp); bindClick(m, s); storeMarker(dc, m, bs, di);
       }
 
       if(isRoute){
@@ -1984,7 +1986,7 @@ function renderExpedition(data){
             bs = {radius:6, color:'#999', weight:2, fillColor:'#999', fillOpacity:1}; m = L.circleMarker(ac, bs);
           }
           m.addTo(map); bindHover(m, `<div class="exp-pop-name">${s.nameEnd||''}</div><div class="exp-pop-meta">Arrivée · ${s.km||''}</div>`);
-          storeMarker(ac, m, bs, di);
+          bindClick(m, s); storeMarker(ac, m, bs, di);
         }
       }
     });
@@ -2016,22 +2018,10 @@ function renderExpedition(data){
       bg.on('mouseover', function(e){ fg.setStyle(hoverOpts); fg.openTooltip(e.latlng); hiM(m0); hiM(m1); });
       bg.on('mousemove', function(e){ fg.openTooltip(e.latlng); });
       bg.on('mouseout',  function(){ fg.setStyle(baseOpts); fg.closeTooltip(); loM(m0); loM(m1); });
-      // Click → open side panel with tronçon info
+      // Click → open side panel
       bg.on('click', function(){ openExpMapPanel(et); });
+      fg.on('click', function(){ openExpMapPanel(et); });
     }
-
-    // Click on markers → open side panel with étape info
-    sortedEtapes.forEach(s => {
-      if(!s.lat || !s.lng) return;
-      const dc = [s.lat, s.lng];
-      const mk = markerMap[coordKey(dc)];
-      if(mk && mk.marker){ mk.marker.on('click', function(){ openExpMapPanel(s); }); }
-      if(s.type==='route' && s.latEnd && s.lngEnd){
-        const ac = [s.latEnd, s.lngEnd];
-        const ma = markerMap[coordKey(ac)];
-        if(ma && ma.marker){ ma.marker.on('click', function(){ openExpMapPanel(s); }); }
-      }
-    });
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
   }
