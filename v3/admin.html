@@ -3989,10 +3989,11 @@ function renderKpis(el){
   <div class="admin-card"><h3>Chiffres</h3><div id="kpis-list">`;
   kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((k,i)=>{
     if(k.type==='countdown'){
-      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px" data-kpi-type="countdown">
+      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap" data-kpi-type="countdown">
         <span style="font-size:18px">⏳</span>
         <input type="date" class="form-input" value="${k.targetDate||''}" style="width:160px" data-kpi-date="${i}">
-        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}">
+        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}">
+        <input type="color" value="${k.color||'#FF6C00'}" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}">
         <input type="hidden" data-kpi-val="${i}" value="__countdown__">
         <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
       </div>`;
@@ -4026,9 +4027,9 @@ function addCountdownRow(){
   if(list.querySelector('[data-kpi-type="countdown"]')){toast('Un seul compte à rebours autorisé');return;}
   const i=list.children.length;
   const div=document.createElement('div');
-  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px';
+  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap';
   div.setAttribute('data-kpi-type','countdown');
-  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}"><input type="color" value="#FF6C00" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
 async function removeKpi(idx){
@@ -4039,15 +4040,18 @@ async function removeKpi(idx){
 async function saveKpis(){
   const vals=document.querySelectorAll('[data-kpi-val]');
   const lbls=document.querySelectorAll('[data-kpi-lbl]');
-  const dates=document.querySelectorAll('[data-kpi-date]');
-  const dateMap={};dates.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
+  const dateEls=document.querySelectorAll('[data-kpi-date]');
+  const colorEls=document.querySelectorAll('[data-kpi-color]');
+  const dateMap={};dateEls.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
+  const colorMap={};colorEls.forEach(c=>{colorMap[c.getAttribute('data-kpi-color')]=c.value;});
   const kpis=[];
   vals.forEach((v,i)=>{
     const lbl=lbls[i];
     const idx=v.getAttribute('data-kpi-val');
     if(v.value==='__countdown__'){
       const td=dateMap[idx]||'';
-      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',order:i*10});
+      const cc=colorMap[idx]||'#FF6C00';
+      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',color:cc,order:i*10});
     } else {
       if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10});
     }
@@ -4059,7 +4063,7 @@ async function saveKpis(){
 function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const ct=ev.contact||{};
-  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez/désactivez via le module "Contact".</div>
+  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="ct-name" value="${(ct.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
