@@ -1601,7 +1601,6 @@ function renderExpedition(data){
   if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
   h += `</div>`;
 
-  if(event.logo_url) h += `<img src="${event.logo_url}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
   if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
   h += `<h1>${event.title || ''}</h1>`;
   if(event.subtitle) h += `<p class="exp-hero-subtitle">${event.subtitle}</p>`;
@@ -2084,7 +2083,7 @@ function renderExpedition(data){
       var posMap={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'};
       var tk=posMap[pl.position||'after-map']||'etapes';
       var tgt=document.querySelector('[data-exp-block="'+tk+'"]');
-      if(tgt){var pd=mk();pd.setAttribute('style','width:100%;display:flex;justify-content:center;pointer-events:none;opacity:'+(pl.opacity||4)/100+';margin:10px 0');pd.innerHTML='<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg" width="400" height="40"><line x1="30" y1="20" x2="170" y2="20" stroke="#999" stroke-width=".6" stroke-dasharray="4 4"/><g transform="translate(200,20)"><path d="M0-3L15-3L20-10L22-10L18-3L28-3L30-7L32-7L29-3L32-3L32 3L29 3L32 7L30 7L28 3L18 3L22 10L20 10L15 3L0 3Z" fill="#999"/></g><line x1="230" y1="20" x2="370" y2="20" stroke="#999" stroke-width=".6" stroke-dasharray="4 4"/></svg>';tgt.after(pd);}
+      if(tgt){var pd=mk();pd.setAttribute('style','width:100%;display:flex;justify-content:center;pointer-events:none;opacity:'+(pl.opacity||4)/100+';margin:10px 0');pd.innerHTML='<svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg" width="400" height="50"><path d="M40 28 C100 26 160 22 220 22" stroke="#aaa" stroke-width=".7" stroke-dasharray="5 4" fill="none"/><g transform="translate(248,22) rotate(-4)"><path d="M-6 0C-6-1.2-5-2-4-2L-2-2L0-8C.3-9 1.2-9.5 2-9.5L2.5-9.5 1-2L6-2C6-2 7.5-5 8-5.5L9-5.5 7.5-2L10-2C11.5-2 12-.8 12 0C12 .8 11.5 2 10 2L7.5 2 9 5.5 8 5.5C7.5 5 6 2 6 2L1 2 2.5 9.5 2 9.5C1.2 9.5.3 9 0 8L-2 2L-4 2C-5 2-6 1.2-6 0Z" fill="#999"/></g><path d="M270 23 C310 26 350 30 380 28" stroke="#aaa" stroke-width=".5" stroke-dasharray="3 5" fill="none" opacity=".5"/></svg>';tgt.after(pd);}
     }
 
     // 4. BOTANICAL
