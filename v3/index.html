@@ -2039,13 +2039,11 @@ function renderExpedition(data){
     const dc = event.decor;
     if(!dc || dc.enabled===false) return;
 
-    // Background color
     if(dc.bgColor) document.body.style.background = dc.bgColor;
 
     const $ = (sel) => document.querySelector(sel);
-    const mkSvg = (html,op) => { const d=document.createElement('div'); d.className='exp-deco'; d.style.opacity=(op||4)/100; d.innerHTML=html; return d; };
+    const op = (v) => (v||4)/100;
 
-    // SVG Presets
     const BOTAN = {
       eucalyptus:'<path d="M50 130Q50 80 30 40Q25 20 50 5Q75 20 70 40Q50 80 50 130Z"/><path d="M50 130L50 30"/><path d="M50 90Q35 75 30 60"/><path d="M50 90Q65 75 70 60"/><path d="M50 65Q40 55 35 45"/><path d="M50 65Q60 55 65 45"/>',
       palm:'<path d="M50 140L50 50"/><path d="M50 50Q20 30 5 45"/><path d="M50 50Q25 20 10 10"/><path d="M50 50Q50 15 50 5"/><path d="M50 50Q75 20 90 10"/><path d="M50 50Q80 30 95 45"/>',
@@ -2064,103 +2062,93 @@ function renderExpedition(data){
       volcano:'M0 55L120 50L200 45L260 30L290 8L310 5L340 30L400 45L480 38L520 25L540 12L560 8L580 25L640 42L720 50L720 60L0 60Z'
     };
 
-    // 1. Compass
+    // Helper: inject SVG into a section
+    function inject(parent, svgHtml, opacity, cssText){
+      if(!parent) return;
+      parent.style.position='relative';
+      const el = document.createElement('div');
+      el.style.cssText = 'position:absolute;pointer-events:none;z-index:0;' + (cssText||'');
+      el.style.opacity = op(opacity);
+      el.innerHTML = svgHtml;
+      parent.appendChild(el);
+    }
+
+    // 1. COMPASS
     const cc = dc.compass;
     if(cc && cc.on!==false){
-      const hero = $('.exp-hero-split') || $('.exp-hero');
+      const hero = $('.exp-hero');
       if(hero){
-        hero.style.position='relative'; hero.style.overflow='hidden';
-        const svg = mkSvg(`<svg viewBox="0 0 200 200" style="width:280px;height:280px"><g transform="translate(100,100)"><circle r="90" fill="none" stroke="#888" stroke-width=".6"/><circle r="70" fill="none" stroke="#888" stroke-width=".3"/><circle r="4" fill="#888"/><g stroke="#888" stroke-width=".8"><line y1="-88" y2="-25"/><line y1="88" y2="25"/><line x1="-88" x2="-25"/><line x1="88" x2="25"/></g><g stroke="#888" stroke-width=".4"><line x1="-62" y1="-62" x2="-18" y2="-18"/><line x1="62" y1="-62" x2="18" y2="-18"/><line x1="-62" y1="62" x2="-18" y2="18"/><line x1="62" y1="62" x2="18" y2="18"/></g><polygon points="0,-88 -8,-25 0,-15 8,-25" fill="#888" opacity=".6"/><polygon points="0,88 -8,25 0,15 8,25" fill="#888" opacity=".3"/><polygon points="-88,0 -25,-8 -15,0 -25,8" fill="#888" opacity=".3"/><polygon points="88,0 25,-8 15,0 25,8" fill="#888" opacity=".3"/><text font-family="Georgia,serif" font-size="11" fill="#888" text-anchor="middle" y="-92">N</text><text font-family="Georgia,serif" font-size="9" fill="#888" text-anchor="middle" y="100">S</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="-96" y="4" text-anchor="middle">W</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="96" y="4" text-anchor="middle">E</text></g></svg>`, cc.opacity);
-        const p=cc.position||'top-right';
-        svg.style.position='absolute';
-        svg.style.top=p.includes('top')?'-40px':'auto';
-        svg.style.bottom=p.includes('bottom')?'-40px':'auto';
-        svg.style.right=p.includes('right')?'-30px':'auto';
-        svg.style.left=p.includes('left')?'-30px':'auto';
-        hero.appendChild(svg);
+        const p = cc.position||'top-right';
+        const css = (p.includes('top')?'top:20px;':'bottom:20px;') + (p.includes('right')?'right:20px;':'left:20px;');
+        inject(hero, `<svg viewBox="0 0 200 200" style="width:280px;height:280px"><g transform="translate(100,100)"><circle r="90" fill="none" stroke="#888" stroke-width=".6"/><circle r="70" fill="none" stroke="#888" stroke-width=".3"/><circle r="4" fill="#888"/><g stroke="#888" stroke-width=".8"><line y1="-88" y2="-25"/><line y1="88" y2="25"/><line x1="-88" x2="-25"/><line x1="88" x2="25"/></g><g stroke="#888" stroke-width=".4"><line x1="-62" y1="-62" x2="-18" y2="-18"/><line x1="62" y1="-62" x2="18" y2="-18"/><line x1="-62" y1="62" x2="-18" y2="18"/><line x1="62" y1="62" x2="18" y2="18"/></g><polygon points="0,-88 -8,-25 0,-15 8,-25" fill="#888" opacity=".6"/><polygon points="0,88 -8,25 0,15 8,25" fill="#888" opacity=".3"/><polygon points="-88,0 -25,-8 -15,0 -25,8" fill="#888" opacity=".3"/><polygon points="88,0 25,-8 15,0 25,8" fill="#888" opacity=".3"/><text font-family="Georgia,serif" font-size="11" fill="#888" text-anchor="middle" y="-92">N</text><text font-family="Georgia,serif" font-size="9" fill="#888" text-anchor="middle" y="100">S</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="-96" y="4" text-anchor="middle">W</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="96" y="4" text-anchor="middle">E</text></g></svg>`, cc.opacity, css);
       }
     }
 
-    // 2. Coords (behind map section)
+    // 2. COORDS
     const coo = dc.coords;
     if(coo && coo.on!==false){
-      const mapSec = $('.exp-map-wrap')?.closest('section') || $('.exp-map-wrap')?.parentElement;
+      const mapSec = $('[data-exp-block="etapes"]');
       if(mapSec){
-        mapSec.style.position='relative';
-        const lb=coo.labels||[];
-        const svg = mkSvg(`<svg viewBox="0 0 600 220" preserveAspectRatio="none" style="position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px)"><line x1="0" y1="55" x2="600" y2="55" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="110" x2="600" y2="110" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="165" x2="600" y2="165" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="150" y1="0" x2="150" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="300" y1="0" x2="300" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="450" y1="0" x2="450" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="52">${lb[0]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="302" y="52">${lb[1]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="168">${lb[2]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="452" y="108">${lb[3]||''}</text></svg>`, coo.opacity);
-        svg.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none';
-        mapSec.appendChild(svg);
+        const lb = coo.labels||[];
+        inject(mapSec, `<svg viewBox="0 0 600 220" preserveAspectRatio="none" style="width:100%;height:100%"><line x1="0" y1="55" x2="600" y2="55" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="110" x2="600" y2="110" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="165" x2="600" y2="165" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="150" y1="0" x2="150" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="300" y1="0" x2="300" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="450" y1="0" x2="450" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="52">${lb[0]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="302" y="52">${lb[1]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="168">${lb[2]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="452" y="108">${lb[3]||''}</text></svg>`, coo.opacity, 'inset:0;width:100%;height:100%');
       }
     }
 
-    // 3. Plane trace
+    // 3. PLANE
     const pl = dc.plane;
     if(pl && pl.on!==false){
       const posMap = {'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'};
       const targetKey = posMap[pl.position||'after-map']||'etapes';
-      const sections = document.querySelectorAll('[data-exp-block]');
-      let target = null;
-      sections.forEach(s=>{ if(s.dataset.expBlock===targetKey) target=s; });
+      const target = $('[data-exp-block="'+targetKey+'"]');
       if(target){
         const div = document.createElement('div');
-        div.className='exp-deco-plane';
-        div.style.opacity=(pl.opacity||4)/100;
-        div.style.pointerEvents='none';
-        div.innerHTML=`<svg viewBox="0 0 800 60" preserveAspectRatio="none" style="width:100%;height:100%"><path d="M20 45Q180 10 400 25T780 15" fill="none" stroke="#888" stroke-width=".8" stroke-dasharray="6 4"/><g transform="translate(775,13) rotate(-8)"><path d="M0 0L-10-4L-8 0L-10 4Z" fill="#888"/><line x1="-7" y1="0" x2="-14" y2="-6" stroke="#888" stroke-width=".5"/><line x1="-7" y1="0" x2="-14" y2="6" stroke="#888" stroke-width=".5"/></g></svg>`;
+        div.style.cssText = 'width:100%;height:50px;pointer-events:none;opacity:'+op(pl.opacity)+';margin:-10px 0';
+        div.innerHTML = `<svg viewBox="0 0 800 60" preserveAspectRatio="none" style="width:100%;height:100%"><path d="M20 45Q180 10 400 25T780 15" fill="none" stroke="#888" stroke-width=".8" stroke-dasharray="6 4"/><g transform="translate(775,13) rotate(-8)"><path d="M0 0L-10-4L-8 0L-10 4Z" fill="#888"/><line x1="-7" y1="0" x2="-14" y2="-6" stroke="#888" stroke-width=".5"/><line x1="-7" y1="0" x2="-14" y2="6" stroke="#888" stroke-width=".5"/></g></svg>`;
         target.after(div);
       }
     }
 
-    // 4. Botanical
+    // 4. BOTANICAL
     const bo = dc.botanical;
     if(bo && bo.on!==false){
-      const style = bo.style||'eucalyptus';
-      const paths = BOTAN[style]||BOTAN.eucalyptus;
-      const citSec = document.querySelector('[data-exp-block="citations"]') || document.querySelector('[data-exp-block="live"]');
-      if(citSec){
-        citSec.style.position='relative'; citSec.style.overflow='hidden';
-        const leaf1 = mkSvg(`<svg viewBox="0 0 100 140" style="width:120px;height:160px"><g stroke="#888" stroke-width=".6" fill="none">${paths}</g></svg>`, bo.opacity);
-        leaf1.style.cssText='position:absolute;left:-10px;top:30px;z-index:0;pointer-events:none;opacity:'+(bo.opacity||3)/100;
-        const leaf2 = mkSvg(`<svg viewBox="0 0 100 140" style="width:100px;height:130px"><g stroke="#888" stroke-width=".5" fill="none" transform="translate(100,0) scale(-1,1)">${paths}</g></svg>`, bo.opacity);
-        leaf2.style.cssText='position:absolute;right:10px;top:60px;z-index:0;pointer-events:none;transform:rotate(25deg);opacity:'+(bo.opacity||3)/100;
-        citSec.appendChild(leaf1); citSec.appendChild(leaf2);
+      const paths = BOTAN[bo.style||'eucalyptus']||BOTAN.eucalyptus;
+      const sec = $('[data-exp-block="citations"]') || $('[data-exp-block="live"]');
+      if(sec){
+        sec.style.position = 'relative';
+        inject(sec, `<svg viewBox="0 0 100 140" style="width:140px;height:180px"><g stroke="#888" stroke-width=".7" fill="none">${paths}</g></svg>`, bo.opacity, 'left:5px;top:30px');
+        inject(sec, `<svg viewBox="0 0 100 140" style="width:110px;height:150px;transform:rotate(25deg) scaleX(-1)"><g stroke="#888" stroke-width=".6" fill="none">${paths}</g></svg>`, bo.opacity, 'right:15px;bottom:30px');
       }
     }
 
-    // 5. Stamp
+    // 5. STAMP
     const sm = dc.stamp;
     if(sm && sm.on!==false){
-      const ln=sm.lines||[];const rot=sm.rotation||12;
-      const galSec = document.querySelector('[data-exp-block="gallery"]') || document.querySelector('[data-exp-block="articles"]');
-      if(galSec){
-        galSec.style.position='relative'; galSec.style.overflow='hidden';
-        const svg = mkSvg(`<svg viewBox="0 0 120 120" style="width:130px;height:130px"><g transform="translate(60,60) rotate(${rot})"><circle r="50" fill="none" stroke="#888" stroke-width="1.2" stroke-dasharray="3 2"/><circle r="42" fill="none" stroke="#888" stroke-width=".4"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="-28" letter-spacing=".15em">${ln[0]||''}</text><text font-family="Georgia,serif" font-size="13" fill="#888" text-anchor="middle" y="-8">${ln[1]||''}</text><text font-family="Courier,monospace" font-size="5.5" fill="#888" text-anchor="middle" y="8">${ln[2]||''}</text><line x1="-35" y1="16" x2="35" y2="16" stroke="#888" stroke-width=".3"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="28">${ln[3]||''}</text><text font-family="Courier,monospace" font-size="4.5" fill="#888" text-anchor="middle" y="38">${ln[4]||''}</text></g></svg>`, sm.opacity);
-        svg.style.cssText='position:absolute;right:20px;top:20px;z-index:0;pointer-events:none;opacity:'+(sm.opacity||4)/100;
-        galSec.appendChild(svg);
+      const ln = sm.lines||[]; const rot = sm.rotation||12;
+      const sec = $('[data-exp-block="gallery"]') || $('[data-exp-block="articles"]');
+      if(sec){
+        sec.style.position = 'relative';
+        inject(sec, `<svg viewBox="0 0 120 120" style="width:150px;height:150px"><g transform="translate(60,60) rotate(${rot})"><circle r="50" fill="none" stroke="#888" stroke-width="1.2" stroke-dasharray="3 2"/><circle r="42" fill="none" stroke="#888" stroke-width=".4"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="-28" letter-spacing=".15em">${ln[0]||''}</text><text font-family="Georgia,serif" font-size="13" fill="#888" text-anchor="middle" y="-8">${ln[1]||''}</text><text font-family="Courier,monospace" font-size="5.5" fill="#888" text-anchor="middle" y="8">${ln[2]||''}</text><line x1="-35" y1="16" x2="35" y2="16" stroke="#888" stroke-width=".3"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="28">${ln[3]||''}</text><text font-family="Courier,monospace" font-size="4.5" fill="#888" text-anchor="middle" y="38">${ln[4]||''}</text></g></svg>`, sm.opacity, 'right:30px;top:20px');
       }
     }
 
-    // 6. Relief
+    // 6. RELIEF
     const rl = dc.relief;
     if(rl && rl.on!==false){
       const path = RELIEFS[rl.style||'hills']||RELIEFS.hills;
-      const footer = document.querySelector('.exp-sponsors')?.parentElement || document.querySelector('[data-exp-block="sponsors"]') || document.querySelector('.exp-contact')?.parentElement;
-      const container = footer || document.querySelector('.expedition-content');
-      if(container){
+      const last = document.querySelector('[data-exp-block="sponsors"]') || document.querySelector('[data-exp-block="contact"]') || document.querySelector('[data-exp-block]:last-child');
+      if(last){
         const div = document.createElement('div');
-        div.style.cssText='position:relative;height:60px;overflow:hidden;pointer-events:none;opacity:'+(rl.opacity||3)/100;
-        div.innerHTML=`<svg viewBox="0 0 720 60" preserveAspectRatio="none" style="width:100%;height:100%;position:absolute;bottom:0"><path d="${path}" fill="#888"/></svg>`;
-        container.after(div);
+        div.style.cssText = 'width:100%;height:60px;pointer-events:none;opacity:'+op(rl.opacity);
+        div.innerHTML = `<svg viewBox="0 0 720 60" preserveAspectRatio="none" style="width:100%;height:100%"><path d="${path}" fill="#888"/></svg>`;
+        last.after(div);
       }
     }
 
-    // 7. Stitch
+    // 7. STITCH
     const sti = dc.stitch;
     if(sti && sti.on!==false){
       const div = document.createElement('div');
-      div.className='exp-deco-stitch';
-      div.style.cssText=`position:fixed;top:0;bottom:0;${sti.side==='right'?'right':'left'}:28px;width:1px;z-index:0;pointer-events:none;opacity:${(sti.opacity||5)/100};background:repeating-linear-gradient(to bottom,#888 0px,#888 6px,transparent 6px,transparent 10px,#888 10px,#888 12px,transparent 12px,transparent 18px)`;
+      div.style.cssText = `position:fixed;top:0;bottom:0;${sti.side==='right'?'right':'left'}:28px;width:1px;z-index:0;pointer-events:none;opacity:${op(sti.opacity)};background:repeating-linear-gradient(to bottom,#888 0px,#888 6px,transparent 6px,transparent 10px,#888 10px,#888 12px,transparent 12px,transparent 18px)`;
       document.body.appendChild(div);
     }
   })();
