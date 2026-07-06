@@ -492,6 +492,9 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 .exp-map-panel-desc{font-family:'Libre Caslon Text',serif;font-size:14px;line-height:1.65;color:#444}
 @media(max-width:768px){.exp-map-panel{width:100%;height:45%;top:auto;bottom:-45%;right:0;border-left:none;border-top:1px solid var(--exp-line);box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:bottom .3s ease}.exp-map-panel.open{bottom:0}.exp-map-panel-img{height:120px}}
 .exp-gallery-extra.exp-expand{display:none}.exp-gallery-extra.exp-expand.open{display:grid}
+.exp-deco{position:absolute;pointer-events:none;z-index:0}
+.exp-deco-plane{width:100%;height:60px;margin:-10px 0}
+.exp-deco-stitch{position:fixed;top:0;bottom:0;width:1px;z-index:0;pointer-events:none}
 body.mode-expedition .leaflet-popup-content-wrapper{border-radius:6px;border:1px solid #111;box-shadow:0 2px 12px rgba(0,0,0,.1);font-family:'Archivo',sans-serif}
 body.mode-expedition .leaflet-popup-content{margin:16px 22px;font-size:14px}
 .exp-pop-name{font-family:'Libre Caslon Display',serif;font-size:19px;margin-bottom:5px}
@@ -1888,7 +1891,7 @@ function renderExpedition(data){
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
-  finalOrder.forEach(key => { if(_b[key]) h += _b[key](); });
+  finalOrder.forEach(key => { if(_b[key]){ const out=_b[key](); if(out) h += `<div data-exp-block="${key}">${out}</div>`; } });
 
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
@@ -2030,6 +2033,137 @@ function renderExpedition(data){
     const autoEtape = nowEtape || sortedEtapes[0];
     if(autoEtape) setTimeout(()=>{ openExpMapPanel(autoEtape); }, 400);
   }
+
+  // ===== DECORATIVE ELEMENTS =====
+  (function renderDecor(){
+    const dc = event.decor;
+    if(!dc || dc.enabled===false) return;
+
+    // Background color
+    if(dc.bgColor) document.body.style.background = dc.bgColor;
+
+    const $ = (sel) => document.querySelector(sel);
+    const mkSvg = (html,op) => { const d=document.createElement('div'); d.className='exp-deco'; d.style.opacity=(op||4)/100; d.innerHTML=html; return d; };
+
+    // SVG Presets
+    const BOTAN = {
+      eucalyptus:'<path d="M50 130Q50 80 30 40Q25 20 50 5Q75 20 70 40Q50 80 50 130Z"/><path d="M50 130L50 30"/><path d="M50 90Q35 75 30 60"/><path d="M50 90Q65 75 70 60"/><path d="M50 65Q40 55 35 45"/><path d="M50 65Q60 55 65 45"/>',
+      palm:'<path d="M50 140L50 50"/><path d="M50 50Q20 30 5 45"/><path d="M50 50Q25 20 10 10"/><path d="M50 50Q50 15 50 5"/><path d="M50 50Q75 20 90 10"/><path d="M50 50Q80 30 95 45"/>',
+      maple:'<path d="M50 130L50 55"/><path d="M50 55L30 20L40 40L20 35L38 48L10 45L35 52L50 55"/><path d="M50 55L70 20L60 40L80 35L62 48L90 45L65 52L50 55"/>',
+      cactus:'<path d="M45 130L45 30Q45 15 55 15L55 130"/><path d="M45 70Q25 70 25 55L25 45Q25 35 35 35L35 70"/><path d="M55 50Q75 50 75 40L75 30Q75 20 65 20L65 50"/>',
+      pine:'<path d="M50 130L50 90"/><path d="M50 10L25 50L35 45L15 80L30 72L20 100L50 90L80 100L70 72L85 80L65 45L75 50Z"/>',
+      olive:'<path d="M50 130Q45 80 35 50Q30 30 50 10Q70 30 65 50Q55 80 50 130Z"/><path d="M50 130L50 20"/><path d="M42 75Q30 65 25 50"/><path d="M58 60Q70 50 75 35"/>',
+      cherry:'<path d="M50 130L50 60"/><path d="M50 60Q40 50 35 40Q30 30 40 25Q50 20 50 30"/><path d="M50 60Q60 50 65 40Q70 30 60 25Q50 20 50 30"/><circle cx="35" cy="42" r="6"/><circle cx="65" cy="42" r="6"/>',
+      wheat:'<path d="M50 130L50 20"/><path d="M50 30Q40 25 38 15"/><path d="M50 30Q60 25 62 15"/><path d="M50 50Q40 45 38 35"/><path d="M50 50Q60 45 62 35"/><path d="M50 70Q40 65 38 55"/><path d="M50 70Q60 65 62 55"/><path d="M50 90Q40 85 38 75"/><path d="M50 90Q60 85 62 75"/>'
+    };
+    const RELIEFS = {
+      hills:'M0 55L40 48L80 50L140 35L180 38L220 25L260 30L300 18L340 22L380 15L420 20L460 28L500 22L540 30L580 38L620 32L660 40L700 36L720 42L720 60L0 60Z',
+      mountains:'M0 58L60 40L90 10L120 35L180 45L220 8L260 38L320 42L370 5L410 30L450 45L510 15L550 40L600 48L660 20L700 42L720 50L720 60L0 60Z',
+      waves:'M0 45Q40 30 80 42Q120 54 160 42Q200 30 240 42Q280 54 320 42Q360 30 400 42Q440 54 480 42Q520 30 560 42Q600 54 640 42Q680 30 720 42L720 60L0 60Z',
+      skyline:'M0 55L40 55L40 30L80 30L80 45L100 45L100 15L140 15L140 40L180 40L180 20L210 20L210 35L240 35L240 10L280 10L280 30L320 30L320 50L360 50L360 25L400 25L400 45L440 45L440 18L480 18L480 38L520 38L520 50L560 50L560 35L600 35L600 55L720 55L720 60L0 60Z',
+      volcano:'M0 55L120 50L200 45L260 30L290 8L310 5L340 30L400 45L480 38L520 25L540 12L560 8L580 25L640 42L720 50L720 60L0 60Z'
+    };
+
+    // 1. Compass
+    const cc = dc.compass;
+    if(cc && cc.on!==false){
+      const hero = $('.exp-hero-split') || $('.exp-hero');
+      if(hero){
+        hero.style.position='relative'; hero.style.overflow='hidden';
+        const svg = mkSvg(`<svg viewBox="0 0 200 200" style="width:280px;height:280px"><g transform="translate(100,100)"><circle r="90" fill="none" stroke="#888" stroke-width=".6"/><circle r="70" fill="none" stroke="#888" stroke-width=".3"/><circle r="4" fill="#888"/><g stroke="#888" stroke-width=".8"><line y1="-88" y2="-25"/><line y1="88" y2="25"/><line x1="-88" x2="-25"/><line x1="88" x2="25"/></g><g stroke="#888" stroke-width=".4"><line x1="-62" y1="-62" x2="-18" y2="-18"/><line x1="62" y1="-62" x2="18" y2="-18"/><line x1="-62" y1="62" x2="-18" y2="18"/><line x1="62" y1="62" x2="18" y2="18"/></g><polygon points="0,-88 -8,-25 0,-15 8,-25" fill="#888" opacity=".6"/><polygon points="0,88 -8,25 0,15 8,25" fill="#888" opacity=".3"/><polygon points="-88,0 -25,-8 -15,0 -25,8" fill="#888" opacity=".3"/><polygon points="88,0 25,-8 15,0 25,8" fill="#888" opacity=".3"/><text font-family="Georgia,serif" font-size="11" fill="#888" text-anchor="middle" y="-92">N</text><text font-family="Georgia,serif" font-size="9" fill="#888" text-anchor="middle" y="100">S</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="-96" y="4" text-anchor="middle">W</text><text font-family="Georgia,serif" font-size="9" fill="#888" x="96" y="4" text-anchor="middle">E</text></g></svg>`, cc.opacity);
+        const p=cc.position||'top-right';
+        svg.style.position='absolute';
+        svg.style.top=p.includes('top')?'-40px':'auto';
+        svg.style.bottom=p.includes('bottom')?'-40px':'auto';
+        svg.style.right=p.includes('right')?'-30px':'auto';
+        svg.style.left=p.includes('left')?'-30px':'auto';
+        hero.appendChild(svg);
+      }
+    }
+
+    // 2. Coords (behind map section)
+    const coo = dc.coords;
+    if(coo && coo.on!==false){
+      const mapSec = $('.exp-map-wrap')?.closest('section') || $('.exp-map-wrap')?.parentElement;
+      if(mapSec){
+        mapSec.style.position='relative';
+        const lb=coo.labels||[];
+        const svg = mkSvg(`<svg viewBox="0 0 600 220" preserveAspectRatio="none" style="position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px)"><line x1="0" y1="55" x2="600" y2="55" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="110" x2="600" y2="110" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="0" y1="165" x2="600" y2="165" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="150" y1="0" x2="150" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="300" y1="0" x2="300" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><line x1="450" y1="0" x2="450" y2="220" stroke="#888" stroke-width=".5" stroke-dasharray="4 8"/><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="52">${lb[0]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="302" y="52">${lb[1]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="152" y="168">${lb[2]||''}</text><text font-family="Courier,monospace" font-size="8" fill="#888" x="452" y="108">${lb[3]||''}</text></svg>`, coo.opacity);
+        svg.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none';
+        mapSec.appendChild(svg);
+      }
+    }
+
+    // 3. Plane trace
+    const pl = dc.plane;
+    if(pl && pl.on!==false){
+      const posMap = {'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'};
+      const targetKey = posMap[pl.position||'after-map']||'etapes';
+      const sections = document.querySelectorAll('[data-exp-block]');
+      let target = null;
+      sections.forEach(s=>{ if(s.dataset.expBlock===targetKey) target=s; });
+      if(target){
+        const div = document.createElement('div');
+        div.className='exp-deco-plane';
+        div.style.opacity=(pl.opacity||4)/100;
+        div.style.pointerEvents='none';
+        div.innerHTML=`<svg viewBox="0 0 800 60" preserveAspectRatio="none" style="width:100%;height:100%"><path d="M20 45Q180 10 400 25T780 15" fill="none" stroke="#888" stroke-width=".8" stroke-dasharray="6 4"/><g transform="translate(775,13) rotate(-8)"><path d="M0 0L-10-4L-8 0L-10 4Z" fill="#888"/><line x1="-7" y1="0" x2="-14" y2="-6" stroke="#888" stroke-width=".5"/><line x1="-7" y1="0" x2="-14" y2="6" stroke="#888" stroke-width=".5"/></g></svg>`;
+        target.after(div);
+      }
+    }
+
+    // 4. Botanical
+    const bo = dc.botanical;
+    if(bo && bo.on!==false){
+      const style = bo.style||'eucalyptus';
+      const paths = BOTAN[style]||BOTAN.eucalyptus;
+      const citSec = document.querySelector('[data-exp-block="citations"]') || document.querySelector('[data-exp-block="live"]');
+      if(citSec){
+        citSec.style.position='relative'; citSec.style.overflow='hidden';
+        const leaf1 = mkSvg(`<svg viewBox="0 0 100 140" style="width:120px;height:160px"><g stroke="#888" stroke-width=".6" fill="none">${paths}</g></svg>`, bo.opacity);
+        leaf1.style.cssText='position:absolute;left:-10px;top:30px;z-index:0;pointer-events:none;opacity:'+(bo.opacity||3)/100;
+        const leaf2 = mkSvg(`<svg viewBox="0 0 100 140" style="width:100px;height:130px"><g stroke="#888" stroke-width=".5" fill="none" transform="translate(100,0) scale(-1,1)">${paths}</g></svg>`, bo.opacity);
+        leaf2.style.cssText='position:absolute;right:10px;top:60px;z-index:0;pointer-events:none;transform:rotate(25deg);opacity:'+(bo.opacity||3)/100;
+        citSec.appendChild(leaf1); citSec.appendChild(leaf2);
+      }
+    }
+
+    // 5. Stamp
+    const sm = dc.stamp;
+    if(sm && sm.on!==false){
+      const ln=sm.lines||[];const rot=sm.rotation||12;
+      const galSec = document.querySelector('[data-exp-block="gallery"]') || document.querySelector('[data-exp-block="articles"]');
+      if(galSec){
+        galSec.style.position='relative'; galSec.style.overflow='hidden';
+        const svg = mkSvg(`<svg viewBox="0 0 120 120" style="width:130px;height:130px"><g transform="translate(60,60) rotate(${rot})"><circle r="50" fill="none" stroke="#888" stroke-width="1.2" stroke-dasharray="3 2"/><circle r="42" fill="none" stroke="#888" stroke-width=".4"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="-28" letter-spacing=".15em">${ln[0]||''}</text><text font-family="Georgia,serif" font-size="13" fill="#888" text-anchor="middle" y="-8">${ln[1]||''}</text><text font-family="Courier,monospace" font-size="5.5" fill="#888" text-anchor="middle" y="8">${ln[2]||''}</text><line x1="-35" y1="16" x2="35" y2="16" stroke="#888" stroke-width=".3"/><text font-family="Courier,monospace" font-size="6" fill="#888" text-anchor="middle" y="28">${ln[3]||''}</text><text font-family="Courier,monospace" font-size="4.5" fill="#888" text-anchor="middle" y="38">${ln[4]||''}</text></g></svg>`, sm.opacity);
+        svg.style.cssText='position:absolute;right:20px;top:20px;z-index:0;pointer-events:none;opacity:'+(sm.opacity||4)/100;
+        galSec.appendChild(svg);
+      }
+    }
+
+    // 6. Relief
+    const rl = dc.relief;
+    if(rl && rl.on!==false){
+      const path = RELIEFS[rl.style||'hills']||RELIEFS.hills;
+      const footer = document.querySelector('.exp-sponsors')?.parentElement || document.querySelector('[data-exp-block="sponsors"]') || document.querySelector('.exp-contact')?.parentElement;
+      const container = footer || document.querySelector('.expedition-content');
+      if(container){
+        const div = document.createElement('div');
+        div.style.cssText='position:relative;height:60px;overflow:hidden;pointer-events:none;opacity:'+(rl.opacity||3)/100;
+        div.innerHTML=`<svg viewBox="0 0 720 60" preserveAspectRatio="none" style="width:100%;height:100%;position:absolute;bottom:0"><path d="${path}" fill="#888"/></svg>`;
+        container.after(div);
+      }
+    }
+
+    // 7. Stitch
+    const sti = dc.stitch;
+    if(sti && sti.on!==false){
+      const div = document.createElement('div');
+      div.className='exp-deco-stitch';
+      div.style.cssText=`position:fixed;top:0;bottom:0;${sti.side==='right'?'right':'left'}:28px;width:1px;z-index:0;pointer-events:none;opacity:${(sti.opacity||5)/100};background:repeating-linear-gradient(to bottom,#888 0px,#888 6px,transparent 6px,transparent 10px,#888 10px,#888 12px,transparent 12px,transparent 18px)`;
+      document.body.appendChild(div);
+    }
+  })();
 
   // Fade-in observer
   const obs = new IntersectionObserver(es=>{
