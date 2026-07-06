@@ -458,6 +458,14 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-counter-num em{font-style:normal;color:var(--exp-accent)}
 .exp-counter-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--exp-grey);margin-top:10px}
 
+/* Essential / À retenir */
+.exp-essential{max-width:1200px;margin:0 auto;padding:48px 32px 56px}
+.exp-essential-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:32px}
+.exp-essential-card{background:var(--exp-stone);border-left:3px solid var(--exp-accent);padding:22px 24px;position:relative}
+.exp-essential-num{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--exp-accent);opacity:.35;line-height:1;margin-bottom:8px}
+.exp-essential-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);background:rgba(255,108,0,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px}
+.exp-essential-text{font-size:14.5px;line-height:1.65;color:var(--exp-ink)}
+
 /* Map section */
 .exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 48px}
 .exp-section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
@@ -714,6 +722,7 @@ body.mode-expedition .social-float{display:none}
   .exp-side{position:static}
   .exp-art-grid{grid-template-columns:1fr}
   .exp-verbatim-grid{grid-template-columns:1fr}
+  .exp-essential-grid{grid-template-columns:1fr}
   .exp-vid-grid{grid-template-columns:1fr}
   .exp-vid-carousel-item.is-classic{width:280px}
   .exp-vid-carousel-item.is-short{width:180px}
@@ -722,7 +731,7 @@ body.mode-expedition .social-float{display:none}
   .exp-gallery-grid .exp-gal-item{height:200px}
   .exp-gallery-extra{grid-template-columns:1fr 1fr}
   .exp-gallery-extra .exp-gal-item{height:150px}
-  .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery,.exp-sponsors{padding-left:20px;padding-right:20px}
+  .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery,.exp-sponsors,.exp-essential{padding-left:20px;padding-right:20px}
 }
 @media(max-width:860px){
   .exp-cobrand{padding:12px 16px}
@@ -1537,7 +1546,7 @@ function render(data){
 var _expMapInstance = null;
 
 function renderExpedition(data){
-  const {event,live,articles,journalists,etapes,citations,videos,interviews} = data;
+  const {event,essential,live,articles,journalists,etapes,citations,videos,interviews} = data;
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
@@ -1660,6 +1669,17 @@ function renderExpedition(data){
       o += `<div class="exp-counter${cdCls}"${cdStyle}><div class="exp-counter-num">${c.value}</div><div class="exp-counter-label">${c.label}</div></div>`;
     });
     return o + `</section>`;
+  };
+
+  _b.essential = function(){
+    if(mod.essential===false || !essential || !essential.length) return '';
+    let o = `<section class="exp-essential">`;
+    if(event.essentialShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.essentialTitle||'À retenir'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.essentialSubtitle||'Les points clés de l\'expédition'}</p>`;
+    o += `<div class="exp-essential-grid">`;
+    essential.forEach((p,i) => {
+      o += `<div class="exp-essential-card"><div class="exp-essential-num">${String(i+1).padStart(2,'0')}</div>${p.tag?`<span class="exp-essential-tag">${p.tag}</span>`:''}<div class="exp-essential-text">${p.text}</div></div>`;
+    });
+    return o + `</div></section>`;
   };
 
   _b.etapes = function(){
@@ -1935,7 +1955,7 @@ function renderExpedition(data){
   };
 
   // Assemble blocks in configured order
-  const defaultExpOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const defaultExpOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
