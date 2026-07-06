@@ -525,6 +525,9 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 
 /* Fil de route */
 .exp-feed{position:relative;padding-left:34px}
+.exp-day-sep{display:flex;align-items:center;gap:16px;margin:32px 0 20px -34px;padding-left:0}
+.exp-day-sep span{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);white-space:nowrap}
+.exp-day-sep::after{content:'';flex:1;height:1px;background:var(--exp-line)}
 .exp-feed::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:var(--exp-line)}
 .exp-entry{position:relative;margin-bottom:44px;opacity:0;transform:translateY(12px);animation:exp-fadeIn .5s ease forwards}
 .exp-entry:nth-child(1){animation-delay:.1s}.exp-entry:nth-child(2){animation-delay:.2s}.exp-entry:nth-child(3){animation-delay:.3s}.exp-entry:nth-child(4){animation-delay:.4s}.exp-entry:nth-child(5){animation-delay:.5s}
@@ -547,6 +550,8 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-voir-plus{display:block;width:100%;text-align:center;padding:16px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);cursor:pointer;border:none;background:none;transition:opacity .2s}
 .exp-voir-plus:hover{opacity:.7}
 .exp-expand{display:none}.exp-expand.open{display:block}
+.exp-verbatim-grid.exp-expand{display:none}.exp-verbatim-grid.exp-expand.open{display:grid}
+.exp-itw-grid.exp-expand{display:none}.exp-itw-grid.exp-expand.open{display:grid}
 .exp-art-grid.exp-expand{display:none}.exp-art-grid.exp-expand.open{display:grid}
 
 /* Sidebar */
@@ -1689,12 +1694,25 @@ function renderExpedition(data){
       const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
       const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
       const extraEntries = pubLive.slice(EXP_LIVE_VIS);
+      // Day separator helper
+      let _lastDay = '';
+      function dayHeader(entry){
+        try {
+          const d = entry.time?.toDate ? entry.time.toDate() : (entry.time ? new Date(entry.time) : null);
+          if(!d || isNaN(d)) return '';
+          const key = d.toISOString().slice(0,10);
+          if(key === _lastDay) return '';
+          _lastDay = key;
+          const label = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+          return `<div class="exp-day-sep"><span>${label.charAt(0).toUpperCase()+label.slice(1)}</span></div>`;
+        } catch(e){ return ''; }
+      }
       o += `<div class="exp-feed">`;
-      visEntries.forEach((entry,i) => { o += mkExpEntry(entry, sortedEtapes, jrPhotoMap, i===0); });
+      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, i===0); });
       if(extraEntries.length){
         o += `<div class="exp-expand" id="exp-feed-expand">`;
-        extraEntries.forEach(entry => { o += mkExpEntry(entry, sortedEtapes, jrPhotoMap); });
-        o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length})">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
+        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap); });
+        o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length},'▴ Réduire','▾ Voir les ${extraEntries.length} entrées précédentes')">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
       }
       o += `</div>`;
     } else {
@@ -1742,39 +1760,63 @@ function renderExpedition(data){
 
   _b.citations = function(){
     if(mod.citations===false || !pubCitations.length) return '';
+    const CIT_VIS = event.citVisibleCount || 6;
+    const visible = pubCitations.slice(0, CIT_VIS);
+    const extra = pubCitations.slice(CIT_VIS);
     let o = `<section class="exp-verbatims">`;
     if(event.citationsShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p>`;
     o += `<div class="exp-verbatim-grid">`;
-    pubCitations.forEach(c => {
+    function mkVCard(c){
       const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const isLarge = c.photoFormat === 'large';
-      o += `<div class="exp-verbatim-card">`;
-      if(isLarge && c.avatar) o += `<img class="exp-verbatim-avatar-large" src="${c.avatar}" alt="" onerror="this.remove()">`;
-      o += `<div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">`;
-      if(!isLarge){ o += c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`; }
-      o += `<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
-    });
-    return o + `</div></section>`;
+      let h = `<div class="exp-verbatim-card">`;
+      if(isLarge && c.avatar) h += `<img class="exp-verbatim-avatar-large" src="${c.avatar}" alt="" onerror="this.remove()">`;
+      h += `<div class="exp-verbatim-text">${c.text||''}</div><div class="exp-verbatim-author">`;
+      if(!isLarge){ h += c.avatar?`<img class="exp-verbatim-avatar" src="${c.avatar}" alt="" onerror="this.style.display='none'">`:`<div class="exp-verbatim-avatar-ph">${ini}</div>`; }
+      h += `<div><div class="exp-verbatim-name">${c.name||''}</div>${c.role?`<div class="exp-verbatim-role">${c.role}</div>`:''}</div></div></div>`;
+      return h;
+    }
+    visible.forEach(c => { o += mkVCard(c); });
+    if(extra.length){
+      o += `</div><div class="exp-verbatim-grid exp-expand" id="exp-cit-extra">`;
+      extra.forEach(c => { o += mkVCard(c); });
+      o += `</div><button class="exp-voir-plus" id="exp-cit-btn" onclick="toggleExpExpand('exp-cit-extra','exp-cit-btn',${extra.length},'Réduire','Voir les ${extra.length} autres verbatims')">Voir les ${extra.length} autres verbatims ▾</button>`;
+    } else {
+      o += `</div>`;
+    }
+    return o + `</section>`;
   };
 
   _b.interviews = function(){
     const pubItw = (interviews||[]).sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.interviews===false || !pubItw.length) return '';
+    const ITW_VIS = event.itwVisibleCount || 4;
+    const visItw = pubItw.slice(0, ITW_VIS);
+    const extraItw = pubItw.slice(ITW_VIS);
     let o = `<section class="exp-interviews">`;
     if(event.interviewsShowTitle!==false){ o += `<div class="exp-section-head"><h2>${event.interviewsTitle||'Interviews'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.interviewsSubtitle||'Rencontres et regards croisés'}</p>`; }
     o += `<div class="exp-itw-grid">`;
-    pubItw.forEach(itw => {
+    function mkItwCard(itw){
       const ini = (itw.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      o += `<div class="exp-itw-card">${itw.photo_url?`<img class="exp-itw-avatar" src="${itw.photo_url}" alt="" onerror="this.style.display='none'">`:`<div class="exp-itw-avatar-ph">${ini}</div>`}<div class="exp-itw-body">`;
-      if(itw.tag) o += `<span class="exp-itw-tag">${itw.tag}</span>`;
-      o += `<div class="exp-itw-name">${itw.name||''}</div>`;
-      if(itw.role) o += `<div class="exp-itw-role">${itw.role}</div>`;
-      if(itw.quote) o += `<div class="exp-itw-quote">${itw.quote}</div>`;
-      if(itw.bio) o += `<div class="exp-itw-bio">${itw.bio}</div>`;
-      if(itw.link) o += `<a class="exp-itw-cta" href="${itw.link}" target="_blank" rel="noopener">Lire l'interview ▸</a>`;
-      o += `</div></div>`;
-    });
-    return o + `</div></section>`;
+      let h = `<div class="exp-itw-card">${itw.photo_url?`<img class="exp-itw-avatar" src="${itw.photo_url}" alt="" onerror="this.style.display='none'">`:`<div class="exp-itw-avatar-ph">${ini}</div>`}<div class="exp-itw-body">`;
+      if(itw.tag) h += `<span class="exp-itw-tag">${itw.tag}</span>`;
+      h += `<div class="exp-itw-name">${itw.name||''}</div>`;
+      if(itw.role) h += `<div class="exp-itw-role">${itw.role}</div>`;
+      if(itw.quote) h += `<div class="exp-itw-quote">${itw.quote}</div>`;
+      if(itw.bio) h += `<div class="exp-itw-bio">${itw.bio}</div>`;
+      if(itw.link) h += `<a class="exp-itw-cta" href="${itw.link}" target="_blank" rel="noopener">Lire l'interview ▸</a>`;
+      h += `</div></div>`;
+      return h;
+    }
+    visItw.forEach(itw => { o += mkItwCard(itw); });
+    if(extraItw.length){
+      o += `</div><div class="exp-itw-grid exp-expand" id="exp-itw-extra">`;
+      extraItw.forEach(itw => { o += mkItwCard(itw); });
+      o += `</div><button class="exp-voir-plus" id="exp-itw-btn" onclick="toggleExpExpand('exp-itw-extra','exp-itw-btn',${extraItw.length},'▴ Réduire','▾ Voir les ${extraItw.length} autres interviews')">▾ Voir les ${extraItw.length} autres interviews</button>`;
+    } else {
+      o += `</div>`;
+    }
+    return o + `</section>`;
   };
 
   _b.videos = function(){
@@ -2142,11 +2184,11 @@ function renderExpedition(data){
 }
 
 // Expedition toggle (simpler than live, no chevron SVG)
-window.toggleExpExpand = function(expandId, btnId, count){
+window.toggleExpExpand = function(expandId, btnId, count, openLabel, closedLabel){
   const el=document.getElementById(expandId), btn=document.getElementById(btnId);
   if(!el||!btn) return;
   const open=el.classList.toggle('open');
-  btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} entrées précédentes`;
+  btn.textContent = open ? (openLabel||'▴ Réduire') : (closedLabel||`▾ Voir les ${count} entrées précédentes`);
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
 
