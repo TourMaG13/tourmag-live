@@ -420,7 +420,7 @@ body.mode-expedition *{scrollbar-width:thin;scrollbar-color:var(--exp-line) tran
 /* Cobrand header */
 .exp-cobrand{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--exp-line);background:var(--exp-paper);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(255,255,255,.92)}
 .exp-cobrand-left{display:flex;align-items:center;gap:14px}
-.exp-cobrand-left img{height:20px;width:auto}
+.exp-cobrand-left img{height:var(--logo-h,20px);width:auto}
 .exp-cobrand-x{font-family:'Libre Caslon Display',serif;font-size:17px;color:var(--exp-accent)}
 .exp-cobrand-tm{font-family:'Archivo',sans-serif;font-weight:700;font-size:16px;letter-spacing:.06em}
 .exp-live-pill{display:flex;align-items:center;gap:8px;background:var(--exp-ink);color:#fff;font-size:11px;font-weight:600;letter-spacing:.14em;padding:8px 14px;border-radius:999px;text-transform:uppercase}
@@ -1538,6 +1538,7 @@ function renderExpedition(data){
   document.body.classList.add('mode-expedition');
   document.body.classList.remove('mode-live');
   document.documentElement.style.setProperty('--exp-accent', accent);
+  document.documentElement.style.setProperty('--logo-h', (event.logoSize||20)+'px');
 
   const jrPhotoMap = {};
   (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
@@ -1895,9 +1896,7 @@ function renderExpedition(data){
 
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
-    <div class="exp-footer-brand">
-      ${event.logo_url ? `<img src="${event.logo_url}" alt="" onerror="this.remove()">` : ''}
-    </div>
+    <div class="exp-footer-brand"></div>
     <small>${exp.footerCredits||''}</small>
   </footer>`;
 
@@ -2081,7 +2080,7 @@ function renderExpedition(data){
       var posMap={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'};
       var tk=posMap[pl.position||'after-map']||'etapes';
       var tgt=document.querySelector('[data-exp-block="'+tk+'"]');
-      if(tgt){var pd=mk();pd.setAttribute('style','width:100%;height:50px;pointer-events:none;opacity:'+(pl.opacity||4)/100+';margin:-10px 0;overflow:hidden');pd.innerHTML='<svg viewBox="0 0 800 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" width="100%" height="50"><path d="M20 45Q180 10 400 25T780 15" fill="none" stroke="#888" stroke-width=".8" stroke-dasharray="6 4"/><g transform="translate(775,13) rotate(-8)"><path d="M0 0L-10-4L-8 0L-10 4Z" fill="#888"/></g></svg>';tgt.after(pd);}
+      if(tgt){var pd=mk();pd.setAttribute('style','width:100%;display:flex;justify-content:center;pointer-events:none;opacity:'+(pl.opacity||4)/100+';margin:10px 0');pd.innerHTML='<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg" width="400" height="40"><line x1="30" y1="20" x2="170" y2="20" stroke="#999" stroke-width=".6" stroke-dasharray="4 4"/><g transform="translate(200,20)"><path d="M0-3L15-3L20-10L22-10L18-3L28-3L30-7L32-7L29-3L32-3L32 3L29 3L32 7L30 7L28 3L18 3L22 10L20 10L15 3L0 3Z" fill="#999"/></g><line x1="230" y1="20" x2="370" y2="20" stroke="#999" stroke-width=".6" stroke-dasharray="4 4"/></svg>';tgt.after(pd);}
     }
 
     // 4. BOTANICAL
@@ -2108,7 +2107,7 @@ function renderExpedition(data){
     if(rl.on!==false){
       var rp=RELIEFS[rl.style||'hills']||RELIEFS.hills;
       var rn=document.querySelector('[data-exp-block="sponsors"]')||document.querySelector('[data-exp-block="contact"]')||document.querySelector('[data-exp-block]:last-child');
-      if(rn){var rd=mk();rd.setAttribute('style','width:100%;height:60px;pointer-events:none;opacity:'+(rl.opacity||4)/100+';overflow:hidden');rd.innerHTML='<svg viewBox="0 0 720 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" width="100%" height="60"><path d="'+rp+'" fill="#888"/></svg>';rn.after(rd);}
+      if(rn){var rd=mk();rd.setAttribute('style','width:100%;max-height:60px;height:60px;pointer-events:none;opacity:'+(rl.opacity||4)/100+';overflow:hidden;flex-shrink:0');rd.innerHTML='<svg viewBox="0 0 720 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice" width="100%" height="60" style="display:block"><path d="'+rp+'" fill="#888"/></svg>';rn.after(rd);}
     }
 
     // 7. STITCH
