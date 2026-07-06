@@ -2034,10 +2034,14 @@ function renderExpedition(data){
   }
 
   // ===== DECORATIVE ELEMENTS =====
+  if(window._decorTimer) clearTimeout(window._decorTimer);
   document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
   document.body.style.removeProperty('background');
 
-  setTimeout(function(){
+  window._decorTimer = setTimeout(function(){
+    // Clean again inside timeout in case another render cycle's cleanup ran before us
+    document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
+    document.body.style.removeProperty('background');
     try {
     var dc = event.decor;
     if(!dc || dc.enabled===false) return;
