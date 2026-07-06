@@ -134,13 +134,28 @@ select.form-input{cursor:pointer}
 .chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:2px solid transparent}
 .chip .chip-del{font-size:12px;opacity:.5;cursor:pointer}.chip .chip-del:hover{opacity:1}
 
-.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
 .media-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
 .media-thumb:hover{border-color:var(--acc)}
 .media-thumb.selected{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,132,44,.3)}
 .media-thumb img{width:100%;height:100%;object-fit:cover}
-.media-thumb .media-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.media-thumb .media-del{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:2}
 .media-thumb:hover .media-del{opacity:1}
+.media-thumb .media-info{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3;opacity:0;transition:opacity .15s;pointer-events:none}
+.media-thumb:hover .media-info{opacity:1}
+.media-thumb .media-check{position:absolute;top:4px;left:4px;width:22px;height:22px;background:rgba(255,255,255,.85);border:2px solid #ccc;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0;transition:opacity .15s;z-index:2}
+.media-thumb:hover .media-check,.media-thumb.sel .media-check{opacity:1}
+.media-thumb.sel .media-check{background:var(--acc);border-color:var(--acc);color:#fff}
+.media-thumb.sel{border-color:var(--acc)}
+.media-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.media-toolbar input[type=text]{flex:1;min-width:160px}
+.media-toolbar select{width:auto}
+.media-pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:12px;font-family:var(--font)}
+.media-pager button{padding:4px 10px;border:1px solid var(--border);background:var(--bg);border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.media-pager button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.media-pager button:disabled{opacity:.4;cursor:default}
+.media-pager .pg-current{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+.media-bulk{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;margin-bottom:10px;font-size:12px}
 .media-add{aspect-ratio:1;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
 .media-add:hover{border-color:var(--acc);color:var(--acc)}
 
@@ -563,10 +578,13 @@ function openMediaPicker(targetInputId){
   if(!mediaData.length){
     h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
   } else {
-    h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
+    h+=`<input type="text" class="form-input" placeholder="🔍 Rechercher…" style="margin-bottom:10px" oninput="filterMediaPicker(this.value)">`;
+    h+=`<div id="media-picker-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
     mediaData.forEach((m,i)=>{
-      h+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickMediaItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
-        <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()">
+      const name = m.name || m.url.split('/').pop().slice(0,20);
+      h+=`<div class="media-picker-item" data-name="${(m.name||m.url||'').toLowerCase()}" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1;position:relative" onclick="pickMediaItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
+        <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.parentElement.remove()">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:9px;pointer-events:none">${name}</div>
       </div>`;
     });
     h+=`</div>`;
@@ -605,6 +623,12 @@ function closeMediaPicker(){
     closeModal();
   }
 }
+window.filterMediaPicker = function(q){
+  q = q.toLowerCase();
+  document.querySelectorAll('.media-picker-item').forEach(el=>{
+    el.style.display = (!q || el.dataset.name.includes(q)) ? '' : 'none';
+  });
+};
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
 function evRef(){ return db.collection('events').doc(currentEventId); }
@@ -1382,18 +1406,98 @@ async function saveTag(i){
 }
 
 // ==================== MEDIA ====================
+// ==================== MÉDIATHÈQUE ====================
+let _mediaPage=0, _mediaSearch='', _mediaSort='newest', _mediaSelected=new Set();
+const MEDIA_PER_PAGE = 30;
+
+function getFilteredMedia(){
+  let list = [...mediaData];
+  // Search
+  if(_mediaSearch){
+    const q = _mediaSearch.toLowerCase();
+    list = list.filter(m => (m.name||'').toLowerCase().includes(q) || (m.url||'').toLowerCase().includes(q));
+  }
+  // Sort — extract timestamp robustly
+  const ts = (m) => { const c=m.created_at; if(!c) return 0; if(c.toDate) return c.toDate().getTime(); return new Date(c).getTime()||0; };
+  if(_mediaSort==='oldest') list.sort((a,b)=>ts(a)-ts(b));
+  else if(_mediaSort==='name') list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  else list.sort((a,b)=>ts(b)-ts(a)); // newest first
+  return list;
+}
+
 function renderMedia(el){
-  let h=`<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
-  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3><div class="media-grid">`;
-  mediaData.forEach(m=>{
-    h+=`<div class="media-thumb"><img src="${m.url}" alt="${m.name||''}" onerror="this.style.background='#E5E7EB'"><button class="media-del" onclick="deleteMedia('${m.id}')">✕</button></div>`;
+  const filtered = getFilteredMedia();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / MEDIA_PER_PAGE));
+  if(_mediaPage >= totalPages) _mediaPage = totalPages - 1;
+  const start = _mediaPage * MEDIA_PER_PAGE;
+  const pageItems = filtered.slice(start, start + MEDIA_PER_PAGE);
+
+  let h = `<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
+  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3>
+    <div class="media-toolbar">
+      <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('main-content'))">
+      <select class="form-input" onchange="_mediaSort=this.value;_mediaPage=0;renderMedia(document.getElementById('main-content'))">
+        <option value="newest"${_mediaSort==='newest'?' selected':''}>Plus récentes</option>
+        <option value="oldest"${_mediaSort==='oldest'?' selected':''}>Plus anciennes</option>
+        <option value="name"${_mediaSort==='name'?' selected':''}>Nom A→Z</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="_mediaSelected.size?_mediaSelected.clear():mediaData.forEach(m=>_mediaSelected.add(m.id));renderMedia(document.getElementById('main-content'))">${_mediaSelected.size?'Tout désélectionner':'Tout sélectionner'}</button>
+    </div>`;
+
+  if(_mediaSelected.size>0){
+    h += `<div class="media-bulk"><span>📌 ${_mediaSelected.size} sélectionnée(s)</span><button class="btn btn-danger btn-xs" onclick="bulkDeleteMedia()">🗑 Supprimer la sélection</button><button class="btn btn-ghost btn-xs" onclick="_mediaSelected.clear();renderMedia(document.getElementById('main-content'))">Annuler</button></div>`;
+  }
+
+  h += `<div class="media-grid">`;
+  pageItems.forEach(m => {
+    const sel = _mediaSelected.has(m.id);
+    const name = m.name || m.url.split('/').pop().slice(0,25);
+    h += `<div class="media-thumb${sel?' sel':''}" data-mid="${m.id}">
+      <img src="${m.url}" alt="${m.name||''}" loading="lazy" onerror="this.style.background='#E5E7EB'">
+      <div class="media-check" onclick="event.stopPropagation();toggleMediaSel('${m.id}')">${sel?'✓':''}</div>
+      <button class="media-del" onclick="event.stopPropagation();deleteMedia('${m.id}')">✕</button>
+      <div class="media-info">${name}</div>
+    </div>`;
   });
-  h+=`<div class="media-add" onclick="addMedia()"><span style="font-size:20px">＋</span><span>Ajouter</span></div></div></div>`;
+  h += `<div class="media-add" onclick="addMedia()"><span style="font-size:20px">＋</span><span>Ajouter</span></div></div>`;
+
+  // Pagination
+  if(totalPages > 1){
+    h += `<div class="media-pager">`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage=0;renderMedia(document.getElementById('main-content'))">«</button>`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage--;renderMedia(document.getElementById('main-content'))">‹</button>`;
+    const startP = Math.max(0, _mediaPage-2);
+    const endP = Math.min(totalPages, startP+5);
+    for(let p=startP;p<endP;p++){
+      h += `<button class="${p===_mediaPage?'pg-current':''}" onclick="_mediaPage=${p};renderMedia(document.getElementById('main-content'))">${p+1}</button>`;
+    }
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage++;renderMedia(document.getElementById('main-content'))">›</button>`;
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage=${totalPages-1};renderMedia(document.getElementById('main-content'))">»</button>`;
+    h += `<span style="margin-left:8px;color:var(--text3)">${start+1}–${Math.min(start+MEDIA_PER_PAGE,filtered.length)} sur ${filtered.length}</span>`;
+    h += `</div>`;
+  }
+  h += `</div>`;
   el.innerHTML=h;
+}
+
+function toggleMediaSel(id){
+  if(_mediaSelected.has(id)) _mediaSelected.delete(id);
+  else _mediaSelected.add(id);
+  renderMedia(document.getElementById('main-content'));
+}
+async function bulkDeleteMedia(){
+  if(!_mediaSelected.size) return;
+  if(!confirm(`Supprimer ${_mediaSelected.size} photo(s) ?`)) return;
+  saving(true);
+  const batch = [];
+  _mediaSelected.forEach(id=>batch.push(subCol('media').doc(id).delete()));
+  await Promise.all(batch);
+  _mediaSelected.clear();
+  toast(`${batch.length} photo(s) supprimée(s)`);
 }
 function addMedia(){
   openModal(`<h3>Ajouter une photo</h3>
-    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}</div></div>
+    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}${mkMediaPickerBtn('m-media-url')}</div></div>
     <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()">📷 Ajouter</button></div>`);
 }
@@ -1401,7 +1505,7 @@ async function saveMedia(){
   const url=document.getElementById('m-media-url').value.trim();
   if(!url){toast('URL requise','error');return;}
   saving(true);
-  await subCol('media').add({url,name:document.getElementById('m-media-name').value.trim()});
+  await subCol('media').add({url,name:document.getElementById('m-media-name').value.trim(),created_at:firebase.firestore.FieldValue.serverTimestamp()});
   closeModal();toast('Photo ajoutée');
 }
 async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete();toast('Supprimé');}
