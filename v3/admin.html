@@ -419,8 +419,9 @@ function applyTabVisibility(){
   const isExpedition = ev?.mode === 'expedition';
 
   // Expedition mode: tabs to hide and rename map
-  const expHiddenTabs = ['programme','flash','essentiel','rubriques','widget'];
+  const expHiddenTabs = ['programme','flash','rubriques','widget'];
   const expRenameMap = {
+    essentiel: {label:'À retenir', icon:'🧠'},
     live: {label:'Fil de route', icon:'🗺️'},
     citations: {label:'Verbatims', icon:'💬'},
     journalistes: {label:'Reporters', icon:'👤'},
@@ -918,7 +919,7 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockOrder:['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -1094,9 +1095,9 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor'];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor'];
   const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
-  const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact'};
+  const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
@@ -1137,6 +1138,7 @@ function renderModules(el){
     // In expedition mode, show expedition-specific block order
     const expBlocks = [
       {key:'kpis',icon:'📊',label:'Compteurs'},
+      {key:'essential',icon:'🧠',label:'À retenir'},
       {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
       {key:'live',icon:'🗺️',label:'Fil de route + Sidebar'},
       {key:'citations',icon:'💬',label:'Verbatims'},
@@ -1147,7 +1149,7 @@ function renderModules(el){
       {key:'sponsors',icon:'🤝',label:'Partenaires'},
       {key:'contact',icon:'📞',label:'Contact'}
     ];
-    const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
