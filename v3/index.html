@@ -487,7 +487,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-map-panel-body{padding:20px 22px}
 .exp-map-panel-status{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
 .exp-map-panel-status.done{color:#111}.exp-map-panel-status.now{color:var(--exp-accent)}.exp-map-panel-status.next{color:#999}
-.exp-map-panel-name{font-family:'Libre Caslon Display',serif;font-size:20px;margin-bottom:6px}
+.exp-map-panel-name{font-family:'Libre Caslon Text',serif;font-weight:700;font-size:20px;margin-bottom:6px}
 .exp-map-panel-meta{display:flex;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);letter-spacing:.04em;margin-bottom:14px}
 .exp-map-panel-desc{font-family:'Libre Caslon Text',serif;font-size:14px;line-height:1.65;color:#444}
 @media(max-width:768px){.exp-map-panel{width:100%;height:45%;top:auto;bottom:-45%;right:0;border-left:none;border-top:1px solid var(--exp-line);box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:bottom .3s ease}.exp-map-panel.open{bottom:0}.exp-map-panel-img{height:120px}}
@@ -638,7 +638,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-art:hover .exp-art-img img{transform:scale(1.04)}
 .exp-art-body{padding:18px 20px 22px}
 .exp-art-date{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:var(--exp-grey);text-transform:uppercase}
-.exp-art h4{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:18.5px;line-height:1.25;margin-top:8px}
+.exp-art h4{font-family:'Libre Caslon Text',serif;font-weight:700;font-size:18.5px;line-height:1.25;margin-top:8px}
 
 /* Gallery */
 .exp-gallery{max-width:1200px;margin:0 auto;padding:0 32px 48px}
@@ -2047,7 +2047,7 @@ function renderExpedition(data){
     document.body.style.removeProperty('background');
     try {
     var dc = event.decor;
-    if(!dc || dc.enabled===false) return;
+    if(!dc || dc.enabled===false || mod.decor===false) return;
 
     if(dc.bgColor) document.body.style.setProperty('background', dc.bgColor, 'important');
 
