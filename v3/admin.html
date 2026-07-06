@@ -135,7 +135,7 @@ select.form-input{cursor:pointer}
 .chip .chip-del{font-size:12px;opacity:.5;cursor:pointer}.chip .chip-del:hover{opacity:1}
 
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
-.media-thumb{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.media-thumb{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s;background-image:linear-gradient(45deg,#e0e0e0 25%,transparent 25%),linear-gradient(-45deg,#e0e0e0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e0e0e0 75%),linear-gradient(-45deg,transparent 75%,#e0e0e0 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0px;background-color:#f5f5f5}
 .media-thumb::before{content:'';display:block;padding-bottom:100%}
 .media-thumb:hover{border-color:var(--acc)}
 .media-thumb.selected{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,132,44,.3)}
@@ -259,33 +259,32 @@ select.form-input{cursor:pointer}
   <div class="mobile-sidebar-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
-      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
       <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
       <div class="sidebar-section">Contenu</div>
-      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
-      <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
-      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
-      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
       <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
-      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
-      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
-      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
+      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Verbatims<span class="badge" id="badge-cit">0</span></div>
       <div class="sidebar-item" data-tab="interviews"><span class="icon">🎙️</span>Interviews</div>
-      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Journalistes</div>
-      <div class="sidebar-section">Enrichissement</div>
-      <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Chiffres clés</div>
+      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
       <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
+      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
       <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
       <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
-      <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
+      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
+      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
+      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
-      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
+      <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
+      <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Compteurs</div>
+      <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
+      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
+      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-section">Système</div>
       <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
       <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
+      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
     </div>
     <div class="admin-main" id="admin-main"></div>
   </div>
@@ -492,21 +491,6 @@ function applyTabVisibility(){
       item.style.display='';
     }
   });
-
-  // Reorder sidebar tabs in expedition mode to match front-end rendering order
-  if(isExpedition){
-    const sidebar = document.querySelector('.sidebar-item[data-tab]')?.parentElement;
-    if(sidebar){
-      const tabItems = {};
-      sidebar.querySelectorAll('.sidebar-item[data-tab]').forEach(el => { tabItems[el.dataset.tab] = el; });
-      // Move items in expTabOrder to the end of sidebar, preserving order
-      expTabOrder.forEach(tab => {
-        if(tabItems[tab] && tabItems[tab].style.display !== 'none'){
-          sidebar.appendChild(tabItems[tab]);
-        }
-      });
-    }
-  }
 
   // Also hide sidebar sections if all their items are hidden
   document.querySelectorAll('.sidebar-section').forEach(sec=>{
@@ -932,7 +916,7 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
     expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
@@ -1027,6 +1011,7 @@ function modifyEvent(id){
           <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="m-ev-eyebrow" value="${((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"><div style="font-size:9px;color:var(--text3);margin-top:3px">Petite mention en capitales au-dessus du titre.</div></div>
           <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="m-ev-photo-credit" value="${((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')}" placeholder="© Photographe"></div>
         </div>
+        <div class="form-row" style="margin-top:10px"><label class="form-label">Taille du logo dans le hero (px)</label><div style="display:flex;align-items:center;gap:10px"><input type="range" id="m-ev-logo-size" min="20" max="120" value="${ev.logoSize||48}" style="flex:1"><span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text3);min-width:36px" id="m-ev-logo-size-lbl">${ev.logoSize||48}px</span></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur maximale du logo affiché dans le hero du front expédition.</div></div>
       </div>
     </div>
 
@@ -1036,6 +1021,9 @@ function modifyEvent(id){
       <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=\\'form-input\\' placeholder=\\'Nom\\' style=\\'width:120px\\' data-ht-name=\\''+i+'\\'><input type=\\'color\\' value=\\'#E8842C\\' style=\\'width:34px;height:30px;border:none;cursor:pointer;border-radius:4px\\' data-ht-color=\\''+i+'\\'><input class=\\'form-input\\' placeholder=\\'URL (optionnel)\\' style=\\'flex:1;font-size:10px\\' data-ht-link=\\''+i+'\\'><button class=\\'btn btn-danger btn-xs\\' onclick=\\'this.parentElement.remove()\\'>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
+  // Wire up logo size slider label
+  const lsSlider=document.getElementById('m-ev-logo-size'),lsLbl=document.getElementById('m-ev-logo-size-lbl');
+  if(lsSlider&&lsLbl) lsSlider.addEventListener('input',()=>{lsLbl.textContent=lsSlider.value+'px';});
 }
 
 function toggleEventModeFields(){
@@ -1069,6 +1057,8 @@ async function updateEvent(id){
   const photoCreditEl=document.getElementById('m-ev-photo-credit');
   if(eyebrowEl) updateData['expedition.eyebrow']=eyebrowEl.value.trim();
   if(photoCreditEl) updateData['expedition.photoCredit']=photoCreditEl.value.trim();
+  const logoSizeEl=document.getElementById('m-ev-logo-size');
+  if(logoSizeEl) updateData.logoSize=parseInt(logoSizeEl.value)||48;
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
 }
@@ -1104,8 +1094,8 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'}];
+  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
   const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -1443,17 +1433,17 @@ function renderMedia(el){
   let h = `<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
   <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3>
     <div class="media-toolbar">
-      <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('main-content'))">
-      <select class="form-input" onchange="_mediaSort=this.value;_mediaPage=0;renderMedia(document.getElementById('main-content'))">
+      <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
+      <select class="form-input" onchange="_mediaSort=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
         <option value="newest"${_mediaSort==='newest'?' selected':''}>Plus récentes</option>
         <option value="oldest"${_mediaSort==='oldest'?' selected':''}>Plus anciennes</option>
         <option value="name"${_mediaSort==='name'?' selected':''}>Nom A→Z</option>
       </select>
-      <button class="btn btn-ghost btn-sm" onclick="_mediaSelected.size?_mediaSelected.clear():mediaData.forEach(m=>_mediaSelected.add(m.id));renderMedia(document.getElementById('main-content'))">${_mediaSelected.size?'Tout désélectionner':'Tout sélectionner'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="_mediaSelected.size?_mediaSelected.clear():mediaData.forEach(m=>_mediaSelected.add(m.id));renderMedia(document.getElementById('admin-main'))">${_mediaSelected.size?'Tout désélectionner':'Tout sélectionner'}</button>
     </div>`;
 
   if(_mediaSelected.size>0){
-    h += `<div class="media-bulk"><span>📌 ${_mediaSelected.size} sélectionnée(s)</span><button class="btn btn-danger btn-xs" onclick="bulkDeleteMedia()">🗑 Supprimer la sélection</button><button class="btn btn-ghost btn-xs" onclick="_mediaSelected.clear();renderMedia(document.getElementById('main-content'))">Annuler</button></div>`;
+    h += `<div class="media-bulk"><span>📌 ${_mediaSelected.size} sélectionnée(s)</span><button class="btn btn-danger btn-xs" onclick="bulkDeleteMedia()">🗑 Supprimer la sélection</button><button class="btn btn-ghost btn-xs" onclick="_mediaSelected.clear();renderMedia(document.getElementById('admin-main'))">Annuler</button></div>`;
   }
 
   h += `<div class="media-grid">`;
@@ -1472,26 +1462,31 @@ function renderMedia(el){
   // Pagination
   if(totalPages > 1){
     h += `<div class="media-pager">`;
-    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage=0;renderMedia(document.getElementById('main-content'))">«</button>`;
-    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage--;renderMedia(document.getElementById('main-content'))">‹</button>`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage=0;renderMedia(document.getElementById('admin-main'))">«</button>`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage--;renderMedia(document.getElementById('admin-main'))">‹</button>`;
     const startP = Math.max(0, _mediaPage-2);
     const endP = Math.min(totalPages, startP+5);
     for(let p=startP;p<endP;p++){
-      h += `<button class="${p===_mediaPage?'pg-current':''}" onclick="_mediaPage=${p};renderMedia(document.getElementById('main-content'))">${p+1}</button>`;
+      h += `<button class="${p===_mediaPage?'pg-current':''}" onclick="_mediaPage=${p};renderMedia(document.getElementById('admin-main'))">${p+1}</button>`;
     }
-    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage++;renderMedia(document.getElementById('main-content'))">›</button>`;
-    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage=${totalPages-1};renderMedia(document.getElementById('main-content'))">»</button>`;
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage++;renderMedia(document.getElementById('admin-main'))">›</button>`;
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage=${totalPages-1};renderMedia(document.getElementById('admin-main'))">»</button>`;
     h += `<span style="margin-left:8px;color:var(--text3)">${start+1}–${Math.min(start+MEDIA_PER_PAGE,filtered.length)} sur ${filtered.length}</span>`;
     h += `</div>`;
   }
   h += `</div>`;
   el.innerHTML=h;
+  // Restore focus to search input if user was typing
+  if(_mediaSearch){
+    const si=el.querySelector('.media-toolbar input[type=text]');
+    if(si){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+  }
 }
 
 function toggleMediaSel(id){
   if(_mediaSelected.has(id)) _mediaSelected.delete(id);
   else _mediaSelected.add(id);
-  renderMedia(document.getElementById('main-content'));
+  renderMedia(document.getElementById('admin-main'));
 }
 async function bulkDeleteMedia(){
   if(!_mediaSelected.size) return;
@@ -1760,6 +1755,7 @@ function _restoreCitDraft(){
 function renderCitations(el){
   _saveCitDraft();
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const isExp=ev.mode==='expedition';
   const citVisible=ev.citVisibleCount||6;
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
@@ -1772,9 +1768,9 @@ function renderCitations(el){
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="cit-s-show-title" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style des cartes</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">${isExp?'Style des verbatims':'Style des cartes'}</div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Style</label>
+        <div class="form-row" style="${isExp?'display:none':''}"><label class="form-label">Style</label>
           <select class="form-input" id="cit-s-style" style="width:180px">
             <option value="classic"${(ev.citationStyle||'classic')==='classic'?' selected':''}>Classique (fond sombre)</option>
             <option value="premium"${ev.citationStyle==='premium'?' selected':''}>Premium (carte blanche)</option>
@@ -4031,6 +4027,14 @@ function renderInterviews(el){
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="itw-s-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="itw-s-show-title" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div class="form-row" style="max-width:300px"><label class="form-label">Interviews visibles avant accordéon</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" min="1" max="20" value="${ev.itwVisibleCount||4}" id="itw-s-visible" oninput="document.getElementById('itw-s-visible-lbl').textContent=this.value" style="flex:1">
+          <span id="itw-s-visible-lbl" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${ev.itwVisibleCount||4}</span>
+        </div>
+      </div>
+    </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveItwSettings()">💾 Enregistrer</button></div>
     </details>
   </div>
@@ -4186,6 +4190,7 @@ function renderContact(el){
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ct-email" value="${(ct.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
       <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="ct-phone" value="${(ct.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
     </div>
+    <div class="form-group"><label class="form-label">Site web</label><input class="form-input" id="ct-website" value="${(ct.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
     ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer le contact</button></div>
   </div>
@@ -4235,6 +4240,7 @@ async function saveContact(){
     message:document.getElementById('ct-msg').value.trim(),
     email:document.getElementById('ct-email').value.trim(),
     phone:document.getElementById('ct-phone').value.trim(),
+    website:document.getElementById('ct-website').value.trim(),
     bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
     bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
@@ -4270,7 +4276,7 @@ function renderDecor(el){
   const c=d.compass||{};const co=d.coords||{};const p=d.plane||{};const b=d.botanical||{};const s=d.stamp||{};const r=d.relief||{};const st=d.stitch||{};
 
   function toggle(id,label,checked){return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none"><input type="checkbox" id="${id}" ${checked?'checked':''}><strong style="font-size:13px">${label}</strong></label>`;}
-  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="20" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:24px" id="${id}-lbl">${val||4}%</span></div>`;}
+  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="20" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:30px" id="${id}-lbl">${(val||4)*5}%</span></div>`;}
   function sel(id,opts,val){let o=`<select class="form-input" id="${id}" style="font-size:12px">`;opts.forEach(op=>{o+=`<option value="${op.id}"${val===op.id?' selected':''}>${op.label}</option>`;});return o+'</select>';}
   function pos(id,val){return sel(id,[{id:'top-right',label:'Haut-droit'},{id:'top-left',label:'Haut-gauche'},{id:'bottom-right',label:'Bas-droit'},{id:'bottom-left',label:'Bas-gauche'}],val||'top-right');}
 
@@ -4368,7 +4374,7 @@ function renderDecor(el){
   // Wire up opacity slider labels
   document.querySelectorAll('[id$="-op"]').forEach(sl=>{
     const lbl=document.getElementById(sl.id+'-lbl');
-    if(sl&&lbl) sl.addEventListener('input',()=>{lbl.textContent=sl.value+'%';});
+    if(sl&&lbl) sl.addEventListener('input',()=>{lbl.textContent=(sl.value*5)+'%';});
   });
   const rotS=document.getElementById('dc-stamp-rot'),rotL=document.getElementById('dc-stamp-rot-lbl');
   if(rotS&&rotL) rotS.addEventListener('input',()=>{rotL.textContent=rotS.value+'°';});
@@ -4402,7 +4408,8 @@ async function saveItwSettings(){
   await evRef().update({
     interviewsTitle:document.getElementById('itw-s-title').value.trim(),
     interviewsSubtitle:document.getElementById('itw-s-sub').value.trim(),
-    interviewsShowTitle:document.getElementById('itw-s-show-title').checked
+    interviewsShowTitle:document.getElementById('itw-s-show-title').checked,
+    itwVisibleCount:parseInt(document.getElementById('itw-s-visible').value)||4
   });
   toast('Réglages interviews enregistrés');
 }
@@ -4521,7 +4528,7 @@ function renderEtapes(el){
         <div class="form-row"><label class="form-label">Statut (manuel)</label><select class="form-input" id="new-etape-status"><option value="next">À venir</option><option value="now">En cours</option><option value="done">Franchie</option></select></div>
         <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="new-etape-order" value="${etapesData.length+1}"></div>
       </div>
-      <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="2"></textarea></div>
+      <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="5" style="resize:vertical"></textarea></div>
       <div class="form-row"><label class="form-label">Photo d'illustration (optionnel)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="new-etape-photo" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('new-etape-photo')}${mkUploadBtn('new-etape-photo')}</div></div>
       <button class="btn btn-primary" onclick="addEtape()">Ajouter l'étape</button>
     </div>
@@ -4657,8 +4664,8 @@ async function editEtape(id){
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="edit-etape-order-${id}" value="${et.order||0}"></div>
-      <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="edit-etape-desc-${id}" value="${(et.description||'').replace(/"/g,'&quot;')}"></div>
     </div>
+    <div class="form-row"><label class="form-label">Description</label><textarea class="form-input" id="edit-etape-desc-${id}" rows="5" style="resize:vertical">${(et.description||'').replace(/</g,'&lt;')}</textarea></div>
     <div class="form-row"><label class="form-label">Photo d'illustration</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="edit-etape-photo-${id}" value="${(et.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('edit-etape-photo-'+id)}${mkUploadBtn('edit-etape-photo-'+id)}</div></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="saveEtapeEdit('${id}')">💾 Enregistrer</button>
@@ -4765,9 +4772,9 @@ function renderGallery(el){
 function pickGalleryFromMedia(){
   if(!mediaData.length){toast('Aucune image dans la médiathèque. Ajoutez-en d\'abord dans l\'onglet Médiathèque.','error');return;}
   let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:12px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
-  mh+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">';
+  mh+='<div class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:400px;overflow-y:auto;padding:4px">';
   mediaData.forEach((m,i)=>{
-    mh+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickGalleryItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'"><img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()"></div>`;
+    mh+=`<div class="media-thumb" onclick="pickGalleryItem(${i})"><img src="${m.url}" onerror="this.parentElement.remove()"></div>`;
   });
   mh+='</div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>';
   openModal(mh);
