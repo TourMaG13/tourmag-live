@@ -135,13 +135,14 @@ select.form-input{cursor:pointer}
 .chip .chip-del{font-size:12px;opacity:.5;cursor:pointer}.chip .chip-del:hover{opacity:1}
 
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
-.media-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.media-thumb{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.media-thumb::before{content:'';display:block;padding-bottom:100%}
 .media-thumb:hover{border-color:var(--acc)}
 .media-thumb.selected{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,132,44,.3)}
-.media-thumb img{width:100%;height:100%;object-fit:cover}
+.media-thumb img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
 .media-thumb .media-del{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:2}
 .media-thumb:hover .media-del{opacity:1}
-.media-thumb .media-info{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3;opacity:0;transition:opacity .15s;pointer-events:none}
+.media-thumb .media-info{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3;opacity:0;transition:opacity .15s;pointer-events:none;z-index:1}
 .media-thumb:hover .media-info{opacity:1}
 .media-thumb .media-check{position:absolute;top:4px;left:4px;width:22px;height:22px;background:rgba(255,255,255,.85);border:2px solid #ccc;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0;transition:opacity .15s;z-index:2}
 .media-thumb:hover .media-check,.media-thumb.sel .media-check{opacity:1}
@@ -156,7 +157,11 @@ select.form-input{cursor:pointer}
 .media-pager button:disabled{opacity:.4;cursor:default}
 .media-pager .pg-current{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
 .media-bulk{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;margin-bottom:10px;font-size:12px}
-.media-add{aspect-ratio:1;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
+.media-add{position:relative;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
+.media-add::before{content:'';display:block;padding-bottom:100%}
+.media-add span{position:absolute}
+.media-add span:first-child{top:calc(50% - 16px)}
+.media-add span:last-child{top:calc(50% + 8px)}
 .media-add:hover{border-color:var(--acc);color:var(--acc)}
 
 .cit-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
@@ -272,6 +277,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
       <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
       <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
+      <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
@@ -421,10 +427,11 @@ function applyTabVisibility(){
     journalistes: {label:'Reporters', icon:'👤'},
     kpis: {label:'Compteurs', icon:'📊'},
     sponsors: {label:'Partenaires', icon:'🤝'},
-    contact: {label:'Contact', icon:'📞'}
+    contact: {label:'Contact', icon:'📞'},
+    decor: {label:'Décor', icon:'🎨'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','media','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','decor','media','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -579,12 +586,12 @@ function openMediaPicker(targetInputId){
     h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
   } else {
     h+=`<input type="text" class="form-input" placeholder="🔍 Rechercher…" style="margin-bottom:10px" oninput="filterMediaPicker(this.value)">`;
-    h+=`<div id="media-picker-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
+    h+=`<div id="media-picker-grid" class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:420px;overflow-y:auto;padding:4px">`;
     mediaData.forEach((m,i)=>{
       const name = m.name || m.url.split('/').pop().slice(0,20);
-      h+=`<div class="media-picker-item" data-name="${(m.name||m.url||'').toLowerCase()}" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1;position:relative" onclick="pickMediaItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
-        <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.parentElement.remove()">
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:9px;pointer-events:none">${name}</div>
+      h+=`<div class="media-thumb media-picker-item" data-name="${(m.name||m.url||'').toLowerCase()}" onclick="pickMediaItem(${i})">
+        <img src="${m.url}" alt="${name}" loading="lazy" onerror="this.parentElement.remove()">
+        <div class="media-info">${name}</div>
       </div>`;
     });
     h+=`</div>`;
@@ -871,6 +878,7 @@ function renderTab(){
     case 'gallery':renderGallery(main);break;
     case 'sponsors':renderSponsors(main);break;
     case 'contact':renderContact(main);break;
+    case 'decor':renderDecor(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
@@ -4235,6 +4243,158 @@ async function saveContact(){
   };
   await evRef().update({contact});
   toast('Contact enregistré');
+}
+
+// ==================== DÉCOR ====================
+const BOTANICAL_PRESETS = [
+  {id:'eucalyptus',label:'🌿 Eucalyptus',desc:'Australie / Océanie'},
+  {id:'palm',label:'🌴 Palmier',desc:'Tropiques / Asie du Sud-Est'},
+  {id:'maple',label:'🍁 Érable',desc:'Canada / Japon automne'},
+  {id:'cactus',label:'🌵 Cactus',desc:'Amérique du Sud / Mexique'},
+  {id:'pine',label:'🌲 Conifère',desc:'Scandinavie / Montagne'},
+  {id:'olive',label:'🫒 Olivier',desc:'Méditerranée'},
+  {id:'cherry',label:'🌸 Cerisier',desc:'Japon printemps'},
+  {id:'wheat',label:'🌾 Blé',desc:'Campagne / Europe de l\'Est'}
+];
+const RELIEF_PRESETS = [
+  {id:'hills',label:'🏜 Collines douces',desc:'Désert / Outback'},
+  {id:'mountains',label:'🏔 Montagnes',desc:'Alpes / Andes'},
+  {id:'waves',label:'🌊 Vagues',desc:'Côtier / Maritime'},
+  {id:'skyline',label:'🏙 Skyline',desc:'Urbain'},
+  {id:'volcano',label:'🌋 Volcans',desc:'Islande / Indonésie'}
+];
+
+function renderDecor(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const d=ev.decor||{};
+  const c=d.compass||{};const co=d.coords||{};const p=d.plane||{};const b=d.botanical||{};const s=d.stamp||{};const r=d.relief||{};const st=d.stitch||{};
+
+  function toggle(id,label,checked){return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none"><input type="checkbox" id="${id}" ${checked?'checked':''}><strong style="font-size:13px">${label}</strong></label>`;}
+  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="8" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:24px" id="${id}-lbl">${val||4}%</span></div>`;}
+  function sel(id,opts,val){let o=`<select class="form-input" id="${id}" style="font-size:12px">`;opts.forEach(op=>{o+=`<option value="${op.id}"${val===op.id?' selected':''}>${op.label}</option>`;});return o+'</select>';}
+  function pos(id,val){return sel(id,[{id:'top-right',label:'Haut-droit'},{id:'top-left',label:'Haut-gauche'},{id:'bottom-right',label:'Bas-droit'},{id:'bottom-left',label:'Bas-gauche'}],val||'top-right');}
+
+  let h=`<div class="page-title">🎨 Décor de page</div><div class="page-desc">Éléments décoratifs discrets rappelant un carnet de route. Chaque élément est paramétrable et optionnel. S'applique uniquement au mode Expédition.</div>`;
+
+  // Global toggle + bg
+  h+=`<div class="admin-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    ${toggle('dc-enabled','Activer les éléments décoratifs',d.enabled!==false)}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="dc-bg-on" ${d.bgColor?'checked':''}>Fond de page personnalisé</label>
+    <input type="color" id="dc-bg-color" value="${d.bgColor||'#FDFBF7'}" style="width:36px;height:28px;border:1px solid #ddd;border-radius:4px;padding:2px;cursor:pointer">
+    <input class="form-input" id="dc-bg-txt" value="${d.bgColor||''}" placeholder="#FDFBF7" style="width:100px;font-size:11px">
+  </div></div>`;
+
+  // Compass
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-compass-on','🧭 Rose des vents',c.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Position</span>${pos('dc-compass-pos',c.position)}</div>
+      <div>${slider('dc-compass-op',c.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Coords
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-coords-on','📐 Coordonnées GPS',co.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px">
+      <input class="form-input" id="dc-co-0" value="${(co.labels||[])[0]||''}" placeholder="S 23°42'" style="font-size:11px">
+      <input class="form-input" id="dc-co-1" value="${(co.labels||[])[1]||''}" placeholder="E 133°52'" style="font-size:11px">
+      <input class="form-input" id="dc-co-2" value="${(co.labels||[])[2]||''}" placeholder="S 34°55'" style="font-size:11px">
+      <input class="form-input" id="dc-co-3" value="${(co.labels||[])[3]||''}" placeholder="E 138°36'" style="font-size:11px">
+    </div>
+    ${slider('dc-coords-op',co.opacity||3)}
+  </div>`;
+
+  // Plane
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-plane-on','✈️ Tracé d\'avion',p.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Placer après la section</span>${sel('dc-plane-pos',[{id:'after-map',label:'Carte / Étapes'},{id:'after-live',label:'Fil de route'},{id:'after-citations',label:'Verbatims'},{id:'after-gallery',label:'Galerie'}],p.position||'after-map')}</div>
+      <div>${slider('dc-plane-op',p.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Botanical
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-botan-on','🌿 Croquis botaniques',b.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Style</span>${sel('dc-botan-style',BOTANICAL_PRESETS,b.style||'eucalyptus')}</div>
+      <div>${slider('dc-botan-op',b.opacity||3)}</div>
+    </div>
+  </div>`;
+
+  // Stamp
+  const sl=s.lines||['EXPEDITION','WTA','AUSTRALIA','2026','ADELAIDE → ADELAIDE'];
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-stamp-on','📌 Tampon postal',s.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+      <input class="form-input" id="dc-st-0" value="${sl[0]||''}" placeholder="EXPEDITION" style="font-size:11px">
+      <input class="form-input" id="dc-st-1" value="${sl[1]||''}" placeholder="WTA" style="font-size:11px">
+      <input class="form-input" id="dc-st-2" value="${sl[2]||''}" placeholder="AUSTRALIA" style="font-size:11px">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+      <input class="form-input" id="dc-st-3" value="${sl[3]||''}" placeholder="2026" style="font-size:11px">
+      <input class="form-input" id="dc-st-4" value="${sl[4]||''}" placeholder="ADELAIDE → ADELAIDE" style="font-size:11px">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Rotation</span><div style="display:flex;align-items:center;gap:6px"><input type="range" id="dc-stamp-rot" min="-30" max="30" value="${s.rotation||12}" style="flex:1"><span style="font-size:10px;min-width:30px" id="dc-stamp-rot-lbl">${s.rotation||12}°</span></div></div>
+      <div>${slider('dc-stamp-op',s.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Relief
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-relief-on','🏔 Silhouette de relief',r.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Profil</span>${sel('dc-relief-style',RELIEF_PRESETS,r.style||'hills')}</div>
+      <div>${slider('dc-relief-op',r.opacity||3)}</div>
+    </div>
+  </div>`;
+
+  // Stitch
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-stitch-on','〰️ Couture de reliure',st.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Côté</span>${sel('dc-stitch-side',[{id:'left',label:'Gauche'},{id:'right',label:'Droite'}],st.side||'left')}</div>
+      <div>${slider('dc-stitch-op',st.opacity||5)}</div>
+    </div>
+  </div>`;
+
+  h+=`<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveDecor()">💾 Enregistrer le décor</button></div>`;
+  el.innerHTML=h;
+
+  // Wire up opacity slider labels
+  document.querySelectorAll('[id$="-op"]').forEach(sl=>{
+    const lbl=document.getElementById(sl.id+'-lbl');
+    if(sl&&lbl) sl.addEventListener('input',()=>{lbl.textContent=sl.value+'%';});
+  });
+  const rotS=document.getElementById('dc-stamp-rot'),rotL=document.getElementById('dc-stamp-rot-lbl');
+  if(rotS&&rotL) rotS.addEventListener('input',()=>{rotL.textContent=rotS.value+'°';});
+  // Sync bg color pickers
+  const bgP=document.getElementById('dc-bg-color'),bgT=document.getElementById('dc-bg-txt');
+  if(bgP&&bgT){bgP.addEventListener('input',()=>{bgT.value=bgP.value;});bgT.addEventListener('input',()=>{if(bgT.value.match(/^#[0-9a-fA-F]{6}$/))bgP.value=bgT.value;});}
+}
+
+async function saveDecor(){
+  saving(true);
+  const v=id=>document.getElementById(id)?.value?.trim()||'';
+  const ck=id=>document.getElementById(id)?.checked||false;
+  const num=id=>parseInt(document.getElementById(id)?.value)||0;
+  const decor={
+    enabled:ck('dc-enabled'),
+    bgColor:ck('dc-bg-on')?v('dc-bg-txt'):'',
+    compass:{on:ck('dc-compass-on'),position:v('dc-compass-pos'),opacity:num('dc-compass-op')},
+    coords:{on:ck('dc-coords-on'),labels:[v('dc-co-0'),v('dc-co-1'),v('dc-co-2'),v('dc-co-3')],opacity:num('dc-coords-op')},
+    plane:{on:ck('dc-plane-on'),position:v('dc-plane-pos'),opacity:num('dc-plane-op')},
+    botanical:{on:ck('dc-botan-on'),style:v('dc-botan-style'),opacity:num('dc-botan-op')},
+    stamp:{on:ck('dc-stamp-on'),lines:[v('dc-st-0'),v('dc-st-1'),v('dc-st-2'),v('dc-st-3'),v('dc-st-4')],rotation:num('dc-stamp-rot'),opacity:num('dc-stamp-op')},
+    relief:{on:ck('dc-relief-on'),style:v('dc-relief-style'),opacity:num('dc-relief-op')},
+    stitch:{on:ck('dc-stitch-on'),side:v('dc-stitch-side'),opacity:num('dc-stitch-op')}
+  };
+  await evRef().update({decor});
+  toast('Décor enregistré');
 }
 
 async function saveItwSettings(){
