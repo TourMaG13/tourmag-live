@@ -456,8 +456,8 @@ function applyTabVisibility(){
       return;
     }
 
-    // Expedition-only tab: etapes
-    if(tab==='etapes'){
+    // Expedition-only tabs: etapes, decor
+    if(tab==='etapes' || tab==='decor'){
       item.style.display=isExpedition?'':'none';
       return;
     }
@@ -4270,7 +4270,7 @@ function renderDecor(el){
   const c=d.compass||{};const co=d.coords||{};const p=d.plane||{};const b=d.botanical||{};const s=d.stamp||{};const r=d.relief||{};const st=d.stitch||{};
 
   function toggle(id,label,checked){return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none"><input type="checkbox" id="${id}" ${checked?'checked':''}><strong style="font-size:13px">${label}</strong></label>`;}
-  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="8" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:24px" id="${id}-lbl">${val||4}%</span></div>`;}
+  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="20" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:24px" id="${id}-lbl">${val||4}%</span></div>`;}
   function sel(id,opts,val){let o=`<select class="form-input" id="${id}" style="font-size:12px">`;opts.forEach(op=>{o+=`<option value="${op.id}"${val===op.id?' selected':''}>${op.label}</option>`;});return o+'</select>';}
   function pos(id,val){return sel(id,[{id:'top-right',label:'Haut-droit'},{id:'top-left',label:'Haut-gauche'},{id:'bottom-right',label:'Bas-droit'},{id:'bottom-left',label:'Bas-gauche'}],val||'top-right');}
 
