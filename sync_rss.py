@@ -44,30 +44,38 @@ def init_firebase():
 
 # ── Extraction d'image depuis un item feedparser ─────────────────────
 def extract_image(entry):
-    """Cherche une image dans l'ordre : enclosure, media_content, media_thumbnail, img dans summary."""
+    """Cherche une image dans l'ordre : enclosure, media_content, media_thumbnail, photo:imgsrc, img dans summary.
+    Upgrade automatiquement les vignettes TourMaG (imagette → grande)."""
+    import re
+
+    def upgrade_tourmag(url):
+        """Remplace 'imagette' par 'grande' dans les URLs TourMaG pour la HD."""
+        if url and 'imagette' in url.lower():
+            return re.sub(r'imagette', 'grande', url, flags=re.IGNORECASE)
+        return url
+
     # Enclosures
     for enc in getattr(entry, 'enclosures', []):
         if enc.get('type', '').startswith('image'):
-            return enc.get('href') or enc.get('url', '')
+            return upgrade_tourmag(enc.get('href') or enc.get('url', ''))
 
     # media:content
     for mc in getattr(entry, 'media_content', []):
         if mc.get('medium') == 'image' or mc.get('type', '').startswith('image'):
-            return mc.get('url', '')
+            return upgrade_tourmag(mc.get('url', ''))
 
     # media:thumbnail
     for mt in getattr(entry, 'media_thumbnail', []):
         url = mt.get('url', '')
         if url:
-            return url
+            return upgrade_tourmag(url)
 
     # Fallback : chercher <img> dans le summary/description
     summary = getattr(entry, 'summary', '') or getattr(entry, 'description', '')
     if summary:
-        import re
         match = re.search(r'<img[^>]+src=["\']([^"\']+)', summary, re.IGNORECASE)
         if match:
-            return match.group(1)
+            return upgrade_tourmag(match.group(1))
 
     return ''
 
