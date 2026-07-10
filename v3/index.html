@@ -1925,14 +1925,17 @@ function renderExpedition(data){
 
   _b.brandnews = function(){
     const bn = event.brandNews;
-    if(!bn || !bn.rssUrl) return '';
-    // Check date range
-    const today = new Date().toISOString().slice(0,10);
-    if(bn.startDate && today < bn.startDate) return '';
-    if(bn.endDate && today > bn.endDate) return '';
+    if(!bn || !bn.rssUrl){ console.log('[BrandNews] ❌ Pas de config brandNews ou rssUrl vide', bn); return ''; }
+    // Check date range — use local date (not UTC) to match admin date inputs
+    const now = new Date();
+    const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    if(bn.startDate && today < bn.startDate){ console.log('[BrandNews] ❌ Pas encore commencé',{today,startDate:bn.startDate}); return ''; }
+    if(bn.endDate && today > bn.endDate){ console.log('[BrandNews] ❌ Période expirée',{today,endDate:bn.endDate}); return ''; }
     // Find articles from the brandnews RSS feed
+    const allRssFeeds = (articles||[]).map(a=>a.rss_feed).filter(Boolean);
     const bnArticles = (articles||[]).filter(a => a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
-    if(!bnArticles.length) return '';
+    console.log('[BrandNews] 🔍 Diagnostic',{rssUrl:bn.rssUrl, totalArticles:(articles||[]).length, uniqueRssFeeds:[...new Set(allRssFeeds)], matchingArticles:bnArticles.length});
+    if(!bnArticles.length){ console.log('[BrandNews] ❌ Aucun article trouvé avec rss_feed ===',bn.rssUrl); return ''; }
     const a = bnArticles[0];
     const label = bn.label || 'Brand News';
     let o = `<section class="exp-brandnews">`;
