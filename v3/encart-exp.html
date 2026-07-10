@@ -121,6 +121,8 @@ async function init(){
   if(enc.bg) document.getElementById('encart').style.background=enc.bg;
   if(enc.titleColor) document.getElementById('title').style.color=enc.titleColor;
   if(enc.subtitleColor) document.getElementById('subtitle').style.color=enc.subtitleColor;
+  if(enc.ctaBg){const c=document.getElementById('cta');c.style.background=enc.ctaBg;c.style.boxShadow='0 2px 12px '+enc.ctaBg+'4d';}
+  if(enc.ctaColor) document.getElementById('cta').style.color=enc.ctaColor;
 
   const logoUrl=enc.logo||ev.logo_url||'';
   const logoEl=document.getElementById('logo');
