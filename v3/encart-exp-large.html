@@ -9,9 +9,9 @@
 body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 
 .encart{
-  display:flex;align-items:center;gap:32px;
+  display:flex;align-items:center;gap:30px;
   background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#1a1a3e 100%);
-  border-radius:14px;padding:32px 36px;min-height:280px;
+  border-radius:14px;padding:28px 32px;min-height:280px;
   position:relative;overflow:hidden;cursor:default;
 }
 .encart::before{
@@ -28,10 +28,10 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 }
 @keyframes shimmer{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-.left{flex:1;min-width:0;position:relative;z-index:2;display:flex;flex-direction:column;gap:14px}
-.logo{max-height:48px;max-width:200px;object-fit:contain;display:block}
-.title{font-size:1.4rem;font-weight:700;color:#f1f5f9;line-height:1.3;letter-spacing:-.01em}
-.subtitle{font-size:.88rem;color:#94a3b8;line-height:1.6;max-width:380px}
+.left{width:40%;min-width:0;position:relative;z-index:2;display:flex;flex-direction:column;gap:12px}
+.logo{max-height:64px;max-width:220px;object-fit:contain;display:block}
+.title{font-size:1.35rem;font-weight:700;color:#f1f5f9;line-height:1.3;letter-spacing:-.01em}
+.subtitle{font-size:.85rem;color:#94a3b8;line-height:1.6}
 .cta{
   display:inline-flex;align-items:center;gap:8px;
   margin-top:6px;padding:11px 22px;
@@ -45,19 +45,16 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 .cta:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,.45)}
 .cta svg{width:16px;height:16px}
 
-/* Carousel zone — larger */
+/* Carousel — takes 60% width, same ratio as small */
 .right{
-  width:320px;min-width:320px;height:220px;
-  position:relative;z-index:1;
-  perspective:800px;
+  width:60%;position:relative;z-index:1;
   border-radius:12px;overflow:hidden;
   box-shadow:0 10px 36px rgba(0,0,0,.5),0 2px 10px rgba(0,0,0,.3);
   border:1px solid rgba(255,255,255,.08);
 }
 .carousel{
-  width:100%;height:100%;position:relative;
-  will-change:transform;
-  transition:transform .12s ease-out;
+  width:100%;padding-bottom:60%;/* 5:3 aspect ratio */
+  position:relative;
 }
 .carousel img{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
@@ -65,9 +62,8 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 }
 .carousel img.active{opacity:1}
 
-/* Dots */
 .dots{
-  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   display:flex;gap:6px;z-index:3;
 }
 .dot{
@@ -78,17 +74,17 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 .dot.active{background:#fff;transform:scale(1.3)}
 
 .no-screens{
-  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  width:100%;padding-bottom:60%;position:relative;
+  display:flex;align-items:center;justify-content:center;
   color:#475569;font-size:12px;text-align:center;
   border:1px dashed #334155;border-radius:10px;
 }
 
 @media(max-width:600px){
-  .encart{flex-direction:column;text-align:center;padding:24px 20px;gap:20px}
-  .left{align-items:center}
-  .subtitle{max-width:none}
+  .encart{flex-direction:column;text-align:center;padding:22px 18px;gap:18px}
+  .left{width:100%;align-items:center}
   .cta{align-self:center}
-  .right{width:100%;min-width:0;height:180px}
+  .right{width:100%}
 }
 </style>
 </head>
@@ -149,7 +145,7 @@ async function init(){
 
   if(screens.length===0){
     document.getElementById('screens-zone').innerHTML='<div class="no-screens">Captures à configurer</div>';
-    return;
+    sendResize();return;
   }
 
   slideCount=screens.length;
@@ -166,7 +162,6 @@ async function init(){
   });
 
   if(slideCount>1) autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
-  initParallax();
   sendResize();
 }
 
@@ -180,20 +175,6 @@ function goTo(idx){
   dots[currentSlide].classList.add('active');
   if(autoTimer) clearInterval(autoTimer);
   autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
-}
-
-function initParallax(){
-  const encart=document.getElementById('encart');
-  const carousel=document.getElementById('carousel');
-  encart.addEventListener('mousemove',e=>{
-    const rect=encart.getBoundingClientRect();
-    const cx=(e.clientX-rect.left)/rect.width-0.5;
-    const cy=(e.clientY-rect.top)/rect.height-0.5;
-    carousel.style.transform='translate('+(-cx*14)+'px,'+(-cy*10)+'px) scale(1.06)';
-  });
-  encart.addEventListener('mouseleave',()=>{
-    carousel.style.transform='translate(0,0) scale(1)';
-  });
 }
 
 function sendResize(){
