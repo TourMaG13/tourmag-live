@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TourMaG Live — Encart Expédition (Grand)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+
+.encart{
+  display:flex;align-items:center;gap:32px;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#1a1a3e 100%);
+  border-radius:14px;padding:32px 36px;min-height:280px;
+  position:relative;overflow:hidden;
+  cursor:default;
+}
+/* Ambient light effects */
+.encart::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 15% 85%,rgba(56,189,248,.07) 0%,transparent 45%),
+             radial-gradient(ellipse at 85% 15%,rgba(168,85,247,.06) 0%,transparent 45%),
+             radial-gradient(ellipse at 50% 50%,rgba(99,102,241,.03) 0%,transparent 60%);
+  pointer-events:none;
+}
+/* Subtle animated shimmer */
+.encart::after{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,rgba(255,255,255,.012) 60deg,transparent 120deg);
+  animation:shimmer 12s linear infinite;pointer-events:none;
+}
+@keyframes shimmer{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.left{flex:1;min-width:0;position:relative;z-index:2;display:flex;flex-direction:column;gap:14px}
+.logo{max-height:48px;max-width:200px;object-fit:contain;display:block}
+.title{font-size:1.4rem;font-weight:700;color:#f1f5f9;line-height:1.3;letter-spacing:-.01em}
+.subtitle{font-size:.88rem;color:#94a3b8;line-height:1.6;max-width:380px}
+.cta{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:6px;padding:11px 22px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  color:#fff;font-size:.82rem;font-weight:600;
+  border-radius:10px;text-decoration:none;
+  transition:transform .2s,box-shadow .2s;
+  align-self:flex-start;
+  box-shadow:0 2px 12px rgba(99,102,241,.3);
+}
+.cta:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,.45)}
+.cta svg{width:16px;height:16px}
+
+/* Right: parallax screenshots — larger */
+.right{
+  width:300px;min-width:300px;height:220px;
+  position:relative;z-index:1;
+  perspective:800px;
+}
+.screen{
+  position:absolute;border-radius:10px;
+  box-shadow:0 10px 32px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
+  transition:transform .15s ease-out;
+  overflow:hidden;border:1px solid rgba(255,255,255,.08);
+  will-change:transform;
+}
+.screen img{width:100%;height:100%;object-fit:cover;display:block}
+.screen-0{width:220px;height:150px;top:10px;left:10px;z-index:4}
+.screen-1{width:200px;height:138px;top:40px;left:70px;z-index:3}
+.screen-2{width:180px;height:125px;top:70px;left:30px;z-index:2}
+.screen-3{width:160px;height:112px;top:5px;left:110px;z-index:1;opacity:.55}
+
+/* No images placeholder */
+.no-screens{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  color:#475569;font-size:12px;text-align:center;
+  border:1px dashed #334155;border-radius:10px;
+}
+
+@media(max-width:600px){
+  .encart{flex-direction:column;text-align:center;padding:24px 20px;gap:20px}
+  .left{align-items:center}
+  .subtitle{max-width:none}
+  .cta{align-self:center}
+  .right{width:100%;min-width:0;height:160px}
+  .screen{left:50%!important}
+  .screen-0{width:180px;height:125px;transform:translateX(-55%)}
+  .screen-1{width:165px;height:114px;transform:translateX(-40%)}
+  .screen-2{width:150px;height:104px;transform:translateX(-60%)}
+  .screen-3{width:140px;height:97px;transform:translateX(-45%)}
+}
+</style>
+</head>
+<body>
+<div class="encart" id="encart">
+  <div class="left">
+    <img class="logo" id="logo" src="" alt="" style="display:none">
+    <div class="title" id="title">Suivez l'expédition en direct</div>
+    <div class="subtitle" id="subtitle">Carnet de route, étapes, interviews, galerie photo…</div>
+    <a class="cta" id="cta" href="#" target="_top">
+      Accéder au live
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  <div class="right" id="screens-zone"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCiVnKKLqST7G-8s7ULMCmGKUnWwgjyL0Y",
+  authDomain:"tourmag-live.firebaseapp.com",
+  projectId:"tourmag-live"
+});
+const db=firebase.firestore();
+
+const params=new URLSearchParams(location.search);
+const eventId=params.get('event');
+if(!eventId){document.body.innerHTML='<p style="color:#ef4444;padding:20px">Paramètre ?event= manquant</p>';}
+
+const baseUrl='https://tourmag13.github.io/tourmag-live/v3/index.html?event='+eventId;
+
+async function init(){
+  const snap=await db.collection('events').doc(eventId).get();
+  if(!snap.exists) return;
+  const ev=snap.data();
+  const enc=ev.expEncart||{};
+
+  // Logo
+  const logoUrl=enc.logo||ev.logo_url||'';
+  const logoEl=document.getElementById('logo');
+  if(logoUrl){logoEl.src=logoUrl;logoEl.style.display='block';}
+
+  // Title
+  if(enc.title) document.getElementById('title').textContent=enc.title;
+  else if(ev.title) document.getElementById('title').textContent=ev.title;
+
+  // Subtitle
+  if(enc.subtitle) document.getElementById('subtitle').textContent=enc.subtitle;
+
+  // CTA
+  const ctaEl=document.getElementById('cta');
+  ctaEl.href=enc.ctaUrl||baseUrl;
+  if(enc.ctaLabel) ctaEl.firstChild.textContent=enc.ctaLabel+' ';
+
+  // Screenshots
+  const screens=(enc.screenshots||[]).filter(Boolean);
+  const zone=document.getElementById('screens-zone');
+  if(screens.length===0){
+    zone.innerHTML='<div class="no-screens">Captures à configurer</div>';
+  } else {
+    screens.forEach((url,i)=>{
+      if(i>3) return;
+      const d=document.createElement('div');
+      d.className='screen screen-'+i;
+      d.innerHTML='<img src="'+url+'" alt="Capture '+(i+1)+'">';
+      zone.appendChild(d);
+    });
+    initParallax(screens.length);
+  }
+
+  // Resize postMessage
+  requestAnimationFrame(()=>{
+    const h=document.getElementById('encart').offsetHeight;
+    parent.postMessage({type:'tmg-encart-resize',height:h,id:getFrameId()},'*');
+  });
+}
+
+function getFrameId(){
+  try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}
+}
+
+/* Parallax on mousemove — bigger depths for large format */
+const depths=[18,12,7,4];
+function initParallax(count){
+  const encart=document.getElementById('encart');
+  encart.addEventListener('mousemove',e=>{
+    const rect=encart.getBoundingClientRect();
+    const cx=(e.clientX-rect.left)/rect.width-0.5;
+    const cy=(e.clientY-rect.top)/rect.height-0.5;
+    for(let i=0;i<count&&i<4;i++){
+      const el=document.querySelector('.screen-'+i);
+      if(!el) continue;
+      const d=depths[i]||4;
+      el.style.transform='translate('+(-cx*d)+'px, '+(-cy*d)+'px)';
+    }
+  });
+  encart.addEventListener('mouseleave',()=>{
+    for(let i=0;i<count&&i<4;i++){
+      const el=document.querySelector('.screen-'+i);
+      if(el) el.style.transform='translate(0,0)';
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

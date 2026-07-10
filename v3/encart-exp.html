@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TourMaG Live — Encart Expédition</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+
+.encart{
+  display:flex;align-items:center;gap:20px;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%);
+  border-radius:12px;padding:22px 24px;min-height:200px;
+  position:relative;overflow:hidden;
+  cursor:default;
+}
+/* Subtle grain overlay */
+.encart::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 80%,rgba(56,189,248,.06) 0%,transparent 50%),
+             radial-gradient(circle at 80% 20%,rgba(168,85,247,.05) 0%,transparent 50%);
+  pointer-events:none;
+}
+
+.left{flex:1;min-width:0;position:relative;z-index:2;display:flex;flex-direction:column;gap:10px}
+.logo{max-height:38px;max-width:140px;object-fit:contain;display:block}
+.title{font-size:1rem;font-weight:700;color:#f1f5f9;line-height:1.3}
+.subtitle{font-size:.75rem;color:#94a3b8;line-height:1.5}
+.cta{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:4px;padding:8px 16px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  color:#fff;font-size:.72rem;font-weight:600;
+  border-radius:8px;text-decoration:none;
+  transition:transform .2s,box-shadow .2s;
+  align-self:flex-start;
+}
+.cta:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(99,102,241,.4)}
+.cta svg{width:14px;height:14px}
+
+/* Right: parallax screenshots */
+.right{
+  width:180px;min-width:180px;height:160px;
+  position:relative;z-index:1;
+  perspective:600px;
+}
+.screen{
+  position:absolute;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  transition:transform .15s ease-out;
+  overflow:hidden;border:1px solid rgba(255,255,255,.08);
+  will-change:transform;
+}
+.screen img{width:100%;height:100%;object-fit:cover;display:block}
+.screen-0{width:130px;height:90px;top:10px;left:0;z-index:4}
+.screen-1{width:120px;height:82px;top:30px;left:40px;z-index:3}
+.screen-2{width:110px;height:76px;top:50px;left:15px;z-index:2}
+.screen-3{width:100px;height:70px;top:5px;left:60px;z-index:1;opacity:.6}
+
+/* No images placeholder */
+.no-screens{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  color:#475569;font-size:11px;text-align:center;
+  border:1px dashed #334155;border-radius:8px;
+}
+
+@media(max-width:400px){
+  .encart{flex-direction:column;text-align:center;padding:18px 16px;gap:16px}
+  .left{align-items:center}
+  .cta{align-self:center}
+  .right{width:100%;min-width:0;height:120px}
+  .screen-0{left:50%;transform:translateX(-50%)}
+  .screen-1{left:calc(50% + 20px);transform:translateX(-50%)}
+  .screen-2{left:calc(50% - 20px);transform:translateX(-50%)}
+  .screen-3{left:calc(50% + 10px);transform:translateX(-50%)}
+}
+</style>
+</head>
+<body>
+<div class="encart" id="encart">
+  <div class="left">
+    <img class="logo" id="logo" src="" alt="" style="display:none">
+    <div class="title" id="title">Suivez l'expédition en direct</div>
+    <div class="subtitle" id="subtitle">Carnet de route, étapes, interviews…</div>
+    <a class="cta" id="cta" href="#" target="_top">
+      Accéder au live
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  <div class="right" id="screens-zone"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCiVnKKLqST7G-8s7ULMCmGKUnWwgjyL0Y",
+  authDomain:"tourmag-live.firebaseapp.com",
+  projectId:"tourmag-live"
+});
+const db=firebase.firestore();
+
+const params=new URLSearchParams(location.search);
+const eventId=params.get('event');
+if(!eventId){document.body.innerHTML='<p style="color:#ef4444;padding:20px">Paramètre ?event= manquant</p>';}
+
+const baseUrl='https://tourmag13.github.io/tourmag-live/v3/index.html?event='+eventId;
+
+async function init(){
+  const snap=await db.collection('events').doc(eventId).get();
+  if(!snap.exists) return;
+  const ev=snap.data();
+  const enc=ev.expEncart||{};
+
+  // Logo
+  const logoUrl=enc.logo||ev.logo_url||'';
+  const logoEl=document.getElementById('logo');
+  if(logoUrl){logoEl.src=logoUrl;logoEl.style.display='block';}
+
+  // Title
+  if(enc.title) document.getElementById('title').textContent=enc.title;
+  else if(ev.title) document.getElementById('title').textContent=ev.title;
+
+  // Subtitle
+  if(enc.subtitle) document.getElementById('subtitle').textContent=enc.subtitle;
+
+  // CTA
+  const ctaEl=document.getElementById('cta');
+  ctaEl.href=enc.ctaUrl||baseUrl;
+  if(enc.ctaLabel) ctaEl.firstChild.textContent=enc.ctaLabel+' ';
+
+  // Screenshots
+  const screens=(enc.screenshots||[]).filter(Boolean);
+  const zone=document.getElementById('screens-zone');
+  if(screens.length===0){
+    zone.innerHTML='<div class="no-screens">Captures à configurer</div>';
+  } else {
+    screens.forEach((url,i)=>{
+      if(i>3) return;
+      const d=document.createElement('div');
+      d.className='screen screen-'+i;
+      d.innerHTML='<img src="'+url+'" alt="Capture '+(i+1)+'">';
+      zone.appendChild(d);
+    });
+    initParallax(screens.length);
+  }
+
+  // Resize postMessage
+  requestAnimationFrame(()=>{
+    const h=document.getElementById('encart').offsetHeight;
+    parent.postMessage({type:'tmg-encart-resize',height:h,id:getFrameId()},'*');
+  });
+}
+
+function getFrameId(){
+  try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}
+}
+
+/* Parallax on mousemove */
+const depths=[12,8,5,3]; // px movement per layer
+function initParallax(count){
+  const encart=document.getElementById('encart');
+  encart.addEventListener('mousemove',e=>{
+    const rect=encart.getBoundingClientRect();
+    const cx=(e.clientX-rect.left)/rect.width-0.5;  // -0.5 to 0.5
+    const cy=(e.clientY-rect.top)/rect.height-0.5;
+    for(let i=0;i<count&&i<4;i++){
+      const el=document.querySelector('.screen-'+i);
+      if(!el) continue;
+      const d=depths[i]||3;
+      el.style.transform='translate('+(-cx*d)+'px, '+(-cy*d)+'px)';
+    }
+  });
+  encart.addEventListener('mouseleave',()=>{
+    for(let i=0;i<count&&i<4;i++){
+      const el=document.querySelector('.screen-'+i);
+      if(el) el.style.transform='translate(0,0)';
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
