@@ -143,10 +143,13 @@ def process_event(db, event_ref, event_data):
     articles_ref = event_ref.collection('articles')
     existing_docs = articles_ref.stream()
     existing_links = set()
+    existing_docs_by_link = {}  # link → doc.reference (pour màj brandnews)
     for doc in existing_docs:
-        link = doc.to_dict().get('link', '')
+        d = doc.to_dict()
+        link = d.get('link', '')
         if link and link != '#':
             existing_links.add(link)
+            existing_docs_by_link[link] = doc.reference
 
     log.info(f"   {len(existing_links)} articles existants en base")
 
@@ -174,6 +177,17 @@ def process_event(db, event_ref, event_data):
                 if not title or not link:
                     continue
                 if link in existing_links:
+                    # Si c'est un flux _brandnews et l'article existe déjà,
+                    # marquer l'article existant comme brandnews
+                    if feed_label == '_brandnews' and link in existing_docs_by_link:
+                        try:
+                            existing_docs_by_link[link].update({
+                                'brandnews_feed': feed_url
+                            })
+                            log.info(f"     ↻ Article existant marqué brandnews : {title[:60]}")
+                            new_count += 1
+                        except Exception as ue:
+                            log.warning(f"     ⚠ Impossible de marquer brandnews : {ue}")
                     continue
 
                 image = extract_image(entry)
@@ -191,6 +205,9 @@ def process_event(db, event_ref, event_data):
                     'rss_feed': feed_url,
                     'imported_at': firestore.SERVER_TIMESTAMP
                 }
+                # Si c'est un flux _brandnews, ajouter le marqueur
+                if feed_label == '_brandnews':
+                    article['brandnews_feed'] = feed_url
 
                 articles_ref.add(article)
                 existing_links.add(link)
