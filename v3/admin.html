@@ -921,7 +921,7 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockOrder:['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'],
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -1148,10 +1148,11 @@ function renderModules(el){
       {key:'videos',icon:'🎬',label:'Vidéos'},
       {key:'gallery',icon:'📸',label:'Galerie photos'},
       {key:'articles',icon:'📰',label:'Articles'},
+      {key:'brandnews',icon:'📢',label:'Brand News'},
       {key:'sponsors',icon:'🤝',label:'Partenaires'},
       {key:'contact',icon:'📞',label:'Contact'}
     ];
-    const expDefaultOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'];
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
@@ -2237,6 +2238,24 @@ function renderArticles(el){
     <div id="rss-preview" style="margin-top:12px"></div>
   </div>
 
+  ${ev.mode==='expedition'?`<!-- BRAND NEWS -->
+  <div class="admin-card"><h3>📢 Brand News (Publicité)</h3>
+    <div class="page-desc" style="margin-bottom:12px">Bloc publicitaire affichant automatiquement le dernier article d'un flux RSS dédié. L'article sera affiché avec sa photo, son titre et un lien vers l'article TourMaG.</div>
+    <div class="form-row"><label class="form-label">URL du flux RSS Brand News</label>
+      <input class="form-input" id="bn-rss-url" value="${(ev.brandNews?.rssUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/xml/votre-flux-brandnews.rss" style="font-family:'IBM Plex Mono';font-size:11px">
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Date de début d'affichage</label><input type="date" class="form-input" id="bn-start" value="${ev.brandNews?.startDate||''}"></div>
+      <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Date de fin d'affichage</label><input type="date" class="form-input" id="bn-end" value="${ev.brandNews?.endDate||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Libellé affiché (optionnel)</label><input class="form-input" id="bn-label" value="${(ev.brandNews?.label||'').replace(/"/g,'&quot;')}" placeholder="Brand News — par défaut"></div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+      <button class="btn btn-primary" onclick="saveBrandNews()">💾 Enregistrer</button>
+      <span style="font-size:10px;color:var(--text3)">Le flux est importé automatiquement par le script RSS toutes les 15 min.</span>
+    </div>
+    ${ev.brandNews?.rssUrl?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px;font-size:11px;color:#166534"><strong>✅ Flux configuré :</strong> ${ev.brandNews.rssUrl}<br>Période : ${ev.brandNews.startDate||'—'} → ${ev.brandNews.endDate||'—'}</div>`:''}
+  </div>`:''}
+
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
   if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun article</div></div>`;
@@ -2306,6 +2325,31 @@ async function saveArtSettings(){
   toast('Réglages articles enregistrés');
 }
 
+// --- Brand News ---
+async function saveBrandNews(){
+  saving(true);
+  const rssUrl=document.getElementById('bn-rss-url').value.trim();
+  const brandNews={
+    rssUrl,
+    startDate:document.getElementById('bn-start').value,
+    endDate:document.getElementById('bn-end').value,
+    label:document.getElementById('bn-label').value.trim()
+  };
+  // Auto-add/update the RSS feed in rssFeeds with special _brandnews label
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  const feeds=ev?.rssFeeds||[];
+  const bnIdx=feeds.findIndex(f=>f.label==='_brandnews');
+  if(rssUrl){
+    if(bnIdx>=0) feeds[bnIdx].url=rssUrl;
+    else feeds.push({url:rssUrl,label:'_brandnews'});
+  } else if(bnIdx>=0){
+    feeds.splice(bnIdx,1);
+  }
+  rssFeeds=feeds;
+  await evRef().update({brandNews,rssFeeds:feeds});
+  toast('Brand News configuré');
+}
+
 // --- RSS ---
 async function addRssFeed(){
   const url=document.getElementById('rss-url').value.trim();
@@ -2334,6 +2378,8 @@ async function fetchAllRss(){
   if(preview) preview.innerHTML='<div style="font-size:11px;color:var(--text3)">Récupération des flux...</div>';
 
   const existingLinks=new Set(articlesData.map(a=>a.link));
+  const existingDocsByLink={};
+  articlesData.forEach(a=>{if(a.link)existingDocsByLink[a.link]=a.id;});
   let imported=0, skipped=0;
 
   for(const feed of rssFeeds){
@@ -2347,7 +2393,18 @@ async function fetchAllRss(){
       for(const item of items){
         const title=item.querySelector('title')?.textContent?.trim()||'';
         const link=item.querySelector('link')?.textContent?.trim()||'';
-        if(!title||!link||existingLinks.has(link)){skipped++;continue;}
+        if(!title||!link) continue;
+        if(existingLinks.has(link)){
+          // Si c'est le flux _brandnews et l'article existe déjà, marquer comme brandnews
+          if(feed.label==='_brandnews' && existingDocsByLink[link]){
+            try{
+              await subCol('articles').doc(existingDocsByLink[link]).update({brandnews_feed:feed.url});
+              console.log('[BrandNews] ↻ Marqué brandnews:',title.slice(0,60));
+              imported++;
+            }catch(e){console.warn('[BrandNews] Update failed:',e);}
+          } else { skipped++; }
+          continue;
+        }
 
         const author=item.querySelector('author')?.textContent?.trim()||
                      item.querySelector('dc\\:creator,creator')?.textContent?.trim()||
@@ -2400,7 +2457,8 @@ async function fetchAllRss(){
         if(!image && link){try{ image = await fetchOgImage(link); }catch(e){}}
 
         // Sauvegarder avec created_at timestamp pour le tri chronologique
-        const articleData={title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss'};
+        const articleData={title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss',rss_feed:feed.url};
+        if(feed.label==='_brandnews') articleData.brandnews_feed=feed.url;
         if(dateObj&&!isNaN(dateObj)) articleData.created_at=firebase.firestore.Timestamp.fromDate(dateObj);
         else articleData.created_at=firebase.firestore.FieldValue.serverTimestamp();
 
@@ -4896,7 +4954,7 @@ async function saveSponsorsConfig(){
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const isExp = ev.mode === 'expedition';
-  const baseUrl='https://tourmag13.github.io/tourmag-live/v2';
+  const baseUrl='https://tourmag13.github.io/tourmag-live/v3';
   const frontUrl=baseUrl+'/index.html?event='+currentEventId;
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
@@ -4928,8 +4986,40 @@ function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
       <label class="form-label" style="margin-bottom:4px;display:block">📸 Captures d'écran (3 à 4 images pour l'animation parallaxe)</label>
-      <div style="font-size:9px;color:var(--text3);margin-bottom:12px">Ces images s'affichent à droite de l'encart avec un effet de profondeur au survol de la souris.</div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:12px">Ces images s'affichent à droite de l'encart en carousel auto-rotatif.</div>
       ${screens.map((s,i)=>`<div class="form-row"><label class="form-label">Capture ${i+1}${i>=3?' (optionnelle)':''}</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-screen-${i}" value="${(s||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('we-screen-'+i)}${mkUploadBtn('we-screen-'+i)}</div></div>`).join('')}
+    </div>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="form-label" style="margin-bottom:10px;display:block">🎨 Apparence de l'encart</label>
+      <div class="form-row"><label class="form-label">Fond (couleur ou dégradé CSS)</label><input class="form-input" id="we-bg" value="${(enc.bg||'').replace(/"/g,'&quot;')}" placeholder="Ex: #1e293b ou linear-gradient(135deg, #0f172a, #1e293b)" style="font-family:'IBM Plex Mono';font-size:11px">
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le dégradé bleu-nuit par défaut est utilisé. Accepte toute valeur CSS : couleur hex, rgb, ou linear-gradient(…).</div>
+      </div>
+      <div class="form-row-inline" style="margin-top:8px">
+        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur rapide</label>
+          <div style="display:flex;align-items:center;gap:10px"><input type="color" id="we-bg-picker" value="${enc.bgColor||'#0f172a'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"><button class="btn btn-ghost btn-xs" onclick="document.getElementById('we-bg').value=document.getElementById('we-bg-picker').value" style="font-size:10px">Appliquer →</button></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px">
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du titre</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-title-color" value="${enc.titleColor||'#f1f5f9'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-title-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-title-color-hex">${enc.titleColor||'#f1f5f9'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut blanc cassé sur fond sombre.</div>
+        </div>
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur de l'accroche</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-subtitle-color" value="${enc.subtitleColor||'#94a3b8'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-subtitle-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-subtitle-color-hex">${enc.subtitleColor||'#94a3b8'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut gris clair sur fond sombre.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du bouton CTA</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-cta-bg" value="${enc.ctaBg||'#4f46e5'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-cta-bg-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-cta-bg-hex">${enc.ctaBg||'#4f46e5'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut dégradé bleu/indigo.</div>
+        </div>
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du texte CTA</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-cta-color" value="${enc.ctaColor||'#ffffff'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-cta-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-cta-color-hex">${enc.ctaColor||'#ffffff'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut blanc.</div>
+        </div>
+      </div>
     </div>
 
     <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetExpConfig()">💾 Enregistrer la configuration</button></div>
@@ -4943,8 +5033,8 @@ function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
   </div>
 
   <div class="admin-card"><h3>📦 Encart petit format</h3>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (~300-400px). Logo + titre + accroche à gauche, captures animées à droite.</p>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartSmallUrl}" style="width:100%;border:none;min-height:220px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (max 700px). Logo + titre + accroche à gauche, captures animées à droite.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartSmallUrl}" style="width:100%;max-width:700px;border:none;min-height:210px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-es'){
@@ -4956,8 +5046,8 @@ window.addEventListener('message',function(e){
   </div>
 
   <div class="admin-card"><h3>📺 Encart grand format</h3>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (~700px+). Mise en page élargie avec captures plus grandes.</p>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartLargeUrl}" style="width:100%;border:none;min-height:300px;border-radius:12px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (max 1200px). Mise en page élargie avec captures plus grandes.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartLargeUrl}" style="width:100%;max-width:1200px;border:none;min-height:330px;border-radius:14px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-el'){
@@ -5019,6 +5109,12 @@ async function saveWidgetExpConfig(){
       subtitle:document.getElementById('we-subtitle').value.trim(),
       ctaUrl:document.getElementById('we-cta-url').value.trim(),
       ctaLabel:document.getElementById('we-cta-label').value.trim(),
+      bg:document.getElementById('we-bg').value.trim(),
+      bgColor:document.getElementById('we-bg-picker').value,
+      titleColor:document.getElementById('we-title-color').value,
+      subtitleColor:document.getElementById('we-subtitle-color').value,
+      ctaBg:document.getElementById('we-cta-bg').value,
+      ctaColor:document.getElementById('we-cta-color').value,
       screenshots
     }
   });
