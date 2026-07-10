@@ -12,10 +12,8 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
   display:flex;align-items:center;gap:20px;
   background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%);
   border-radius:12px;padding:22px 24px;min-height:200px;
-  position:relative;overflow:hidden;
-  cursor:default;
+  position:relative;overflow:hidden;cursor:default;
 }
-/* Subtle grain overlay */
 .encart::before{
   content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 20% 80%,rgba(56,189,248,.06) 0%,transparent 50%),
@@ -39,26 +37,37 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 .cta:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(99,102,241,.4)}
 .cta svg{width:14px;height:14px}
 
-/* Right: parallax screenshots */
+/* Carousel zone */
 .right{
-  width:180px;min-width:180px;height:160px;
+  width:200px;min-width:200px;height:150px;
   position:relative;z-index:1;
   perspective:600px;
+  border-radius:10px;overflow:hidden;
+  box-shadow:0 8px 28px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.08);
 }
-.screen{
-  position:absolute;border-radius:8px;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);
-  transition:transform .15s ease-out;
-  overflow:hidden;border:1px solid rgba(255,255,255,.08);
+.carousel{
+  width:100%;height:100%;position:relative;
   will-change:transform;
+  transition:transform .12s ease-out;
 }
-.screen img{width:100%;height:100%;object-fit:cover;display:block}
-.screen-0{width:130px;height:90px;top:10px;left:0;z-index:4}
-.screen-1{width:120px;height:82px;top:30px;left:40px;z-index:3}
-.screen-2{width:110px;height:76px;top:50px;left:15px;z-index:2}
-.screen-3{width:100px;height:70px;top:5px;left:60px;z-index:1;opacity:.6}
+.carousel img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity .8s ease;
+}
+.carousel img.active{opacity:1}
 
-/* No images placeholder */
+/* Dots */
+.dots{
+  position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;z-index:3;
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.35);transition:background .3s,transform .3s;
+}
+.dot.active{background:#fff;transform:scale(1.3)}
+
 .no-screens{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   color:#475569;font-size:11px;text-align:center;
@@ -69,11 +78,7 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
   .encart{flex-direction:column;text-align:center;padding:18px 16px;gap:16px}
   .left{align-items:center}
   .cta{align-self:center}
-  .right{width:100%;min-width:0;height:120px}
-  .screen-0{left:50%;transform:translateX(-50%)}
-  .screen-1{left:calc(50% + 20px);transform:translateX(-50%)}
-  .screen-2{left:calc(50% - 20px);transform:translateX(-50%)}
-  .screen-3{left:calc(50% + 10px);transform:translateX(-50%)}
+  .right{width:100%;min-width:0;height:140px}
 }
 </style>
 </head>
@@ -88,7 +93,10 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
-  <div class="right" id="screens-zone"></div>
+  <div class="right" id="screens-zone">
+    <div class="carousel" id="carousel"></div>
+    <div class="dots" id="dots"></div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -100,12 +108,12 @@ firebase.initializeApp({
   projectId:"tourmag-live"
 });
 const db=firebase.firestore();
-
 const params=new URLSearchParams(location.search);
 const eventId=params.get('event');
 if(!eventId){document.body.innerHTML='<p style="color:#ef4444;padding:20px">Paramètre ?event= manquant</p>';}
-
 const baseUrl='https://tourmag13.github.io/tourmag-live/v3/index.html?event='+eventId;
+
+let currentSlide=0,slideCount=0,autoTimer=null;
 
 async function init(){
   const snap=await db.collection('events').doc(eventId).get();
@@ -113,70 +121,76 @@ async function init(){
   const ev=snap.data();
   const enc=ev.expEncart||{};
 
-  // Logo
   const logoUrl=enc.logo||ev.logo_url||'';
   const logoEl=document.getElementById('logo');
   if(logoUrl){logoEl.src=logoUrl;logoEl.style.display='block';}
 
-  // Title
   if(enc.title) document.getElementById('title').textContent=enc.title;
   else if(ev.title) document.getElementById('title').textContent=ev.title;
-
-  // Subtitle
   if(enc.subtitle) document.getElementById('subtitle').textContent=enc.subtitle;
 
-  // CTA
   const ctaEl=document.getElementById('cta');
   ctaEl.href=enc.ctaUrl||baseUrl;
   if(enc.ctaLabel) ctaEl.firstChild.textContent=enc.ctaLabel+' ';
 
-  // Screenshots
   const screens=(enc.screenshots||[]).filter(Boolean);
-  const zone=document.getElementById('screens-zone');
+  const carousel=document.getElementById('carousel');
+  const dotsEl=document.getElementById('dots');
+
   if(screens.length===0){
-    zone.innerHTML='<div class="no-screens">Captures à configurer</div>';
-  } else {
-    screens.forEach((url,i)=>{
-      if(i>3) return;
-      const d=document.createElement('div');
-      d.className='screen screen-'+i;
-      d.innerHTML='<img src="'+url+'" alt="Capture '+(i+1)+'">';
-      zone.appendChild(d);
-    });
-    initParallax(screens.length);
+    document.getElementById('screens-zone').innerHTML='<div class="no-screens">Captures à configurer</div>';
+    return;
   }
 
-  // Resize postMessage
-  requestAnimationFrame(()=>{
-    const h=document.getElementById('encart').offsetHeight;
-    parent.postMessage({type:'tmg-encart-resize',height:h,id:getFrameId()},'*');
+  slideCount=screens.length;
+  screens.forEach((url,i)=>{
+    const img=document.createElement('img');
+    img.src=url;img.alt='Capture '+(i+1);
+    if(i===0) img.classList.add('active');
+    carousel.appendChild(img);
+
+    const dot=document.createElement('div');
+    dot.className='dot'+(i===0?' active':'');
+    dot.onclick=()=>goTo(i);
+    dotsEl.appendChild(dot);
   });
+
+  if(slideCount>1) autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
+  initParallax();
+  sendResize();
 }
 
-function getFrameId(){
-  try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}
+function goTo(idx){
+  const imgs=document.querySelectorAll('#carousel img');
+  const dots=document.querySelectorAll('.dot');
+  imgs[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide=idx;
+  imgs[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+  if(autoTimer) clearInterval(autoTimer);
+  autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
 }
 
-/* Parallax on mousemove */
-const depths=[12,8,5,3]; // px movement per layer
-function initParallax(count){
+function initParallax(){
   const encart=document.getElementById('encart');
+  const carousel=document.getElementById('carousel');
   encart.addEventListener('mousemove',e=>{
     const rect=encart.getBoundingClientRect();
-    const cx=(e.clientX-rect.left)/rect.width-0.5;  // -0.5 to 0.5
+    const cx=(e.clientX-rect.left)/rect.width-0.5;
     const cy=(e.clientY-rect.top)/rect.height-0.5;
-    for(let i=0;i<count&&i<4;i++){
-      const el=document.querySelector('.screen-'+i);
-      if(!el) continue;
-      const d=depths[i]||3;
-      el.style.transform='translate('+(-cx*d)+'px, '+(-cy*d)+'px)';
-    }
+    carousel.style.transform='translate('+(-cx*10)+'px,'+(-cy*8)+'px) scale(1.06)';
   });
   encart.addEventListener('mouseleave',()=>{
-    for(let i=0;i<count&&i<4;i++){
-      const el=document.querySelector('.screen-'+i);
-      if(el) el.style.transform='translate(0,0)';
-    }
+    carousel.style.transform='translate(0,0) scale(1)';
+  });
+}
+
+function sendResize(){
+  requestAnimationFrame(()=>{
+    const h=document.getElementById('encart').offsetHeight;
+    try{const fid=window.frameElement?window.frameElement.id:'';}catch(e){}
+    parent.postMessage({type:'tmg-encart-resize',height:h,id:(()=>{try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}})()},'*');
   });
 }
 
