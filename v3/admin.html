@@ -419,7 +419,7 @@ function applyTabVisibility(){
   const isExpedition = ev?.mode === 'expedition';
 
   // Expedition mode: tabs to hide and rename map
-  const expHiddenTabs = ['programme','flash','rubriques','widget'];
+  const expHiddenTabs = ['programme','flash','rubriques'];
   const expRenameMap = {
     essentiel: {label:'À retenir', icon:'🧠'},
     live: {label:'Fil de route', icon:'🗺️'},
@@ -431,7 +431,7 @@ function applyTabVisibility(){
     decor: {label:'Décor', icon:'🎨'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','decor','media','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -548,7 +548,9 @@ async function uploadImageTo(targetInputId){
       const data=await resp.json();
       if(data.error){toast('Erreur: '+data.error,'error');if(target){target.value='';target.disabled=false;}return;}
       if(target){target.value=data.url;target.disabled=false;}
-      toast('Image uploadée');
+      // Auto-add to media library
+      try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
+      toast('Image uploadée + ajoutée à la médiathèque');
     }catch(e){
       console.error('Upload error:',e);
       toast('Erreur d\'upload: '+e.message,'error');
@@ -985,8 +987,8 @@ function modifyEvent(id){
         <option value="live"${!isExp?' selected':''}>Live classique</option>
         <option value="expedition"${isExp?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:9px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
     </div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
-    <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}${mkUploadBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
 
     <!-- ===== CLASSIC-ONLY FIELDS ===== -->
     <div id="m-ev-classic-fields" style="${isExp?'display:none':''}">
@@ -1558,7 +1560,7 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}${mkUploadBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier / Programmer</button></div>
@@ -1650,7 +1652,7 @@ function editLive(id){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="m-live-journalist" value="${e.journalist||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}${mkUploadBtn('m-live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="m-live-url" value="${e.url||''}"></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-live-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     ${e.image?`<div class="form-row-inline">
@@ -1847,7 +1849,7 @@ function renderCitations(el){
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}${mkUploadBtn('cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="cit-photo-format"><option value="round">Médaillon (rond)</option><option value="large">Photo grand format (rectangle)</option></select></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="cit-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter / Programmer</button></div></div>
@@ -1909,7 +1911,7 @@ function editCitation(id){
   openModal(`<h3>Modifier la citation</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}${mkUploadBtn('m-cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="m-cit-photo-format"><option value="round"${(c.photoFormat||'round')==='round'?' selected':''}>Médaillon (rond)</option><option value="large"${c.photoFormat==='large'?' selected':''}>Photo grand format (rectangle)</option></select></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-cit-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     <div class="modal-footer">
@@ -2215,7 +2217,7 @@ function renderArticles(el){
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}${mkUploadBtn('art-image')}</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
 
   <!-- FLUX RSS -->
@@ -2275,7 +2277,7 @@ function editArticle(id){
   openModal(`<h3>Modifier l'article</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-art-title" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}${mkUploadBtn('m-art-image')}</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveArticleEdit('${id}')">💾 Enregistrer</button>
@@ -3319,7 +3321,7 @@ function renderJournalistes(el){
     </div>
     <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="jr-bio" rows="2" placeholder="Spécialiste croisières depuis 15 ans..."></textarea></div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="jr-photo" style="flex:1">${mkMediaPickerBtn('jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="jr-photo" style="flex:1">${mkMediaPickerBtn('jr-photo')}${mkUploadBtn('jr-photo')}</div></div>
       <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="jr-profile" placeholder="https://www.tourmag.com/..."></div>
     </div>
     <div class="form-row-inline">
@@ -3393,7 +3395,7 @@ function editGlobalJournalist(id){
     </div>
     <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="m-jr-bio" rows="3">${j.bio||''}</textarea></div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}${mkUploadBtn('m-jr-photo')}</div></div>
       <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="m-jr-profile" value="${j.profileUrl||''}"></div>
     </div>
     <div class="form-row-inline">
@@ -4070,7 +4072,7 @@ function addInterview(){
       <div class="form-row"><label class="form-label">Badge / tag</label><input class="form-input" id="m-itw-tag" placeholder="Expertise & Vision"></div>
       <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-itw-order" value="${(interviewsData.length+1)*10}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" style="flex:1" placeholder="https://">${mkMediaPickerBtn('m-itw-photo')}</div></div>
+    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" style="flex:1" placeholder="https://">${mkMediaPickerBtn('m-itw-photo')}${mkUploadBtn('m-itw-photo')}</div></div>
     <div class="form-row"><label class="form-label">Lien article (URL)</label><input class="form-input" id="m-itw-link" placeholder="https://www.tourmag.com/..."></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveInterview()">💾 Ajouter</button></div>`);
 }
@@ -4092,7 +4094,7 @@ function editInterview(id){
       <div class="form-row"><label class="form-label">Badge / tag</label><input class="form-input" id="m-itw-tag" value="${itw.tag||''}"></div>
       <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-itw-order" value="${itw.order||0}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" value="${itw.photo_url||''}" style="flex:1">${mkMediaPickerBtn('m-itw-photo')}</div></div>
+    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" value="${itw.photo_url||''}" style="flex:1">${mkMediaPickerBtn('m-itw-photo')}${mkUploadBtn('m-itw-photo')}</div></div>
     <div class="form-row"><label class="form-label">Lien article (URL)</label><input class="form-input" id="m-itw-link" value="${itw.link||''}"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveInterview('${id}')">💾 Enregistrer</button></div>`);
 }
@@ -4851,7 +4853,7 @@ function renderSponsors(el){
 function addSponsor(){
   openModal(`<h3>Nouveau partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${((eventsData.find(e=>e.id===currentEventId)?.sponsors||[]).length+1)*10}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor()">💾 Ajouter</button></div>`);
@@ -4861,7 +4863,7 @@ function editSponsor(idx){
   const s=(ev.sponsors||[])[idx];if(!s)return;
   openModal(`<h3>Modifier le partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${s.order||0}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor(${idx})">💾 Enregistrer</button></div>`);
@@ -4893,10 +4895,138 @@ async function saveSponsorsConfig(){
 // ==================== WIDGET ====================
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const isExp = ev.mode === 'expedition';
   const baseUrl='https://tourmag13.github.io/tourmag-live/v2';
   const frontUrl=baseUrl+'/index.html?event='+currentEventId;
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
+
+  if(isExp){
+    renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId);
+  } else {
+    renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId);
+  }
+}
+
+/* ---- EXPEDITION WIDGET ---- */
+function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
+  const enc=ev.expEncart||{};
+  const screens=enc.screenshots||['','','',''];
+  while(screens.length<4) screens.push('');
+
+  const encartSmallUrl=baseUrl+'/encart-exp.html?event='+currentEventId;
+  const encartLargeUrl=baseUrl+'/encart-exp-large.html?event='+currentEventId;
+
+  let h=`<div class="page-title">Widget homepage — Expédition</div><div class="page-desc">Configurez les deux encarts promotionnels à intégrer sur la homepage TourMaG.</div>
+
+  <div class="admin-card"><h3>🎨 Contenu des encarts</h3>
+    <div class="form-row"><label class="form-label">Logo (par défaut celui de l'événement)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-logo" value="${(enc.logo||ev.logo_url||'').replace(/"/g,'&quot;')}" placeholder="Logo de l'événement" style="flex:1">${mkMediaPickerBtn('we-logo')}${mkUploadBtn('we-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Titre personnalisé</label><input class="form-input" id="we-title" value="${(enc.title||'').replace(/"/g,'&quot;')}" placeholder="Ex: Suivez l'expédition en direct"></div>
+    <div class="form-row"><label class="form-label">Accroche</label><textarea class="form-input" id="we-subtitle" rows="2" placeholder="Ex: Carnet de route, étapes, interviews, galerie photo…" style="resize:vertical">${(enc.subtitle||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="form-row"><label class="form-label">URL du bouton CTA</label><input class="form-input" id="we-cta-url" value="${(enc.ctaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages.</div></div>
+    <div class="form-row"><label class="form-label">Libellé du bouton CTA</label><input class="form-input" id="we-cta-label" value="${(enc.ctaLabel||'').replace(/"/g,'&quot;')}" placeholder="Ex: Accéder au live →"></div>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="form-label" style="margin-bottom:4px;display:block">📸 Captures d'écran (3 à 4 images pour l'animation parallaxe)</label>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:12px">Ces images s'affichent à droite de l'encart avec un effet de profondeur au survol de la souris.</div>
+      ${screens.map((s,i)=>`<div class="form-row"><label class="form-label">Capture ${i+1}${i>=3?' (optionnelle)':''}</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-screen-${i}" value="${(s||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('we-screen-'+i)}${mkUploadBtn('we-screen-'+i)}</div></div>`).join('')}
+    </div>
+
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetExpConfig()">💾 Enregistrer la configuration</button></div>
+  </div>
+
+  <div class="admin-card"><h3>🔧 Configuration générale</h3>
+    <div class="form-row"><label class="form-label">📷 URL du serveur d'upload d'images</label>
+      <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:11px">
+      <div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script d'upload. ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré</span>'}</div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>📦 Encart petit format</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (~300-400px). Logo + titre + accroche à gauche, captures animées à droite.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartSmallUrl}" style="width:100%;border:none;min-height:220px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-es'){
+    document.getElementById('${iframeId}-es').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-small')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📺 Encart grand format</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (~700px+). Mise en page élargie avec captures plus grandes.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartLargeUrl}" style="width:100%;border:none;min-height:300px;border-radius:12px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-el'){
+    document.getElementById('${iframeId}-el').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-large')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📺 Page complète (iframe)</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.</p>
+    <div style="position:relative"><textarea class="form-input" rows="10" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(!e.data) return;
+  if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
+    document.getElementById('${iframeId}').style.height=e.data.height+'px';
+  }
+  if(e.data.type==='tourmag-live-fullwidth'){
+    var f=document.getElementById('${iframeId}');
+    if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>🔗 URLs directes</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Page live :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${frontUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${frontUrl}');toast('URL copiée')">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Encart petit :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${encartSmallUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${encartSmallUrl}');toast('URL copiée')">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Encart grand :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${encartLargeUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${encartLargeUrl}');toast('URL copiée')">📋</button>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=h;
+}
+
+async function saveWidgetExpConfig(){
+  saving(true);
+  const screenshots=[0,1,2,3].map(i=>document.getElementById('we-screen-'+i).value.trim()).filter(Boolean);
+  await evRef().update({
+    uploadUrl:document.getElementById('w-upload-url').value.trim(),
+    expEncart:{
+      logo:document.getElementById('we-logo').value.trim(),
+      title:document.getElementById('we-title').value.trim(),
+      subtitle:document.getElementById('we-subtitle').value.trim(),
+      ctaUrl:document.getElementById('we-cta-url').value.trim(),
+      ctaLabel:document.getElementById('we-cta-label').value.trim(),
+      screenshots
+    }
+  });
+  toast('Configuration encarts expédition enregistrée');
+}
+
+/* ---- CLASSIQUE WIDGET ---- */
+function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
   let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
 
