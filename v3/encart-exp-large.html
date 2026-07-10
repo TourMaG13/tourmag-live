@@ -32,7 +32,7 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
   width:40%;min-width:0;position:relative;z-index:2;
   display:flex;flex-direction:column;gap:12px;
   justify-content:center;
-  padding:24px 0 24px 32px;
+  padding:24px 20px 24px 32px;
 }
 .logo{max-height:64px;max-width:220px;object-fit:contain;display:block;flex-shrink:0}
 .title{font-size:1.35rem;font-weight:700;color:#f1f5f9;line-height:1.3;letter-spacing:-.01em}
@@ -50,7 +50,6 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
 .cta:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,.45)}
 .cta svg{width:15px;height:15px}
 
-/* Carousel — edge to edge vertically, thin border */
 .right{
   width:60%;position:relative;z-index:1;flex-shrink:0;
   margin-left:auto;
@@ -80,11 +79,11 @@ body{background:transparent;overflow:hidden;font-family:-apple-system,BlinkMacSy
   color:#475569;font-size:12px;text-align:center;
 }
 
-@media(max-width:600px){
-  .encart{flex-direction:column;height:auto;min-height:280px;text-align:center}
-  .left{width:100%;padding:22px 18px;align-items:center}
+@media(max-width:700px){
+  .encart{flex-direction:column;height:auto;text-align:center}
+  .left{width:100%;padding:24px 24px 18px;align-items:center}
   .cta{align-self:center}
-  .right{width:100%;height:200px;border-radius:0 0 14px 14px;border-left:none;border-top:1px solid rgba(255,255,255,.1)}
+  .right{width:100%;aspect-ratio:16/9;border-radius:0 0 14px 14px;border-left:none;border-top:1px solid rgba(255,255,255,.1)}
 }
 </style>
 </head>
@@ -127,11 +126,9 @@ async function init(){
   const ev=snap.data();
   const enc=ev.expEncart||{};
 
-  // Custom background
-  if(enc.bg){
-    const el=document.getElementById('encart');
-    el.style.background=enc.bg;
-  }
+  if(enc.bg) document.getElementById('encart').style.background=enc.bg;
+  if(enc.titleColor) document.getElementById('title').style.color=enc.titleColor;
+  if(enc.subtitleColor) document.getElementById('subtitle').style.color=enc.subtitleColor;
 
   const logoUrl=enc.logo||ev.logo_url||'';
   const logoEl=document.getElementById('logo');
