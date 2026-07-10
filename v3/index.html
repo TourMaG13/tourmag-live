@@ -1931,11 +1931,10 @@ function renderExpedition(data){
     const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
     if(bn.startDate && today < bn.startDate){ console.log('[BrandNews] ❌ Pas encore commencé',{today,startDate:bn.startDate}); return ''; }
     if(bn.endDate && today > bn.endDate){ console.log('[BrandNews] ❌ Période expirée',{today,endDate:bn.endDate}); return ''; }
-    // Find articles from the brandnews RSS feed
-    const allRssFeeds = (articles||[]).map(a=>a.rss_feed).filter(Boolean);
-    const bnArticles = (articles||[]).filter(a => a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
-    console.log('[BrandNews] 🔍 Diagnostic',{rssUrl:bn.rssUrl, totalArticles:(articles||[]).length, uniqueRssFeeds:[...new Set(allRssFeeds)], matchingArticles:bnArticles.length});
-    if(!bnArticles.length){ console.log('[BrandNews] ❌ Aucun article trouvé avec rss_feed ===',bn.rssUrl); return ''; }
+    // Find articles from the brandnews RSS feed (brandnews_feed field set by sync, or rss_feed as fallback)
+    const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    console.log('[BrandNews] 🔍',{rssUrl:bn.rssUrl, matchingArticles:bnArticles.length});
+    if(!bnArticles.length) return '';
     const a = bnArticles[0];
     const label = bn.label || 'Brand News';
     let o = `<section class="exp-brandnews">`;
