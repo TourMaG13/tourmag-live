@@ -4826,7 +4826,7 @@ function renderGallery(el){
     </div>`;
   });
   h+=`</div>
-    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()">📷 Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGallery()">💾 Enregistrer la galerie</button></div>
   </div>`;
   el.innerHTML=h;
@@ -4854,6 +4854,38 @@ function addGalleryRow(url){
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
   div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
+}
+function uploadGalleryPhoto(){
+  const url=getUploadUrl();
+  if(!url){toast('Configurez l\'URL d\'upload dans l\'onglet Intégration','error');return;}
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+  input.multiple=true;
+  input.onchange=async function(){
+    const files=Array.from(input.files);
+    if(!files.length)return;
+    let uploaded=0;
+    for(const file of files){
+      if(file.size>10*1024*1024){toast(file.name+' trop volumineux (max 10 Mo)','error');continue;}
+      try{
+        toast('⏳ Upload de '+file.name+'…');
+        const fd=new FormData();
+        fd.append('image',file);
+        const resp=await fetch(url,{method:'POST',body:fd});
+        const data=await resp.json();
+        if(data.error){toast('Erreur: '+data.error,'error');continue;}
+        addGalleryRow(data.url);
+        try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
+        uploaded++;
+      }catch(e){
+        console.error('Upload error:',e);
+        toast('Erreur pour '+file.name+': '+e.message,'error');
+      }
+    }
+    if(uploaded) toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' — pensez à enregistrer');
+  };
+  input.click();
 }
 async function saveGallery(){
   const urls=document.querySelectorAll('[data-gal-url]');
