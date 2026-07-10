@@ -680,6 +680,17 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 
 /* Sponsors / Partenaires */
 .exp-sponsors{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+/* Brand News */
+.exp-brandnews{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-bn-card{display:flex;gap:16px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s}
+.exp-bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.exp-bn-img{width:200px;min-height:140px;flex-shrink:0;overflow:hidden}
+.exp-bn-img img{width:100%;height:100%;object-fit:cover;display:block}
+.exp-bn-body{display:flex;flex-direction:column;justify-content:center;padding:18px 20px 18px 0;gap:8px}
+.exp-bn-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#d97706;background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.03));padding:3px 10px;border-radius:6px;border:1px solid rgba(217,119,6,.15);align-self:flex-start}
+.exp-bn-title{font-family:'Libre Caslon Display',serif;font-size:16px;line-height:1.4;color:var(--exp-ink)}
+.exp-bn-read{font-size:12px;color:var(--exp-accent);font-weight:600}
+@media(max-width:600px){.exp-bn-card{flex-direction:column}.exp-bn-img{width:100%;height:180px}.exp-bn-body{padding:14px 16px}}
 .exp-sponsors-grid{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:38px;padding:32px;border:1px solid var(--exp-line)}
 .exp-sponsors-grid img{height:36px;opacity:.4;filter:grayscale(100%);transition:all .3s;cursor:pointer}
 .exp-sponsors-grid img:hover{opacity:.9;filter:none}
@@ -1912,6 +1923,28 @@ function renderExpedition(data){
     return o+`</section>`;
   };
 
+  _b.brandnews = function(){
+    const bn = event.brandNews;
+    if(!bn || !bn.rssUrl) return '';
+    // Check date range
+    const today = new Date().toISOString().slice(0,10);
+    if(bn.startDate && today < bn.startDate) return '';
+    if(bn.endDate && today > bn.endDate) return '';
+    // Find articles from the brandnews RSS feed
+    const bnArticles = (articles||[]).filter(a => a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    if(!bnArticles.length) return '';
+    const a = bnArticles[0];
+    const label = bn.label || 'Brand News';
+    let o = `<section class="exp-brandnews">`;
+    o += `<div class="exp-bn-card" onclick="window.open('${a.link}','_blank')">`;
+    if(a.image) o += `<div class="exp-bn-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
+    o += `<div class="exp-bn-body"><div class="exp-bn-badge">📢 ${label}</div>`;
+    o += `<div class="exp-bn-title">${a.title||''}</div>`;
+    o += `<div class="exp-bn-read">Lire l'article →</div>`;
+    o += `</div></div></section>`;
+    return o;
+  };
+
   _b.sponsors = function(){
     const sp=(event.sponsors||[]).sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
@@ -1955,7 +1988,7 @@ function renderExpedition(data){
   };
 
   // Assemble blocks in configured order
-  const defaultExpOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const defaultExpOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'];
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
