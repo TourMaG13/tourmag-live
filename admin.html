@@ -134,14 +134,34 @@ select.form-input{cursor:pointer}
 .chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:2px solid transparent}
 .chip .chip-del{font-size:12px;opacity:.5;cursor:pointer}.chip .chip-del:hover{opacity:1}
 
-.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
-.media-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.media-thumb{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border .15s;background-image:linear-gradient(45deg,#e0e0e0 25%,transparent 25%),linear-gradient(-45deg,#e0e0e0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e0e0e0 75%),linear-gradient(-45deg,transparent 75%,#e0e0e0 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0px;background-color:#f5f5f5}
+.media-thumb::before{content:'';display:block;padding-bottom:100%}
 .media-thumb:hover{border-color:var(--acc)}
 .media-thumb.selected{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,132,44,.3)}
-.media-thumb img{width:100%;height:100%;object-fit:cover}
-.media-thumb .media-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.media-thumb img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.media-thumb .media-del{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:2}
 .media-thumb:hover .media-del{opacity:1}
-.media-add{aspect-ratio:1;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
+.media-thumb .media-info{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;line-height:1.3;opacity:0;transition:opacity .15s;pointer-events:none;z-index:1}
+.media-thumb:hover .media-info{opacity:1}
+.media-thumb .media-check{position:absolute;top:4px;left:4px;width:22px;height:22px;background:rgba(255,255,255,.85);border:2px solid #ccc;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0;transition:opacity .15s;z-index:2}
+.media-thumb:hover .media-check,.media-thumb.sel .media-check{opacity:1}
+.media-thumb.sel .media-check{background:var(--acc);border-color:var(--acc);color:#fff}
+.media-thumb.sel{border-color:var(--acc)}
+.media-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.media-toolbar input[type=text]{flex:1;min-width:160px}
+.media-toolbar select{width:auto}
+.media-pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:12px;font-family:var(--font)}
+.media-pager button{padding:4px 10px;border:1px solid var(--border);background:var(--bg);border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.media-pager button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.media-pager button:disabled{opacity:.4;cursor:default}
+.media-pager .pg-current{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+.media-bulk{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;margin-bottom:10px;font-size:12px}
+.media-add{position:relative;border-radius:8px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;gap:2px;font-size:10px;color:var(--text3)}
+.media-add::before{content:'';display:block;padding-bottom:100%}
+.media-add span{position:absolute}
+.media-add span:first-child{top:calc(50% - 16px)}
+.media-add span:last-child{top:calc(50% + 8px)}
 .media-add:hover{border-color:var(--acc);color:var(--acc)}
 
 .cit-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
@@ -239,32 +259,32 @@ select.form-input{cursor:pointer}
   <div class="mobile-sidebar-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
-      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
       <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
       <div class="sidebar-section">Contenu</div>
-      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
-      <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
-      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
-      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
       <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
-      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Citations<span class="badge" id="badge-cit">0</span></div>
-      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
-      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
+      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Verbatims<span class="badge" id="badge-cit">0</span></div>
       <div class="sidebar-item" data-tab="interviews"><span class="icon">🎙️</span>Interviews</div>
-      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Journalistes</div>
-      <div class="sidebar-section">Enrichissement</div>
-      <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Chiffres clés</div>
+      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
       <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
+      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
       <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
       <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
+      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
+      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
+      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
       <div class="sidebar-section">Outils</div>
       <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
-      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
+      <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
+      <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Compteurs</div>
+      <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
+      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
+      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-section">Système</div>
       <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
       <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
+      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
     </div>
     <div class="admin-main" id="admin-main"></div>
   </div>
@@ -384,6 +404,7 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 function isClient(){ return currentUserRole==='client'; }
 
 function isSuperAdmin(){
+  if(isClient()) return false;
   const ev=eventsData.find(e=>e.id===currentEventId);
   const superAdmins=ev?.superAdmins||[];
   // If no super admins defined, everyone is super admin (retrocompat)
@@ -399,17 +420,19 @@ function applyTabVisibility(){
   const isExpedition = ev?.mode === 'expedition';
 
   // Expedition mode: tabs to hide and rename map
-  const expHiddenTabs = ['programme','flash','essentiel','rubriques','widget'];
+  const expHiddenTabs = ['programme','flash','rubriques'];
   const expRenameMap = {
+    essentiel: {label:'À retenir', icon:'🧠'},
     live: {label:'Fil de route', icon:'🗺️'},
     citations: {label:'Verbatims', icon:'💬'},
     journalistes: {label:'Reporters', icon:'👤'},
     kpis: {label:'Compteurs', icon:'📊'},
     sponsors: {label:'Partenaires', icon:'🤝'},
-    contact: {label:'Contact', icon:'📞'}
+    contact: {label:'Contact', icon:'📞'},
+    decor: {label:'Décor', icon:'🎨'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','media','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -434,8 +457,8 @@ function applyTabVisibility(){
       return;
     }
 
-    // Expedition-only tab: etapes
-    if(tab==='etapes'){
+    // Expedition-only tabs: etapes, decor
+    if(tab==='etapes' || tab==='decor'){
       item.style.display=isExpedition?'':'none';
       return;
     }
@@ -470,21 +493,6 @@ function applyTabVisibility(){
       item.style.display='';
     }
   });
-
-  // Reorder sidebar tabs in expedition mode to match front-end rendering order
-  if(isExpedition){
-    const sidebar = document.querySelector('.sidebar-item[data-tab]')?.parentElement;
-    if(sidebar){
-      const tabItems = {};
-      sidebar.querySelectorAll('.sidebar-item[data-tab]').forEach(el => { tabItems[el.dataset.tab] = el; });
-      // Move items in expTabOrder to the end of sidebar, preserving order
-      expTabOrder.forEach(tab => {
-        if(tabItems[tab] && tabItems[tab].style.display !== 'none'){
-          sidebar.appendChild(tabItems[tab]);
-        }
-      });
-    }
-  }
 
   // Also hide sidebar sections if all their items are hidden
   document.querySelectorAll('.sidebar-section').forEach(sec=>{
@@ -541,7 +549,9 @@ async function uploadImageTo(targetInputId){
       const data=await resp.json();
       if(data.error){toast('Erreur: '+data.error,'error');if(target){target.value='';target.disabled=false;}return;}
       if(target){target.value=data.url;target.disabled=false;}
-      toast('Image uploadée');
+      // Auto-add to media library
+      try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
+      toast('Image uploadée + ajoutée à la médiathèque');
     }catch(e){
       console.error('Upload error:',e);
       toast('Erreur d\'upload: '+e.message,'error');
@@ -563,10 +573,13 @@ function openMediaPicker(targetInputId){
   if(!mediaData.length){
     h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
   } else {
-    h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">`;
+    h+=`<input type="text" class="form-input" placeholder="🔍 Rechercher…" style="margin-bottom:10px" oninput="filterMediaPicker(this.value)">`;
+    h+=`<div id="media-picker-grid" class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:420px;overflow-y:auto;padding:4px">`;
     mediaData.forEach((m,i)=>{
-      h+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickMediaItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'">
-        <img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()">
+      const name = m.name || m.url.split('/').pop().slice(0,20);
+      h+=`<div class="media-thumb media-picker-item" data-name="${(m.name||m.url||'').toLowerCase()}" onclick="pickMediaItem(${i})">
+        <img src="${m.url}" alt="${name}" loading="lazy" onerror="this.parentElement.remove()">
+        <div class="media-info">${name}</div>
       </div>`;
     });
     h+=`</div>`;
@@ -605,6 +618,12 @@ function closeMediaPicker(){
     closeModal();
   }
 }
+window.filterMediaPicker = function(q){
+  q = q.toLowerCase();
+  document.querySelectorAll('.media-picker-item').forEach(el=>{
+    el.style.display = (!q || el.dataset.name.includes(q)) ? '' : 'none';
+  });
+};
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
 function evRef(){ return db.collection('events').doc(currentEventId); }
@@ -847,6 +866,7 @@ function renderTab(){
     case 'gallery':renderGallery(main);break;
     case 'sponsors':renderSponsors(main);break;
     case 'contact':renderContact(main);break;
+    case 'decor':renderDecor(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'widget':renderWidget(main);break;
@@ -900,9 +920,11 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false},
+    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
+    expSidebarAnchor:'live',
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -968,8 +990,8 @@ function modifyEvent(id){
         <option value="live"${!isExp?' selected':''}>Live classique</option>
         <option value="expedition"${isExp?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:9px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
     </div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}</div></div>
-    <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('m-ev-hero-image')}${mkUploadBtn('m-ev-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
 
     <!-- ===== CLASSIC-ONLY FIELDS ===== -->
     <div id="m-ev-classic-fields" style="${isExp?'display:none':''}">
@@ -995,6 +1017,7 @@ function modifyEvent(id){
           <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="m-ev-eyebrow" value="${((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"><div style="font-size:9px;color:var(--text3);margin-top:3px">Petite mention en capitales au-dessus du titre.</div></div>
           <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="m-ev-photo-credit" value="${((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')}" placeholder="© Photographe"></div>
         </div>
+        <div class="form-row" style="margin-top:10px"><label class="form-label">Taille du logo dans le hero (px)</label><div style="display:flex;align-items:center;gap:10px"><input type="range" id="m-ev-logo-size" min="20" max="120" value="${ev.logoSize||48}" style="flex:1"><span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text3);min-width:36px" id="m-ev-logo-size-lbl">${ev.logoSize||48}px</span></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur maximale du logo affiché dans le hero du front expédition.</div></div>
       </div>
     </div>
 
@@ -1004,6 +1027,9 @@ function modifyEvent(id){
       <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=\\'form-input\\' placeholder=\\'Nom\\' style=\\'width:120px\\' data-ht-name=\\''+i+'\\'><input type=\\'color\\' value=\\'#E8842C\\' style=\\'width:34px;height:30px;border:none;cursor:pointer;border-radius:4px\\' data-ht-color=\\''+i+'\\'><input class=\\'form-input\\' placeholder=\\'URL (optionnel)\\' style=\\'flex:1;font-size:10px\\' data-ht-link=\\''+i+'\\'><button class=\\'btn btn-danger btn-xs\\' onclick=\\'this.parentElement.remove()\\'>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')">💾 Enregistrer</button></div>`);
+  // Wire up logo size slider label
+  const lsSlider=document.getElementById('m-ev-logo-size'),lsLbl=document.getElementById('m-ev-logo-size-lbl');
+  if(lsSlider&&lsLbl) lsSlider.addEventListener('input',()=>{lsLbl.textContent=lsSlider.value+'px';});
 }
 
 function toggleEventModeFields(){
@@ -1037,6 +1063,8 @@ async function updateEvent(id){
   const photoCreditEl=document.getElementById('m-ev-photo-credit');
   if(eyebrowEl) updateData['expedition.eyebrow']=eyebrowEl.value.trim();
   if(photoCreditEl) updateData['expedition.photoCredit']=photoCreditEl.value.trim();
+  const logoSizeEl=document.getElementById('m-ev-logo-size');
+  if(logoSizeEl) updateData.logoSize=parseInt(logoSizeEl.value)||48;
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
 }
@@ -1072,9 +1100,9 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'}];
-  const expRenames = {live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact'};
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
+  const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
@@ -1112,42 +1140,78 @@ function renderModules(el){
   h+=`</div>`;
 
   if(isExp){
-    // In expedition mode, show expedition-specific block order
+    // In expedition mode, show expedition-specific block order with zone constraints
     const expBlocks = [
-      {key:'kpis',icon:'📊',label:'Compteurs'},
-      {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
-      {key:'live',icon:'🗺️',label:'Fil de route + Sidebar'},
-      {key:'citations',icon:'💬',label:'Verbatims'},
-      {key:'interviews',icon:'🎙️',label:'Interviews'},
-      {key:'videos',icon:'🎬',label:'Vidéos'},
-      {key:'gallery',icon:'📸',label:'Galerie photos'},
-      {key:'articles',icon:'📰',label:'Articles'},
-      {key:'sponsors',icon:'🤝',label:'Partenaires'},
-      {key:'contact',icon:'📞',label:'Contact'}
+      {key:'kpis',icon:'📊',label:'Compteurs',zones:['full']},
+      {key:'essential',icon:'🧠',label:'À retenir',zones:['full','main']},
+      {key:'etapes',icon:'🗺️',label:'Carte & Étapes',zones:['full']},
+      {key:'live',icon:'📝',label:'Fil de route',zones:['main']},
+      {key:'reporters',icon:'🎤',label:'Reporters',zones:['side','main']},
+      {key:'itinerary',icon:'🧭',label:'Itinéraire',zones:['side','main']},
+      {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
+      {key:'citations',icon:'💬',label:'Verbatims',zones:['full','main']},
+      {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
+      {key:'videos',icon:'🎬',label:'Vidéos',zones:['full','main']},
+      {key:'gallery',icon:'📸',label:'Galerie photos',zones:['full','main']},
+      {key:'articles',icon:'📰',label:'Articles',zones:['full','main']},
+      {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
+      {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
     ];
-    const expDefaultOrder = ['kpis','etapes','live','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultOrder = ['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
-    expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
+    // Auto-inject new blocks (reporters, itinerary) for legacy events
+    expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)){
+      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'){
+        const li=expOrder.indexOf('live'); expOrder.splice(li>=0?li+1:expOrder.length,0,b.key);
+      } else { expOrder.push(b.key); }
+    }});
     const expMap = Object.fromEntries(expBlocks.map(b=>[b.key,b]));
+    const expSavedZones = ev?.expBlockZones || {};
+    function getExpZone(k){ return expSavedZones[k] || expDefaultZones[k] || 'main'; }
+    const expZoneBgs = {full:'#EEF2FF',main:'#FFF',side:'#FFF5EB'};
+    const expZoneLabels = {full:'⬛ Pleine largeur',main:'◀ Col. principale',side:'▶ Sidebar'};
 
-    h+=`<div class="admin-card"><h3>↕️ Ordre des blocs</h3>
-      <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour réorganiser l'affichage de la page expédition. Le hero et le footer restent fixes.</div>
+    h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+      <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
       <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
     expOrder.forEach((key,i)=>{
       const b=expMap[key]; if(!b) return;
       const dis=mod[b.key]===false;
-      h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:#FFF">
+      const zone=getExpZone(key);
+      const locked=b.zones.length===1;
+      h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:${expZoneBgs[zone]||'#FFF'}">
         <span class="block-drag-handle">⠿</span><span style="font-size:14px">${b.icon}</span>
         <span style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${b.label}</span>
         ${dis?'<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px">OFF</span>':''}
+        ${locked
+          ? `<span class="block-zone-sel" data-key="${key}" data-value="${b.zones[0]}" style="font-size:9px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#f3f3f3;color:var(--text3);font-family:Poppins;cursor:default">🔒 ${expZoneLabels[b.zones[0]]||b.zones[0]}</span>`
+          : `<select class="block-zone-sel" data-key="${key}" style="font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;background:#fff;font-family:Poppins;cursor:pointer">
+            ${b.zones.map(z=>`<option value="${z}"${zone===z?' selected':''}>${expZoneLabels[z]||z}</option>`).join('')}
+          </select>`}
         <div style="display:flex;gap:2px">
           <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===expOrder.length-1?' disabled':''}>▼</button>
         </div>
       </div>`;
     });
-    h+=`</div></div>`;
+    h+=`</div>
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Aperçu du rendu</div>
+        <div id="block-preview-zone" style="font-size:11px;color:var(--text2);line-height:2"></div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">📌 Ancrage de la sidebar</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">La sidebar se positionne à côté de ce bloc :</div>
+        <select class="form-input" id="sidebar-anchor" style="max-width:300px">
+          ${['live','essential','citations','articles','videos','interviews'].map(k=>{
+            const b=expBlocks.find(x=>x.key===k);
+            return `<option value="${k}"${(ev?.expSidebarAnchor||'live')===k?' selected':''}>${b?b.icon+' '+b.label:k}</option>`;
+          }).join('')}
+        </select>
+      </div>
+    </div>`;
   } else {
   h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
     <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
@@ -1213,7 +1277,7 @@ function updateBlockPreview(){
   items.forEach(item=>{
     const key=item.dataset.key;
     const sel=item.querySelector('.block-zone-sel');
-    const zone=sel?sel.value:'main';
+    const zone=sel ? (sel.tagName==='SELECT' ? sel.value : (sel.dataset.value||'main')) : 'main';
     const label=item.querySelector('[style*="flex:1"]')?.textContent||key;
     const icon=item.querySelectorAll('span')[1]?.textContent||'';
     if(zone==='max'){
@@ -1267,15 +1331,20 @@ function initUnifiedBlockDrag(){
 
   // Zone change handlers
   list.querySelectorAll('.block-zone-sel').forEach(sel=>{
+    if(sel.tagName!=='SELECT') return; // skip locked zones (span)
     sel.addEventListener('change',()=>{
       // Update background color
-      const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
+      const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#FFF5EB'};
       const item=sel.closest('.block-uni-item');
       if(item) item.style.background=zoneBgs[sel.value]||'#FFF';
       saveUnifiedBlockOrder();
       updateBlockPreview();
     });
   });
+
+  // Sidebar anchor change handler
+  const anchorSel=document.getElementById('sidebar-anchor');
+  if(anchorSel) anchorSel.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
 }
 
 function getUnifiedAfter(list,y){
@@ -1303,10 +1372,20 @@ async function saveUnifiedBlockOrder(){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const isExp = ev?.mode === 'expedition';
   if(isExp){
-    // Expedition: save to dedicated expBlockOrder field
-    if(ev) ev.expBlockOrder=newOrder;
+    // Expedition: save order + zones + sidebar anchor
+    const newExpZones = {};
+    items.forEach(item=>{
+      const key=item.dataset.key;
+      const sel=item.querySelector('.block-zone-sel');
+      if(sel){
+        // For locked zones (span, not select), read data-value; for selects, read .value
+        newExpZones[key] = sel.tagName==='SELECT' ? sel.value : (sel.dataset.value||'main');
+      }
+    });
+    const expSidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
+    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;}
     try{
-      await evRef().update({expBlockOrder:newOrder});
+      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor});
     }catch(e){
       console.error('[saveBlockOrder] Error:', e);
       toast('Erreur sauvegarde: '+e.message,'error');
@@ -1382,18 +1461,103 @@ async function saveTag(i){
 }
 
 // ==================== MEDIA ====================
+// ==================== MÉDIATHÈQUE ====================
+let _mediaPage=0, _mediaSearch='', _mediaSort='newest', _mediaSelected=new Set();
+const MEDIA_PER_PAGE = 30;
+
+function getFilteredMedia(){
+  let list = [...mediaData];
+  // Search
+  if(_mediaSearch){
+    const q = _mediaSearch.toLowerCase();
+    list = list.filter(m => (m.name||'').toLowerCase().includes(q) || (m.url||'').toLowerCase().includes(q));
+  }
+  // Sort — extract timestamp robustly
+  const ts = (m) => { const c=m.created_at; if(!c) return 0; if(c.toDate) return c.toDate().getTime(); return new Date(c).getTime()||0; };
+  if(_mediaSort==='oldest') list.sort((a,b)=>ts(a)-ts(b));
+  else if(_mediaSort==='name') list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  else list.sort((a,b)=>ts(b)-ts(a)); // newest first
+  return list;
+}
+
 function renderMedia(el){
-  let h=`<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
-  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3><div class="media-grid">`;
-  mediaData.forEach(m=>{
-    h+=`<div class="media-thumb"><img src="${m.url}" alt="${m.name||''}" onerror="this.style.background='#E5E7EB'"><button class="media-del" onclick="deleteMedia('${m.id}')">✕</button></div>`;
+  const filtered = getFilteredMedia();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / MEDIA_PER_PAGE));
+  if(_mediaPage >= totalPages) _mediaPage = totalPages - 1;
+  const start = _mediaPage * MEDIA_PER_PAGE;
+  const pageItems = filtered.slice(start, start + MEDIA_PER_PAGE);
+
+  let h = `<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
+  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3>
+    <div class="media-toolbar">
+      <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
+      <select class="form-input" onchange="_mediaSort=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
+        <option value="newest"${_mediaSort==='newest'?' selected':''}>Plus récentes</option>
+        <option value="oldest"${_mediaSort==='oldest'?' selected':''}>Plus anciennes</option>
+        <option value="name"${_mediaSort==='name'?' selected':''}>Nom A→Z</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="_mediaSelected.size?_mediaSelected.clear():mediaData.forEach(m=>_mediaSelected.add(m.id));renderMedia(document.getElementById('admin-main'))">${_mediaSelected.size?'Tout désélectionner':'Tout sélectionner'}</button>
+    </div>`;
+
+  if(_mediaSelected.size>0){
+    h += `<div class="media-bulk"><span>📌 ${_mediaSelected.size} sélectionnée(s)</span><button class="btn btn-danger btn-xs" onclick="bulkDeleteMedia()">🗑 Supprimer la sélection</button><button class="btn btn-ghost btn-xs" onclick="_mediaSelected.clear();renderMedia(document.getElementById('admin-main'))">Annuler</button></div>`;
+  }
+
+  h += `<div class="media-grid">`;
+  pageItems.forEach(m => {
+    const sel = _mediaSelected.has(m.id);
+    const name = m.name || m.url.split('/').pop().slice(0,25);
+    h += `<div class="media-thumb${sel?' sel':''}" data-mid="${m.id}">
+      <img src="${m.url}" alt="${m.name||''}" loading="lazy" onerror="this.style.background='#E5E7EB'">
+      <div class="media-check" onclick="event.stopPropagation();toggleMediaSel('${m.id}')">${sel?'✓':''}</div>
+      <button class="media-del" onclick="event.stopPropagation();deleteMedia('${m.id}')">✕</button>
+      <div class="media-info">${name}</div>
+    </div>`;
   });
-  h+=`<div class="media-add" onclick="addMedia()"><span style="font-size:20px">＋</span><span>Ajouter</span></div></div></div>`;
+  h += `<div class="media-add" onclick="addMedia()"><span style="font-size:20px">＋</span><span>Ajouter</span></div></div>`;
+
+  // Pagination
+  if(totalPages > 1){
+    h += `<div class="media-pager">`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage=0;renderMedia(document.getElementById('admin-main'))">«</button>`;
+    h += `<button ${_mediaPage===0?'disabled':''} onclick="_mediaPage--;renderMedia(document.getElementById('admin-main'))">‹</button>`;
+    const startP = Math.max(0, _mediaPage-2);
+    const endP = Math.min(totalPages, startP+5);
+    for(let p=startP;p<endP;p++){
+      h += `<button class="${p===_mediaPage?'pg-current':''}" onclick="_mediaPage=${p};renderMedia(document.getElementById('admin-main'))">${p+1}</button>`;
+    }
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage++;renderMedia(document.getElementById('admin-main'))">›</button>`;
+    h += `<button ${_mediaPage>=totalPages-1?'disabled':''} onclick="_mediaPage=${totalPages-1};renderMedia(document.getElementById('admin-main'))">»</button>`;
+    h += `<span style="margin-left:8px;color:var(--text3)">${start+1}–${Math.min(start+MEDIA_PER_PAGE,filtered.length)} sur ${filtered.length}</span>`;
+    h += `</div>`;
+  }
+  h += `</div>`;
   el.innerHTML=h;
+  // Restore focus to search input if user was typing
+  if(_mediaSearch){
+    const si=el.querySelector('.media-toolbar input[type=text]');
+    if(si){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+  }
+}
+
+function toggleMediaSel(id){
+  if(_mediaSelected.has(id)) _mediaSelected.delete(id);
+  else _mediaSelected.add(id);
+  renderMedia(document.getElementById('admin-main'));
+}
+async function bulkDeleteMedia(){
+  if(!_mediaSelected.size) return;
+  if(!confirm(`Supprimer ${_mediaSelected.size} photo(s) ?`)) return;
+  saving(true);
+  const batch = [];
+  _mediaSelected.forEach(id=>batch.push(subCol('media').doc(id).delete()));
+  await Promise.all(batch);
+  _mediaSelected.clear();
+  toast(`${batch.length} photo(s) supprimée(s)`);
 }
 function addMedia(){
   openModal(`<h3>Ajouter une photo</h3>
-    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}</div></div>
+    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}${mkMediaPickerBtn('m-media-url')}</div></div>
     <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()">📷 Ajouter</button></div>`);
 }
@@ -1401,7 +1565,7 @@ async function saveMedia(){
   const url=document.getElementById('m-media-url').value.trim();
   if(!url){toast('URL requise','error');return;}
   saving(true);
-  await subCol('media').add({url,name:document.getElementById('m-media-name').value.trim()});
+  await subCol('media').add({url,name:document.getElementById('m-media-name').value.trim(),created_at:firebase.firestore.FieldValue.serverTimestamp()});
   closeModal();toast('Photo ajoutée');
 }
 async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete();toast('Supprimé');}
@@ -1449,7 +1613,7 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}${mkUploadBtn('live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier / Programmer</button></div>
@@ -1541,7 +1705,7 @@ function editLive(id){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="m-live-journalist" value="${e.journalist||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-live-image" value="${e.image||''}" style="flex:1">${mkMediaPickerBtn('m-live-image')}${mkUploadBtn('m-live-image')}</div></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="m-live-url" value="${e.url||''}"></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-live-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     ${e.image?`<div class="form-row-inline">
@@ -1648,6 +1812,7 @@ function _restoreCitDraft(){
 function renderCitations(el){
   _saveCitDraft();
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const isExp=ev.mode==='expedition';
   const citVisible=ev.citVisibleCount||6;
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
@@ -1660,9 +1825,9 @@ function renderCitations(el){
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="cit-s-show-title" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style des cartes</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">${isExp?'Style des verbatims':'Style des cartes'}</div>
       <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Style</label>
+        <div class="form-row" style="${isExp?'display:none':''}"><label class="form-label">Style</label>
           <select class="form-input" id="cit-s-style" style="width:180px">
             <option value="classic"${(ev.citationStyle||'classic')==='classic'?' selected':''}>Classique (fond sombre)</option>
             <option value="premium"${ev.citationStyle==='premium'?' selected':''}>Premium (carte blanche)</option>
@@ -1737,7 +1902,7 @@ function renderCitations(el){
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}${mkUploadBtn('cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="cit-photo-format"><option value="round">Médaillon (rond)</option><option value="large">Photo grand format (rectangle)</option></select></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="cit-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter / Programmer</button></div></div>
@@ -1799,7 +1964,7 @@ function editCitation(id){
   openModal(`<h3>Modifier la citation</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="m-cit-text" rows="3">${c.text||''}</textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-cit-name" value="${c.name||''}"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="m-cit-role" value="${c.role||''}"></div></div>
-    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}</div></div></div>
+    <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="m-cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-cit-avatar" value="${c.avatar||''}" style="flex:1">${mkMediaPickerBtn('m-cit-avatar')}${mkUploadBtn('m-cit-avatar')}</div></div></div>
     <div class="form-row" style="max-width:260px"><label class="form-label">Format photo</label><select class="form-input" id="m-cit-photo-format"><option value="round"${(c.photoFormat||'round')==='round'?' selected':''}>Médaillon (rond)</option><option value="large"${c.photoFormat==='large'?' selected':''}>Photo grand format (rectangle)</option></select></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-cit-scheduled" value="${schedVal}"><div style="font-size:9px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     <div class="modal-footer">
@@ -2105,7 +2270,7 @@ function renderArticles(el){
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}${mkUploadBtn('art-image')}</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
 
   <!-- FLUX RSS -->
@@ -2124,6 +2289,24 @@ function renderArticles(el){
     ${rssFeeds.length?`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success" onclick="fetchAllRss()" id="rss-fetch-btn"${rssFetching?' disabled':''}>${rssFetching?'⏳ Import en cours...':'🔄 Importer les articles RSS'}</button><button class="btn btn-ghost" onclick="upgradeImagesToHD()">🖼 Upgrader images HD</button><button class="btn btn-ghost" onclick="fixMissingImages()">🖼 Images manquantes</button><button class="btn btn-ghost" onclick="fixEnglishDates()">📅 Dates en anglais</button><button class="btn btn-ghost" onclick="debugRssImages()">🔍 Diagnostiquer</button></div>`:''}
     <div id="rss-preview" style="margin-top:12px"></div>
   </div>
+
+  ${ev.mode==='expedition'?`<!-- BRAND NEWS -->
+  <div class="admin-card"><h3>📢 Brand News (Publicité)</h3>
+    <div class="page-desc" style="margin-bottom:12px">Bloc publicitaire affichant automatiquement le dernier article d'un flux RSS dédié. L'article sera affiché avec sa photo, son titre et un lien vers l'article TourMaG.</div>
+    <div class="form-row"><label class="form-label">URL du flux RSS Brand News</label>
+      <input class="form-input" id="bn-rss-url" value="${(ev.brandNews?.rssUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/xml/votre-flux-brandnews.rss" style="font-family:'IBM Plex Mono';font-size:11px">
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Date de début d'affichage</label><input type="date" class="form-input" id="bn-start" value="${ev.brandNews?.startDate||''}"></div>
+      <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Date de fin d'affichage</label><input type="date" class="form-input" id="bn-end" value="${ev.brandNews?.endDate||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Libellé affiché (optionnel)</label><input class="form-input" id="bn-label" value="${(ev.brandNews?.label||'').replace(/"/g,'&quot;')}" placeholder="Brand News — par défaut"></div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+      <button class="btn btn-primary" onclick="saveBrandNews()">💾 Enregistrer</button>
+      <span style="font-size:10px;color:var(--text3)">Le flux est importé automatiquement par le script RSS toutes les 15 min.</span>
+    </div>
+    ${ev.brandNews?.rssUrl?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px;font-size:11px;color:#166534"><strong>✅ Flux configuré :</strong> ${ev.brandNews.rssUrl}<br>Période : ${ev.brandNews.startDate||'—'} → ${ev.brandNews.endDate||'—'}</div>`:''}
+  </div>`:''}
 
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
@@ -2165,7 +2348,7 @@ function editArticle(id){
   openModal(`<h3>Modifier l'article</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-art-title" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}${mkUploadBtn('m-art-image')}</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveArticleEdit('${id}')">💾 Enregistrer</button>
@@ -2192,6 +2375,31 @@ async function saveArtSettings(){
     articlesTitleSize:parseInt(document.getElementById('art-s-tsize').value)||14
   });
   toast('Réglages articles enregistrés');
+}
+
+// --- Brand News ---
+async function saveBrandNews(){
+  saving(true);
+  const rssUrl=document.getElementById('bn-rss-url').value.trim();
+  const brandNews={
+    rssUrl,
+    startDate:document.getElementById('bn-start').value,
+    endDate:document.getElementById('bn-end').value,
+    label:document.getElementById('bn-label').value.trim()
+  };
+  // Auto-add/update the RSS feed in rssFeeds with special _brandnews label
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  const feeds=ev?.rssFeeds||[];
+  const bnIdx=feeds.findIndex(f=>f.label==='_brandnews');
+  if(rssUrl){
+    if(bnIdx>=0) feeds[bnIdx].url=rssUrl;
+    else feeds.push({url:rssUrl,label:'_brandnews'});
+  } else if(bnIdx>=0){
+    feeds.splice(bnIdx,1);
+  }
+  rssFeeds=feeds;
+  await evRef().update({brandNews,rssFeeds:feeds});
+  toast('Brand News configuré');
 }
 
 // --- RSS ---
@@ -2222,6 +2430,8 @@ async function fetchAllRss(){
   if(preview) preview.innerHTML='<div style="font-size:11px;color:var(--text3)">Récupération des flux...</div>';
 
   const existingLinks=new Set(articlesData.map(a=>a.link));
+  const existingDocsByLink={};
+  articlesData.forEach(a=>{if(a.link)existingDocsByLink[a.link]=a.id;});
   let imported=0, skipped=0;
 
   for(const feed of rssFeeds){
@@ -2235,7 +2445,18 @@ async function fetchAllRss(){
       for(const item of items){
         const title=item.querySelector('title')?.textContent?.trim()||'';
         const link=item.querySelector('link')?.textContent?.trim()||'';
-        if(!title||!link||existingLinks.has(link)){skipped++;continue;}
+        if(!title||!link) continue;
+        if(existingLinks.has(link)){
+          // Si c'est le flux _brandnews et l'article existe déjà, marquer comme brandnews
+          if(feed.label==='_brandnews' && existingDocsByLink[link]){
+            try{
+              await subCol('articles').doc(existingDocsByLink[link]).update({brandnews_feed:feed.url});
+              console.log('[BrandNews] ↻ Marqué brandnews:',title.slice(0,60));
+              imported++;
+            }catch(e){console.warn('[BrandNews] Update failed:',e);}
+          } else { skipped++; }
+          continue;
+        }
 
         const author=item.querySelector('author')?.textContent?.trim()||
                      item.querySelector('dc\\:creator,creator')?.textContent?.trim()||
@@ -2288,7 +2509,8 @@ async function fetchAllRss(){
         if(!image && link){try{ image = await fetchOgImage(link); }catch(e){}}
 
         // Sauvegarder avec created_at timestamp pour le tri chronologique
-        const articleData={title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss'};
+        const articleData={title,link,author,image,date:dateStr||new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),source:'rss',rss_feed:feed.url};
+        if(feed.label==='_brandnews') articleData.brandnews_feed=feed.url;
         if(dateObj&&!isNaN(dateObj)) articleData.created_at=firebase.firestore.Timestamp.fromDate(dateObj);
         else articleData.created_at=firebase.firestore.FieldValue.serverTimestamp();
 
@@ -3209,7 +3431,7 @@ function renderJournalistes(el){
     </div>
     <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="jr-bio" rows="2" placeholder="Spécialiste croisières depuis 15 ans..."></textarea></div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="jr-photo" style="flex:1">${mkMediaPickerBtn('jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="jr-photo" style="flex:1">${mkMediaPickerBtn('jr-photo')}${mkUploadBtn('jr-photo')}</div></div>
       <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="jr-profile" placeholder="https://www.tourmag.com/..."></div>
     </div>
     <div class="form-row-inline">
@@ -3283,7 +3505,7 @@ function editGlobalJournalist(id){
     </div>
     <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="m-jr-bio" rows="3">${j.bio||''}</textarea></div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}</div></div>
+      <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}${mkUploadBtn('m-jr-photo')}</div></div>
       <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="m-jr-profile" value="${j.profileUrl||''}"></div>
     </div>
     <div class="form-row-inline">
@@ -3372,17 +3594,23 @@ function renderAccess(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const superAdmins=ev.superAdmins||[];
   const hiddenTabs=ev.hiddenTabs||[];
+  const isExp=ev.mode==='expedition';
 
   const allTabs=[
     {key:'events',icon:'📋',label:'Mes événements'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
-    {key:'essentiel',icon:'🧠',label:'L\'essentiel'},
-    {key:'live',icon:'📡',label:'Fil live'},
-    {key:'citations',icon:'💬',label:'Citations'},
+    {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L\'essentiel'},
+    {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
+    {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
+    {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
-    {key:'journalistes',icon:'👤',label:'Journalistes'},
+    {key:'interviews',icon:'🎙️',label:'Interviews'},
+    {key:'journalistes',icon:'👤',label:isExp?'Reporters':'Journalistes'},
+    {key:'gallery',icon:'📸',label:'Galerie photos'},
+    {key:'sponsors',icon:'🤝',label:'Partenaires'},
+    {key:'contact',icon:'📞',label:'Contact'},
     {key:'media',icon:'📷',label:'Médiathèque'},
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
@@ -3919,6 +4147,14 @@ function renderInterviews(el){
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="itw-s-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="itw-s-show-title" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div class="form-row" style="max-width:300px"><label class="form-label">Interviews visibles avant accordéon</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" min="1" max="20" value="${ev.itwVisibleCount||4}" id="itw-s-visible" oninput="document.getElementById('itw-s-visible-lbl').textContent=this.value" style="flex:1">
+          <span id="itw-s-visible-lbl" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${ev.itwVisibleCount||4}</span>
+        </div>
+      </div>
+    </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveItwSettings()">💾 Enregistrer</button></div>
     </details>
   </div>
@@ -3952,7 +4188,7 @@ function addInterview(){
       <div class="form-row"><label class="form-label">Badge / tag</label><input class="form-input" id="m-itw-tag" placeholder="Expertise & Vision"></div>
       <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-itw-order" value="${(interviewsData.length+1)*10}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" style="flex:1" placeholder="https://">${mkMediaPickerBtn('m-itw-photo')}</div></div>
+    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" style="flex:1" placeholder="https://">${mkMediaPickerBtn('m-itw-photo')}${mkUploadBtn('m-itw-photo')}</div></div>
     <div class="form-row"><label class="form-label">Lien article (URL)</label><input class="form-input" id="m-itw-link" placeholder="https://www.tourmag.com/..."></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveInterview()">💾 Ajouter</button></div>`);
 }
@@ -3974,7 +4210,7 @@ function editInterview(id){
       <div class="form-row"><label class="form-label">Badge / tag</label><input class="form-input" id="m-itw-tag" value="${itw.tag||''}"></div>
       <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-itw-order" value="${itw.order||0}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" value="${itw.photo_url||''}" style="flex:1">${mkMediaPickerBtn('m-itw-photo')}</div></div>
+    <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-itw-photo" value="${itw.photo_url||''}" style="flex:1">${mkMediaPickerBtn('m-itw-photo')}${mkUploadBtn('m-itw-photo')}</div></div>
     <div class="form-row"><label class="form-label">Lien article (URL)</label><input class="form-input" id="m-itw-link" value="${itw.link||''}"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveInterview('${id}')">💾 Enregistrer</button></div>`);
 }
@@ -3989,10 +4225,11 @@ function renderKpis(el){
   <div class="admin-card"><h3>Chiffres</h3><div id="kpis-list">`;
   kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((k,i)=>{
     if(k.type==='countdown'){
-      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px" data-kpi-type="countdown">
+      h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap" data-kpi-type="countdown">
         <span style="font-size:18px">⏳</span>
         <input type="date" class="form-input" value="${k.targetDate||''}" style="width:160px" data-kpi-date="${i}">
-        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}">
+        <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}">
+        <input type="color" value="${k.color||'#FF6C00'}" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}">
         <input type="hidden" data-kpi-val="${i}" value="__countdown__">
         <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
       </div>`;
@@ -4026,9 +4263,9 @@ function addCountdownRow(){
   if(list.querySelector('[data-kpi-type="countdown"]')){toast('Un seul compte à rebours autorisé');return;}
   const i=list.children.length;
   const div=document.createElement('div');
-  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px';
+  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap';
   div.setAttribute('data-kpi-type','countdown');
-  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1" data-kpi-lbl="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}"><input type="color" value="#FF6C00" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
 async function removeKpi(idx){
@@ -4039,15 +4276,18 @@ async function removeKpi(idx){
 async function saveKpis(){
   const vals=document.querySelectorAll('[data-kpi-val]');
   const lbls=document.querySelectorAll('[data-kpi-lbl]');
-  const dates=document.querySelectorAll('[data-kpi-date]');
-  const dateMap={};dates.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
+  const dateEls=document.querySelectorAll('[data-kpi-date]');
+  const colorEls=document.querySelectorAll('[data-kpi-color]');
+  const dateMap={};dateEls.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
+  const colorMap={};colorEls.forEach(c=>{colorMap[c.getAttribute('data-kpi-color')]=c.value;});
   const kpis=[];
   vals.forEach((v,i)=>{
     const lbl=lbls[i];
     const idx=v.getAttribute('data-kpi-val');
     if(v.value==='__countdown__'){
       const td=dateMap[idx]||'';
-      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',order:i*10});
+      const cc=colorMap[idx]||'#FF6C00';
+      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',color:cc,order:i*10});
     } else {
       if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10});
     }
@@ -4059,21 +4299,56 @@ async function saveKpis(){
 function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const ct=ev.contact||{};
-  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez/désactivez via le module "Contact".</div>
+  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="ct-name" value="${(ct.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
     <div class="form-group"><label class="form-label">Rôle / titre</label><input class="form-input" id="ct-role" value="${(ct.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
-    <div class="form-group"><label class="form-label">Photo (URL)</label><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+    <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ct-photo')}${mkUploadBtn('ct-photo')}</div></div>
     <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="ct-msg" rows="3" placeholder="Pour obtenir les photos de l'expédition, contactez-moi directement.">${ct.message||''}</textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ct-email" value="${(ct.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
       <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="ct-phone" value="${(ct.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
     </div>
+    <div class="form-group"><label class="form-label">Site web</label><input class="form-input" id="ct-website" value="${(ct.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
     ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer le contact</button></div>
+  </div>
+  <div class="admin-card" style="margin-top:16px"><h3>🎨 Personnalisation visuelle</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Couleur de fond</label><div style="display:flex;gap:8px"><input type="color" id="ct-bg-color" value="${ct.bg_color||'#F5F4F2'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-bg-color-txt" value="${(ct.bg_color||'').replace(/"/g,'&quot;')}" placeholder="#F5F4F2" style="flex:1"></div></div>
+      <div class="form-group"><label class="form-label">Image de fond (URL, optionnel)</label><input class="form-input" id="ct-bg-image" value="${(ct.bg_image||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Couleur nom/prénom</label><div style="display:flex;gap:6px"><input type="color" id="ct-name-color" value="${ct.name_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-name-color-txt" value="${(ct.name_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1;font-size:11px"></div></div>
+      <div class="form-group"><label class="form-label">Couleur fonction</label><div style="display:flex;gap:6px"><input type="color" id="ct-role-color" value="${ct.role_color||'#6E6B66'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-role-color-txt" value="${(ct.role_color||'').replace(/"/g,'&quot;')}" placeholder="#6E6B66" style="flex:1;font-size:11px"></div></div>
+      <div class="form-group"><label class="form-label">Couleur boutons</label><div style="display:flex;gap:6px"><input type="color" id="ct-btn-color" value="${ct.btn_color||'#111111'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-btn-color-txt" value="${(ct.btn_color||'').replace(/"/g,'&quot;')}" placeholder="#111111" style="flex:1;font-size:11px"></div></div>
+    </div>
+    <div id="ct-preview" style="margin-top:12px;padding:20px 24px;border-radius:8px;border:1px solid #e5e5e5;min-height:60px;background:${ct.bg_color||'#F5F4F2'};font-family:sans-serif;font-size:14px;${ct.bg_image?`background-image:url('${ct.bg_image}');background-size:cover;background-position:center;`:''}" >
+      <strong style="color:${ct.name_color||'#111'}">Nom Prénom</strong> · <span style="color:${ct.role_color||'#6E6B66'}">Fonction</span> · <span style="border:1px solid ${ct.btn_color||'#111'};padding:2px 8px;color:${ct.btn_color||'#111'};font-size:12px">Bouton</span>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer</button></div>
   </div>`;
   el.innerHTML=h;
+  // Sync color pickers ↔ text inputs
+  ['bg','name','role','btn'].forEach(k=>{
+    const picker=document.getElementById('ct-'+k+'-color');
+    const txt=document.getElementById('ct-'+k+'-color-txt');
+    if(picker&&txt){picker.addEventListener('input',()=>{txt.value=picker.value;updateCtPreview()});txt.addEventListener('input',()=>{if(txt.value.match(/^#[0-9a-fA-F]{6}$/))picker.value=txt.value;updateCtPreview()});}
+  });
+  document.getElementById('ct-bg-image')?.addEventListener('input',updateCtPreview);
+}
+function updateCtPreview(){
+  const p=document.getElementById('ct-preview');if(!p)return;
+  const bg=document.getElementById('ct-bg-color')?.value||'#F5F4F2';
+  const im=document.getElementById('ct-bg-image')?.value||'';
+  const nc=document.getElementById('ct-name-color')?.value||'#111';
+  const rc=document.getElementById('ct-role-color')?.value||'#6E6B66';
+  const bc=document.getElementById('ct-btn-color')?.value||'#111';
+  p.style.backgroundColor=bg;
+  p.style.backgroundImage=im?`url('${im}')`:'none';
+  if(im){p.style.backgroundSize='cover';p.style.backgroundPosition='center';}
+  p.innerHTML=`<strong style="color:${nc}">Nom Prénom</strong> · <span style="color:${rc}">Fonction</span> · <span style="border:1px solid ${bc};padding:2px 8px;color:${bc};font-size:12px">Bouton</span>`;
 }
 async function saveContact(){
   saving(true);
@@ -4084,10 +4359,168 @@ async function saveContact(){
     photo_url:document.getElementById('ct-photo').value.trim(),
     message:document.getElementById('ct-msg').value.trim(),
     email:document.getElementById('ct-email').value.trim(),
-    phone:document.getElementById('ct-phone').value.trim()
+    phone:document.getElementById('ct-phone').value.trim(),
+    website:document.getElementById('ct-website').value.trim(),
+    bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
+    bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
+    name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
+    role_color:document.getElementById('ct-role-color-txt')?.value.trim()||'',
+    btn_color:document.getElementById('ct-btn-color-txt')?.value.trim()||''
   };
   await evRef().update({contact});
   toast('Contact enregistré');
+}
+
+// ==================== DÉCOR ====================
+const BOTANICAL_PRESETS = [
+  {id:'eucalyptus',label:'🌿 Eucalyptus',desc:'Australie / Océanie'},
+  {id:'palm',label:'🌴 Palmier',desc:'Tropiques / Asie du Sud-Est'},
+  {id:'maple',label:'🍁 Érable',desc:'Canada / Japon automne'},
+  {id:'cactus',label:'🌵 Cactus',desc:'Amérique du Sud / Mexique'},
+  {id:'pine',label:'🌲 Conifère',desc:'Scandinavie / Montagne'},
+  {id:'olive',label:'🫒 Olivier',desc:'Méditerranée'},
+  {id:'cherry',label:'🌸 Cerisier',desc:'Japon printemps'},
+  {id:'wheat',label:'🌾 Blé',desc:'Campagne / Europe de l\'Est'}
+];
+const RELIEF_PRESETS = [
+  {id:'hills',label:'🏜 Collines douces',desc:'Désert / Outback'},
+  {id:'mountains',label:'🏔 Montagnes',desc:'Alpes / Andes'},
+  {id:'waves',label:'🌊 Vagues',desc:'Côtier / Maritime'},
+  {id:'skyline',label:'🏙 Skyline',desc:'Urbain'},
+  {id:'volcano',label:'🌋 Volcans',desc:'Islande / Indonésie'}
+];
+
+function renderDecor(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const d=ev.decor||{};
+  const c=d.compass||{};const co=d.coords||{};const p=d.plane||{};const b=d.botanical||{};const s=d.stamp||{};const r=d.relief||{};const st=d.stitch||{};
+
+  function toggle(id,label,checked){return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none"><input type="checkbox" id="${id}" ${checked?'checked':''}><strong style="font-size:13px">${label}</strong></label>`;}
+  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:10px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="20" value="${val||4}" style="flex:1"><span style="font-size:10px;color:var(--text3);min-width:30px" id="${id}-lbl">${(val||4)*5}%</span></div>`;}
+  function sel(id,opts,val){let o=`<select class="form-input" id="${id}" style="font-size:12px">`;opts.forEach(op=>{o+=`<option value="${op.id}"${val===op.id?' selected':''}>${op.label}</option>`;});return o+'</select>';}
+  function pos(id,val){return sel(id,[{id:'top-right',label:'Haut-droit'},{id:'top-left',label:'Haut-gauche'},{id:'bottom-right',label:'Bas-droit'},{id:'bottom-left',label:'Bas-gauche'}],val||'top-right');}
+
+  let h=`<div class="page-title">🎨 Décor de page</div><div class="page-desc">Éléments décoratifs discrets rappelant un carnet de route. Chaque élément est paramétrable et optionnel. S'applique uniquement au mode Expédition.</div>`;
+
+  // Global toggle + bg
+  h+=`<div class="admin-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    ${toggle('dc-enabled','Activer les éléments décoratifs',d.enabled!==false)}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="dc-bg-on" ${d.bgColor?'checked':''}>Fond de page personnalisé</label>
+    <input type="color" id="dc-bg-color" value="${d.bgColor||'#FDFBF7'}" style="width:36px;height:28px;border:1px solid #ddd;border-radius:4px;padding:2px;cursor:pointer">
+    <input class="form-input" id="dc-bg-txt" value="${d.bgColor||''}" placeholder="#FDFBF7" style="width:100px;font-size:11px">
+  </div></div>`;
+
+  // Compass
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-compass-on','🧭 Rose des vents',c.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Position</span>${pos('dc-compass-pos',c.position)}</div>
+      <div>${slider('dc-compass-op',c.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Coords
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-coords-on','📐 Coordonnées GPS',co.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px">
+      <input class="form-input" id="dc-co-0" value="${(co.labels||[])[0]||''}" placeholder="S 23°42'" style="font-size:11px">
+      <input class="form-input" id="dc-co-1" value="${(co.labels||[])[1]||''}" placeholder="E 133°52'" style="font-size:11px">
+      <input class="form-input" id="dc-co-2" value="${(co.labels||[])[2]||''}" placeholder="S 34°55'" style="font-size:11px">
+      <input class="form-input" id="dc-co-3" value="${(co.labels||[])[3]||''}" placeholder="E 138°36'" style="font-size:11px">
+    </div>
+    ${slider('dc-coords-op',co.opacity||3)}
+  </div>`;
+
+  // Plane
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-plane-on','✈️ Tracé d\'avion',p.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Placer après la section</span>${sel('dc-plane-pos',[{id:'after-map',label:'Carte / Étapes'},{id:'after-live',label:'Fil de route'},{id:'after-citations',label:'Verbatims'},{id:'after-gallery',label:'Galerie'}],p.position||'after-map')}</div>
+      <div>${slider('dc-plane-op',p.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Botanical
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-botan-on','🌿 Croquis botaniques',b.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Style</span>${sel('dc-botan-style',BOTANICAL_PRESETS,b.style||'eucalyptus')}</div>
+      <div>${slider('dc-botan-op',b.opacity||3)}</div>
+    </div>
+  </div>`;
+
+  // Stamp
+  const sl=s.lines||['EXPEDITION','WTA','AUSTRALIA','2026','ADELAIDE → ADELAIDE'];
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-stamp-on','📌 Tampon postal',s.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+      <input class="form-input" id="dc-st-0" value="${sl[0]||''}" placeholder="EXPEDITION" style="font-size:11px">
+      <input class="form-input" id="dc-st-1" value="${sl[1]||''}" placeholder="WTA" style="font-size:11px">
+      <input class="form-input" id="dc-st-2" value="${sl[2]||''}" placeholder="AUSTRALIA" style="font-size:11px">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+      <input class="form-input" id="dc-st-3" value="${sl[3]||''}" placeholder="2026" style="font-size:11px">
+      <input class="form-input" id="dc-st-4" value="${sl[4]||''}" placeholder="ADELAIDE → ADELAIDE" style="font-size:11px">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Rotation</span><div style="display:flex;align-items:center;gap:6px"><input type="range" id="dc-stamp-rot" min="-30" max="30" value="${s.rotation||12}" style="flex:1"><span style="font-size:10px;min-width:30px" id="dc-stamp-rot-lbl">${s.rotation||12}°</span></div></div>
+      <div>${slider('dc-stamp-op',s.opacity||4)}</div>
+    </div>
+  </div>`;
+
+  // Relief
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-relief-on','🏔 Silhouette de relief',r.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Profil</span>${sel('dc-relief-style',RELIEF_PRESETS,r.style||'hills')}</div>
+      <div>${slider('dc-relief-op',r.opacity||3)}</div>
+    </div>
+  </div>`;
+
+  // Stitch
+  h+=`<div class="admin-card" style="margin-top:10px">
+    ${toggle('dc-stitch-on','〰️ Couture de reliure',st.on!==false)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div><span style="font-size:11px;color:var(--text3)">Côté</span>${sel('dc-stitch-side',[{id:'left',label:'Gauche'},{id:'right',label:'Droite'}],st.side||'left')}</div>
+      <div>${slider('dc-stitch-op',st.opacity||5)}</div>
+    </div>
+  </div>`;
+
+  h+=`<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveDecor()">💾 Enregistrer le décor</button></div>`;
+  el.innerHTML=h;
+
+  // Wire up opacity slider labels
+  document.querySelectorAll('[id$="-op"]').forEach(sl=>{
+    const lbl=document.getElementById(sl.id+'-lbl');
+    if(sl&&lbl) sl.addEventListener('input',()=>{lbl.textContent=(sl.value*5)+'%';});
+  });
+  const rotS=document.getElementById('dc-stamp-rot'),rotL=document.getElementById('dc-stamp-rot-lbl');
+  if(rotS&&rotL) rotS.addEventListener('input',()=>{rotL.textContent=rotS.value+'°';});
+  // Sync bg color pickers
+  const bgP=document.getElementById('dc-bg-color'),bgT=document.getElementById('dc-bg-txt');
+  if(bgP&&bgT){bgP.addEventListener('input',()=>{bgT.value=bgP.value;});bgT.addEventListener('input',()=>{if(bgT.value.match(/^#[0-9a-fA-F]{6}$/))bgP.value=bgT.value;});}
+}
+
+async function saveDecor(){
+  saving(true);
+  const v=id=>document.getElementById(id)?.value?.trim()||'';
+  const ck=id=>document.getElementById(id)?.checked||false;
+  const num=id=>parseInt(document.getElementById(id)?.value)||0;
+  const decor={
+    enabled:ck('dc-enabled'),
+    bgColor:ck('dc-bg-on')?v('dc-bg-txt'):'',
+    compass:{on:ck('dc-compass-on'),position:v('dc-compass-pos'),opacity:num('dc-compass-op')},
+    coords:{on:ck('dc-coords-on'),labels:[v('dc-co-0'),v('dc-co-1'),v('dc-co-2'),v('dc-co-3')],opacity:num('dc-coords-op')},
+    plane:{on:ck('dc-plane-on'),position:v('dc-plane-pos'),opacity:num('dc-plane-op')},
+    botanical:{on:ck('dc-botan-on'),style:v('dc-botan-style'),opacity:num('dc-botan-op')},
+    stamp:{on:ck('dc-stamp-on'),lines:[v('dc-st-0'),v('dc-st-1'),v('dc-st-2'),v('dc-st-3'),v('dc-st-4')],rotation:num('dc-stamp-rot'),opacity:num('dc-stamp-op')},
+    relief:{on:ck('dc-relief-on'),style:v('dc-relief-style'),opacity:num('dc-relief-op')},
+    stitch:{on:ck('dc-stitch-on'),side:v('dc-stitch-side'),opacity:num('dc-stitch-op')}
+  };
+  await evRef().update({decor});
+  toast('Décor enregistré');
 }
 
 async function saveItwSettings(){
@@ -4095,7 +4528,8 @@ async function saveItwSettings(){
   await evRef().update({
     interviewsTitle:document.getElementById('itw-s-title').value.trim(),
     interviewsSubtitle:document.getElementById('itw-s-sub').value.trim(),
-    interviewsShowTitle:document.getElementById('itw-s-show-title').checked
+    interviewsShowTitle:document.getElementById('itw-s-show-title').checked,
+    itwVisibleCount:parseInt(document.getElementById('itw-s-visible').value)||4
   });
   toast('Réglages interviews enregistrés');
 }
@@ -4214,7 +4648,8 @@ function renderEtapes(el){
         <div class="form-row"><label class="form-label">Statut (manuel)</label><select class="form-input" id="new-etape-status"><option value="next">À venir</option><option value="now">En cours</option><option value="done">Franchie</option></select></div>
         <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="new-etape-order" value="${etapesData.length+1}"></div>
       </div>
-      <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="2"></textarea></div>
+      <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="5" style="resize:vertical"></textarea></div>
+      <div class="form-row"><label class="form-label">Photo d'illustration (optionnel)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="new-etape-photo" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('new-etape-photo')}${mkUploadBtn('new-etape-photo')}</div></div>
       <button class="btn btn-primary" onclick="addEtape()">Ajouter l'étape</button>
     </div>
   </details>`;
@@ -4279,7 +4714,8 @@ async function addEtape(){
     km: document.getElementById('new-etape-km').value.trim(),
     status: document.getElementById('new-etape-status').value,
     order: parseInt(document.getElementById('new-etape-order').value)||etapesData.length+1,
-    description: document.getElementById('new-etape-desc').value.trim()
+    description: document.getElementById('new-etape-desc').value.trim(),
+    photo_url: document.getElementById('new-etape-photo').value.trim()
   };
   if(type==='route'){
     data.nameEnd = document.getElementById('new-etape-name-end').value.trim();
@@ -4348,8 +4784,9 @@ async function editEtape(id){
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Ordre</label><input class="form-input" type="number" id="edit-etape-order-${id}" value="${et.order||0}"></div>
-      <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="edit-etape-desc-${id}" value="${(et.description||'').replace(/"/g,'&quot;')}"></div>
     </div>
+    <div class="form-row"><label class="form-label">Description</label><textarea class="form-input" id="edit-etape-desc-${id}" rows="5" style="resize:vertical">${(et.description||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="form-row"><label class="form-label">Photo d'illustration</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="edit-etape-photo-${id}" value="${(et.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('edit-etape-photo-'+id)}${mkUploadBtn('edit-etape-photo-'+id)}</div></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="saveEtapeEdit('${id}')">💾 Enregistrer</button>
       <button class="btn btn-ghost btn-sm" onclick="editEtape('${id}')">Annuler</button>
@@ -4395,7 +4832,8 @@ async function saveEtapeEdit(id){
     lng: parseFloat(document.getElementById('edit-etape-lng-'+id).value)||0,
     km: document.getElementById('edit-etape-km-'+id).value.trim(),
     order: parseInt(document.getElementById('edit-etape-order-'+id).value)||0,
-    description: document.getElementById('edit-etape-desc-'+id).value.trim()
+    description: document.getElementById('edit-etape-desc-'+id).value.trim(),
+    photo_url: document.getElementById('edit-etape-photo-'+id)?.value.trim()||''
   };
   if(type==='route'){
     data.nameEnd = document.getElementById('edit-etape-name-end-'+id).value.trim();
@@ -4446,7 +4884,7 @@ function renderGallery(el){
     </div>`;
   });
   h+=`</div>
-    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()">📷 Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGallery()">💾 Enregistrer la galerie</button></div>
   </div>`;
   el.innerHTML=h;
@@ -4454,9 +4892,9 @@ function renderGallery(el){
 function pickGalleryFromMedia(){
   if(!mediaData.length){toast('Aucune image dans la médiathèque. Ajoutez-en d\'abord dans l\'onglet Médiathèque.','error');return;}
   let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:12px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
-  mh+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:400px;overflow-y:auto;padding:4px">';
+  mh+='<div class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:400px;overflow-y:auto;padding:4px">';
   mediaData.forEach((m,i)=>{
-    mh+=`<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border .15s;aspect-ratio:1" onclick="pickGalleryItem(${i})" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='transparent'"><img src="${m.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.remove()"></div>`;
+    mh+=`<div class="media-thumb" onclick="pickGalleryItem(${i})"><img src="${m.url}" onerror="this.parentElement.remove()"></div>`;
   });
   mh+='</div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>';
   openModal(mh);
@@ -4474,6 +4912,38 @@ function addGalleryRow(url){
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
   div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
+}
+function uploadGalleryPhoto(){
+  const url=getUploadUrl();
+  if(!url){toast('Configurez l\'URL d\'upload dans l\'onglet Intégration','error');return;}
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+  input.multiple=true;
+  input.onchange=async function(){
+    const files=Array.from(input.files);
+    if(!files.length)return;
+    let uploaded=0;
+    for(const file of files){
+      if(file.size>10*1024*1024){toast(file.name+' trop volumineux (max 10 Mo)','error');continue;}
+      try{
+        toast('⏳ Upload de '+file.name+'…');
+        const fd=new FormData();
+        fd.append('image',file);
+        const resp=await fetch(url,{method:'POST',body:fd});
+        const data=await resp.json();
+        if(data.error){toast('Erreur: '+data.error,'error');continue;}
+        addGalleryRow(data.url);
+        try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
+        uploaded++;
+      }catch(e){
+        console.error('Upload error:',e);
+        toast('Erreur pour '+file.name+': '+e.message,'error');
+      }
+    }
+    if(uploaded) toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' — pensez à enregistrer');
+  };
+  input.click();
 }
 async function saveGallery(){
   const urls=document.querySelectorAll('[data-gal-url]');
@@ -4531,7 +5001,7 @@ function renderSponsors(el){
 function addSponsor(){
   openModal(`<h3>Nouveau partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${((eventsData.find(e=>e.id===currentEventId)?.sponsors||[]).length+1)*10}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor()">💾 Ajouter</button></div>`);
@@ -4541,7 +5011,7 @@ function editSponsor(idx){
   const s=(ev.sponsors||[])[idx];if(!s)return;
   openModal(`<h3>Modifier le partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
-    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${s.order||0}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor(${idx})">💾 Enregistrer</button></div>`);
@@ -4573,10 +5043,176 @@ async function saveSponsorsConfig(){
 // ==================== WIDGET ====================
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const baseUrl='https://tourmag13.github.io/tourmag-live/v2';
+  const isExp = ev.mode === 'expedition';
+  const baseUrl='https://tourmag13.github.io/tourmag-live/v3';
   const frontUrl=baseUrl+'/index.html?event='+currentEventId;
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
+
+  if(isExp){
+    renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId);
+  } else {
+    renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId);
+  }
+}
+
+/* ---- EXPEDITION WIDGET ---- */
+function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
+  const enc=ev.expEncart||{};
+  const screens=enc.screenshots||['','','',''];
+  while(screens.length<4) screens.push('');
+
+  const encartSmallUrl=baseUrl+'/encart-exp.html?event='+currentEventId;
+  const encartLargeUrl=baseUrl+'/encart-exp-large.html?event='+currentEventId;
+
+  let h=`<div class="page-title">Widget homepage — Expédition</div><div class="page-desc">Configurez les deux encarts promotionnels à intégrer sur la homepage TourMaG.</div>
+
+  <div class="admin-card"><h3>🎨 Contenu des encarts</h3>
+    <div class="form-row"><label class="form-label">Logo (par défaut celui de l'événement)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-logo" value="${(enc.logo||ev.logo_url||'').replace(/"/g,'&quot;')}" placeholder="Logo de l'événement" style="flex:1">${mkMediaPickerBtn('we-logo')}${mkUploadBtn('we-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Titre personnalisé</label><input class="form-input" id="we-title" value="${(enc.title||'').replace(/"/g,'&quot;')}" placeholder="Ex: Suivez l'expédition en direct"></div>
+    <div class="form-row"><label class="form-label">Accroche</label><textarea class="form-input" id="we-subtitle" rows="2" placeholder="Ex: Carnet de route, étapes, interviews, galerie photo…" style="resize:vertical">${(enc.subtitle||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="form-row"><label class="form-label">URL du bouton CTA</label><input class="form-input" id="we-cta-url" value="${(enc.ctaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages.</div></div>
+    <div class="form-row"><label class="form-label">Libellé du bouton CTA</label><input class="form-input" id="we-cta-label" value="${(enc.ctaLabel||'').replace(/"/g,'&quot;')}" placeholder="Ex: Accéder au live →"></div>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="form-label" style="margin-bottom:4px;display:block">📸 Captures d'écran (3 à 4 images pour l'animation parallaxe)</label>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:12px">Ces images s'affichent à droite de l'encart en carousel auto-rotatif.</div>
+      ${screens.map((s,i)=>`<div class="form-row"><label class="form-label">Capture ${i+1}${i>=3?' (optionnelle)':''}</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-screen-${i}" value="${(s||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('we-screen-'+i)}${mkUploadBtn('we-screen-'+i)}</div></div>`).join('')}
+    </div>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="form-label" style="margin-bottom:10px;display:block">🎨 Apparence de l'encart</label>
+      <div class="form-row"><label class="form-label">Fond (couleur ou dégradé CSS)</label><input class="form-input" id="we-bg" value="${(enc.bg||'').replace(/"/g,'&quot;')}" placeholder="Ex: #1e293b ou linear-gradient(135deg, #0f172a, #1e293b)" style="font-family:'IBM Plex Mono';font-size:11px">
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le dégradé bleu-nuit par défaut est utilisé. Accepte toute valeur CSS : couleur hex, rgb, ou linear-gradient(…).</div>
+      </div>
+      <div class="form-row-inline" style="margin-top:8px">
+        <div class="form-row" style="max-width:200px"><label class="form-label">Couleur rapide</label>
+          <div style="display:flex;align-items:center;gap:10px"><input type="color" id="we-bg-picker" value="${enc.bgColor||'#0f172a'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"><button class="btn btn-ghost btn-xs" onclick="document.getElementById('we-bg').value=document.getElementById('we-bg-picker').value" style="font-size:10px">Appliquer →</button></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px">
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du titre</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-title-color" value="${enc.titleColor||'#f1f5f9'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-title-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-title-color-hex">${enc.titleColor||'#f1f5f9'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut blanc cassé sur fond sombre.</div>
+        </div>
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur de l'accroche</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-subtitle-color" value="${enc.subtitleColor||'#94a3b8'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-subtitle-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-subtitle-color-hex">${enc.subtitleColor||'#94a3b8'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut gris clair sur fond sombre.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du bouton CTA</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-cta-bg" value="${enc.ctaBg||'#4f46e5'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-cta-bg-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-cta-bg-hex">${enc.ctaBg||'#4f46e5'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut dégradé bleu/indigo.</div>
+        </div>
+        <div class="form-row" style="flex:1;min-width:180px"><label class="form-label">Couleur du texte CTA</label>
+          <div style="display:flex;align-items:center;gap:8px"><input type="color" id="we-cta-color" value="${enc.ctaColor||'#ffffff'}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px" oninput="document.getElementById('we-cta-color-hex').textContent=this.value"><code style="font-size:10px;color:var(--text3)" id="we-cta-color-hex">${enc.ctaColor||'#ffffff'}</code></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">Par défaut blanc.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetExpConfig()">💾 Enregistrer la configuration</button></div>
+  </div>
+
+  <div class="admin-card"><h3>🔧 Configuration générale</h3>
+    <div class="form-row"><label class="form-label">📷 URL du serveur d'upload d'images</label>
+      <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:11px">
+      <div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script d'upload. ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré</span>'}</div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>📦 Encart petit format</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (max 700px). Logo + titre + accroche à gauche, captures animées à droite.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartSmallUrl}" style="width:100%;max-width:700px;border:none;min-height:210px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-es'){
+    document.getElementById('${iframeId}-es').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-small')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📺 Encart grand format</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (max 1200px). Mise en page élargie avec captures plus grandes.</p>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartLargeUrl}" style="width:100%;max-width:1200px;border:none;min-height:330px;border-radius:14px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-el'){
+    document.getElementById('${iframeId}-el').style.height=e.data.height+'px';
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-large')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>📺 Page complète (iframe)</h3>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.</p>
+    <div style="position:relative"><textarea class="form-input" rows="10" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+window.addEventListener('message',function(e){
+  if(!e.data) return;
+  if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
+    document.getElementById('${iframeId}').style.height=e.data.height+'px';
+  }
+  if(e.data.type==='tourmag-live-fullwidth'){
+    var f=document.getElementById('${iframeId}');
+    if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
+  }
+});
+&lt;/script&gt;</textarea>
+    <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')">📋 Copier</button></div>
+  </div>
+
+  <div class="admin-card"><h3>🔗 URLs directes</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Page live :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${frontUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${frontUrl}');toast('URL copiée')">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Encart petit :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${encartSmallUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${encartSmallUrl}');toast('URL copiée')">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Encart grand :</span>
+        <code style="font-family:'IBM Plex Mono';font-size:10px;color:var(--blue);flex:1;word-break:break-all">${encartLargeUrl}</code>
+        <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${encartLargeUrl}');toast('URL copiée')">📋</button>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=h;
+}
+
+async function saveWidgetExpConfig(){
+  saving(true);
+  const screenshots=[0,1,2,3].map(i=>document.getElementById('we-screen-'+i).value.trim()).filter(Boolean);
+  await evRef().update({
+    uploadUrl:document.getElementById('w-upload-url').value.trim(),
+    expEncart:{
+      logo:document.getElementById('we-logo').value.trim(),
+      title:document.getElementById('we-title').value.trim(),
+      subtitle:document.getElementById('we-subtitle').value.trim(),
+      ctaUrl:document.getElementById('we-cta-url').value.trim(),
+      ctaLabel:document.getElementById('we-cta-label').value.trim(),
+      bg:document.getElementById('we-bg').value.trim(),
+      bgColor:document.getElementById('we-bg-picker').value,
+      titleColor:document.getElementById('we-title-color').value,
+      subtitleColor:document.getElementById('we-subtitle-color').value,
+      ctaBg:document.getElementById('we-cta-bg').value,
+      ctaColor:document.getElementById('we-cta-color').value,
+      screenshots
+    }
+  });
+  toast('Configuration encarts expédition enregistrée');
+}
+
+/* ---- CLASSIQUE WIDGET ---- */
+function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
   let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
 
