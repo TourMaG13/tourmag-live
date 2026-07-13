@@ -4919,21 +4919,56 @@ function renderGallery(el){
   </div>`;
   el.innerHTML=h;
 }
+let _gpPage=0, _gpSearch='', _gpSort='newest';
 function pickGalleryFromMedia(){
   if(!mediaData.length){toast('Aucune image dans la médiathèque. Ajoutez-en d\'abord dans l\'onglet Médiathèque.','error');return;}
-  let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:12px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
-  mh+='<div class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:400px;overflow-y:auto;padding:4px">';
-  mediaData.forEach((m,i)=>{
-    mh+=`<div class="media-thumb" onclick="pickGalleryItem(${i})"><img src="${m.url}" onerror="this.parentElement.remove()"></div>`;
+  _gpPage=0;_gpSearch='';
+  _renderGalPicker();
+}
+function _renderGalPicker(){
+  let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:8px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
+  mh+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">`;
+  mh+=`<input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_gpSearch.replace(/"/g,'&quot;')}" oninput="_gpSearch=this.value;_gpPage=0;_renderGalPicker()" style="flex:1">`;
+  mh+=`<select class="form-input" style="width:auto" onchange="_gpSort=this.value;_gpPage=0;_renderGalPicker()">`;
+  mh+=`<option value="newest"${_gpSort==='newest'?' selected':''}>Plus récentes</option>`;
+  mh+=`<option value="oldest"${_gpSort==='oldest'?' selected':''}>Plus anciennes</option>`;
+  mh+=`<option value="name"${_gpSort==='name'?' selected':''}>Nom A→Z</option>`;
+  mh+=`</select></div>`;
+  let list=mediaData.map((m,i)=>({...m,_oi:i}));
+  if(_gpSearch){const q=_gpSearch.toLowerCase();list=list.filter(m=>(m.name||m.url||'').toLowerCase().includes(q));}
+  const ts=m=>(m.created_at?.seconds||m.created_at?.toMillis?.()||0);
+  if(_gpSort==='oldest') list.sort((a,b)=>ts(a)-ts(b));
+  else if(_gpSort==='name') list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  else list.sort((a,b)=>ts(b)-ts(a));
+  const totalPages=Math.max(1,Math.ceil(list.length/MP_PER_PAGE));
+  if(_gpPage>=totalPages) _gpPage=totalPages-1;
+  const page=list.slice(_gpPage*MP_PER_PAGE,(_gpPage+1)*MP_PER_PAGE);
+  mh+='<div class="media-grid" style="grid-template-columns:repeat(4,1fr);max-height:380px;overflow-y:auto;padding:4px">';
+  page.forEach(m=>{
+    mh+=`<div class="media-thumb" onclick="pickGalleryItem(${m._oi})"><img src="${m.url}" loading="lazy" onerror="this.parentElement.remove()"></div>`;
   });
-  mh+='</div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>';
-  openModal(mh);
+  mh+='</div>';
+  if(totalPages>1){
+    mh+=`<div style="display:flex;justify-content:center;gap:4px;margin-top:8px;font-size:12px">`;
+    mh+=`<button class="btn btn-ghost btn-xs" ${_gpPage===0?'disabled':''} onclick="_gpPage=0;_renderGalPicker()">«</button>`;
+    mh+=`<button class="btn btn-ghost btn-xs" ${_gpPage===0?'disabled':''} onclick="_gpPage--;_renderGalPicker()">‹</button>`;
+    mh+=`<span style="padding:4px 8px;color:var(--text2)">${_gpPage+1} / ${totalPages}</span>`;
+    mh+=`<button class="btn btn-ghost btn-xs" ${_gpPage>=totalPages-1?'disabled':''} onclick="_gpPage++;_renderGalPicker()">›</button>`;
+    mh+=`<button class="btn btn-ghost btn-xs" ${_gpPage>=totalPages-1?'disabled':''} onclick="_gpPage=${totalPages-1};_renderGalPicker()">»</button>`;
+    mh+=`</div>`;
+  }
+  mh+=`<div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center">${list.length} image${list.length>1?'s':''}</div>`;
+  mh+='<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>';
+  const box=document.getElementById('modal-box');
+  if(box) box.innerHTML=mh;
+  if(!document.getElementById('modal').classList.contains('show')) openModal(mh);
 }
 function pickGalleryItem(idx){
   const m=mediaData[idx];if(!m)return;
   closeModal();
   addGalleryRow(m.url);
-  toast('Photo ajoutée — pensez à enregistrer');
+  saveGallery();
+  toast('Photo ajoutée et enregistrée');
 }
 function addGalleryRow(url){
   const list=document.getElementById('gallery-list');if(!list)return;
@@ -4965,6 +5000,7 @@ function uploadGalleryPhoto(){
         const data=await resp.json();
         if(data.error){toast('Erreur: '+data.error,'error');continue;}
         addGalleryRow(data.url);
+        await saveGallery();
         try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
         uploaded++;
       }catch(e){
@@ -4972,7 +5008,7 @@ function uploadGalleryPhoto(){
         toast('Erreur pour '+file.name+': '+e.message,'error');
       }
     }
-    if(uploaded){ await saveGallery(); toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' et enregistrée'+(uploaded>1?'s':'')); }
+    if(uploaded) toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' et enregistrée'+(uploaded>1?'s':''));
   };
   input.click();
 }
