@@ -4904,12 +4904,13 @@ function renderGallery(el){
     const url=typeof p==='string'?p:p.url||'';
     const caption=typeof p==='object'?p.caption||'':'';
     const copyright=typeof p==='object'?p.copyright||'':'';
-    h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+    h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px" data-gal-row>
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0"><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),-1)" title="Monter" style="padding:1px 4px;font-size:10px">▲</button><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),1)" title="Descendre" style="padding:1px 4px;font-size:10px">▼</button></div>
       <img src="${url}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9" onerror="this.style.display='none'">
       <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'">
       <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende" style="width:120px" data-gal-cap="${i}">
       <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}">
-      <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove();saveGallery()">🗑</button>
+      <button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()">🗑</button>
     </div>`;
   });
   h+=`</div>
@@ -4939,7 +4940,8 @@ function addGalleryRow(url){
   const i=list.children.length;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`<img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove();saveGallery()">🗑</button>`;
+  div.setAttribute('data-gal-row','');
+  div.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0"><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),-1)" title="Monter" style="padding:1px 4px;font-size:10px">▲</button><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),1)" title="Descendre" style="padding:1px 4px;font-size:10px">▼</button></div><img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}"><button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()">🗑</button>`;
   list.appendChild(div);
 }
 function uploadGalleryPhoto(){
@@ -4970,10 +4972,17 @@ function uploadGalleryPhoto(){
         toast('Erreur pour '+file.name+': '+e.message,'error');
       }
     }
-    if(uploaded) toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' — pensez à enregistrer');
+    if(uploaded){ await saveGallery(); toast(uploaded+' photo'+(uploaded>1?'s':'')+' uploadée'+(uploaded>1?'s':'')+' et enregistrée'+(uploaded>1?'s':'')); }
   };
   input.click();
 }
+window.moveGalRow = function(row, dir){
+  const list=document.getElementById('gallery-list');if(!list||!row)return;
+  if(dir===-1 && row.previousElementSibling){ list.insertBefore(row, row.previousElementSibling); }
+  else if(dir===1 && row.nextElementSibling){ list.insertBefore(row.nextElementSibling, row); }
+  else return;
+  saveGallery();
+};
 async function saveGallery(){
   const urls=document.querySelectorAll('[data-gal-url]');
   const caps=document.querySelectorAll('[data-gal-cap]');
