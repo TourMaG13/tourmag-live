@@ -551,7 +551,7 @@ async function uploadImageTo(targetInputId){
       const resp=await fetch(url,{method:'POST',body:fd});
       const data=await resp.json();
       if(data.error){toast('Erreur: '+data.error,'error');if(target){target.value='';target.disabled=false;}return;}
-      if(target){target.value=data.url;target.disabled=false;}
+      if(target){target.value=data.url;target.disabled=false;target.dispatchEvent(new Event('input'));}
       // Auto-add to media library
       try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
       toast('Image uploadée + ajoutée à la médiathèque');
@@ -631,13 +631,13 @@ function pickMediaItem(idx){
     window._savedModalHtml=null;
     setTimeout(()=>{
       const target=document.getElementById(targetId);
-      if(target) target.value=url;
+      if(target){target.value=url;target.dispatchEvent(new Event('input'));}
       toast('Image sélectionnée');
     },50);
   } else {
     closeModal();
     const target=document.getElementById(targetId);
-    if(target) target.value=url;
+    if(target){target.value=url;target.dispatchEvent(new Event('input'));}
     toast('Image sélectionnée');
   }
 }
@@ -1638,7 +1638,14 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1">${mkMediaPickerBtn('live-image')}${mkUploadBtn('live-image')}</div></div>
+    <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1" oninput="toggleLiveImgOpts()">${mkMediaPickerBtn('live-image')}${mkUploadBtn('live-image')}</div></div>
+    <div id="live-img-opts" style="display:none">
+      <div class="form-row-inline" style="margin-top:4px">
+        <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="live-imgpos" onchange="updateLiveImgPreview()"><option value="center center">center center</option><option value="center top" selected>center top</option><option value="center bottom">center bottom</option><option value="left center">left center</option><option value="right center">right center</option></select></div>
+        <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="live-imgheight" value="200" min="80" max="500" step="10" oninput="updateLiveImgPreview()"></div>
+      </div>
+      <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img id="live-imgpreview" src="" style="width:100%;height:200px;object-fit:cover;object-position:center top;display:block" onerror="this.style.display='none'"></div>
+    </div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier / Programmer</button></div>
@@ -1692,6 +1699,24 @@ window.pickMedia=function(url,el){
   document.getElementById('live-image').value=url;
   document.querySelectorAll('#media-picker .media-thumb').forEach(t=>t.classList.remove('selected'));
   el.classList.add('selected');
+  toggleLiveImgOpts();
+};
+window.toggleLiveImgOpts=function(){
+  const img=document.getElementById('live-image');
+  const opts=document.getElementById('live-img-opts');
+  const prev=document.getElementById('live-imgpreview');
+  if(!img||!opts)return;
+  const show=!!img.value.trim();
+  opts.style.display=show?'':'none';
+  if(show&&prev){prev.src=img.value;prev.style.display='block';updateLiveImgPreview();}
+};
+window.updateLiveImgPreview=function(){
+  const prev=document.getElementById('live-imgpreview');
+  const posEl=document.getElementById('live-imgpos');
+  const hEl=document.getElementById('live-imgheight');
+  if(!prev)return;
+  if(posEl) prev.style.objectPosition=posEl.value;
+  if(hEl) prev.style.height=hEl.value+'px';
 };
 async function addLive(){
   const text=document.getElementById('live-text').value.trim();
@@ -1708,6 +1733,10 @@ async function addLive(){
     tag_color:tagData?tagColor(tagData):'',
     time:firebase.firestore.FieldValue.serverTimestamp()
   };
+  if(image){
+    doc.image_position=document.getElementById('live-imgpos')?.value||'center top';
+    doc.image_height=parseInt(document.getElementById('live-imgheight')?.value)||200;
+  }
   if(scheduledRaw) doc.scheduledAt=new Date(scheduledRaw);
   await subCol('live').add(doc);
   _liveDraft={text:'',tag:'',journalist:journalist,image:'',scheduledAt:''};
@@ -1715,6 +1744,7 @@ async function addLive(){
   document.getElementById('live-image').value='';
   document.getElementById('live-url').value='';
   document.getElementById('live-scheduled').value='';
+  toggleLiveImgOpts();
   toast(scheduledRaw?'Programmé !':'Publié !');
 }
 function editLive(id){
