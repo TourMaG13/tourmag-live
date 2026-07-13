@@ -528,8 +528,13 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
 @media(max-width:768px){.exp-contact{padding:32px 20px}.exp-contact-card{flex-direction:column;text-align:center;padding:28px 24px;gap:18px}.exp-contact-actions{justify-content:center}}
 
-/* Main layout */
-.exp-main{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
+/* Main layout — zone-based */
+.exp-dash{}
+.exp-layout{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
+.exp-layout-solo{grid-template-columns:1fr}
+.exp-main-col{}
+.exp-side-col{display:flex;flex-direction:column;gap:30px;position:sticky;top:70px;align-self:start}
+.exp-block-full{}
 
 /* Fil de route */
 .exp-feed{position:relative;padding-left:34px}
@@ -562,8 +567,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-itw-grid.exp-expand{display:none}.exp-itw-grid.exp-expand.open{display:grid}
 .exp-art-grid.exp-expand{display:none}.exp-art-grid.exp-expand.open{display:grid}
 
-/* Sidebar */
-.exp-side{display:flex;flex-direction:column;gap:30px;position:sticky;top:70px;align-self:start}
+/* Sidebar cards */
 .exp-card{border:1px solid var(--exp-line);padding:26px}
 .exp-card-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:var(--exp-accent);padding:5px 12px;display:inline-block;margin-bottom:16px;font-weight:600}
 .exp-reporter{display:flex;align-items:center;gap:14px;margin-bottom:14px}
@@ -726,8 +730,8 @@ body.mode-expedition .social-float{display:none}
 
 /* ===== EXPEDITION RESPONSIVE ===== */
 @media(max-width:940px){
-  .exp-main{grid-template-columns:1fr;padding:44px 20px;gap:40px}
-  .exp-side{position:static}
+  .exp-layout{grid-template-columns:1fr;padding:44px 20px;gap:40px}
+  .exp-side-col{position:static}
   .exp-art-grid{grid-template-columns:1fr}
   .exp-verbatim-grid{grid-template-columns:1fr}
   .exp-essential-grid{grid-template-columns:1fr}
@@ -1715,7 +1719,7 @@ function renderExpedition(data){
   };
 
   _b.live = function(){
-    let o = `<div class="exp-main"><div>`;
+    let o = '';
     if(event.liveShowTitle!==false){
       o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
       o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
@@ -1748,62 +1752,47 @@ function renderExpedition(data){
     } else {
       o += `<p style="color:var(--exp-grey);font-family:'Libre Caslon Text',serif;font-style:italic;padding:40px 0">L'expédition n'a pas encore commencé. Revenez bientôt…</p>`;
     }
-    o += `</div><div class="exp-side">`;
-    // BrandNews card (sidebar)
-    (function(){
-      const bn = event.brandNews;
-      if(!bn || !bn.rssUrl) return;
-      const now = new Date();
-      const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-      if(bn.startDate && today < bn.startDate) return;
-      if(bn.endDate && today > bn.endDate) return;
-      const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
-      if(!bnArticles.length) return;
-      const a = bnArticles[0];
-      const label = bn.label || 'Brand News';
-      o += `<div class="exp-card exp-card-bn" onclick="window.open('${a.link}','_blank')" style="cursor:pointer">`;
-      o += `<div class="exp-card-label exp-card-label-bn"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div>`;
-      if(a.image) o += `<div class="exp-bn-side-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
-      o += `<div class="exp-bn-side-title">${a.title||''}</div>`;
-      o += `<div class="exp-bn-side-read">Lire l'article →</div>`;
-      o += `</div>`;
-    })();
-    // Reporters
+    return o;
+  };
+
+  _b.reporters = function(){
     const reporters = journalists||[];
-    if(reporters.length){
-      reporters.forEach(reporter => {
-        o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
-        const socials = [];
-        if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);}
-        if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
-        if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener" title="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>`);}
-        if(socials.length) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
-        if(reporter.profileUrl) o += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
-        o += `</div>`;
-      });
+    if(!reporters.length) return '';
+    let o = '';
+    reporters.forEach(reporter => {
+      o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+      const socials = [];
+      if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);}
+      if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
+      if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener" title="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>`);}
+      if(socials.length) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
+      if(reporter.profileUrl) o += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
+      o += `</div>`;
+    });
+    return o;
+  };
+
+  _b.itinerary = function(){
+    if(!sortedEtapes.length) return '';
+    let o = '';
+    const EXP_ITIN_VIS = 5;
+    let nIdx = sortedEtapes.findIndex(et => et.status === 'now');
+    if(nIdx < 0) nIdx = sortedEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
+    if(nIdx < 0) nIdx = 0;
+    const wS = Math.max(0, Math.min(nIdx - 2, sortedEtapes.length - EXP_ITIN_VIS));
+    const wE = Math.min(sortedEtapes.length, wS + EXP_ITIN_VIS);
+    const before = sortedEtapes.slice(0, wS), visible = sortedEtapes.slice(wS, wE), after = sortedEtapes.slice(wE);
+    function mkEtapeLi(et){
+      const isRoute = et.type==='route' && et.nameEnd;
+      const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
+      const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
+      return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
     }
-    // Itinerary accordion
-    if(sortedEtapes.length){
-      const EXP_ITIN_VIS = 5;
-      let nIdx = sortedEtapes.findIndex(et => et.status === 'now');
-      if(nIdx < 0) nIdx = sortedEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
-      if(nIdx < 0) nIdx = 0;
-      const wS = Math.max(0, Math.min(nIdx - 2, sortedEtapes.length - EXP_ITIN_VIS));
-      const wE = Math.min(sortedEtapes.length, wS + EXP_ITIN_VIS);
-      const before = sortedEtapes.slice(0, wS), visible = sortedEtapes.slice(wS, wE), after = sortedEtapes.slice(wE);
-      function mkEtapeLi(et){
-        const isRoute = et.type==='route' && et.nameEnd;
-        const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
-        const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
-        return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
-      }
-      o += `<div class="exp-card"><div class="exp-card-label">Itinéraire</div><ul class="exp-route">`;
-      if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
-      visible.forEach(et => { o += mkEtapeLi(et); });
-      if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
-      o += `</ul></div>`;
-    }
-    o += `</div></div>`;
+    o += `<div class="exp-card"><div class="exp-card-label">Itinéraire</div><ul class="exp-route">`;
+    if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
+    visible.forEach(et => { o += mkEtapeLi(et); });
+    if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
+    o += `</ul></div>`;
     return o;
   };
 
@@ -1940,8 +1929,23 @@ function renderExpedition(data){
   };
 
   _b.brandnews = function(){
-    // Rendu dans la sidebar (exp-side) — ce bloc full-width n'est plus utilisé
-    return '';
+    const bn = event.brandNews;
+    if(!bn || !bn.rssUrl) return '';
+    const now = new Date();
+    const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    if(bn.startDate && today < bn.startDate) return '';
+    if(bn.endDate && today > bn.endDate) return '';
+    const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    if(!bnArticles.length) return '';
+    const a = bnArticles[0];
+    const label = bn.label || 'Brand News';
+    let o = `<div class="exp-card exp-card-bn" onclick="window.open('${a.link}','_blank')" style="cursor:pointer">`;
+    o += `<div class="exp-card-label exp-card-label-bn"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div>`;
+    if(a.image) o += `<div class="exp-bn-side-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
+    o += `<div class="exp-bn-side-title">${a.title||''}</div>`;
+    o += `<div class="exp-bn-side-read">Lire l'article →</div>`;
+    o += `</div>`;
+    return o;
   };
 
   _b.sponsors = function(){
@@ -1986,12 +1990,76 @@ function renderExpedition(data){
     return o;
   };
 
-  // Assemble blocks in configured order
-  const defaultExpOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'];
+  // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
+  const expBlockRenderers = _b;
+  const defaultExpOrder = ['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
-  defaultExpOrder.forEach(k => { if(!finalOrder.includes(k)) finalOrder.push(k); });
-  finalOrder.forEach(key => { if(_b[key]){ const out=_b[key](); if(out) h += `<div data-exp-block="${key}">${out}</div>`; } });
+  // Auto-inject new blocks for legacy events
+  defaultExpOrder.forEach(k => {
+    if(!finalOrder.includes(k)){
+      if(k==='reporters'||k==='itinerary'){
+        const li=finalOrder.indexOf('live'); finalOrder.splice(li>=0?li+1:finalOrder.length,0,k);
+      } else { finalOrder.push(k); }
+    }
+  });
+
+  const expZones = event.expBlockZones || {};
+  function getExpZone(k){ return expZones[k] || expDefaultZones[k] || 'main'; }
+  function expRb(k){ const fn=expBlockRenderers[k]; return fn ? fn() : ''; }
+
+  const allExpSideKeys = finalOrder.filter(k => getExpZone(k) === 'side' && expBlockRenderers[k]);
+  const expSidebarAnchor = event.expSidebarAnchor || 'live';
+  let _expSideRendered = false, _expInDash = false, _expMainBuf = [];
+
+  function _expShouldRenderSide(){
+    if(_expSideRendered || !allExpSideKeys.length) return false;
+    return _expMainBuf.includes(expSidebarAnchor);
+  }
+  function _expFlushMain(){
+    if(!_expMainBuf.length) return;
+    if(!_expInDash){ h+='<div class="exp-dash">'; _expInDash=true; }
+    if(_expShouldRenderSide()){
+      h+='<div class="exp-layout"><div class="exp-main-col">';
+      _expMainBuf.forEach(k=>{ const out=expRb(k); if(out) h+=`<div data-exp-block="${k}">${out}</div>`; });
+      h+='</div><div class="exp-side-col">';
+      allExpSideKeys.forEach(k=>{ const out=expRb(k); if(out) h+=`<div data-exp-block="${k}">${out}</div>`; });
+      h+='</div></div>';
+      _expSideRendered=true;
+    } else {
+      // Main blocks without sidebar — wrap in single-column layout for proper containment
+      h+='<div class="exp-layout exp-layout-solo"><div class="exp-main-col">';
+      _expMainBuf.forEach(k=>{ const out=expRb(k); if(out) h+=`<div data-exp-block="${k}">${out}</div>`; });
+      h+='</div></div>';
+    }
+    _expMainBuf=[];
+  }
+  function _expCloseDash(){
+    _expFlushMain();
+    if(_expInDash){ h+='</div>'; _expInDash=false; }
+  }
+
+  finalOrder.forEach(key => {
+    if(!expBlockRenderers[key]) return;
+    const zone = getExpZone(key);
+    if(zone==='side') return; // rendered with the anchor
+    if(zone==='full'){
+      _expFlushMain();
+      if(!_expInDash){ h+='<div class="exp-dash">'; _expInDash=true; }
+      const out=expRb(key);
+      if(out) h+=`<div class="exp-block-full" data-exp-block="${key}">${out}</div>`;
+    } else { // main
+      _expMainBuf.push(key);
+    }
+  });
+  _expCloseDash();
+  // Safety: render any remaining side blocks if anchor was never hit
+  if(!_expSideRendered && allExpSideKeys.length){
+    h+='<div class="exp-dash"><div class="exp-layout"><div class="exp-main-col"></div><div class="exp-side-col">';
+    allExpSideKeys.forEach(k=>{ const out=expRb(k); if(out) h+=`<div data-exp-block="${k}">${out}</div>`; });
+    h+='</div></div></div>';
+  }
 
   // ===== FOOTER =====
   h += `<footer class="exp-footer">
