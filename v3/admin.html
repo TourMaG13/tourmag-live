@@ -459,7 +459,10 @@ function applyTabVisibility(){
 
     // Expedition-only tabs: etapes, decor
     if(tab==='etapes' || tab==='decor'){
-      item.style.display=isExpedition?'':'none';
+      if(!isExpedition){ item.style.display='none'; return; }
+      // In expedition: still respect hiddenTabs for non-super admins
+      if(!superAdmin && hiddenTabs.includes(tab)){ item.style.display='none'; return; }
+      item.style.display='';
       return;
     }
 
@@ -3611,6 +3614,8 @@ function renderAccess(el){
     {key:'gallery',icon:'📸',label:'Galerie photos'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
     {key:'contact',icon:'📞',label:'Contact'},
+    {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
+    {key:'decor',icon:'🎨',label:'Décor'},
     {key:'media',icon:'📷',label:'Médiathèque'},
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
