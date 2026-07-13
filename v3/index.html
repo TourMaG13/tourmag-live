@@ -461,13 +461,10 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 /* Essential / À retenir */
 .exp-essential{max-width:1200px;margin:0 auto;padding:48px 32px 56px}
 .exp-essential-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:32px}
-.exp-essential-card{background:var(--exp-stone);border-left:3px solid var(--exp-accent);padding:22px 24px 26px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease,border-left-width .2s ease}
-.exp-essential-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.07);border-left-width:5px}
-.exp-essential-num{position:absolute;top:-8px;right:10px;font-family:'Libre Caslon Display',serif;font-size:82px;font-weight:400;color:var(--exp-accent);opacity:.06;line-height:1;pointer-events:none;user-select:none}
-.exp-essential-tag{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);background:rgba(255,108,0,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px}
-.exp-essential-tag svg{width:12px;height:12px;stroke:var(--exp-accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exp-essential-card{background:var(--exp-stone);border-left:3px solid var(--exp-accent);padding:22px 24px;position:relative}
+.exp-essential-num{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;color:var(--exp-accent);opacity:.35;line-height:1;margin-bottom:8px}
+.exp-essential-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);background:rgba(255,108,0,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px}
 .exp-essential-text{font-size:14.5px;line-height:1.65;color:var(--exp-ink)}
-.exp-essential-stamp{position:absolute;bottom:10px;right:10px;width:48px;height:48px;opacity:.045;pointer-events:none;transform:rotate(-12deg)}
 
 /* Map section */
 .exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 48px}
@@ -675,7 +672,6 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-gallery-extra .exp-gal-item{height:var(--gal-h,180px)}
 .exp-gallery-extra .exp-gal-item img{height:100%}
 .exp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(17,17,17,.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
-.exp-lightbox.exp-lb-iframe{position:absolute;inset:auto;left:0;width:100%}
 .exp-lightbox.open{opacity:1;pointer-events:auto}
 .exp-lightbox img{max-width:90vw;max-height:85vh;object-fit:contain;border:1px solid rgba(255,255,255,.1)}
 .exp-lightbox-close{position:absolute;top:20px;right:28px;font-family:'Archivo',sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:none;border:1px solid rgba(255,255,255,.25);padding:8px 18px;cursor:pointer;transition:border-color .2s}
@@ -1689,34 +1685,11 @@ function renderExpedition(data){
 
   _b.essential = function(){
     if(mod.essential===false || !essential || !essential.length) return '';
-    // Tag icon mapping
-    const tagIcons = {
-      'aérien':'<svg viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5 5.1 3 L5.7 13H3.2l-.8 1 3 1.5L6.8 18.5l1-.8h0L10.3 15l3 5.1.5-.3c.4-.2.6-.6.5-1.1z"/></svg>',
-      'destinations':'<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-      'durable':'<svg viewBox="0 0 24 24"><path d="M11 20A7 7 0 019.8 6.9C15.5 4.9 17 3.5 17 3.5s1.5 2.5-.5 6.5c2 0 3.5.5 3.5.5s-1.5 5-6 7.5"/><path d="M11 20v-8c3-3 5.5-4.5 5.5-4.5"/></svg>',
-      'distribution':'<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
-      'haut de gamme':'<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3l1 6 1-6"/><path d="M2 9h20"/><path d="M7 9l5 13 5-13"/></svg>',
-      'croisière':'<svg viewBox="0 0 24 24"><path d="M2 21c1.5 0 2.7-.4 3.6-1 1.8-1.2 4.2-1.2 6 0 1.8 1.2 4.2 1.2 6 0 .9-.6 2.1-1 3.6-1"/><path d="M4 18l1.5-9h13L20 18"/><path d="M12 3v6"/><path d="M8 9l4-6 4 6"/></svg>',
-      'hôtellerie':'<svg viewBox="0 0 24 24"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-4h6v4"/><path d="M3 11h18"/></svg>',
-      'économie':'<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
-      'tech':'<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-      'politique':'<svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><rect x="9" y="13" width="6" height="8"/><line x1="12" y1="7" x2="12" y2="13"/></svg>',
-      'général':'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg>'
-    };
-    function getTagIcon(tag){
-      if(!tag) return '';
-      const t = tag.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      for(const [k,v] of Object.entries(tagIcons)){ if(t.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return v; }
-      return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-    }
-    // Stamp SVG (passport-style circular stamp)
-    const stampSvg = `<svg class="exp-essential-stamp" viewBox="0 0 100 100" fill="var(--exp-accent)"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--exp-accent)" stroke-width="3"/><circle cx="50" cy="50" r="38" fill="none" stroke="var(--exp-accent)" stroke-width="1.5"/><text x="50" y="42" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" font-weight="700" letter-spacing="2" fill="var(--exp-accent)">TOURMAG</text><text x="50" y="55" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="1.5" fill="var(--exp-accent)">EXPÉDITION</text><text x="50" y="66" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="1" fill="var(--exp-accent)">✦ VÉRIFIÉ ✦</text></svg>`;
-
     let o = `<section class="exp-essential">`;
     if(event.essentialShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.essentialTitle||'À retenir'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.essentialSubtitle||'Les points clés de l\'expédition'}</p>`;
     o += `<div class="exp-essential-grid">`;
     essential.forEach((p,i) => {
-      o += `<div class="exp-essential-card"><div class="exp-essential-num">${String(i+1).padStart(2,'0')}</div>${p.tag?`<span class="exp-essential-tag">${getTagIcon(p.tag)}${p.tag}</span>`:''}<div class="exp-essential-text">${p.text}</div>${stampSvg}</div>`;
+      o += `<div class="exp-essential-card"><div class="exp-essential-num">${String(i+1).padStart(2,'0')}</div>${p.tag?`<span class="exp-essential-tag">${p.tag}</span>`:''}<div class="exp-essential-text">${p.text}</div></div>`;
     });
     return o + `</div></section>`;
   };
@@ -2394,7 +2367,6 @@ window.openExpLightbox = function(idx){
   _expLbIdx = idx;
   _expLbShow();
 };
-var _inIframe = (function(){ try { return window.self !== window.top; } catch(e){ return true; } })();
 function _expLbShow(){
   const lb = document.getElementById('exp-lightbox');
   if(!lb) return;
@@ -2405,34 +2377,12 @@ function _expLbShow(){
   document.getElementById('exp-lightbox-img').src = url;
   const capEl = document.getElementById('exp-lightbox-cap');
   capEl.textContent = cap + (cr ? '  © '+cr : '');
-
-  if(_inIframe){
-    // Iframe mode: position lightbox absolutely near the gallery
-    lb.classList.add('exp-lb-iframe');
-    const galEl = document.querySelector('[data-exp-block="gallery"]') || document.querySelector('.exp-gallery') || lb.parentElement;
-    const refY = galEl ? galEl.offsetTop : 0;
-    const estVH = Math.min(screen.availHeight || screen.height || 900, 1000);
-    const lbTop = Math.max(0, refY - estVH * 0.15);
-    lb.style.top = lbTop + 'px';
-    lb.style.height = estVH + 'px';
-    // Ask parent to scroll iframe so lightbox area is visible
-    try { window.parent.postMessage({type:'tourmag-live', action:'lightbox', state:'open'}, '*'); } catch(e){}
-  }
-
   lb.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 window.closeExpLightbox = function(){
   const lb = document.getElementById('exp-lightbox');
-  if(lb){
-    lb.classList.remove('open');
-    if(_inIframe){
-      lb.classList.remove('exp-lb-iframe');
-      lb.style.top = '';
-      lb.style.height = '';
-      try { window.parent.postMessage({type:'tourmag-live', action:'lightbox', state:'close'}, '*'); } catch(e){}
-    }
-  }
+  if(lb) lb.classList.remove('open');
   document.body.style.overflow = '';
 };
 window.navExpLightbox = function(dir){
