@@ -404,6 +404,7 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 function isClient(){ return currentUserRole==='client'; }
 
 function isSuperAdmin(){
+  if(isClient()) return false;
   const ev=eventsData.find(e=>e.id===currentEventId);
   const superAdmins=ev?.superAdmins||[];
   // If no super admins defined, everyone is super admin (retrocompat)
@@ -3593,17 +3594,23 @@ function renderAccess(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const superAdmins=ev.superAdmins||[];
   const hiddenTabs=ev.hiddenTabs||[];
+  const isExp=ev.mode==='expedition';
 
   const allTabs=[
     {key:'events',icon:'📋',label:'Mes événements'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
-    {key:'essentiel',icon:'🧠',label:'L\'essentiel'},
-    {key:'live',icon:'📡',label:'Fil live'},
-    {key:'citations',icon:'💬',label:'Citations'},
+    {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L\'essentiel'},
+    {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
+    {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
+    {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
-    {key:'journalistes',icon:'👤',label:'Journalistes'},
+    {key:'interviews',icon:'🎙️',label:'Interviews'},
+    {key:'journalistes',icon:'👤',label:isExp?'Reporters':'Journalistes'},
+    {key:'gallery',icon:'📸',label:'Galerie photos'},
+    {key:'sponsors',icon:'🤝',label:'Partenaires'},
+    {key:'contact',icon:'📞',label:'Contact'},
     {key:'media',icon:'📷',label:'Médiathèque'},
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
