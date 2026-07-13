@@ -664,7 +664,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-gallery{max-width:1200px;margin:0 auto;padding:0 32px 48px}
 .exp-gallery-grid{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:280px calc(280px * 0.5 - 5px);gap:10px;margin-top:38px}
 .exp-gallery-grid .exp-gal-item:first-child{grid-row:1/3}
-.exp-gal-item{position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--exp-line);background:var(--exp-stone)}
+.exp-gal-item{position:relative;overflow:hidden;cursor:zoom-in;border:1px solid var(--exp-line);background:var(--exp-stone)}
 .exp-gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
 .exp-gal-item:hover img{transform:scale(1.04)}
 .exp-gal-credit{position:absolute;bottom:4px;right:6px;font-family:'IBM Plex Mono',monospace;font-size:7px;color:rgba(255,255,255,.6);letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
@@ -673,16 +673,17 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-gallery-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .exp-gallery-extra .exp-gal-item{height:var(--gal-h,180px)}
 .exp-gallery-extra .exp-gal-item img{height:100%}
-.exp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(17,17,17,.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.exp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(17,17,17,.75);display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .exp-lightbox.open{opacity:1;pointer-events:auto}
-.exp-lightbox img{max-width:90vw;max-height:85vh;object-fit:contain;border:1px solid rgba(255,255,255,.1)}
-.exp-lightbox-close{position:absolute;top:20px;right:28px;font-family:'Archivo',sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:none;border:1px solid rgba(255,255,255,.25);padding:8px 18px;cursor:pointer;transition:border-color .2s}
-.exp-lightbox-close:hover{border-color:#fff}
-.exp-lightbox-cap{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6);letter-spacing:.06em;text-align:center;max-width:600px}
-.exp-lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:none;border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
-.exp-lightbox-nav:hover{border-color:#fff}
-.exp-lightbox-prev{left:20px}
-.exp-lightbox-next{right:20px}
+.exp-lightbox img{max-width:90vw;max-height:82vh;object-fit:contain;transform:scale(.92);transition:transform .35s cubic-bezier(.2,.9,.3,1);will-change:transform}
+.exp-lightbox.open img{transform:scale(1)}
+.exp-lightbox-cap{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.55);letter-spacing:.04em;text-align:center;max-width:600px;margin-top:14px;padding:0 20px;transition:opacity .3s;opacity:0}
+.exp-lightbox.open .exp-lightbox-cap{opacity:1;transition-delay:.15s}
+.exp-lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .2s,color .2s;opacity:0}
+.exp-lightbox.open .exp-lightbox-nav{opacity:1;transition-delay:.2s}
+.exp-lightbox-nav:hover{background:rgba(255,255,255,.15);color:#fff}
+.exp-lightbox-prev{left:16px}
+.exp-lightbox-next{right:16px}
 
 /* Sponsors / Partenaires */
 .exp-sponsors{max-width:1200px;margin:0 auto;padding:0 32px 48px}
@@ -1924,7 +1925,7 @@ function renderExpedition(data){
       o+=`<div class="exp-gallery-extra exp-expand" id="exp-gal-expand">${extraPhotos.map((p,i)=>gi(p,i+GALLERY_VIS,true)).join('')}</div>`;
       o+=`<button class="exp-voir-plus" id="exp-gal-btn" onclick="toggleExpGallery(${extraPhotos.length})">▾ Voir les ${extraPhotos.length} autres photos</button>`;
     }
-    o+=`<div class="exp-lightbox" id="exp-lightbox" onclick="if(event.target===this)closeExpLightbox()"><button class="exp-lightbox-close" onclick="closeExpLightbox()">Fermer</button><button class="exp-lightbox-nav exp-lightbox-prev" onclick="navExpLightbox(-1)">‹</button><img id="exp-lightbox-img" src="" alt=""><button class="exp-lightbox-nav exp-lightbox-next" onclick="navExpLightbox(1)">›</button><div class="exp-lightbox-cap" id="exp-lightbox-cap"></div></div>`;
+    o+=`<div class="exp-lightbox" id="exp-lightbox" onclick="if(event.target===this)closeExpLightbox()"><button class="exp-lightbox-nav exp-lightbox-prev" onclick="event.stopPropagation();navExpLightbox(-1)">‹</button><img id="exp-lightbox-img" src="" alt="" onclick="event.stopPropagation();navExpLightbox(1)"><button class="exp-lightbox-nav exp-lightbox-next" onclick="event.stopPropagation();navExpLightbox(1)">›</button><div class="exp-lightbox-cap" id="exp-lightbox-cap"></div></div>`;
     return o+`</section>`;
   };
 
