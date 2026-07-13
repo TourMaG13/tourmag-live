@@ -921,7 +921,9 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'],
+    expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
+    expSidebarAnchor:'live',
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   });
@@ -1137,44 +1139,78 @@ function renderModules(el){
   h+=`</div>`;
 
   if(isExp){
-    // In expedition mode, show expedition-specific block order
+    // In expedition mode, show expedition-specific block order with zone constraints
     const expBlocks = [
-      {key:'kpis',icon:'📊',label:'Compteurs'},
-      {key:'essential',icon:'🧠',label:'À retenir'},
-      {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
-      {key:'live',icon:'🗺️',label:'Fil de route + Sidebar'},
-      {key:'citations',icon:'💬',label:'Verbatims'},
-      {key:'interviews',icon:'🎙️',label:'Interviews'},
-      {key:'videos',icon:'🎬',label:'Vidéos'},
-      {key:'gallery',icon:'📸',label:'Galerie photos'},
-      {key:'articles',icon:'📰',label:'Articles'},
-      {key:'brandnews',icon:'📢',label:'Brand News'},
-      {key:'sponsors',icon:'🤝',label:'Partenaires'},
-      {key:'contact',icon:'📞',label:'Contact'}
+      {key:'kpis',icon:'📊',label:'Compteurs',zones:['full']},
+      {key:'essential',icon:'🧠',label:'À retenir',zones:['full','main']},
+      {key:'etapes',icon:'🗺️',label:'Carte & Étapes',zones:['full']},
+      {key:'live',icon:'📝',label:'Fil de route',zones:['main']},
+      {key:'reporters',icon:'🎤',label:'Reporters',zones:['side','main']},
+      {key:'itinerary',icon:'🧭',label:'Itinéraire',zones:['side','main']},
+      {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
+      {key:'citations',icon:'💬',label:'Verbatims',zones:['full','main']},
+      {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
+      {key:'videos',icon:'🎬',label:'Vidéos',zones:['full','main']},
+      {key:'gallery',icon:'📸',label:'Galerie photos',zones:['full','main']},
+      {key:'articles',icon:'📰',label:'Articles',zones:['full','main']},
+      {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
+      {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
     ];
-    const expDefaultOrder = ['kpis','essential','etapes','live','citations','interviews','videos','gallery','articles','brandnews','sponsors','contact'];
+    const expDefaultOrder = ['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
-    expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)) expOrder.push(b.key); });
+    // Auto-inject new blocks (reporters, itinerary) for legacy events
+    expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)){
+      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'){
+        const li=expOrder.indexOf('live'); expOrder.splice(li>=0?li+1:expOrder.length,0,b.key);
+      } else { expOrder.push(b.key); }
+    }});
     const expMap = Object.fromEntries(expBlocks.map(b=>[b.key,b]));
+    const expSavedZones = ev?.expBlockZones || {};
+    function getExpZone(k){ return expSavedZones[k] || expDefaultZones[k] || 'main'; }
+    const expZoneBgs = {full:'#EEF2FF',main:'#FFF',side:'#FFF5EB'};
+    const expZoneLabels = {full:'⬛ Pleine largeur',main:'◀ Col. principale',side:'▶ Sidebar'};
 
-    h+=`<div class="admin-card"><h3>↕️ Ordre des blocs</h3>
-      <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour réorganiser l'affichage de la page expédition. Le hero et le footer restent fixes.</div>
+    h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+      <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
       <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
     expOrder.forEach((key,i)=>{
       const b=expMap[key]; if(!b) return;
       const dis=mod[b.key]===false;
-      h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:#FFF">
+      const zone=getExpZone(key);
+      const locked=b.zones.length===1;
+      h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:${expZoneBgs[zone]||'#FFF'}">
         <span class="block-drag-handle">⠿</span><span style="font-size:14px">${b.icon}</span>
         <span style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${b.label}</span>
         ${dis?'<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px">OFF</span>':''}
+        ${locked
+          ? `<span class="block-zone-sel" data-key="${key}" data-value="${b.zones[0]}" style="font-size:9px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#f3f3f3;color:var(--text3);font-family:Poppins;cursor:default">🔒 ${expZoneLabels[b.zones[0]]||b.zones[0]}</span>`
+          : `<select class="block-zone-sel" data-key="${key}" style="font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;background:#fff;font-family:Poppins;cursor:pointer">
+            ${b.zones.map(z=>`<option value="${z}"${zone===z?' selected':''}>${expZoneLabels[z]||z}</option>`).join('')}
+          </select>`}
         <div style="display:flex;gap:2px">
           <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===expOrder.length-1?' disabled':''}>▼</button>
         </div>
       </div>`;
     });
-    h+=`</div></div>`;
+    h+=`</div>
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Aperçu du rendu</div>
+        <div id="block-preview-zone" style="font-size:11px;color:var(--text2);line-height:2"></div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">📌 Ancrage de la sidebar</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">La sidebar se positionne à côté de ce bloc :</div>
+        <select class="form-input" id="sidebar-anchor" style="max-width:300px">
+          ${['live','essential','citations','articles','videos','interviews'].map(k=>{
+            const b=expBlocks.find(x=>x.key===k);
+            return `<option value="${k}"${(ev?.expSidebarAnchor||'live')===k?' selected':''}>${b?b.icon+' '+b.label:k}</option>`;
+          }).join('')}
+        </select>
+      </div>
+    </div>`;
   } else {
   h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
     <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
@@ -1240,7 +1276,7 @@ function updateBlockPreview(){
   items.forEach(item=>{
     const key=item.dataset.key;
     const sel=item.querySelector('.block-zone-sel');
-    const zone=sel?sel.value:'main';
+    const zone=sel ? (sel.tagName==='SELECT' ? sel.value : (sel.dataset.value||'main')) : 'main';
     const label=item.querySelector('[style*="flex:1"]')?.textContent||key;
     const icon=item.querySelectorAll('span')[1]?.textContent||'';
     if(zone==='max'){
@@ -1294,15 +1330,20 @@ function initUnifiedBlockDrag(){
 
   // Zone change handlers
   list.querySelectorAll('.block-zone-sel').forEach(sel=>{
+    if(sel.tagName!=='SELECT') return; // skip locked zones (span)
     sel.addEventListener('change',()=>{
       // Update background color
-      const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
+      const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#FFF5EB'};
       const item=sel.closest('.block-uni-item');
       if(item) item.style.background=zoneBgs[sel.value]||'#FFF';
       saveUnifiedBlockOrder();
       updateBlockPreview();
     });
   });
+
+  // Sidebar anchor change handler
+  const anchorSel=document.getElementById('sidebar-anchor');
+  if(anchorSel) anchorSel.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
 }
 
 function getUnifiedAfter(list,y){
@@ -1330,10 +1371,20 @@ async function saveUnifiedBlockOrder(){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const isExp = ev?.mode === 'expedition';
   if(isExp){
-    // Expedition: save to dedicated expBlockOrder field
-    if(ev) ev.expBlockOrder=newOrder;
+    // Expedition: save order + zones + sidebar anchor
+    const newExpZones = {};
+    items.forEach(item=>{
+      const key=item.dataset.key;
+      const sel=item.querySelector('.block-zone-sel');
+      if(sel){
+        // For locked zones (span, not select), read data-value; for selects, read .value
+        newExpZones[key] = sel.tagName==='SELECT' ? sel.value : (sel.dataset.value||'main');
+      }
+    });
+    const expSidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
+    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;}
     try{
-      await evRef().update({expBlockOrder:newOrder});
+      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor});
     }catch(e){
       console.error('[saveBlockOrder] Error:', e);
       toast('Erreur sauvegarde: '+e.message,'error');
