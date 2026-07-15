@@ -561,6 +561,11 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-entry-photo img{width:100%;height:280px;object-fit:cover;filter:saturate(1.04);display:block}
 .exp-entry-photo figcaption{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--exp-grey);padding:10px 4px 0;display:flex;justify-content:space-between;background:none}
 .exp-entry-km{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--exp-grey);margin-top:8px}
+.exp-entry-clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--exp-clamp,none)}
+.exp-entry-clamp.open{-webkit-line-clamp:unset;display:block}
+.exp-entry-toggle{display:none;background:none;border:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--exp-accent);padding:6px 0 0;transition:opacity .2s}
+.exp-entry-toggle:hover{opacity:.7}
+.exp-entry-toggle.visible{display:inline-block}
 .exp-entry.exp-entry-latest::before{background:var(--exp-accent);border-color:var(--exp-accent);box-shadow:0 0 0 4px rgba(255,108,0,.2);animation:exp-pulse 1.6s infinite}
 .exp-voir-plus{display:block;width:100%;text-align:center;padding:16px 0;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--exp-accent);cursor:pointer;border:none;background:none;transition:opacity .2s}
 .exp-voir-plus:hover{opacity:.7}
@@ -1758,6 +1763,7 @@ function renderExpedition(data){
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-line"></span><span>Trajet à venir</span></div>
         </div>
       </div>
+      ${exp.mapNote ? `<p class="exp-map-note">${exp.mapNote}</p>` : ''}
     </section>`;
   };
 
@@ -1769,6 +1775,7 @@ function renderExpedition(data){
     }
     if(pubLive.length){
       const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
+      const _lineClamp = event.liveLineClamp || 0;
       const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
       const extraEntries = pubLive.slice(EXP_LIVE_VIS);
       // Day separator helper
@@ -1785,10 +1792,10 @@ function renderExpedition(data){
         } catch(e){ return ''; }
       }
       o += `<div class="exp-feed">`;
-      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, i===0); });
+      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, i===0, _lineClamp); });
       if(extraEntries.length){
         o += `<div class="exp-expand" id="exp-feed-expand">`;
-        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap); });
+        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, false, _lineClamp); });
         o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length},'▴ Réduire','▾ Voir les ${extraEntries.length} entrées précédentes')">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
       }
       o += `</div>`;
@@ -2345,6 +2352,9 @@ function renderExpedition(data){
   window._socialParseTimer = setTimeout(()=>{
     try{if(window.instgrm&&window.instgrm.Embeds) window.instgrm.Embeds.process();}catch(e){}
   },400);
+
+  // Init accordion clamps after DOM update
+  requestAnimationFrame(initExpClamps);
 }
 
 // Expedition toggle (simpler than live, no chevron SVG)
@@ -2353,6 +2363,7 @@ window.toggleExpExpand = function(expandId, btnId, count, openLabel, closedLabel
   if(!el||!btn) return;
   const open=el.classList.toggle('open');
   btn.textContent = open ? (openLabel||'▴ Réduire') : (closedLabel||`▾ Voir les ${count} entrées précédentes`);
+  if(open) requestAnimationFrame(initExpClamps);
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
 
@@ -2410,11 +2421,12 @@ window.openGalBg = function(url){
 };
 
 // Expedition entry builder
-function mkExpEntry(entry, etapes, jrPhotoMap, isLatest){
+function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
   const jrKey = (entry.journalist||'').toLowerCase().trim();
   const jrPhoto = jrPhotoMap[jrKey] || '';
   const etape = entry.etape ? (etapes||[]).find(e=>e.id===entry.etape) : null;
   const isNow = etape && etape.status === 'now';
+  const clampId = 'exp-clamp-'+entry.id;
 
   let o = `<div class="exp-entry${isNow?' now':''}${isLatest?' exp-entry-latest':''}">`;
   o += `<div class="exp-entry-meta">`;
@@ -2432,7 +2444,12 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest){
     txt = txt.replace(/«\s*([^»]+)\s*»/g, '<span class="verbatim">« $1 »</span>');
     // Support links
     if(entry.url) txt += ` <a href="${entry.url}" target="_blank">→ Lire la suite</a>`;
-    o += `<p>${txt}</p>`;
+    if(lineClamp && lineClamp > 0){
+      o += `<p class="exp-entry-clamp" id="${clampId}" style="--exp-clamp:${lineClamp}">${txt}</p>`;
+      o += `<button class="exp-entry-toggle" data-clamp="${clampId}" onclick="toggleExpClamp(this)">▼ Lire la suite</button>`;
+    } else {
+      o += `<p>${txt}</p>`;
+    }
   }
 
   if(entry.image){
@@ -2449,6 +2466,26 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest){
 
   o += `</div>`;
   return o;
+}
+
+// Accordion toggle for clamped text
+function toggleExpClamp(btn){
+  const el = document.getElementById(btn.dataset.clamp);
+  if(!el) return;
+  const isOpen = el.classList.toggle('open');
+  btn.innerHTML = isOpen ? '▲ Réduire' : '▼ Lire la suite';
+}
+// After render: show toggle only if text actually overflows
+function initExpClamps(){
+  document.querySelectorAll('.exp-entry-clamp').forEach(el => {
+    const btn = el.nextElementSibling;
+    if(!btn || !btn.classList.contains('exp-entry-toggle')) return;
+    if(el.scrollHeight > el.clientHeight + 2){
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  });
 }
 
 // ============================================================
