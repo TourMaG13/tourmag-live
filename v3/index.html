@@ -2226,21 +2226,30 @@ function renderExpedition(data){
     });
 
     // === STEP 2: Detect duplicate segments & compute offset ===
+    // Use toFixed(3) = ~110m tolerance for matching overlapping routes
     const _segKey = (a, b) => {
-      const ka = a[0].toFixed(5)+','+a[1].toFixed(5);
-      const kb = b[0].toFixed(5)+','+b[1].toFixed(5);
+      const ka = parseFloat(a[0]).toFixed(3)+','+parseFloat(a[1]).toFixed(3);
+      const kb = parseFloat(b[0]).toFixed(3)+','+parseFloat(b[1]).toFixed(3);
       return ka < kb ? ka+'|'+kb : kb+'|'+ka;
     };
     const _segOccurrence = {};
     for(let i=0; i<chain.length-1; i++){
-      const k = _segKey(chain[i].coord, chain[i+1].coord);
+      // Skip zero-length connecting segments
+      const c0=chain[i].coord, c1=chain[i+1].coord;
+      if(Math.abs(c0[0]-c1[0])<0.0001 && Math.abs(c0[1]-c1[1])<0.0001) continue;
+      const k = _segKey(c0, c1);
       if(!_segOccurrence[k]) _segOccurrence[k] = [];
       _segOccurrence[k].push(i);
     }
-    // Offset amount: ~0.4% of the bounding box diagonal
+    // Debug: log detected duplicates
+    const _dupSegs = Object.entries(_segOccurrence).filter(([k,v])=>v.length>1);
+    if(_dupSegs.length) console.log('[TourMaG Live] Segments superposés détectés:', _dupSegs.length, _dupSegs);
+    else console.log('[TourMaG Live] Aucun segment superposé détecté. Clés:', Object.keys(_segOccurrence));
+
+    // Offset amount: ~0.6% of the bounding box diagonal, min ~500m
     const _lats = allCoords.map(c=>c[0]), _lngs = allCoords.map(c=>c[1]);
     const _diag = Math.sqrt(Math.pow(Math.max(..._lats)-Math.min(..._lats),2) + Math.pow(Math.max(..._lngs)-Math.min(..._lngs),2));
-    const _offBase = Math.max(_diag * 0.004, 0.001);
+    const _offBase = Math.max(_diag * 0.006, 0.005);
     function _offsetSeg(a, b, side){
       const dx = b[1]-a[1], dy = b[0]-a[0];
       const len = Math.sqrt(dx*dx+dy*dy);
@@ -2256,10 +2265,11 @@ function renderExpedition(data){
       let seg=[w0.coord, w1.coord];
       // Apply offset if this segment has a duplicate
       const _sk = _segKey(w0.coord, w1.coord);
-      if(_segOccurrence[_sk].length > 1){
-        const occIdx = _segOccurrence[_sk].indexOf(i);
-        const n = _segOccurrence[_sk].length;
-        const side = n > 1 ? (2 * occIdx / (n - 1)) - 1 : 0;
+      const _occ = _segOccurrence[_sk];
+      if(_occ && _occ.length > 1){
+        const occIdx = _occ.indexOf(i);
+        const n = _occ.length;
+        const side = n > 1 ? (2 * Math.max(occIdx,0) / (n - 1)) - 1 : 0;
         seg = _offsetSeg(w0.coord, w1.coord, side);
       }
       const isDone = w0.status==='done' || w0.status==='now';
