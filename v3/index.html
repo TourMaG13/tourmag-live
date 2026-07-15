@@ -2256,8 +2256,21 @@ function renderExpedition(data){
       }
     }
     const _dupCount = Object.values(_dupGroups).filter((v,i,a)=>a.indexOf(v)===i).length;
-    if(_dupCount) console.log('[TourMaG Live] Segments superposés détectés:', _dupCount, _dupGroups);
-    else console.log('[TourMaG Live] Aucun segment superposé détecté.');
+    if(_dupCount){
+      console.log('[TourMaG Live] Paires superposées:', _dupCount);
+      Object.values(_dupGroups).filter((v,i,a)=>a.indexOf(v)===i).forEach(grp => {
+        grp.forEach(idx => {
+          const a=chain[idx].coord, b=chain[idx+1].coord;
+          console.log('  segment chain['+idx+']:', chain[idx].etape.name, '→', a, '→', b);
+        });
+      });
+    } else {
+      console.log('[TourMaG Live] Aucun segment superposé détecté. Segments réels:', _realSegs.length);
+      _realSegs.forEach(idx => {
+        const a=chain[idx].coord, b=chain[idx+1].coord;
+        console.log('  ['+idx+']', chain[idx].etape.name, a, '→', b, '('+_hvDist(a,b).toFixed(1)+'km)');
+      });
+    }
 
     // Offset amount: ~0.6% of the bounding box diagonal, min ~500m
     const _lats = allCoords.map(c=>c[0]), _lngs = allCoords.map(c=>c[1]);
@@ -2276,6 +2289,7 @@ function renderExpedition(data){
     for(let i=0; i<chain.length-1; i++){
       const w0=chain[i], w1=chain[i+1];
       let seg=[w0.coord, w1.coord];
+      let isReturnDup = false;
       // Apply offset if this segment has a duplicate
       const _grp = _dupGroups[i];
       if(_grp && _grp.length > 1){
@@ -2283,6 +2297,8 @@ function renderExpedition(data){
         const n = _grp.length;
         const side = n > 1 ? (2 * Math.max(occIdx,0) / (n - 1)) - 1 : 0;
         seg = _offsetSeg(w0.coord, w1.coord, side);
+        isReturnDup = occIdx > 0;
+        console.log('[TourMaG Live] Offset appliqué seg['+i+']:', w0.etape.name, 'side='+side.toFixed(2), 'occIdx='+occIdx);
       }
       const isDone = w0.status==='done' || w0.status==='now';
       const et = w0.etape;
@@ -2290,8 +2306,8 @@ function renderExpedition(data){
         ? `${et.name} → ${et.nameEnd}` : et.name||'';
       const tipHtml = `<div class="exp-pop-name">${label}</div><div class="exp-pop-meta">${et.dateLabel||''} · ${et.km||''}</div>`;
       const baseOpts = isDone
-        ? {color:accent, weight:3.5, opacity:.85}
-        : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
+        ? {color:accent, weight:isReturnDup?2.5:3.5, opacity:.85, dashArray:isReturnDup?'8 5':null}
+        : {color:'#111', weight:2, dashArray:isReturnDup?'3 6':'6 8', opacity:isReturnDup?.7:.55};
       const hoverOpts = {color:accent, weight:baseOpts.weight, opacity:1, dashArray:null};
 
       // Transparent fat hit-area
