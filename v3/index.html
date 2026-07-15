@@ -2226,10 +2226,10 @@ function renderExpedition(data){
     });
 
     // === STEP 2: Detect duplicate segments & compute offset ===
-    // Use toFixed(3) = ~110m tolerance for matching overlapping routes
+    // Use toFixed(2) = ~1.1km tolerance for matching overlapping routes
     const _segKey = (a, b) => {
-      const ka = parseFloat(a[0]).toFixed(3)+','+parseFloat(a[1]).toFixed(3);
-      const kb = parseFloat(b[0]).toFixed(3)+','+parseFloat(b[1]).toFixed(3);
+      const ka = parseFloat(a[0]).toFixed(2)+','+parseFloat(a[1]).toFixed(2);
+      const kb = parseFloat(b[0]).toFixed(2)+','+parseFloat(b[1]).toFixed(2);
       return ka < kb ? ka+'|'+kb : kb+'|'+ka;
     };
     const _segOccurrence = {};
