@@ -17,6 +17,9 @@
       var f=document.getElementById('tourmag-live-v2-w');
       if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
     }
+    if(e.data.type==='tourmag-live-nooverflow'){
+      document.documentElement.style.overflowX='hidden';
+    }
   });
   </script>
 -->
@@ -2707,6 +2710,7 @@ function sendHeight(){
 }
 function requestFullWidth(){
   window.parent.postMessage({type:'tourmag-live-fullwidth'},'*');
+  window.parent.postMessage({type:'tourmag-live-nooverflow'},'*');
 }
 window.addEventListener('load',()=>{
   document.documentElement.style.overflow='visible';document.body.style.overflow='visible';
