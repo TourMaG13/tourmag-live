@@ -2277,8 +2277,9 @@ function renderExpedition(data){
     const _diag = Math.sqrt(Math.pow(Math.max(..._lats)-Math.min(..._lats),2) + Math.pow(Math.max(..._lngs)-Math.min(..._lngs),2));
     const _offBase = Math.max(_diag * 0.006, 0.005);
     console.log('[TourMaG Live] Offset base:', _offBase.toFixed(4), 'diag:', _diag.toFixed(2));
-    function _offsetSeg(a, b, side){
-      const dx = b[1]-a[1], dy = b[0]-a[0];
+    function _offsetSeg(a, b, side, refA, refB){
+      // Perpendicular always computed from reference direction (first segment in group)
+      const dx = (refB||b)[1]-(refA||a)[1], dy = (refB||b)[0]-(refA||a)[0];
       const len = Math.sqrt(dx*dx+dy*dy);
       if(len===0) return [a, b];
       const px = -dy/len, py = dx/len;
@@ -2297,7 +2298,10 @@ function renderExpedition(data){
         const occIdx = _grp.indexOf(i);
         const n = _grp.length;
         const side = n > 1 ? (2 * Math.max(occIdx,0) / (n - 1)) - 1 : 0;
-        seg = _offsetSeg(w0.coord, w1.coord, side);
+        // Always use first segment's direction as reference for perpendicular
+        const refIdx = _grp[0];
+        const refA = chain[refIdx].coord, refB = chain[refIdx+1].coord;
+        seg = _offsetSeg(w0.coord, w1.coord, side, refA, refB);
         isReturnDup = occIdx > 0;
         console.log('[TourMaG Live] Offset seg['+i+']:', w0.etape.name, 'side='+side.toFixed(2), 'original:', JSON.stringify([w0.coord, w1.coord]), 'offsetted:', JSON.stringify(seg));
       }
