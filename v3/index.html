@@ -797,7 +797,7 @@ body.mode-expedition .social-float{display:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.6.0/leaflet.polylineDecorator.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
@@ -2307,18 +2307,22 @@ function renderExpedition(data){
       const fg = L.polyline(seg, baseOpts).addTo(map);
       fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
 
-      // Arrow decorators for direction
-      const arrowColor = isDone ? accent : (isReturnDup ? '#555' : '#111');
-      L.polylineDecorator(fg, {
-        patterns: [{
-          offset: '15%', repeat: '25%',
-          symbol: L.Symbol.arrowHead({
-            pixelSize: isDone ? 10 : 8,
-            polygon: false,
-            pathOptions: {stroke:true, color:arrowColor, weight: isDone ? 2.5 : 1.5, opacity: isDone ? .9 : .6}
-          })
-        }]
-      }).addTo(map);
+      // Arrow decorators for direction (if plugin loaded)
+      if(L.polylineDecorator){
+        const arrowColor = isDone ? accent : (isReturnDup ? '#555' : '#111');
+        try {
+          L.polylineDecorator(fg, {
+            patterns: [{
+              offset: '15%', repeat: '25%',
+              symbol: L.Symbol.arrowHead({
+                pixelSize: isDone ? 10 : 8,
+                polygon: false,
+                pathOptions: {stroke:true, color:arrowColor, weight: isDone ? 2.5 : 1.5, opacity: isDone ? .9 : .6}
+              })
+            }]
+          }).addTo(map);
+        } catch(e){ console.warn('[TourMaG Live] Arrow decorator error:', e.message); }
+      }
 
       const m0 = markerMap[coordKey(w0.coord)];
       const m1 = markerMap[coordKey(w1.coord)];
