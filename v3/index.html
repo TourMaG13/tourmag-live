@@ -797,6 +797,7 @@ body.mode-expedition .social-float{display:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.6.0/leaflet.polylineDecorator.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
@@ -1777,6 +1778,8 @@ function renderExpedition(data){
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-dot"></span><span>Étape à venir</span></div>
           <div class="exp-lg-row exp-lg-done"><span class="exp-lg-line"></span><span>Trajet effectué</span></div>
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-line"></span><span>Trajet à venir</span></div>
+          <div class="exp-lg-row"><span style="display:inline-block;width:22px;flex-shrink:0;text-align:center;font-size:11px;color:#111;letter-spacing:-1px">→ →</span><span>Sens aller</span></div>
+          <div class="exp-lg-row"><span style="display:inline-block;width:22px;flex-shrink:0;text-align:center;font-size:11px;color:#111;letter-spacing:-1px">← ←</span><span>Sens retour</span></div>
         </div>
       </div>
       ${exp.mapNote ? `<p class="exp-map-note">${exp.mapNote}</p>` : ''}
@@ -2256,27 +2259,12 @@ function renderExpedition(data){
       }
     }
     const _dupCount = Object.values(_dupGroups).filter((v,i,a)=>a.indexOf(v)===i).length;
-    if(_dupCount){
-      console.log('[TourMaG Live] Paires superposées:', _dupCount);
-      Object.values(_dupGroups).filter((v,i,a)=>a.indexOf(v)===i).forEach(grp => {
-        grp.forEach(idx => {
-          const a=chain[idx].coord, b=chain[idx+1].coord;
-          console.log('  segment chain['+idx+']:', chain[idx].etape.name, '→', a, '→', b);
-        });
-      });
-    } else {
-      console.log('[TourMaG Live] Aucun segment superposé détecté. Segments réels:', _realSegs.length);
-      _realSegs.forEach(idx => {
-        const a=chain[idx].coord, b=chain[idx+1].coord;
-        console.log('  ['+idx+']', chain[idx].etape.name, a, '→', b, '('+_hvDist(a,b).toFixed(1)+'km)');
-      });
-    }
+    if(_dupCount) console.log('[TourMaG Live] Segments superposés (aller/retour):', _dupCount, 'paires');
 
     // Offset amount: ~0.6% of the bounding box diagonal, min ~500m
     const _lats = allCoords.map(c=>c[0]), _lngs = allCoords.map(c=>c[1]);
     const _diag = Math.sqrt(Math.pow(Math.max(..._lats)-Math.min(..._lats),2) + Math.pow(Math.max(..._lngs)-Math.min(..._lngs),2));
     const _offBase = Math.max(_diag * 0.006, 0.005);
-    console.log('[TourMaG Live] Offset base:', _offBase.toFixed(4), 'diag:', _diag.toFixed(2));
     function _offsetSeg(a, b, side, refA, refB){
       // Perpendicular always computed from reference direction (first segment in group)
       const dx = (refB||b)[1]-(refA||a)[1], dy = (refB||b)[0]-(refA||a)[0];
@@ -2303,7 +2291,6 @@ function renderExpedition(data){
         const refA = chain[refIdx].coord, refB = chain[refIdx+1].coord;
         seg = _offsetSeg(w0.coord, w1.coord, side, refA, refB);
         isReturnDup = occIdx > 0;
-        console.log('[TourMaG Live] Offset seg['+i+']:', w0.etape.name, 'side='+side.toFixed(2), 'original:', JSON.stringify([w0.coord, w1.coord]), 'offsetted:', JSON.stringify(seg));
       }
       const isDone = w0.status==='done' || w0.status==='now';
       const et = w0.etape;
@@ -2319,6 +2306,19 @@ function renderExpedition(data){
       const bg = L.polyline(seg, {weight:22, color:'rgba(0,0,0,0)', opacity:1, interactive:true}).addTo(map);
       const fg = L.polyline(seg, baseOpts).addTo(map);
       fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
+
+      // Arrow decorators for direction
+      const arrowColor = isDone ? accent : (isReturnDup ? '#555' : '#111');
+      L.polylineDecorator(fg, {
+        patterns: [{
+          offset: '15%', repeat: '25%',
+          symbol: L.Symbol.arrowHead({
+            pixelSize: isDone ? 10 : 8,
+            polygon: false,
+            pathOptions: {stroke:true, color:arrowColor, weight: isDone ? 2.5 : 1.5, opacity: isDone ? .9 : .6}
+          })
+        }]
+      }).addTo(map);
 
       const m0 = markerMap[coordKey(w0.coord)];
       const m1 = markerMap[coordKey(w1.coord)];
