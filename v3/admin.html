@@ -88,6 +88,12 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
   .ess-item{flex-wrap:wrap;gap:6px}
   .saving-indicator{top:48px;right:10px;font-size:9px}
   .media-grid{grid-template-columns:repeat(3,1fr)!important}
+  [data-gal-row]{flex-wrap:wrap!important}
+  [data-gal-row] input[data-gal-url]{width:100%!important;flex:none!important;order:1}
+  [data-gal-row] input[data-gal-cap]{width:calc(50% - 20px)!important;flex:1!important;order:2}
+  [data-gal-row] input[data-gal-cr]{width:calc(50% - 20px)!important;flex:1!important;order:3}
+  [data-gal-row] .btn-danger{order:4}
+  [data-gal-row] img{width:40px!important;height:28px!important}
 }
 
 .page-title{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:6px}
@@ -4992,7 +4998,7 @@ function renderGallery(el){
     </div>`;
   });
   h+=`</div>
-    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()">📷 Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()">📷 Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()">📂 Depuis la médiathèque</button></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGallery()">💾 Enregistrer la galerie</button></div>
   </div>`;
   el.innerHTML=h;
