@@ -2225,10 +2225,43 @@ function renderExpedition(data){
       }
     });
 
-    // === STEP 2: Polylines with hover linked to endpoint markers ===
+    // === STEP 2: Detect duplicate segments & compute offset ===
+    const _segKey = (a, b) => {
+      const ka = a[0].toFixed(5)+','+a[1].toFixed(5);
+      const kb = b[0].toFixed(5)+','+b[1].toFixed(5);
+      return ka < kb ? ka+'|'+kb : kb+'|'+ka;
+    };
+    const _segOccurrence = {};
+    for(let i=0; i<chain.length-1; i++){
+      const k = _segKey(chain[i].coord, chain[i+1].coord);
+      if(!_segOccurrence[k]) _segOccurrence[k] = [];
+      _segOccurrence[k].push(i);
+    }
+    // Offset amount: ~0.4% of the bounding box diagonal
+    const _lats = allCoords.map(c=>c[0]), _lngs = allCoords.map(c=>c[1]);
+    const _diag = Math.sqrt(Math.pow(Math.max(..._lats)-Math.min(..._lats),2) + Math.pow(Math.max(..._lngs)-Math.min(..._lngs),2));
+    const _offBase = Math.max(_diag * 0.004, 0.001);
+    function _offsetSeg(a, b, side){
+      const dx = b[1]-a[1], dy = b[0]-a[0];
+      const len = Math.sqrt(dx*dx+dy*dy);
+      if(len===0) return [a, b];
+      const px = -dy/len, py = dx/len;
+      const off = side * _offBase;
+      return [[a[0]+px*off, a[1]+py*off], [b[0]+px*off, b[1]+py*off]];
+    }
+
+    // === STEP 3: Polylines with hover linked to endpoint markers ===
     for(let i=0; i<chain.length-1; i++){
       const w0=chain[i], w1=chain[i+1];
-      const seg=[w0.coord, w1.coord];
+      let seg=[w0.coord, w1.coord];
+      // Apply offset if this segment has a duplicate
+      const _sk = _segKey(w0.coord, w1.coord);
+      if(_segOccurrence[_sk].length > 1){
+        const occIdx = _segOccurrence[_sk].indexOf(i);
+        const n = _segOccurrence[_sk].length;
+        const side = n > 1 ? (2 * occIdx / (n - 1)) - 1 : 0;
+        seg = _offsetSeg(w0.coord, w1.coord, side);
+      }
       const isDone = w0.status==='done' || w0.status==='now';
       const et = w0.etape;
       const label = et.type==='route' && et.nameEnd
