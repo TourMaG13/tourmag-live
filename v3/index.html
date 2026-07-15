@@ -797,7 +797,6 @@ body.mode-expedition .social-float{display:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
@@ -1778,8 +1777,7 @@ function renderExpedition(data){
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-dot"></span><span>Étape à venir</span></div>
           <div class="exp-lg-row exp-lg-done"><span class="exp-lg-line"></span><span>Trajet effectué</span></div>
           <div class="exp-lg-row exp-lg-next"><span class="exp-lg-line"></span><span>Trajet à venir</span></div>
-          <div class="exp-lg-row"><span style="display:inline-block;width:22px;flex-shrink:0;text-align:center;font-size:11px;color:#111;letter-spacing:-1px">→ →</span><span>Sens aller</span></div>
-          <div class="exp-lg-row"><span style="display:inline-block;width:22px;flex-shrink:0;text-align:center;font-size:11px;color:#111;letter-spacing:-1px">← ←</span><span>Sens retour</span></div>
+          <div class="exp-lg-row"><span style="display:inline-flex;width:22px;flex-shrink:0;justify-content:center"><svg width="12" height="12" viewBox="0 0 22 22"><path d="M4 17 L11 5 L18 17" stroke="var(--exp-accent)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Sens du parcours</span></div>
         </div>
       </div>
       ${exp.mapNote ? `<p class="exp-map-note">${exp.mapNote}</p>` : ''}
@@ -2141,6 +2139,7 @@ function renderExpedition(data){
   // ===== INIT LEAFLET MAP =====
   if(sortedEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
     if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
+    if(window._expAnimFrame){ cancelAnimationFrame(window._expAnimFrame); window._expAnimFrame=null; }
 
     const map = L.map('exp-routemap', {scrollWheelZoom:false});
     _expMapInstance = map;
@@ -2279,7 +2278,6 @@ function renderExpedition(data){
     for(let i=0; i<chain.length-1; i++){
       const w0=chain[i], w1=chain[i+1];
       let seg=[w0.coord, w1.coord];
-      let isReturnDup = false;
       // Apply offset if this segment has a duplicate
       const _grp = _dupGroups[i];
       if(_grp && _grp.length > 1){
@@ -2290,7 +2288,6 @@ function renderExpedition(data){
         const refIdx = _grp[0];
         const refA = chain[refIdx].coord, refB = chain[refIdx+1].coord;
         seg = _offsetSeg(w0.coord, w1.coord, side, refA, refB);
-        isReturnDup = occIdx > 0;
       }
       const isDone = w0.status==='done' || w0.status==='now';
       const et = w0.etape;
@@ -2298,31 +2295,14 @@ function renderExpedition(data){
         ? `${et.name} → ${et.nameEnd}` : et.name||'';
       const tipHtml = `<div class="exp-pop-name">${label}</div><div class="exp-pop-meta">${et.dateLabel||''} · ${et.km||''}</div>`;
       const baseOpts = isDone
-        ? {color:accent, weight:isReturnDup?2.5:3.5, opacity:.85, dashArray:isReturnDup?'8 5':null}
-        : {color:'#111', weight:2, dashArray:isReturnDup?'3 6':'6 8', opacity:isReturnDup?.7:.55};
+        ? {color:accent, weight:3.5, opacity:.85}
+        : {color:'#111', weight:2, dashArray:'6 8', opacity:.55};
       const hoverOpts = {color:accent, weight:baseOpts.weight, opacity:1, dashArray:null};
 
       // Transparent fat hit-area
       const bg = L.polyline(seg, {weight:22, color:'rgba(0,0,0,0)', opacity:1, interactive:true}).addTo(map);
       const fg = L.polyline(seg, baseOpts).addTo(map);
       fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
-
-      // Single arrow at midpoint — only on overlapping aller/retour segments
-      if(L.polylineDecorator && _dupGroups[i]){
-        const arrowColor = isDone ? accent : (isReturnDup ? '#555' : '#111');
-        try {
-          L.polylineDecorator(fg, {
-            patterns: [{
-              offset: '50%', repeat: 0,
-              symbol: L.Symbol.arrowHead({
-                pixelSize: 12,
-                polygon: false,
-                pathOptions: {stroke:true, color:arrowColor, weight: 2.5, opacity: isDone ? .9 : .65}
-              })
-            }]
-          }).addTo(map);
-        } catch(e){ console.warn('[TourMaG Live] Arrow decorator error:', e.message); }
-      }
 
       const m0 = markerMap[coordKey(w0.coord)];
       const m1 = markerMap[coordKey(w1.coord)];
@@ -2338,6 +2318,65 @@ function renderExpedition(data){
     }
 
     if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+
+    // ===== ANIMATED DIRECTION ARROW =====
+    // Build continuous path from chain (skip zero-length hops)
+    const _animPath = [];
+    for(let i=0; i<chain.length; i++){
+      const c = chain[i].coord;
+      if(_animPath.length === 0 || _hvDist(c, _animPath[_animPath.length-1]) > 0.5){
+        _animPath.push(c);
+      }
+    }
+    if(_animPath.length >= 2){
+      // Compute cumulative distances for even-speed interpolation
+      const _cumDist = [0];
+      for(let i=1; i<_animPath.length; i++){
+        _cumDist.push(_cumDist[i-1] + _hvDist(_animPath[i-1], _animPath[i]));
+      }
+      const _totalDist = _cumDist[_cumDist.length-1];
+
+      // Bearing helper
+      function _bearing(a, b){
+        const dL=(b[1]-a[1])*Math.PI/180, la=a[0]*Math.PI/180, lb=b[0]*Math.PI/180;
+        return (Math.atan2(Math.sin(dL)*Math.cos(lb), Math.cos(la)*Math.sin(lb)-Math.sin(la)*Math.cos(lb)*Math.cos(dL))*180/Math.PI+360)%360;
+      }
+
+      // Create arrow marker
+      const _arrowSvg = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M4 17 L11 5 L18 17" stroke="${accent}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const _arrowMarker = L.marker(_animPath[0], {
+        icon: L.divIcon({className:'', html:`<div id="exp-anim-arrow" style="transition:transform .15s linear">${_arrowSvg}</div>`, iconSize:[22,22], iconAnchor:[11,11]}),
+        interactive: false, zIndexOffset: 900
+      }).addTo(map);
+
+      // Animation loop: ~25 seconds per full circuit
+      const LOOP_DURATION = 25000;
+      let _animStart = null;
+      if(window._expAnimFrame) cancelAnimationFrame(window._expAnimFrame);
+      function _animStep(ts){
+        if(!_animStart) _animStart = ts;
+        const t = ((ts - _animStart) % LOOP_DURATION) / LOOP_DURATION;
+        const targetDist = t * _totalDist;
+        // Find segment
+        let segIdx = 0;
+        for(let i=1; i<_cumDist.length; i++){
+          if(_cumDist[i] >= targetDist){ segIdx = i-1; break; }
+          if(i === _cumDist.length-1) segIdx = i-1;
+        }
+        const segLen = _cumDist[segIdx+1] - _cumDist[segIdx];
+        const frac = segLen > 0 ? (targetDist - _cumDist[segIdx]) / segLen : 0;
+        const a = _animPath[segIdx], b = _animPath[segIdx+1];
+        const lat = a[0] + (b[0]-a[0]) * frac;
+        const lng = a[1] + (b[1]-a[1]) * frac;
+        _arrowMarker.setLatLng([lat, lng]);
+        // Rotate arrow to heading
+        const angle = _bearing(a, b);
+        const el = document.getElementById('exp-anim-arrow');
+        if(el) el.style.transform = 'rotate('+(angle)+'deg)';
+        window._expAnimFrame = requestAnimationFrame(_animStep);
+      }
+      window._expAnimFrame = requestAnimationFrame(_animStep);
+    }
 
     // Auto-open panel on current étape (or first if trip hasn't started)
     const nowEtape = sortedEtapes.find(e => e.status==='now');
