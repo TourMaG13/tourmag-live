@@ -167,8 +167,14 @@ img{display:block}a{text-decoration:none}
 .live-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:#F1F5F9;color:#475569}
 .live-timestamp{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
 .live-journalist{font-size:9px;color:var(--acc);font-weight:600}
-.live-text{font-size:12.5px;line-height:1.6;color:var(--text);white-space:pre-line}
+.live-text{font-size:12.5px;line-height:1.6;color:var(--text)}
+.live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
+.live-text u{text-decoration:underline}
+.live-text a{color:var(--acc);font-size:11px;font-weight:600;text-decoration:none}
+.live-text a:hover{text-decoration:underline}
+.live-text ul,.live-text ol{margin:4px 0 4px 18px}
+.live-text li{margin-bottom:2px}
 .live-img{margin-top:10px;border-radius:10px;overflow:hidden}
 .live-img img{width:100%;display:block;object-fit:cover}
 .expand-wrap{display:none}.expand-wrap.open{display:block}
@@ -553,6 +559,16 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-entry-meta .tag{color:var(--exp-accent);font-weight:500}
 .exp-entry h3{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:24px;margin-bottom:10px;line-height:1.15}
 .exp-entry p{font-size:15px;line-height:1.65;color:#333}
+.exp-entry-body{font-size:15px;line-height:1.65;color:#333}
+.exp-entry-body p{margin-bottom:6px}
+.exp-entry-body p:last-child{margin-bottom:0}
+.exp-entry-body strong{font-weight:700}
+.exp-entry-body em{font-style:italic}
+.exp-entry-body u{text-decoration:underline}
+.exp-entry-body a{color:var(--exp-accent,#E8842C);text-decoration:none;font-weight:600}
+.exp-entry-body a:hover{text-decoration:underline}
+.exp-entry-body ul,.exp-entry-body ol{margin:8px 0 8px 20px}
+.exp-entry-body li{margin-bottom:3px}
 .exp-entry p a{color:var(--exp-accent);text-decoration:none;font-weight:600;font-size:13px}
 .exp-entry p a:hover{text-decoration:underline}
 .exp-entry .verbatim{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:17.5px;line-height:1.55;color:var(--exp-ink);border-left:2px solid var(--exp-accent);padding-left:18px;margin:14px 0;display:block}
@@ -2445,10 +2461,10 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
     // Support links
     if(entry.url) txt += ` <a href="${entry.url}" target="_blank">→ Lire la suite</a>`;
     if(lineClamp && lineClamp > 0){
-      o += `<p class="exp-entry-clamp" id="${clampId}" style="--exp-clamp:${lineClamp}">${txt}</p>`;
+      o += `<div class="exp-entry-body exp-entry-clamp" id="${clampId}" style="--exp-clamp:${lineClamp}">${txt}</div>`;
       o += `<button class="exp-entry-toggle" data-clamp="${clampId}" onclick="toggleExpClamp(this)">▼ Lire la suite</button>`;
     } else {
-      o += `<p>${txt}</p>`;
+      o += `<div class="exp-entry-body">${txt}</div>`;
     }
   }
 
