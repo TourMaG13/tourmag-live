@@ -2307,17 +2307,17 @@ function renderExpedition(data){
       const fg = L.polyline(seg, baseOpts).addTo(map);
       fg.bindTooltip(tipHtml, {sticky:true, className:'exp-seg-tip'});
 
-      // Arrow decorators for direction (if plugin loaded)
-      if(L.polylineDecorator){
+      // Single arrow at midpoint — only on overlapping aller/retour segments
+      if(L.polylineDecorator && _dupGroups[i]){
         const arrowColor = isDone ? accent : (isReturnDup ? '#555' : '#111');
         try {
           L.polylineDecorator(fg, {
             patterns: [{
-              offset: '15%', repeat: '25%',
+              offset: '50%', repeat: 0,
               symbol: L.Symbol.arrowHead({
-                pixelSize: isDone ? 10 : 8,
+                pixelSize: 12,
                 polygon: false,
-                pathOptions: {stroke:true, color:arrowColor, weight: isDone ? 2.5 : 1.5, opacity: isDone ? .9 : .6}
+                pathOptions: {stroke:true, color:arrowColor, weight: 2.5, opacity: isDone ? .9 : .65}
               })
             }]
           }).addTo(map);
