@@ -2225,26 +2225,39 @@ function renderExpedition(data){
       }
     });
 
-    // === STEP 2: Detect duplicate segments & compute offset ===
-    // Use toFixed(2) = ~1.1km tolerance for matching overlapping routes
-    const _segKey = (a, b) => {
-      const ka = parseFloat(a[0]).toFixed(2)+','+parseFloat(a[1]).toFixed(2);
-      const kb = parseFloat(b[0]).toFixed(2)+','+parseFloat(b[1]).toFixed(2);
-      return ka < kb ? ka+'|'+kb : kb+'|'+ka;
-    };
-    const _segOccurrence = {};
-    for(let i=0; i<chain.length-1; i++){
-      // Skip zero-length connecting segments
-      const c0=chain[i].coord, c1=chain[i+1].coord;
-      if(Math.abs(c0[0]-c1[0])<0.0001 && Math.abs(c0[1]-c1[1])<0.0001) continue;
-      const k = _segKey(c0, c1);
-      if(!_segOccurrence[k]) _segOccurrence[k] = [];
-      _segOccurrence[k].push(i);
+    // === STEP 2: Detect duplicate segments via geographic distance ===
+    function _hvDist(a, b){
+      const R=6371, dLat=(b[0]-a[0])*Math.PI/180, dLng=(b[1]-a[1])*Math.PI/180;
+      const la=a[0]*Math.PI/180, lb=b[0]*Math.PI/180;
+      const h=Math.sin(dLat/2)**2+Math.cos(la)*Math.cos(lb)*Math.sin(dLng/2)**2;
+      return 2*R*Math.asin(Math.sqrt(h));
     }
-    // Debug: log detected duplicates
-    const _dupSegs = Object.entries(_segOccurrence).filter(([k,v])=>v.length>1);
-    if(_dupSegs.length) console.log('[TourMaG Live] Segments superposés détectés:', _dupSegs.length, _dupSegs);
-    else console.log('[TourMaG Live] Aucun segment superposé détecté. Clés:', Object.keys(_segOccurrence));
+    const MATCH_KM = 2; // 2km tolerance for "same point"
+    const MIN_SEG_KM = 0.5; // skip zero-length connecting segments
+    // Build list of real segments (skip zero-length connectors)
+    const _realSegs = [];
+    for(let i=0; i<chain.length-1; i++){
+      if(_hvDist(chain[i].coord, chain[i+1].coord) >= MIN_SEG_KM) _realSegs.push(i);
+    }
+    // Pairwise comparison: find segments that share both endpoints (same or reversed)
+    const _dupGroups = {}; // chainIndex → shared group array
+    for(let a=0; a<_realSegs.length; a++){
+      for(let b=a+1; b<_realSegs.length; b++){
+        const ia=_realSegs[a], ib=_realSegs[b];
+        const Aa=chain[ia].coord, Ab=chain[ia+1].coord;
+        const Ba=chain[ib].coord, Bb=chain[ib+1].coord;
+        const fwd = _hvDist(Aa,Ba)<MATCH_KM && _hvDist(Ab,Bb)<MATCH_KM;
+        const rev = _hvDist(Aa,Bb)<MATCH_KM && _hvDist(Ab,Ba)<MATCH_KM;
+        if(fwd||rev){
+          if(!_dupGroups[ia]) _dupGroups[ia]=[ia];
+          if(!_dupGroups[ia].includes(ib)) _dupGroups[ia].push(ib);
+          _dupGroups[ib]=_dupGroups[ia]; // share same array reference
+        }
+      }
+    }
+    const _dupCount = Object.values(_dupGroups).filter((v,i,a)=>a.indexOf(v)===i).length;
+    if(_dupCount) console.log('[TourMaG Live] Segments superposés détectés:', _dupCount, _dupGroups);
+    else console.log('[TourMaG Live] Aucun segment superposé détecté.');
 
     // Offset amount: ~0.6% of the bounding box diagonal, min ~500m
     const _lats = allCoords.map(c=>c[0]), _lngs = allCoords.map(c=>c[1]);
@@ -2264,11 +2277,10 @@ function renderExpedition(data){
       const w0=chain[i], w1=chain[i+1];
       let seg=[w0.coord, w1.coord];
       // Apply offset if this segment has a duplicate
-      const _sk = _segKey(w0.coord, w1.coord);
-      const _occ = _segOccurrence[_sk];
-      if(_occ && _occ.length > 1){
-        const occIdx = _occ.indexOf(i);
-        const n = _occ.length;
+      const _grp = _dupGroups[i];
+      if(_grp && _grp.length > 1){
+        const occIdx = _grp.indexOf(i);
+        const n = _grp.length;
         const side = n > 1 ? (2 * Math.max(occIdx,0) / (n - 1)) - 1 : 0;
         seg = _offsetSeg(w0.coord, w1.coord, side);
       }
