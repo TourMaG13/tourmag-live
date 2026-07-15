@@ -125,7 +125,8 @@ select.form-input{cursor:pointer}
 .list-item:last-child{border-bottom:none}
 .list-item-time{font-family:'IBM Plex Mono';font-size:11px;color:var(--acc);font-weight:500;flex-shrink:0;width:45px;padding-top:2px}
 .list-item-content{flex:1;min-width:0}
-.list-item-text{font-size:12px;color:var(--text);line-height:1.5}
+.list-item-text{font-size:12px;color:var(--text);line-height:1.5;max-height:80px;overflow:hidden}
+.list-item-text p{margin:0}
 .list-item-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .list-item-tag{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;background:#F1F5F9;color:#475569;text-transform:uppercase;letter-spacing:.5px}
 .list-item-actions{flex-shrink:0;display:flex;gap:4px}
@@ -228,7 +229,14 @@ select.form-input{cursor:pointer}
 .block-drag-icon{font-size:13px}
 .block-drag-label{flex:1;font-weight:500;color:var(--text)}
 .block-drag-off{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:3px}
+
+/* Quill editor overrides */
+.ql-editor-wrap .ql-toolbar{border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg);padding:4px 8px}
+.ql-editor-wrap .ql-container{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;font-family:'Poppins',sans-serif;font-size:13px;min-height:80px}
+.ql-editor-wrap .ql-editor{min-height:80px;padding:10px 14px;line-height:1.6}
+.ql-editor-wrap .ql-editor p{margin-bottom:4px}
 </style>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 </head>
 <body>
 
@@ -298,6 +306,7 @@ select.form-input{cursor:pointer}
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 // ============================================================
 // FIREBASE CONFIG — REMPLACER PAR VOS CLÉS
@@ -1598,13 +1607,15 @@ async function deleteMedia(id){saving(true);await subCol('media').doc(id).delete
 // ==================== LIVE ====================
 // Preserve form values across re-renders
 var _liveDraft={text:'',tag:'',journalist:'',image:'',scheduledAt:''};
+var _liveQuill=null;
+var _quillToolbar=[['bold','italic','underline'],['link'],[{list:'ordered'},{list:'bullet'}],['clean']];
 function _saveLiveDraft(){
-  const t=document.getElementById('live-text');
-  if(t){_liveDraft={text:t.value,tag:document.getElementById('live-tag')?.value||'',journalist:document.getElementById('live-journalist')?.value||'',image:document.getElementById('live-image')?.value||'',scheduledAt:document.getElementById('live-scheduled')?.value||''};}
+  const html=_liveQuill?_liveQuill.root.innerHTML:'';
+  const isEmpty=_liveQuill?_liveQuill.getText().trim().length===0:true;
+  _liveDraft={text:isEmpty?'':html,tag:document.getElementById('live-tag')?.value||'',journalist:document.getElementById('live-journalist')?.value||'',image:document.getElementById('live-image')?.value||'',scheduledAt:document.getElementById('live-scheduled')?.value||''};
 }
 function _restoreLiveDraft(){
-  const t=document.getElementById('live-text');
-  if(t&&_liveDraft.text){t.value=_liveDraft.text;}
+  if(_liveQuill&&_liveDraft.text){_liveQuill.root.innerHTML=_liveDraft.text;}
   const tag=document.getElementById('live-tag');
   if(tag&&_liveDraft.tag){tag.value=_liveDraft.tag;}
   const j=document.getElementById('live-journalist');
@@ -1613,6 +1624,11 @@ function _restoreLiveDraft(){
   if(img&&_liveDraft.image){img.value=_liveDraft.image;}
   const sched=document.getElementById('live-scheduled');
   if(sched&&_liveDraft.scheduledAt){sched.value=_liveDraft.scheduledAt;}
+}
+function _initLiveQuill(){
+  const el=document.getElementById('live-text-editor');
+  if(!el)return;
+  _liveQuill=new Quill(el,{theme:'snow',modules:{toolbar:_quillToolbar},placeholder:'Votre texte ici…'});
 }
 
 function renderLive(el){
@@ -1637,7 +1653,7 @@ function renderLive(el){
 
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
-    <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="live-text" rows="3"></textarea></div>
+    <div class="form-row"><label class="form-label">Texte</label><div class="ql-editor-wrap"><div id="live-text-editor"></div></div></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
@@ -1697,6 +1713,7 @@ function renderLive(el){
     </div>`;
   });
   h+=`</div></div>`; el.innerHTML=h;
+  _initLiveQuill();
   _restoreLiveDraft();
 }
 window.pickMedia=function(url,el){
@@ -1723,8 +1740,8 @@ window.updateLiveImgPreview=function(){
   if(hEl) prev.style.height=hEl.value+'px';
 };
 async function addLive(){
-  const text=document.getElementById('live-text').value.trim();
-  if(!text){toast('Texte requis','error');return;}
+  if(!_liveQuill || _liveQuill.getText().trim().length===0){toast('Texte requis','error');return;}
+  const text=_liveQuill.root.innerHTML;
   saving(true);
   const journalist=document.getElementById('live-journalist').value||'La Rédaction';
   const tag=document.getElementById('live-tag').value;
@@ -1745,7 +1762,7 @@ async function addLive(){
   if(scheduledRaw) doc.scheduledAt=new Date(scheduledRaw);
   await subCol('live').add(doc);
   _liveDraft={text:'',tag:'',journalist:journalist,image:'',scheduledAt:''};
-  document.getElementById('live-text').value='';
+  if(_liveQuill) _liveQuill.setText('');
   document.getElementById('live-title').value='';
   document.getElementById('live-image').value='';
   document.getElementById('live-url').value='';
@@ -1762,7 +1779,7 @@ function editLive(id){
   if(e.scheduledAt){const sd=e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt);if(!isNaN(sd)){const p=v=>String(v).padStart(2,'0');schedVal=sd.getFullYear()+'-'+p(sd.getMonth()+1)+'-'+p(sd.getDate())+'T'+p(sd.getHours())+':'+p(sd.getMinutes());}}
   openModal(`<h3>Modifier l'entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="m-live-title" value="${(e.title||'').replace(/"/g,'&quot;')}"></div>
-    <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-live-text" rows="3">${e.text||''}</textarea></div>
+    <div class="form-row"><label class="form-label">Texte</label><div class="ql-editor-wrap"><div id="m-live-text-editor"></div></div></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="m-live-journalist" value="${e.journalist||''}"></div>
@@ -1779,19 +1796,25 @@ function editLive(id){
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveLiveEdit('${id}')">💾 Enregistrer</button>
     </div>`);
-  // Attach image preview listeners after modal render
+  // Attach image preview listeners + init Quill after modal render
+  const _editText = e.text||'';
   setTimeout(()=>{
     const posEl=document.getElementById('m-live-imgpos');
     const hEl=document.getElementById('m-live-imgheight');
     const prevEl=document.getElementById('m-live-imgpreview');
     if(posEl&&prevEl) posEl.onchange=function(){prevEl.style.objectPosition=this.value;};
     if(hEl&&prevEl) hEl.oninput=function(){prevEl.style.height=this.value+'px';};
+    const edEl=document.getElementById('m-live-text-editor');
+    if(edEl){
+      window._modalQuill=new Quill(edEl,{theme:'snow',modules:{toolbar:_quillToolbar},placeholder:'Texte…'});
+      if(_editText) window._modalQuill.root.innerHTML=_editText;
+    }
   },50);
 }
 async function saveLiveEdit(id){
   saving(true);
   const update={
-    text:document.getElementById('m-live-text').value.trim(),
+    text:window._modalQuill?window._modalQuill.root.innerHTML:'',
     title:document.getElementById('m-live-title').value.trim(),
     tag:document.getElementById('m-live-tag').value,
     journalist:document.getElementById('m-live-journalist').value,
