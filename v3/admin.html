@@ -1628,11 +1628,15 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="live-s-sub" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="live-s-show-title" ${(eventsData.find(e=>e.id===currentEventId)||{}).liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
+    <div class="form-row-inline" style="margin-top:8px">
+      <div class="form-row" style="max-width:220px"><label class="form-label">Lignes max avant accordéon</label><input type="number" class="form-input" id="live-s-lineclamp" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveLineClamp||0}" min="0" step="1" placeholder="0 = désactivé"><div style="font-size:9px;color:var(--text3);margin-top:3px">0 = pas de troncature</div></div>
+    </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
     </details>
   </div>
 
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
+    <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
     <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="live-text" rows="3"></textarea></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
@@ -1676,7 +1680,7 @@ function renderLive(el){
     h+=`<div class="list-item"${e.scheduledAt&&(e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt)).getTime()>Date.now()?' style="opacity:.7;border-left:3px solid #F59E0B"':''}>
       <div class="list-item-time">${ts}</div>
       <div class="list-item-content">
-        <div class="list-item-text">${e.text||''}</div>
+        <div class="list-item-text">${e.title?`<strong style="display:block;margin-bottom:2px">${e.title}</strong>`:''}${e.text||''}</div>
         <div class="list-item-meta">
           <span class="list-item-tag">${e.tag||''}</span>
           <span>${e.journalist||''}</span>
@@ -1730,6 +1734,7 @@ async function addLive(){
   const tagData=tagsData.find(t=>tagName(t)===tag);
   const doc={
     text,tag,journalist,image,url,
+    title:document.getElementById('live-title').value.trim(),
     tag_color:tagData?tagColor(tagData):'',
     time:firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -1741,6 +1746,7 @@ async function addLive(){
   await subCol('live').add(doc);
   _liveDraft={text:'',tag:'',journalist:journalist,image:'',scheduledAt:''};
   document.getElementById('live-text').value='';
+  document.getElementById('live-title').value='';
   document.getElementById('live-image').value='';
   document.getElementById('live-url').value='';
   document.getElementById('live-scheduled').value='';
@@ -1755,6 +1761,7 @@ function editLive(id){
   let schedVal='';
   if(e.scheduledAt){const sd=e.scheduledAt?.toDate?e.scheduledAt.toDate():new Date(e.scheduledAt);if(!isNaN(sd)){const p=v=>String(v).padStart(2,'0');schedVal=sd.getFullYear()+'-'+p(sd.getMonth()+1)+'-'+p(sd.getDate())+'T'+p(sd.getHours())+':'+p(sd.getMinutes());}}
   openModal(`<h3>Modifier l'entrée</h3>
+    <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="m-live-title" value="${(e.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-live-text" rows="3">${e.text||''}</textarea></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="m-live-tag">${tagOpts}</select></div>
@@ -1785,6 +1792,7 @@ async function saveLiveEdit(id){
   saving(true);
   const update={
     text:document.getElementById('m-live-text').value.trim(),
+    title:document.getElementById('m-live-title').value.trim(),
     tag:document.getElementById('m-live-tag').value,
     journalist:document.getElementById('m-live-journalist').value,
     image:document.getElementById('m-live-image').value,
@@ -1845,7 +1853,8 @@ async function saveLiveSettings(){
   await evRef().update({
     liveTitle:document.getElementById('live-s-title').value.trim(),
     liveSubtitle:document.getElementById('live-s-sub').value.trim(),
-    liveShowTitle:document.getElementById('live-s-show-title').checked
+    liveShowTitle:document.getElementById('live-s-show-title').checked,
+    liveLineClamp:parseInt(document.getElementById('live-s-lineclamp').value)||0
   });
   toast('Réglages fil live enregistrés');
 }
@@ -4611,6 +4620,7 @@ function renderEtapes(el){
       <div class="form-row"><label class="form-label">Titre carte</label><input class="form-input" id="exp-map-title" value="${(exp.mapTitle||'').replace(/"/g,'&quot;')}" placeholder="La route, en direct"></div>
       <div class="form-row"><label class="form-label">Sous-titre carte</label><input class="form-input" id="exp-map-sub" value="${(exp.mapSubtitle||'').replace(/"/g,'&quot;')}"></div>
     </div>
+    <div class="form-row"><label class="form-label">Note sous la carte <span style="font-weight:400;color:var(--text3);font-size:11px">(petite note affichée sous la carte)</span></label><textarea class="form-input" id="exp-map-note" rows="2" placeholder="Ex : Tracé indicatif — positions actualisées chaque jour">${(exp.mapNote||'').replace(/</g,'&lt;')}</textarea></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Label live pill</label><input class="form-input" id="exp-live-label" value="${(exp.liveLabel||'').replace(/"/g,'&quot;')}" placeholder="En direct"></div>
       <div class="form-row"><label class="form-label">Crédits footer</label><input class="form-input" id="exp-footer-credits" value="${(exp.footerCredits||'').replace(/"/g,'&quot;')}"></div>
@@ -4724,6 +4734,7 @@ async function saveExpeditionSettings(){
     'expedition.branding.accentColor': document.getElementById('exp-accent-color').value,
     'expedition.mapTitle': document.getElementById('exp-map-title').value.trim(),
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
+    'expedition.mapNote': document.getElementById('exp-map-note').value.trim(),
     'expedition.liveLabel': document.getElementById('exp-live-label').value.trim(),
     'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim()
   });
