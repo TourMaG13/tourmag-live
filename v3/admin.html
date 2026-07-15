@@ -1665,6 +1665,10 @@ function renderLive(el){
         <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="live-imgheight" value="200" min="80" max="500" step="10" oninput="updateLiveImgPreview()"></div>
       </div>
       <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img id="live-imgpreview" src="" style="width:100%;height:200px;object-fit:cover;object-position:center top;display:block" onerror="this.style.display='none'"></div>
+      <div class="form-row-inline" style="margin-top:8px">
+        <div class="form-row"><label class="form-label">Légende photo</label><input class="form-input" id="live-imgcaption" placeholder="Description de la photo"></div>
+        <div class="form-row"><label class="form-label">Crédit © photo</label><input class="form-input" id="live-imgcredit" placeholder="Nom du photographe"></div>
+      </div>
     </div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="live-url" placeholder="https://..."></div>
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
@@ -1758,6 +1762,8 @@ async function addLive(){
   if(image){
     doc.image_position=document.getElementById('live-imgpos')?.value||'center top';
     doc.image_height=parseInt(document.getElementById('live-imgheight')?.value)||200;
+    doc.image_caption=document.getElementById('live-imgcaption')?.value?.trim()||'';
+    doc.image_credit=document.getElementById('live-imgcredit')?.value?.trim()||'';
   }
   if(scheduledRaw) doc.scheduledAt=new Date(scheduledRaw);
   await subCol('live').add(doc);
@@ -1791,7 +1797,11 @@ function editLive(id){
       <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="m-live-imgpos">${posOpts}</select></div>
       <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="80" max="500" step="10"></div>
     </div>
-    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>`:''}
+    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>
+    <div class="form-row-inline" style="margin-top:8px">
+      <div class="form-row"><label class="form-label">Légende photo</label><input class="form-input" id="m-live-imgcaption" value="${(e.image_caption||'').replace(/"/g,'&quot;')}"></div>
+      <div class="form-row"><label class="form-label">Crédit © photo</label><input class="form-input" id="m-live-imgcredit" value="${(e.image_credit||'').replace(/"/g,'&quot;')}"></div>
+    </div>`:''}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveLiveEdit('${id}')">💾 Enregistrer</button>
@@ -1827,6 +1837,10 @@ async function saveLiveEdit(id){
   if(posEl) update.image_position=posEl.value;
   const hEl=document.getElementById('m-live-imgheight');
   if(hEl) update.image_height=parseInt(hEl.value)||200;
+  const capEl=document.getElementById('m-live-imgcaption');
+  if(capEl) update.image_caption=capEl.value.trim();
+  const credEl=document.getElementById('m-live-imgcredit');
+  if(credEl) update.image_credit=credEl.value.trim();
   // Stocker la couleur du tag
   const tagVal=update.tag;
   const tagData=tagsData.find(t=>tagName(t)===tagVal);
