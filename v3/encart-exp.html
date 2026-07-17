@@ -188,7 +188,7 @@ function sendResize(){
     const h=el.offsetHeight+2;
     if(h===_lastH) return;
     _lastH=h;
-    const fid=(()=>{try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}})();
+    const fid=params.get('frameId')||(()=>{try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}})();
     parent.postMessage({type:'tmg-encart-resize',height:h,id:fid},'*');
   });
 }
