@@ -537,7 +537,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-btn:hover span{color:var(--_ct-bg,var(--exp-stone))}
 .exp-contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
-@media(max-width:768px){.exp-contact{padding:0 16px 32px;overflow:hidden;box-sizing:border-box;max-width:100vw}.exp-contact .exp-section-head h2{white-space:normal;font-size:22px;line-height:1.3}.exp-contact-card{flex-direction:column;text-align:center;padding:24px 16px;gap:16px;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box}.exp-contact-body{width:100%;max-width:100%;min-width:0;overflow:hidden;box-sizing:border-box}.exp-contact-actions{justify-content:center;width:100%;flex-direction:column;align-items:stretch;box-sizing:border-box}.exp-contact-btn{max-width:100%;overflow:hidden;justify-content:center;padding:10px 14px;font-size:10.5px;box-sizing:border-box}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}.exp-contact-name{font-size:19px;word-break:break-word}.exp-contact-photo,.exp-contact-photo-ph{width:64px;height:64px}}
+@media(max-width:768px){.exp-contact{padding:0 0 32px;overflow:hidden;box-sizing:border-box;max-width:100%}.exp-contact .exp-section-head{overflow:hidden;min-width:0;max-width:100%}.exp-contact .exp-section-head h2{white-space:normal!important;font-size:20px;line-height:1.3;min-width:0;flex-shrink:1;word-break:break-word}.exp-contact-card{flex-direction:column;text-align:center;padding:20px 14px;gap:14px;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box}.exp-contact-body{width:100%;max-width:100%;min-width:0;overflow:hidden;box-sizing:border-box}.exp-contact-actions{justify-content:center;width:100%;flex-direction:column;align-items:stretch;gap:8px;box-sizing:border-box}.exp-contact-btn{max-width:100%;overflow:hidden;justify-content:center;padding:10px 14px;font-size:10.5px;box-sizing:border-box}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}.exp-contact-name{font-size:18px;word-break:break-word}.exp-contact-photo,.exp-contact-photo-ph{width:64px;height:64px}}
 
 /* Main layout — zone-based */
 .exp-dash{}
@@ -746,7 +746,7 @@ body.mode-expedition .social-float{display:none}
 /* ===== EXPEDITION RESPONSIVE ===== */
 @media(max-width:940px){
   .exp-layout{grid-template-columns:1fr;padding:44px 20px;gap:40px}
-  .exp-side-col{position:static}
+  .exp-side-col{position:static;overflow:hidden;min-width:0;max-width:100%}
   .exp-art-grid{grid-template-columns:1fr}
   .exp-verbatim-grid{grid-template-columns:1fr}
   .exp-essential-grid{grid-template-columns:1fr}
