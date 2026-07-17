@@ -509,7 +509,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-map-panel-name{font-family:'Libre Caslon Text',serif;font-weight:700;font-size:20px;margin-bottom:6px}
 .exp-map-panel-meta{display:flex;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);letter-spacing:.04em;margin-bottom:14px}
 .exp-map-panel-desc{font-family:'Libre Caslon Text',serif;font-size:14px;line-height:1.65;color:#444}
-@media(max-width:768px){.exp-map-panel{width:100%;height:40%;top:auto;bottom:-40%;right:0;border-left:none;border-top:1px solid var(--exp-line);box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:bottom .3s ease}.exp-map-panel.open{bottom:0}.exp-map-panel-img{height:100px}.exp-map-panel-body{padding:14px 16px}.exp-map-panel-name{font-size:17px}.exp-map-panel-meta{font-size:10px;gap:10px;margin-bottom:10px}.exp-map-panel-desc{font-size:13px}}
+@media(max-width:768px){.exp-map-panel{width:100%;height:auto;max-height:55%;top:auto;bottom:-100%;right:0;border-left:none;border-top:1px solid var(--exp-line);box-shadow:0 -4px 20px rgba(0,0,0,.1);transition:bottom .3s ease;overflow-y:auto}.exp-map-panel.open{bottom:0}.exp-map-panel-img{height:120px}.exp-map-panel-body{padding:14px 16px}.exp-map-panel-name{font-size:17px}.exp-map-panel-meta{font-size:10px;gap:10px;margin-bottom:10px}.exp-map-panel-desc{font-size:13px}}
 .exp-gallery-extra.exp-expand{display:none}.exp-gallery-extra.exp-expand.open{display:grid}
 .exp-deco{position:absolute;pointer-events:none;z-index:0}
 .exp-deco-plane{width:100%;height:60px;margin:-10px 0}
@@ -537,7 +537,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-btn:hover span{color:var(--_ct-bg,var(--exp-stone))}
 .exp-contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
-@media(max-width:768px){.exp-contact{padding:0 20px 32px}.exp-contact-card{flex-direction:column;text-align:center;padding:28px 20px;gap:18px}.exp-contact-actions{justify-content:center;width:100%}.exp-contact-btn{max-width:100%;overflow:hidden}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}}
+@media(max-width:768px){.exp-contact{padding:0 16px 32px;overflow:hidden}.exp-contact-card{flex-direction:column;text-align:center;padding:24px 16px;gap:16px;overflow:hidden;max-width:100%;box-sizing:border-box}.exp-contact-actions{justify-content:center;width:100%;flex-direction:column;align-items:stretch}.exp-contact-btn{max-width:100%;overflow:hidden;justify-content:center;padding:10px 14px;font-size:10.5px;box-sizing:border-box}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}.exp-contact-name{font-size:19px;word-break:break-word}}
 
 /* Main layout — zone-based */
 .exp-dash{}
@@ -770,7 +770,7 @@ body.mode-expedition .social-float{display:none}
   .exp-counters{grid-template-columns:repeat(2,1fr)}
   .exp-counter:nth-child(2){border-right:none}
   .exp-mapsec{padding:40px 16px 40px}
-  #exp-routemap{height:380px}
+  #exp-routemap{height:440px}
   .exp-map-legend{font-size:10px;padding:10px 12px;min-width:140px}
   .exp-section-head h2{font-size:26px}
   .exp-itw-card{flex-direction:column;text-align:center;gap:16px;padding:24px 20px}
@@ -782,7 +782,7 @@ body.mode-expedition .social-float{display:none}
   .exp-counters{grid-template-columns:1fr}
   .exp-counter{border-right:none;border-bottom:1px solid var(--exp-line);padding:20px 16px}
   .exp-counter:last-child{border-bottom:none}
-  #exp-routemap{height:360px}
+  #exp-routemap{height:420px}
   .exp-map-legend{bottom:10px;left:10px;padding:8px 10px;font-size:9px;min-width:130px}
   .exp-map-legend b{font-size:10px;margin-bottom:6px;padding-bottom:4px}
   .exp-entry-photo img{height:200px}
@@ -792,9 +792,8 @@ body.mode-expedition .social-float{display:none}
   [data-decor]{display:none!important}
 }
 @media(max-width:480px){
-  .exp-contact-actions{flex-direction:column;align-items:stretch}
-  .exp-contact-btn{justify-content:center;padding:10px 14px;font-size:10.5px}
-  .exp-contact-name{font-size:19px}
+  .exp-contact-btn{font-size:10px;padding:10px 12px}
+  .exp-contact-name{font-size:18px}
   .exp-mapsec{padding:32px 12px 32px;overflow:hidden}
   .exp-map-wrap{overflow:hidden}
   .exp-map-note{font-size:9px}
