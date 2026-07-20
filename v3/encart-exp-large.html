@@ -80,13 +80,13 @@ body{margin:0;padding:0;background:transparent;overflow:hidden;font-family:-appl
 }
 
 @media(max-width:700px){
-  .encart{flex-direction:column;height:auto;text-align:center}
+  .encart{display:block;height:auto;text-align:center;overflow:hidden}
   .left{width:100%;padding:22px 20px 14px;align-items:center}
   .logo{max-height:48px}
   .title{font-size:1.1rem}
   .subtitle{font-size:.78rem}
   .cta{align-self:center;font-size:.78rem;padding:9px 18px}
-  .right{width:100%;height:0;padding-bottom:56%;border-radius:0 0 14px 14px;border-left:none;border-top:1px solid rgba(255,255,255,.1);position:relative}
+  .right{width:100%;height:280px;padding-bottom:0;border-radius:0 0 14px 14px;border-left:none;border-top:1px solid rgba(255,255,255,.1);position:relative}
   .carousel{position:absolute;inset:0;width:100%;height:100%}
 }
 </style>
@@ -161,6 +161,7 @@ async function init(){
   screens.forEach((url,i)=>{
     const img=document.createElement('img');
     img.src=url;img.alt='Capture '+(i+1);
+    img.onload=()=>sendResize();
     if(i===0) img.classList.add('active');
     carousel.appendChild(img);
 
@@ -172,6 +173,7 @@ async function init(){
 
   if(slideCount>1) autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
   sendResize();
+  setTimeout(sendResize,300);
 }
 
 function goTo(idx){
@@ -186,11 +188,25 @@ function goTo(idx){
   autoTimer=setInterval(()=>goTo((currentSlide+1)%slideCount),3500);
 }
 
+let _lastH=0;
 function sendResize(){
   requestAnimationFrame(()=>{
-    const h=document.getElementById('encart').offsetHeight+2;
-    parent.postMessage({type:'tmg-encart-resize',height:h,id:(()=>{try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}})()},'*');
+    const el=document.getElementById('encart');
+    if(!el) return;
+    const h=el.offsetHeight+2;
+    if(h===_lastH) return;
+    _lastH=h;
+    const fid=params.get('frameId')||(()=>{try{return window.frameElement?window.frameElement.id:'';}catch(e){return '';}})();
+    parent.postMessage({type:'tmg-encart-resize',height:h,id:fid},'*');
   });
+}
+
+/* Re-send on viewport resize (orientation change, responsive) */
+window.addEventListener('resize',sendResize);
+
+/* ResizeObserver for any layout shift */
+if(window.ResizeObserver){
+  new ResizeObserver(sendResize).observe(document.getElementById('encart'));
 }
 
 init();
