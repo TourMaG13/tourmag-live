@@ -3724,7 +3724,8 @@ function renderAccess(el){
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
     {key:'modules',icon:'⚙️',label:'Modules'},
-    {key:'widget',icon:'📦',label:'Widget homepage'}
+    {key:'widget',icon:'📦',label:'Widget homepage'},
+    {key:'guide',icon:'📖',label:'Guide d\'utilisation'}
   ];
 
   let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Définissez les super admins et choisissez les onglets visibles pour les autres utilisateurs.</div>
@@ -3969,23 +3970,30 @@ function renderGuide(el){
     <div style="font-family:'Josefin Sans';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
     <a href="#g-start">1. Premiers pas</a>
     <a href="#g-events">2. Créer et gérer un événement</a>
-    <a href="#g-programme">3. Le programme</a>
-    <a href="#g-flash">4. Le flash info</a>
-    <a href="#g-essential">5. Les points essentiels</a>
-    <a href="#g-live">6. Le fil live</a>
-    <a href="#g-citations">7. Les citations</a>
-    <a href="#g-articles">8. Les articles liés</a>
-    <a href="#g-videos">9. Les vidéos</a>
-    <a href="#g-media">10. La médiathèque</a>
-    <a href="#g-rubriques">11. Rubriques et tags</a>
-    <a href="#g-modules">12. Disposition des blocs</a>
-    <a href="#g-widget">13. Intégrer sur votre site</a>
-    <a href="#g-access">14. Gestion des accès</a>
+    <a href="#g-modes">3. Les deux modes : Classique et Expédition</a>
+    <a href="#g-programme">4. Le programme</a>
+    <a href="#g-flash">5. Le flash info</a>
+    <a href="#g-essential">6. Les points essentiels / À retenir</a>
+    <a href="#g-live">7. Le fil live / Fil de route</a>
+    <a href="#g-citations">8. Les citations / Verbatims</a>
+    <a href="#g-interviews">9. Les interviews</a>
+    <a href="#g-articles">10. Les articles liés</a>
+    <a href="#g-videos">11. Les vidéos</a>
+    <a href="#g-reporters">12. Reporters / Journalistes</a>
+    <a href="#g-gallery">13. Galerie photos</a>
+    <a href="#g-kpis">14. Compteurs / Chiffres clés</a>
+    <a href="#g-contact">15. Contact</a>
+    <a href="#g-media">16. La médiathèque</a>
+    <a href="#g-rubriques">17. Rubriques et tags</a>
+    <a href="#g-decor">18. Décor (mode Expédition)</a>
+    <a href="#g-modules">19. Disposition des blocs</a>
+    <a href="#g-widget">20. Intégrer sur votre site</a>
+    <a href="#g-access">21. Gestion des accès</a>
   </div>
 
   <!-- ==================== 1. PREMIERS PAS ==================== -->
   <h2 id="g-start">1. 🚀 Premiers pas</h2>
-  <p>TourMaG Live est un dashboard de couverture événementielle en temps réel. Il vous permet de créer une page live pour un événement (salon, conférence, etc.) et d'y publier du contenu en direct : fil d'actualité, citations, programme, vidéos…</p>
+  <p>TourMaG Live est un dashboard de couverture événementielle en temps réel. Il permet de créer une page live pour un événement (salon, conférence, expédition…) et d'y publier du contenu en direct : fil d'actualité, citations, programme, vidéos, galerie photo…</p>
 
   <h3>L'interface en un coup d'œil</h3>
   <ul>
@@ -3998,223 +4006,240 @@ function renderGuide(el){
 
   <!-- ==================== 2. ÉVÉNEMENTS ==================== -->
   <h2 id="g-events">2. 📋 Créer et gérer un événement</h2>
-  <p>Un événement est un conteneur qui regroupe tout le contenu d'une couverture live (programme, fil live, citations, vidéos…).</p>
-
+  <p>L'onglet <span class="key">📋 Mes événements</span> vous permet de créer, modifier et sélectionner vos événements.</p>
   <h3>Créer un événement</h3>
   <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">📋 Mes événements</span><br>
-    <span class="step-num">2</span> Cliquez sur <strong>＋ Nouvel événement</strong><br>
-    <span class="step-num">3</span> Un événement vierge est créé. Cliquez sur <strong>✏️ Modifier</strong> pour renseigner le titre, les dates, le lieu, le logo, etc.
+    <span class="step-num">1</span> Cliquez sur <strong>+ Nouvel événement</strong>.<br>
+    <span class="step-num">2</span> Remplissez le titre, la date, le lieu et la couleur principale.<br>
+    <span class="step-num">3</span> Choisissez le <strong>mode</strong> : Live classique ou Expédition (voir section 3).<br>
+    <span class="step-num">4</span> Cliquez sur <strong>Créer</strong>. L'événement apparaît dans la liste.
   </div>
-
-  <h3>Les champs de l'événement</h3>
+  <h3>Modifier un événement</h3>
+  <p>Cliquez sur le crayon ✏️ à côté du nom pour modifier ses informations (titre, logo, couleur, statut, mode).</p>
+  <h3>Statuts</h3>
   <ul>
-    <li><strong>Nom interne</strong> — Visible uniquement dans l'admin (ex : « IFTM 2026 — test »).</li>
-    <li><strong>Titre public</strong> — Affiché sur le dashboard public (ex : « IFTM Top Resa 2026 »).</li>
-    <li><strong>Statut</strong> — <em>À venir</em>, <em>En direct</em> ou <em>Terminé</em>. Choisissez « En direct » pour afficher le badge rouge « EN DIRECT » sur le dashboard.</li>
-    <li><strong>Logo</strong> — URL d'une image (vous pouvez l'uploader via la médiathèque).</li>
-    <li><strong>Couleur</strong> — La couleur de fond du héro (en-tête) du dashboard.</li>
+    <li><strong>À venir</strong> — Créé mais pas encore en direct.</li>
+    <li><strong>En direct</strong> — Actif, le contenu est publié en temps réel.</li>
+    <li><strong>Terminé</strong> — Archivé. Les scripts automatiques ne le traitent plus.</li>
   </ul>
 
-  <div class="tip">💡 <strong>Passer en live</strong> : quand l'événement commence, changez le statut en « En direct ». Quand il se termine, passez-le en « Terminé ».</div>
-
-  <!-- ==================== 3. PROGRAMME ==================== -->
-  <h2 id="g-programme">3. 🗓 Le programme</h2>
-  <p>Le programme affiche les horaires de l'événement sur le dashboard (conférences, tables rondes, pauses…).</p>
-
-  <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">🗓 Programme</span><br>
-    <span class="step-num">2</span> Vous pouvez personnaliser le <strong>titre de l'encart</strong> (par défaut : « Programme »). Tapez ce que vous voulez (ex : « Agenda », « Planning du jour ») et cliquez 💾.<br>
-    <span class="step-num">3</span> Pour ajouter un élément : renseignez le <strong>jour</strong> (sélectionnez un jour existant ou tapez-en un nouveau, ex : « Mardi 1er octobre »), l'<strong>heure</strong> (optionnel), l'<strong>intitulé</strong> et une <strong>description</strong>.<br>
-    <span class="step-num">4</span> Cliquez sur <strong>🗓 Ajouter</strong>.
-  </div>
-
+  <!-- ==================== 3. MODES ==================== -->
+  <h2 id="g-modes">3. 🔀 Les deux modes : Classique et Expédition</h2>
+  <p>Chaque événement fonctionne dans l'un des deux modes. Le mode se choisit à la création ou se modifie ensuite.</p>
+  <h3>Mode Classique (Live)</h3>
+  <p>Conçu pour les événements éditoriaux : salons, conférences, forums. Layout avec <strong>trois zones</strong> (pleine largeur, colonne principale, colonne latérale) et des blocs repositionnables par glisser-déposer.</p>
+  <h3>Mode Expédition</h3>
+  <p>Conçu pour les reportages terrain et carnets de route. Fonctionnalités supplémentaires :</p>
   <ul>
-    <li>Les éléments sont regroupés par jour et triés par heure.</li>
-    <li>Le statut (À venir / En cours / Terminé) est calculé automatiquement d'après l'heure.</li>
-    <li>Vous pouvez réordonner les jours avec ▲ ▼ et renommer un jour avec ✏️.</li>
+    <li><strong>Carte interactive</strong> — Carte Leaflet avec les étapes du parcours géolocalisées.</li>
+    <li><strong>Fil de route</strong> — Fil live avec séparateurs de jour automatiques.</li>
+    <li><strong>Brand News</strong> — Bloc RSS sponsorisé configurable.</li>
+    <li><strong>Galerie photo</strong> — Carrousel avec lightbox plein écran.</li>
+    <li><strong>Décor</strong> — Éléments graphiques décoratifs (relief, silhouettes…).</li>
+    <li><strong>Zones flexibles</strong> — Blocs placés dans une colonne principale ou une sidebar.</li>
+  </ul>
+  <div class="step">
+    <span class="step-num">1</span> Pour basculer : <span class="key">📋 Mes événements</span> → crayon ✏️ → changez le <strong>Mode</strong>.<br>
+    <span class="step-num">2</span> Le changement est instantané et rétrocompatible.
+  </div>
+  <div class="tip">💡 En mode Expédition, certains onglets changent de nom (« Fil live » → « Fil de route », « Journalistes » → « Reporters »). Les fonctionnalités restent similaires.</div>
+
+  <!-- ==================== 4. PROGRAMME ==================== -->
+  <h2 id="g-programme">4. 🗓 Le programme</h2>
+  <p>L'onglet <span class="key">🗓 Programme</span> permet de créer l'agenda de votre événement, organisé par journée.</p>
+  <div class="step">
+    <span class="step-num">1</span> Sélectionnez le jour (Jour 1, Jour 2…).<br>
+    <span class="step-num">2</span> Remplissez le titre (obligatoire), l'heure (optionnelle) et la description.<br>
+    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>. L'entrée apparaît dans la liste du jour.
+  </div>
+  <p>Le <strong>titre de l'encart</strong> est personnalisable (ex : « Agenda », « Planning du jour »). Les entrées se réordonnent avec ▲/▼ et se suppriment avec ✕.</p>
+
+  <!-- ==================== 5. FLASH ==================== -->
+  <h2 id="g-flash">5. ⚡ Le flash info</h2>
+  <p>Bandeau d'alerte en haut du dashboard avec animation pulsante pour attirer l'attention.</p>
+  <div class="step">
+    <span class="step-num">1</span> Onglet <span class="key">⚡ Flash info</span> → tapez votre message.<br>
+    <span class="step-num">2</span> <strong>Activez</strong> le toggle pour publier, <strong>désactivez</strong> pour masquer.
+  </div>
+  <div class="tip">💡 Idéal pour les breaking news : « 🔴 DIRECT — Le ministre prend la parole dans 5 minutes ».</div>
+
+  <!-- ==================== 6. ESSENTIELS ==================== -->
+  <h2 id="g-essential">6. 🧠 Les points essentiels / À retenir</h2>
+  <p>Informations clés de l'événement sous forme de cartes numérotées, alimentées manuellement ou par IA.</p>
+  <h3>Ajouter un point manuellement</h3>
+  <div class="step">
+    <span class="step-num">1</span> Onglet <span class="key">🧠 L'essentiel</span> (ou « À retenir » en Expédition).<br>
+    <span class="step-num">2</span> Titre, texte, et <strong>tag</strong> optionnel pour catégoriser.<br>
+    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>.
+  </div>
+  <h3>Génération automatique par IA</h3>
+  <p>Si le toggle <strong>IA Essentiels</strong> est activé, un script automatique (toutes les 4h) analyse les derniers articles et génère 6 points de synthèse. Ces points cohabitent avec vos points manuels.</p>
+  <p>En mode Expédition, chaque carte affiche un <strong>numéro en filigrane</strong>, une <strong>icône SVG</strong> selon le tag, et des couleurs personnalisées.</p>
+
+  <!-- ==================== 7. FIL LIVE ==================== -->
+  <h2 id="g-live">7. 📡 Le fil live / Fil de route</h2>
+  <p>Le cœur du dashboard : un flux d'entrées en temps réel.</p>
+  <div class="step">
+    <span class="step-num">1</span> Sélectionnez le <strong>type</strong> : texte simple, photo, ou flash.<br>
+    <span class="step-num">2</span> Rédigez votre message, ajoutez une image si besoin.<br>
+    <span class="step-num">3</span> Cliquez sur <strong>Publier</strong>. Publication immédiate sur le dashboard.
+  </div>
+  <h3>Spécificités mode Expédition</h3>
+  <ul>
+    <li><strong>Séparateurs de jour</strong> — Insérés automatiquement quand la date change entre deux entrées.</li>
+    <li><strong>Tags live</strong> — Chaque entrée peut être taguée (« Étape », « Rencontre », « Paysage »…).</li>
   </ul>
 
-  <!-- ==================== 4. FLASH ==================== -->
-  <h2 id="g-flash">4. ⚡ Le flash info</h2>
-  <p>Le flash est un bandeau rouge en haut du dashboard pour mettre en avant une information urgente ou importante.</p>
-
+  <!-- ==================== 8. CITATIONS ==================== -->
+  <h2 id="g-citations">8. 💬 Les citations / Verbatims</h2>
+  <p>Mettez en avant des déclarations marquantes d'intervenants.</p>
   <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">⚡ Flash info</span><br>
-    <span class="step-num">2</span> Activez le flash avec l'interrupteur.<br>
-    <span class="step-num">3</span> Tapez votre message (ex : « Le ministre annonce un plan de 500 M€ »).<br>
-    <span class="step-num">4</span> Optionnel : ajoutez un lien URL (le bandeau deviendra cliquable).<br>
-    <span class="step-num">5</span> Cliquez <strong>💾 Enregistrer</strong>.
+    <span class="step-num">1</span> Onglet <span class="key">💬 Citations</span> (ou « Verbatims » en Expédition).<br>
+    <span class="step-num">2</span> Texte de la citation, <strong>nom</strong> et <strong>rôle</strong> de l'intervenant, <strong>photo</strong>.<br>
+    <span class="step-num">3</span> Optionnel : <strong>horaire de scheduling</strong> pour apparition différée.
+  </div>
+  <p>Le style (avatar, couleur, bordure) se règle dans <span class="key">🎨 Apparence</span>.</p>
+
+  <!-- ==================== 9. INTERVIEWS ==================== -->
+  <h2 id="g-interviews">9. 🎙️ Les interviews</h2>
+  <p>Questions/réponses structurées avec un intervenant identifié.</p>
+  <div class="step">
+    <span class="step-num">1</span> Onglet <span class="key">🎙️ Interviews</span> → nom, rôle, photo de l'interviewé.<br>
+    <span class="step-num">2</span> Ajoutez les paires <strong>question/réponse</strong> une par une.<br>
+    <span class="step-num">3</span> Marquez une interview « mise en avant » pour plus de visibilité.
   </div>
 
-  <!-- ==================== 5. ESSENTIEL ==================== -->
-  <h2 id="g-essential">5. 🧠 Les points essentiels</h2>
-  <p>Ce sont les 3 à 6 cartes affichées dans l'en-tête du dashboard, qui résument les informations clés de l'événement.</p>
+  <!-- ==================== 10. ARTICLES ==================== -->
+  <h2 id="g-articles">10. 📰 Les articles liés</h2>
+  <p>Importés <strong>automatiquement</strong> via RSS (toutes les 15 min). Gestion dans l'onglet <span class="key">📰 Articles liés</span> : consultation et suppression si besoin (anti-doublon par URL).</p>
+  <div class="tip">💡 Si un article ne s'importe pas, vérifiez qu'il est publié sur TourMaG et que le flux RSS est configuré.</div>
 
+  <!-- ==================== 11. VIDÉOS ==================== -->
+  <h2 id="g-videos">11. 🎬 Les vidéos</h2>
+  <p>Intégration depuis <strong>YouTube</strong>, <strong>Instagram</strong>, <strong>Facebook</strong> et <strong>LinkedIn</strong>.</p>
   <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">🧠 L'essentiel</span><br>
-    <span class="step-num">2</span> Ajoutez un point manuellement : choisissez un <strong>tag</strong> (catégorie), rédigez le <strong>texte</strong> (vous pouvez utiliser &lt;strong&gt; pour mettre en gras).<br>
-    <span class="step-num">3</span> Réordonnez les points avec ▲ ▼.
+    <span class="step-num">1</span> Collez l'URL → détection automatique de la plateforme et du type.<br>
+    <span class="step-num">2</span> Ajoutez titre, description, miniature optionnelle.<br>
+    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>.
+  </div>
+  <div class="warn">⚠️ Facebook et LinkedIn bloquent parfois l'embed. Un lien « Ouvrir sur… » apparaît en fallback. YouTube et Instagram sont les plus fiables.</div>
+
+  <!-- ==================== 12. REPORTERS ==================== -->
+  <h2 id="g-reporters">12. 👤 Reporters / Journalistes</h2>
+  <p>Fiches des personnes couvrant l'événement.</p>
+  <div class="step">
+    <span class="step-num">1</span> Nom, rôle (ex : « Envoyé spécial »), biographie, photo.<br>
+    <span class="step-num">2</span> Réseaux sociaux (X, LinkedIn, Instagram) → icônes SVG sur la carte reporter.<br>
+    <span class="step-num">3</span> Le reporter sélectionné est associé aux entrées du fil live.
   </div>
 
-  <div class="tip">💡 Gardez entre 3 et 6 points essentiels pour un rendu optimal. Au-delà, l'en-tête devient trop long.</div>
-
-  <!-- ==================== 6. FIL LIVE ==================== -->
-  <h2 id="g-live">6. 📡 Le fil live</h2>
-  <p>C'est le cœur du dashboard : un fil d'actualité en temps réel, avec les publications les plus récentes en haut.</p>
-
+  <!-- ==================== 13. GALERIE ==================== -->
+  <h2 id="g-gallery">13. 📸 Galerie photos</h2>
+  <p>Carrousel de photos affiché sur le dashboard.</p>
   <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">📡 Fil live</span><br>
-    <span class="step-num">2</span> Rédigez votre message dans le champ texte. Vous pouvez utiliser &lt;strong&gt; pour le gras.<br>
-    <span class="step-num">3</span> Choisissez un <strong>tag</strong> (catégorie), renseignez le nom du <strong>journaliste</strong>.<br>
-    <span class="step-num">4</span> Optionnel : ajoutez une <strong>image</strong> (URL) et un <strong>lien</strong> « Lire la suite ».<br>
-    <span class="step-num">5</span> Cliquez <strong>📡 Publier</strong>. Le message apparaît instantanément sur le dashboard public.
+    <span class="step-num">1</span> Uploadez ou sélectionnez des photos via la médiathèque.<br>
+    <span class="step-num">2</span> Titre et légende optionnels par photo.<br>
+    <span class="step-num">3</span> Réordonnez par glisser-déposer.
+  </div>
+  <p>En Expédition, un clic ouvre une <strong>lightbox plein écran</strong>. En iframe, la lightbox s'adapte automatiquement via postMessage.</p>
+
+  <!-- ==================== 14. KPIS ==================== -->
+  <h2 id="g-kpis">14. 📊 Compteurs / Chiffres clés</h2>
+  <p>Indicateurs visuels en haut du dashboard (km parcourus, jours restants, rencontres…).</p>
+  <div class="step">
+    <span class="step-num">1</span> Ajoutez un compteur : <strong>label</strong>, <strong>valeur</strong>, <strong>icône</strong> optionnel.<br>
+    <span class="step-num">2</span> Les compteurs s'affichent dans une barre horizontale.
   </div>
 
-  <div class="tip">💡 Les 5 dernières entrées sont affichées par défaut. Les précédentes sont accessibles via « Voir les entrées précédentes ».</div>
+  <!-- ==================== 15. CONTACT ==================== -->
+  <h2 id="g-contact">15. 📞 Contact</h2>
+  <p>Encadré de contact en bas du dashboard. Renseignez nom, email, téléphone, site web et logo. Les icônes (globe, réseaux sociaux) s'affichent automatiquement.</p>
 
-  <!-- ==================== 7. CITATIONS ==================== -->
-  <h2 id="g-citations">7. 💬 Les citations</h2>
-  <p>Mettez en valeur les verbatims des intervenants avec des cartes visuelles élégantes.</p>
-
-  <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">💬 Citations</span><br>
-    <span class="step-num">2</span> Renseignez la <strong>citation</strong> (le texte), le <strong>nom</strong> de la personne, son <strong>rôle/poste</strong>.<br>
-    <span class="step-num">3</span> Choisissez la <strong>rubrique</strong> (les rubriques se créent dans l'onglet Rubriques).<br>
-    <span class="step-num">4</span> Optionnel : ajoutez une <strong>photo</strong> (URL) et choisissez le format (médaillon rond ou grand format).<br>
-    <span class="step-num">5</span> Cliquez <strong>💬 Ajouter</strong>.
-  </div>
-
-  <p>Les citations sont regroupées par rubrique sur le dashboard. Si une même personne a plusieurs citations, elles sont fusionnées dans une seule carte.</p>
-
-  <!-- ==================== 8. ARTICLES ==================== -->
-  <h2 id="g-articles">8. 📰 Les articles liés</h2>
-  <p>Listez les articles publiés sur TourMaG.com en lien avec l'événement.</p>
-
-  <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">📰 Articles liés</span><br>
-    <span class="step-num">2</span> Renseignez le <strong>titre</strong>, l'<strong>URL</strong> de l'article, l'<strong>auteur</strong>.<br>
-    <span class="step-num">3</span> Optionnel : ajoutez une <strong>image</strong> (pour la vignette).<br>
-    <span class="step-num">4</span> Cliquez <strong>📰 Ajouter</strong>.
-  </div>
-
-  <!-- ==================== 9. VIDÉOS ==================== -->
-  <h2 id="g-videos">9. 🎬 Les vidéos</h2>
-  <p>Intégrez des vidéos provenant de YouTube, Instagram, Facebook ou LinkedIn.</p>
-
-  <h3>Ajouter une vidéo</h3>
-  <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">🎬 Vidéos</span><br>
-    <span class="step-num">2</span> Collez l'<strong>URL de la vidéo</strong> dans le champ. Le système détecte automatiquement la plateforme.<br>
-    <span class="step-num">3</span> Ajoutez une <strong>légende</strong> (optionnel) et choisissez la <strong>section</strong>.<br>
-    <span class="step-num">4</span> Cliquez <strong>🎬 Ajouter</strong>.
-  </div>
-
-  <h3>Où trouver les URLs ?</h3>
+  <!-- ==================== 16. MÉDIATHÈQUE ==================== -->
+  <h2 id="g-media">16. 📷 La médiathèque</h2>
+  <p>Bibliothèque d'images partagée pour tout l'événement.</p>
   <ul>
-    <li><strong>YouTube</strong> — Copiez l'URL dans la barre d'adresse (ex : youtube.com/watch?v=…) ou via Partager → Copier le lien.</li>
-    <li><strong>Instagram</strong> — Sur le reel ou le post, cliquez ⋯ → <em>Copier le lien</em>. Le compte doit être <strong>public</strong>.</li>
-    <li><strong>Facebook</strong> — Sur la vidéo, cliquez ⋯ → <em>Copier le lien</em>. La vidéo doit être <strong>publique</strong>.</li>
-    <li><strong>LinkedIn</strong> — Sur le post, cliquez ⋯ → <em>Copier le lien du post</em>. Le post doit être <strong>public</strong>. L'URL doit contenir « activity- » ou « ugcPost- ».</li>
+    <li><strong>Upload</strong> — Glissez-déposez ou cliquez pour sélectionner.</li>
+    <li><strong>Recherche</strong> — Filtrez par nom de fichier.</li>
+    <li><strong>Sélection</strong> — Cliquez sur une image pour copier son URL.</li>
   </ul>
+  <p>Le bouton 📷 à côté de chaque champ image ouvre le sélecteur de médiathèque.</p>
 
-  <div class="warn">⚠️ <strong>Important</strong> : Facebook et LinkedIn bloquent parfois l'intégration de vidéos sur les sites tiers. Si l'embed ne fonctionne pas, un lien « Ouvrir sur… » apparaît sous la vidéo pour la voir dans une fenêtre popup. YouTube et Instagram sont les plus fiables pour l'intégration directe.</div>
+  <!-- ==================== 17. RUBRIQUES ==================== -->
+  <h2 id="g-rubriques">17. 📁 Rubriques et 🏷 Tags</h2>
+  <p>Les <strong>rubriques</strong> catégorisent les entrées du fil live. Le visiteur peut filtrer par rubrique.</p>
+  <p>Les <strong>tags live</strong> (mode Expédition) fonctionnent de la même façon, avec en plus des icônes SVG et une palette de couleurs personnalisée par tag.</p>
 
-  <h3>Sections et taille</h3>
-  <p>Les vidéos sont organisées en <strong>sections</strong> (ex : « Interviews », « Shorts du salon »). Pour chaque section, vous pouvez régler :</p>
+  <!-- ==================== 18. DÉCOR ==================== -->
+  <h2 id="g-decor">18. 🎨 Décor (mode Expédition)</h2>
+  <p>Uniquement en mode Expédition. Ajoutez des éléments graphiques décoratifs :</p>
   <ul>
-    <li><strong>Mode</strong> — Grille (côte à côte) ou Carrousel (défilant horizontal).</li>
-    <li><strong>Largeur des vidéos (px)</strong> — Contrôle la taille de chaque vidéo. Plus la valeur est grande, moins il y a de vidéos par ligne. Exemples : 200 = petit, 320 = standard, 500 = grand, 800 = très grand.</li>
-    <li><strong>Vidéos visibles</strong> — En mode grille, combien de vidéos afficher avant le bouton « Voir plus ».</li>
+    <li><strong>Silhouettes de relief</strong> — Profil montagneux ou paysager en bas de page.</li>
+    <li><strong>Opacité</strong> — Réglez via le slider (de subtil à prononcé).</li>
   </ul>
+  <div class="tip">💡 Le décor est purement cosmétique et donne une identité visuelle « terrain » au dashboard.</div>
 
-  <h3>Supprimer ou modifier une vidéo</h3>
-  <p>Dans la liste des vidéos de chaque section, utilisez les boutons à droite de chaque vidéo :</p>
+  <!-- ==================== 19. MODULES ==================== -->
+  <h2 id="g-modules">19. ⚙️ Disposition des blocs</h2>
+  <p>Contrôlez <strong>quels blocs sont visibles</strong> et <strong>où ils apparaissent</strong>.</p>
+  <h3>Activer/désactiver</h3>
+  <p>Les interrupteurs permettent d'activer ou désactiver chaque bloc.</p>
+  <h3>Mode Classique — Trois zones</h3>
   <ul>
-    <li>▲ ▼ — Changer l'ordre</li>
-    <li>✏️ — Modifier la légende, le type ou la section</li>
-    <li><span style="color:var(--red);font-weight:700">✕</span> — Supprimer la vidéo</li>
+    <li><strong>⬛ Pleine largeur</strong> — Le bloc occupe toute la largeur.</li>
+    <li><strong>◀ Colonne principale</strong> — Grande colonne de gauche.</li>
+    <li><strong>▶ Colonne latérale</strong> — Petite colonne de droite.</li>
   </ul>
-
-  <!-- ==================== 10. MÉDIATHÈQUE ==================== -->
-  <h2 id="g-media">10. 📷 La médiathèque</h2>
-  <p>La médiathèque stocke les images que vous pouvez ensuite utiliser dans les citations, le fil live, les articles, etc.</p>
-
+  <h3>Mode Expédition — Zones flexibles</h3>
+  <ul>
+    <li><strong>Main</strong> — Colonne principale large.</li>
+    <li><strong>Side</strong> — Sidebar étroite.</li>
+    <li><strong>Full</strong> — Pleine largeur.</li>
+  </ul>
+  <p>Le <strong>Sidebar Anchor</strong> détermine à quel bloc principal la sidebar s'accroche.</p>
   <div class="step">
-    <span class="step-num">1</span> Allez dans <span class="key">📷 Médiathèque</span><br>
-    <span class="step-num">2</span> Cliquez sur <strong>+ Ajouter</strong> et collez une URL d'image, ou uploadez un fichier (si le serveur d'upload est configuré).<br>
-    <span class="step-num">3</span> L'image apparaît dans la grille. Cliquez dessus pour copier son URL.
+    <span class="step-num">1</span> <strong>Glissez-déposez</strong> les blocs entre zones.<br>
+    <span class="step-num">2</span> L'ordre dans chaque zone = ordre d'affichage.
   </div>
 
-  <div class="tip">💡 Pour utiliser une image de la médiathèque, copiez son URL et collez-la dans le champ image du fil live, d'une citation, etc.</div>
-
-  <!-- ==================== 11. RUBRIQUES & TAGS ==================== -->
-  <h2 id="g-rubriques">11. 📁 Rubriques et 🏷 Tags</h2>
-
-  <h3>Rubriques</h3>
-  <p>Les rubriques servent à organiser les <strong>citations</strong> par thème (ex : « IA & Tech », « Distribution », « Destinations »). Chaque rubrique a un nom, un emoji, et des couleurs.</p>
-
-  <h3>Tags live</h3>
-  <p>Les tags servent à catégoriser les entrées du <strong>fil live</strong> (ex : GÉNÉRAL, TECH, AÉRIEN…). Vous pouvez personnaliser la liste et les couleurs des tags.</p>
-
-  <!-- ==================== 12. DISPOSITION ==================== -->
-  <h2 id="g-modules">12. ⚙️ Disposition des blocs</h2>
-  <p>C'est ici que vous contrôlez <strong>quels blocs sont visibles</strong> et <strong>où ils apparaissent</strong> sur le dashboard.</p>
-
-  <h3>Activer/désactiver les blocs</h3>
-  <p>Les interrupteurs en haut de la page permettent d'activer ou désactiver chaque bloc (programme, fil live, citations, vidéos, etc.).</p>
-
-  <h3>Organiser la disposition</h3>
-  <p>Le preview en bas de la page montre la structure du dashboard avec 3 zones :</p>
+  <!-- ==================== 20. INTÉGRATION ==================== -->
+  <h2 id="g-widget">20. 📦 Intégrer sur votre site</h2>
+  <p>L'onglet <span class="key">📦 Widget homepage</span> fournit les codes d'intégration pour le CMS TourMaG.</p>
+  <h3>Options d'intégration</h3>
   <ul>
-    <li><strong>⬛ Pleine largeur</strong> — Le bloc occupe toute la largeur du dashboard. Idéal pour les vidéos en grand format.</li>
-    <li><strong>◀ Colonne principale</strong> — La grande colonne de gauche (fil live, citations…).</li>
-    <li><strong>▶ Colonne latérale</strong> — La petite colonne de droite (programme, articles…).</li>
+    <li><strong>Page complète (iframe)</strong> — Intègre tout le dashboard. Copiez-collez dans un module HTML du CMS.</li>
+    <li><strong>Widget compact</strong> — Encart résumé pour la homepage (mode classique).</li>
+    <li><strong>Encart petit format</strong> — Bannière promo sidebar avec carrousel de captures (mode Expédition).</li>
+    <li><strong>Encart grand format</strong> — Bannière promo pleine largeur avec carrousel (mode Expédition).</li>
   </ul>
-
+  <h3>Configuration des encarts (mode Expédition)</h3>
+  <p>Le formulaire permet de personnaliser : logo, titre, accroche, URL et libellé du CTA, 3-4 captures d'écran en carrousel, couleurs (fond, titre, bouton…).</p>
+  <h3>Copier le code embed</h3>
   <div class="step">
-    <span class="step-num">1</span> <strong>Glissez-déposez</strong> les blocs d'une zone à l'autre pour changer leur position.<br>
-    <span class="step-num">2</span> L'ordre dans chaque zone correspond à l'ordre d'affichage sur le dashboard.<br>
-    <span class="step-num">3</span> Un bloc en pleine largeur s'insère à sa position dans le flux global : il « coupe » le layout 2 colonnes et reprend ensuite.
+    <span class="step-num">1</span> Cliquez sur <strong>📋 Copier</strong> sous l'encart souhaité.<br>
+    <span class="step-num">2</span> Collez dans un module HTML du CMS.
   </div>
+  <div class="warn">⚠️ <strong>Ne modifiez pas le code embed</strong> : le paramètre <code>frameId</code> dans l'URL et le bloc <code>&lt;style&gt;</code> avec la media query mobile sont indispensables. Sans eux, l'encart sera trop petit sur mobile.</div>
 
-  <div class="tip">💡 <strong>Exemple</strong> : pour avoir les vidéos en très grand format au milieu du dashboard, glissez le bloc « Vidéos » dans la zone Pleine largeur, et réglez la largeur des vidéos à 600 ou 800 px dans l'onglet Vidéos.</div>
-
-  <!-- ==================== 13. INTÉGRATION ==================== -->
-  <h2 id="g-widget">13. 📦 Intégrer sur votre site</h2>
-  <p>L'onglet <span class="key">📦 Widget homepage</span> vous donne les codes à intégrer dans votre site (CMS TourMaG).</p>
-
-  <h3>Deux options d'intégration</h3>
+  <!-- ==================== 21. ACCÈS ==================== -->
+  <h2 id="g-access">21. 👥 Gestion des accès</h2>
+  <p>L'onglet <span class="key">👥 Accès</span> contrôle qui a accès à quoi (super admins uniquement).</p>
+  <h3>Comptes utilisateurs</h3>
   <ul>
-    <li><strong>Option 1 — Page complète (iframe)</strong> : intègre tout le dashboard dans votre page. Copiez le code et collez-le dans un module HTML de votre CMS.</li>
-    <li><strong>Option 2 — Widget compact (iframe)</strong> : un encart résumé pour la homepage, avec les dernières entrées du fil live.</li>
+    <li><strong>Admin</strong> — Voit tous les événements et tous les onglets.</li>
+    <li><strong>Client</strong> — Ne voit que les événements listés dans « Accès restreint ».</li>
   </ul>
-
-  <h3>Configuration du widget</h3>
-  <ul>
-    <li><strong>URL du bouton CTA</strong> — L'URL vers laquelle pointe le bouton « Accéder au Live ».</li>
-    <li><strong>Zone personnalisable</strong> — Texte et bouton sous la frise du widget compact.</li>
-  </ul>
-
-  <!-- ==================== 14. ACCÈS ==================== -->
-  <h2 id="g-access">14. 👥 Gestion des accès</h2>
-  <p>L'onglet <span class="key">👥 Accès</span> permet de contrôler qui a accès à quoi. Il n'est visible que par les super admins.</p>
-
   <h3>Super administrateurs</h3>
-  <p>Les super admins voient tous les onglets et ont accès à la page Accès. Si la liste est vide, tout le monde a un accès complet.</p>
-
+  <p>Voient tous les onglets et accèdent à la page Accès. Si la liste est vide, tout le monde a un accès complet.</p>
   <h3>Onglets visibles</h3>
-  <p>Vous pouvez masquer certains onglets aux utilisateurs non super-admin (ex : cacher les modules, le widget, les tags…).</p>
-
+  <p>Masquez des onglets aux non super-admins via les toggles (modules, widget, tags, guide…).</p>
   <h3>Accès restreint par événement</h3>
-  <p>Par défaut, tous les admins connectés voient tous les événements. Vous pouvez restreindre un événement à certains utilisateurs seulement :</p>
   <div class="step">
-    <span class="step-num">1</span> Dans la section « 🔒 Accès restreint à cet événement », ajoutez les emails des utilisateurs autorisés.<br>
-    <span class="step-num">2</span> Dès qu'un email est ajouté, seuls les utilisateurs listés (+ les super admins) pourront voir cet événement.<br>
-    <span class="step-num">3</span> Si la liste est vide, aucune restriction : tout le monde voit l'événement.
+    <span class="step-num">1</span> Section « 🔒 Accès restreint » → ajoutez les emails autorisés.<br>
+    <span class="step-num">2</span> Seuls les listés (+ super admins) verront cet événement.<br>
+    <span class="step-num">3</span> Liste vide = aucune restriction.
   </div>
-
-  <div class="warn">⚠️ Attention : si vous restreignez un événement, assurez-vous que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>
+  <div class="warn">⚠️ Vérifiez que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>
 
   <!-- ==================== FIN ==================== -->
   <div style="margin-top:40px;padding:24px;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);border-radius:12px;text-align:center">
@@ -5282,7 +5307,11 @@ function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
 
   <div class="admin-card"><h3>📦 Encart petit format</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (max 700px). Logo + titre + accroche à gauche, captures animées à droite.</p>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartSmallUrl}" style="width:100%;max-width:700px;border:none;min-height:210px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
+    <div style="position:relative"><textarea class="form-input" rows="10" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;style&gt;
+  #${iframeId}-es { height: auto; }
+  @media (max-width: 580px) { #${iframeId}-es { height: 480px; } }
+&lt;/style&gt;
+&lt;iframe src="${encartSmallUrl}&amp;frameId=${iframeId}-es" style="width:100%;max-width:700px;border:none;min-height:210px;border-radius:12px;overflow:hidden" id="${iframeId}-es"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-es'){
@@ -5295,7 +5324,11 @@ window.addEventListener('message',function(e){
 
   <div class="admin-card"><h3>📺 Encart grand format</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (max 1200px). Mise en page élargie avec captures plus grandes.</p>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${encartLargeUrl}" style="width:100%;max-width:1200px;border:none;min-height:330px;border-radius:14px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
+    <div style="position:relative"><textarea class="form-input" rows="10" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;style&gt;
+  #${iframeId}-el { height: auto; }
+  @media (max-width: 700px) { #${iframeId}-el { height: 560px; } }
+&lt;/style&gt;
+&lt;iframe src="${encartLargeUrl}&amp;frameId=${iframeId}-el" style="width:100%;max-width:1200px;border:none;min-height:330px;border-radius:14px;overflow:hidden" id="${iframeId}-el"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;e.data.type==='tmg-encart-resize'&amp;&amp;e.data.id==='${iframeId}-el'){
