@@ -466,7 +466,7 @@ function applyTabVisibility(){
     }
 
     // Client role: hide management/system tabs
-    const clientHiddenTabs=['events','modules','widget','access','guide'];
+    const clientHiddenTabs=['events','modules','widget','access'];
     if(isClient() && clientHiddenTabs.includes(tab)){
       item.style.display='none';
       return;
