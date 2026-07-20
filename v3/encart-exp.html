@@ -139,6 +139,7 @@ async function init(){
   const ctaEl=document.getElementById('cta');
   ctaEl.href=enc.ctaUrl||baseUrl;
   if(enc.ctaLabel) ctaEl.firstChild.textContent=enc.ctaLabel+' ';
+  ctaEl.onclick=function(e){e.preventDefault();window.open(ctaEl.href,'_blank');};
 
   const screens=(enc.screenshots||[]).filter(Boolean);
   const carousel=document.getElementById('carousel');
