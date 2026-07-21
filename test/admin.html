@@ -1167,7 +1167,11 @@ function renderApparence(el){
   <div class="admin-card"><h3>🔤 Familles de polices</h3>
     <div class="page-desc" style="margin-bottom:12px">Choisissez les polices Google Fonts pour chaque usage. Un aperçu s'affiche à droite.</div>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:1"><label class="form-label">Titres (hero, sections, noms)</label><select class="form-input" id="typo-heading-font" onchange="previewFont('heading')">${_fontOpts(typo.headingFont||'')}</select></div>
+      <div class="form-row" style="flex:1"><label class="form-label">🏠 Titre du dashboard (hero)</label><select class="form-input" id="typo-hero-font" onchange="previewFont('hero')">${_fontOpts(typo.heroFont||'')}</select></div>
+      <div style="flex:0 0 200px;padding-top:22px;font-size:28px;font-weight:700;color:var(--text)" id="typo-hero-preview">Aperçu Hero</div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1"><label class="form-label">Titres de sections (rubriques, noms)</label><select class="form-input" id="typo-heading-font" onchange="previewFont('heading')">${_fontOpts(typo.headingFont||'')}</select></div>
       <div style="flex:0 0 200px;padding-top:22px;font-size:22px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu titre</div>
     </div>
     <div class="form-row-inline">
@@ -1201,7 +1205,8 @@ function renderApparence(el){
 
   <div class="admin-card"><h3>🎨 Couleurs de texte</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="max-width:180px"><label class="form-label">Titres</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-heading-color" value="${typo.headingColor||'#1E293B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-heading-color-hex" value="${typo.headingColor||'#1E293B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-heading-color').value=this.value"></div></div>
+      <div class="form-row" style="max-width:180px"><label class="form-label">Titre hero</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-hero-color" value="${typo.heroColor||'#FFFFFF'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-hero-color-hex" value="${typo.heroColor||'#FFFFFF'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-hero-color').value=this.value"></div></div>
+      <div class="form-row" style="max-width:180px"><label class="form-label">Titres sections</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-heading-color" value="${typo.headingColor||'#1E293B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-heading-color-hex" value="${typo.headingColor||'#1E293B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-heading-color').value=this.value"></div></div>
       <div class="form-row" style="max-width:180px"><label class="form-label">Corps</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-body-color" value="${typo.bodyColor||'#334155'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-body-color-hex" value="${typo.bodyColor||'#334155'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-body-color').value=this.value"></div></div>
       <div class="form-row" style="max-width:180px"><label class="form-label">Labels / UI</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-ui-color" value="${typo.uiColor||'#64748B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-ui-color-hex" value="${typo.uiColor||'#64748B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-ui-color').value=this.value"></div></div>
     </div>
@@ -1213,7 +1218,7 @@ function renderApparence(el){
   </div>`;
   el.innerHTML=h;
   // Load preview fonts
-  ['heading','body','ui'].forEach(k=>previewFont(k));
+  ['hero','heading','body','ui'].forEach(k=>previewFont(k));
 }
 function previewFont(type){
   const sel=document.getElementById('typo-'+type+'-font');
@@ -1233,6 +1238,7 @@ function previewFont(type){
 }
 async function saveApparence(){
   const typography={
+    heroFont:document.getElementById('typo-hero-font').value,
     headingFont:document.getElementById('typo-heading-font').value,
     bodyFont:document.getElementById('typo-body-font').value,
     uiFont:document.getElementById('typo-ui-font').value,
@@ -1244,6 +1250,7 @@ async function saveApparence(){
     phaseTabSize:parseInt(document.getElementById('typo-phase-size').value)||13,
     phaseTabPadY:parseInt(document.getElementById('typo-phase-pad').value)||7,
     counterSize:parseInt(document.getElementById('typo-counter-size').value)||40,
+    heroColor:document.getElementById('typo-hero-color').value,
     headingColor:document.getElementById('typo-heading-color').value,
     bodyColor:document.getElementById('typo-body-color').value,
     uiColor:document.getElementById('typo-ui-color').value
@@ -1384,40 +1391,6 @@ async function savePhaseEdit(idx){
 }
 
 // Generic phase filter for admin history lists
-// Block-level phase assignment checkboxes
-function mkBlockPhaseChecks(blockKey, assignedPhases, prefix){
-  const phases=getPhases();
-  if(!phases.length) return '';
-  const assigned=assignedPhases||[];
-  let h=`<div class="block-phase-row" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;padding-left:30px">`;
-  phases.forEach(p=>{
-    const checked=assigned.includes(p.id);
-    const c=p.color||'#6366F1';
-    h+=`<label style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:1.5px solid ${checked?c+'90':'var(--border)'};background:${checked?c+'15':'transparent'};color:${checked?c:'var(--text3)'};transition:all .15s" data-color="${c}"><input type="checkbox" class="block-phase-chk" data-prefix="${prefix}" data-block="${blockKey}" data-phase="${p.id}" ${checked?'checked':''} style="display:none" onchange="togglePhasePill(this)">${p.name}</label>`;
-  });
-  h+=`<span style="font-size:8px;color:var(--text3);align-self:center;margin-left:4px">${assigned.length?'':'= toutes'}</span></div>`;
-  return h;
-}
-window.togglePhasePill=function(chk){
-  const lbl=chk.parentElement;
-  const c=lbl.dataset.color||'#6366F1';
-  if(chk.checked){
-    lbl.style.borderColor=c+'90';
-    lbl.style.background=c+'15';
-    lbl.style.color=c;
-  } else {
-    lbl.style.borderColor='var(--border)';
-    lbl.style.background='transparent';
-    lbl.style.color='var(--text3)';
-  }
-  // Update "= toutes" label
-  const row=lbl.closest('.block-phase-row');
-  if(row){
-    const anyChecked=row.querySelector('.block-phase-chk:checked');
-    const hint=row.querySelector('span:last-child');
-    if(hint) hint.textContent=anyChecked?'':'= toutes';
-  }
-};
 
 // Generic phase filter for admin history lists
 window.filterByPhaseAttr=function(containerId, filterId){
@@ -1559,7 +1532,7 @@ function renderModules(el){
           <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===expOrder.length-1?' disabled':''}>▼</button>
         </div>
-      </div>${mkBlockPhaseChecks(key, (ev?.expBlockPhases||{})[key], 'exp')}`;
+      </div>`;
     });
     h+=`</div>
       <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
@@ -1586,7 +1559,6 @@ function renderModules(el){
     const b=blockMap[key]; if(!b) return;
     const dis=mod[b.key]===false;
     const zone=blockZones[key]||defaultZones[key]||'main';
-    const bpMap=ev?.blockPhases||{};
     h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:${zoneBgs[zone]||'#FFF'}">
       <span class="block-drag-handle">⠿</span>
       <span style="font-size:14px">${b.icon}</span>
@@ -1602,7 +1574,7 @@ function renderModules(el){
         <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
         <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===validKeys.length-1?' disabled':''}>▼</button>
       </div>
-    </div>${mkBlockPhaseChecks(key, bpMap[key], 'classic')}`;
+    </div>`;
   });
 
   h+=`</div>
@@ -1711,11 +1683,6 @@ function initUnifiedBlockDrag(){
   // Sidebar anchor change handler
   const anchorSel=document.getElementById('sidebar-anchor');
   if(anchorSel) anchorSel.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
-
-  // Phase checkbox change handler — auto-save
-  list.querySelectorAll('.block-phase-chk').forEach(chk=>{
-    chk.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
-  });
 }
 
 function getUnifiedAfter(list,y){
@@ -1754,31 +1721,18 @@ async function saveUnifiedBlockOrder(){
       }
     });
     const expSidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
-    // Collect block phase assignments
-    const expBlockPhases={};
-    document.querySelectorAll('.block-phase-chk[data-prefix="exp"]:checked').forEach(chk=>{
-      const bk=chk.dataset.block, ph=chk.dataset.phase;
-      if(!expBlockPhases[bk]) expBlockPhases[bk]=[];
-      expBlockPhases[bk].push(ph);
-    });
-    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;ev.expBlockPhases=expBlockPhases;}
+    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;}
     try{
-      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor,expBlockPhases});
+      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor});
     }catch(e){
       console.error('[saveBlockOrder] Error:', e);
       toast('Erreur sauvegarde: '+e.message,'error');
     }
   } else {
-    // Classic: save blockOrder + zones + sidebar anchor + block phases
+    // Classic: save blockOrder + zones + sidebar anchor
     const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
-    const blockPhases={};
-    document.querySelectorAll('.block-phase-chk[data-prefix="classic"]:checked').forEach(chk=>{
-      const bk=chk.dataset.block, ph=chk.dataset.phase;
-      if(!blockPhases[bk]) blockPhases[bk]=[];
-      blockPhases[bk].push(ph);
-    });
-    if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;ev.blockPhases=blockPhases;}
-    await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor,blockPhases});
+    if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;}
+    await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor});
   }
   toast('Disposition mise à jour');
 }
