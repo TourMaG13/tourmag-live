@@ -5329,12 +5329,16 @@ function renderGallery(el){
     const url=typeof p==='string'?p:p.url||'';
     const caption=typeof p==='object'?p.caption||'':'';
     const copyright=typeof p==='object'?p.copyright||'':'';
+    const phase=typeof p==='object'?p.phase||'':'';
+    const _gph=getPhases();
+    const _gphSel=_gph.length?'<select class="form-input" data-gal-phase="'+i+'" style="width:auto;min-width:90px;font-size:9px;padding:3px 6px"><option value="">Toutes</option>'+_gph.map(ph=>'<option value="'+ph.id+'"'+(phase===ph.id?' selected':'')+'>'+ph.name+'</option>').join('')+'</select>':'';
     h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px" data-gal-row>
       <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0"><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),-1)" title="Monter" style="padding:1px 4px;font-size:10px">▲</button><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),1)" title="Descendre" style="padding:1px 4px;font-size:10px">▼</button></div>
       <img src="${url}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9" onerror="this.style.display='none'">
       <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'">
       <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende" style="width:120px" data-gal-cap="${i}">
-      <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:100px;font-size:10px" data-gal-cr="${i}">
+      <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:80px;font-size:10px" data-gal-cr="${i}">
+      ${_gphSel}
       <button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()">🗑</button>
     </div>`;
   });
@@ -5450,7 +5454,7 @@ async function saveGallery(){
   const crs=document.querySelectorAll('[data-gal-cr]');
   const gallery=[];
   urls.forEach((u,i)=>{
-    if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||'',copyright:crs[i]?.value.trim()||''});
+    if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||'',copyright:crs[i]?.value.trim()||'',phase:document.querySelector(`[data-gal-phase="${i}"]`)?.value||''});
   });
   saving(true);
   try{ await evRef().update({gallery}); toast('Galerie enregistrée ('+gallery.length+' photos)'); }
