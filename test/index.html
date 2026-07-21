@@ -1730,6 +1730,8 @@ function renderExpedition(data){
   const pubLive = (live||[]).filter(_isPublished);
   const pubCitations = (citations||[]).filter(_isPublished);
   const sortedEtapes = (etapes||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+  // Filter étapes by active phase
+  const filteredEtapes = activePhase ? sortedEtapes.filter(et => !et.phase || et.phase === activePhase) : sortedEtapes;
 
   // Auto-compute status from dates (overrides manual status when dates are set)
   const _today = new Date(); _today.setHours(0,0,0,0);
@@ -1920,7 +1922,7 @@ function renderExpedition(data){
   };
 
   _b.etapes = function(){
-    if(!sortedEtapes.length || mod.etapes===false) return '';
+    if(!filteredEtapes.length || mod.etapes===false) return '';
     return `<section class="exp-mapsec">
       <div class="exp-section-head"><h2>${exp.mapTitle||'La route, en direct'}</h2><div class="rule"></div></div>
       <p class="exp-section-sub">${exp.mapSubtitle||"Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant."}</p>
@@ -2001,15 +2003,15 @@ function renderExpedition(data){
   };
 
   _b.itinerary = function(){
-    if(!sortedEtapes.length) return '';
+    if(!filteredEtapes.length) return '';
     let o = '';
     const EXP_ITIN_VIS = 5;
-    let nIdx = sortedEtapes.findIndex(et => et.status === 'now');
-    if(nIdx < 0) nIdx = sortedEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
+    let nIdx = filteredEtapes.findIndex(et => et.status === 'now');
+    if(nIdx < 0) nIdx = filteredEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
     if(nIdx < 0) nIdx = 0;
-    const wS = Math.max(0, Math.min(nIdx - 2, sortedEtapes.length - EXP_ITIN_VIS));
-    const wE = Math.min(sortedEtapes.length, wS + EXP_ITIN_VIS);
-    const before = sortedEtapes.slice(0, wS), visible = sortedEtapes.slice(wS, wE), after = sortedEtapes.slice(wE);
+    const wS = Math.max(0, Math.min(nIdx - 2, filteredEtapes.length - EXP_ITIN_VIS));
+    const wE = Math.min(filteredEtapes.length, wS + EXP_ITIN_VIS);
+    const before = filteredEtapes.slice(0, wS), visible = filteredEtapes.slice(wS, wE), after = filteredEtapes.slice(wE);
     function mkEtapeLi(et){
       const isRoute = et.type==='route' && et.nameEnd;
       const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
@@ -2308,7 +2310,7 @@ function renderExpedition(data){
   document.getElementById('app').innerHTML = h;
 
   // ===== INIT LEAFLET MAP =====
-  if(sortedEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
+  if(filteredEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
     if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
     if(window._expAnimFrame){ cancelAnimationFrame(window._expAnimFrame); window._expAnimFrame=null; }
 
@@ -2320,7 +2322,7 @@ function renderExpedition(data){
 
     // Build ordered waypoint chain (handles both stop & route étapes)
     const chain = [];
-    sortedEtapes.forEach(s => {
+    filteredEtapes.forEach(s => {
       if(!s.lat || !s.lng) return;
       chain.push({coord:[s.lat,s.lng], status:s.status, etape:s, isEnd:false});
       if(s.type==='route' && s.latEnd && s.lngEnd){
@@ -2357,7 +2359,7 @@ function renderExpedition(data){
       storeMarker(sc, mS, null, true);
     }
 
-    sortedEtapes.forEach(s => {
+    filteredEtapes.forEach(s => {
       if(!s.lat || !s.lng) return;
       const isRoute = s.type==='route' && s.latEnd && s.lngEnd;
       const dc = [s.lat, s.lng];
