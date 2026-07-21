@@ -42,16 +42,15 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .hero-title,.hero-subtitle-text,.sec-title h2,.sec-title p,
 .exp-hero-title,.exp-hero-subtitle,.exp-section-title,
 .cit-name,.exp-verbatim-name,.exp-itw-name,
-h1,h2,h3{font-family:var(--font-heading, inherit)}
-.hero-title,.exp-hero-title{font-size:var(--typo-hero-size, 32px)}
-.hero-subtitle-text,.exp-hero-subtitle{font-size:var(--typo-hero-sub, 16px)}
-.sec-title h2,.exp-section-title{font-size:var(--typo-sec-size, 20px)}
+h1,h2,h3{font-family:var(--font-heading, inherit) !important}
+.hero-title,.exp-hero-title{font-size:var(--typo-hero-size) !important}
+.hero-subtitle-text,.exp-hero-subtitle{font-size:var(--typo-hero-sub) !important}
+.sec-title h2,.exp-section-title{font-size:var(--typo-sec-size) !important}
 /* Body */
 .live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,
 .cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,
 .ess-card-text,.exp-ess-text,
-.exp-live-text,.exp-live-title,.exp-art-title,
-p,li,td{font-family:var(--font-body, inherit);font-size:var(--typo-body-size, inherit)}
+.exp-live-text,.exp-live-title,.exp-art-title{font-family:var(--font-body, inherit) !important}
 /* UI elements */
 .hero-badge-row span,.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,
 .live-tag,.live-jr,.live-time,
@@ -60,18 +59,8 @@ p,li,td{font-family:var(--font-body, inherit);font-size:var(--typo-body-size, in
 .exp-live-tag,.exp-live-time,.exp-live-jr,
 .exp-counter-label,.exp-ess-tag,
 .exp-verbatim-role,.exp-itw-tag,
-.phase-tab,.sticky-nav,
-.sec-title-line+p,
-small,label,.badge{font-family:var(--font-ui, inherit);font-size:var(--typo-ui-size, inherit)}
+.phase-tab,.sticky-nav{font-family:var(--font-ui, inherit) !important}
 .phase-tab{font-size:var(--typo-phase-size, 13px) !important}
-/* Colors (only applied if set) */
-.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title,h1,h2,h3{color:var(--typo-heading-color, inherit)}
-.live-text,.cit-text,.exp-live-text,.exp-verbatim-text,
-.art-title,.exp-art-title,.prog-item-label,
-.ess-card-text,.exp-ess-text,p{color:var(--typo-body-color, inherit)}
-.live-tag,.live-jr,.cit-role,.art-date,
-.exp-live-tag,.exp-live-jr,.exp-counter-label,
-.exp-ess-tag,.phase-tab,small,.badge{color:var(--typo-ui-color, inherit)}
 img{display:block}a{text-decoration:none}
 
 /* LOADER */
@@ -1016,6 +1005,14 @@ function render(data){
   _r.setProperty('--typo-heading-color', _typo.headingColor||'');
   _r.setProperty('--typo-body-color', _typo.bodyColor||'');
   _r.setProperty('--typo-ui-color', _typo.uiColor||'');
+  // Dynamic color overrides (only when set)
+  let _typoColorCSS = '';
+  if(_typo.headingColor) _typoColorCSS += `.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title{color:${_typo.headingColor} !important}`;
+  if(_typo.bodyColor) _typoColorCSS += `.live-text,.live-title,.cit-text,.exp-live-text,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
+  if(_typo.uiColor) _typoColorCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-live-tag,.exp-live-jr,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
+  let _typoStyle = document.getElementById('typo-colors');
+  if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-colors'; document.head.appendChild(_typoStyle); }
+  _typoStyle.textContent = _typoColorCSS;
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
