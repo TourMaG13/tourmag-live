@@ -444,7 +444,8 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 @keyframes exp-pulse{0%,100%{box-shadow:0 0 0 0 var(--exp-accent)}50%{box-shadow:0 0 0 8px transparent}}
 
 /* Hero */
-.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:var(--exp-hero-h,420px);overflow:hidden;background:var(--exp-ink)}
+.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:420px;overflow:hidden;background:var(--exp-ink)}
+.exp-hero[data-h]{min-height:0;height:var(--exp-hero-h)}
 .exp-hero.no-image{grid-template-columns:1fr}
 .exp-hero-text{display:flex;flex-direction:column;justify-content:center;padding:48px 44px 40px;position:relative;color:#fff}
 .exp-hero-badge-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
@@ -991,6 +992,7 @@ function render(data){
   let _typoStyle = document.getElementById('typo-overrides');
   if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
   _typoStyle.textContent = _typoCSS;
+  if(_typoCSS) console.log('[TYPO] CSS injected:', _typoCSS.substring(0, 200));
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
@@ -1766,8 +1768,9 @@ function renderExpedition(data){
 
   // ===== HERO =====
   const hasHeroImage = !!event.hero_image;
-  h += `<section class="exp-hero${hasHeroImage?'':' no-image'}">`;
-  h += `<div class="exp-hero-text">`;
+  const _expHeroH = event.hero_height;
+  const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
+  h += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  h += `<div class="exp-hero-text">`;
 
   // Badge row (live + label)
   h += `<div class="exp-hero-badge-row">`;
