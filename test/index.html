@@ -38,29 +38,38 @@
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
 /* ===== TYPOGRAPHY OVERRIDES (from Apparence settings) ===== */
-/* Headings */
-.hero-title,.hero-subtitle-text,.sec-title h2,.sec-title p,
-.exp-hero-title,.exp-hero-subtitle,.exp-section-title,
+/* Headings — titles, names, numbers */
+.hero-title,.sec-title h2,.kpi-num,.ess-num,
+.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,
+.exp-hero-title,.exp-section-title,.exp-counter-num,
 .cit-name,.exp-verbatim-name,.exp-itw-name,
 h1,h2,h3{font-family:var(--font-heading, inherit) !important}
 .hero-title,.exp-hero-title{font-size:var(--typo-hero-size) !important}
 .hero-subtitle-text,.exp-hero-subtitle{font-size:var(--typo-hero-sub) !important}
-.sec-title h2,.exp-section-title{font-size:var(--typo-sec-size) !important}
-/* Body */
+.sec-title h2,.exp-section-title,.itw-section-hd h2{font-size:var(--typo-sec-size) !important}
+/* Body — text content, subtitles, quotes, descriptions */
+.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,
+.exp-hero-subtitle,.exp-section-sub,
 .live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,
 .cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,
 .ess-card-text,.exp-ess-text,
 .exp-live-text,.exp-live-title,.exp-art-title{font-family:var(--font-body, inherit) !important}
-/* UI elements */
-.hero-badge-row span,.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,
-.live-tag,.live-jr,.live-time,
-.cit-role,.art-date,.art-author,
-.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta,
-.exp-live-tag,.exp-live-time,.exp-live-jr,
+/* UI — badges, tags, labels, meta, navigation, counters */
+.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,
+.live-tag,.live-timestamp,.live-jr,.live-time,
+.art-card-tag,.art-card-cta,.art-date,.art-author,
+.itw-badge,.itw-cta,.cit-role,
+.flash-badge,.ess-tag,.ess-ia,.sl,
+.sticky-nav-brand,.sticky-nav a,.upd-bar,
+.hero-tl-date,.hero-tl-ia,
+.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,
+.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,
 .exp-counter-label,.exp-ess-tag,
 .exp-verbatim-role,.exp-itw-tag,
-.phase-tab,.sticky-nav{font-family:var(--font-ui, inherit) !important}
-.phase-tab{font-size:var(--typo-phase-size, 13px) !important}
+.exp-footer small,
+.phase-tab{font-family:var(--font-ui, inherit) !important}
+.phase-tab{font-size:var(--typo-phase-size, 13px) !important;padding-top:var(--typo-phase-pad, 7px) !important;padding-bottom:var(--typo-phase-pad, 7px) !important}
+.kpi-num,.exp-counter-num{font-size:var(--typo-counter-size, 40px) !important}
 img{display:block}a{text-decoration:none}
 
 /* LOADER */
@@ -469,7 +478,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 @keyframes exp-pulse{0%,100%{box-shadow:0 0 0 0 var(--exp-accent)}50%{box-shadow:0 0 0 8px transparent}}
 
 /* Hero */
-.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:420px;overflow:hidden;background:var(--exp-ink)}
+.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:var(--exp-hero-h,420px);overflow:hidden;background:var(--exp-ink)}
 .exp-hero.no-image{grid-template-columns:1fr}
 .exp-hero-text{display:flex;flex-direction:column;justify-content:center;padding:48px 44px 40px;position:relative;color:#fff}
 .exp-hero-badge-row{display:flex;align-items:center;gap:10px;margin-bottom:18px}
@@ -1002,6 +1011,8 @@ function render(data){
   _r.setProperty('--typo-body-size', (_typo.bodySize||14)+'px');
   _r.setProperty('--typo-ui-size', (_typo.uiSize||11)+'px');
   _r.setProperty('--typo-phase-size', (_typo.phaseTabSize||13)+'px');
+  _r.setProperty('--typo-phase-pad', (_typo.phaseTabPadY||7)+'px');
+  _r.setProperty('--typo-counter-size', (_typo.counterSize||40)+'px');
   _r.setProperty('--typo-heading-color', _typo.headingColor||'');
   _r.setProperty('--typo-body-color', _typo.bodyColor||'');
   _r.setProperty('--typo-ui-color', _typo.uiColor||'');
@@ -1734,6 +1745,7 @@ function renderExpedition(data){
   document.body.classList.remove('mode-live');
   document.documentElement.style.setProperty('--exp-accent', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
+  document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
 
   const jrPhotoMap = {};
   (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
