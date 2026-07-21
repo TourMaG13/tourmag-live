@@ -296,6 +296,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
       <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
       <div class="sidebar-section">Système</div>
+      <div class="sidebar-item" data-tab="apparence"><span class="icon">🎨</span>Apparence</div>
       <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
       <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
       <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
@@ -467,7 +468,7 @@ function applyTabVisibility(){
     }
 
     // Client role: hide management/system tabs
-    const clientHiddenTabs=['events','modules','widget','access'];
+    const clientHiddenTabs=['events','modules','widget','access','apparence'];
     if(isClient() && clientHiddenTabs.includes(tab)){
       item.style.display='none';
       return;
@@ -892,6 +893,7 @@ function renderTab(){
   switch(currentTab){
     case 'events':renderEvents(main);break;
     case 'phases':renderPhases(main);break;
+    case 'apparence':renderApparence(main);break;
     case 'modules':renderModules(main);break;
     case 'live':renderLive(main);break;
     case 'citations':renderCitations(main);break;
@@ -1109,6 +1111,137 @@ async function updateEvent(id){
   if(logoSizeEl) updateData.logoSize=parseInt(logoSizeEl.value)||48;
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
+}
+
+// ==================== APPARENCE ====================
+const FONT_LIST = [
+  {name:'Par défaut (système)', value:'', category:'default'},
+  {name:'Inter', value:'Inter', category:'sans'},
+  {name:'Outfit', value:'Outfit', category:'sans'},
+  {name:'DM Sans', value:'DM Sans', category:'sans'},
+  {name:'Montserrat', value:'Montserrat', category:'sans'},
+  {name:'Poppins', value:'Poppins', category:'sans'},
+  {name:'Raleway', value:'Raleway', category:'sans'},
+  {name:'Nunito', value:'Nunito', category:'sans'},
+  {name:'Open Sans', value:'Open Sans', category:'sans'},
+  {name:'Lato', value:'Lato', category:'sans'},
+  {name:'Work Sans', value:'Work Sans', category:'sans'},
+  {name:'Plus Jakarta Sans', value:'Plus Jakarta Sans', category:'sans'},
+  {name:'Josefin Sans', value:'Josefin Sans', category:'sans'},
+  {name:'Oswald', value:'Oswald', category:'display'},
+  {name:'Playfair Display', value:'Playfair Display', category:'serif'},
+  {name:'Lora', value:'Lora', category:'serif'},
+  {name:'Source Serif 4', value:'Source Serif 4', category:'serif'},
+  {name:'Merriweather', value:'Merriweather', category:'serif'},
+  {name:'Crimson Text', value:'Crimson Text', category:'serif'},
+  {name:'Libre Baskerville', value:'Libre Baskerville', category:'serif'},
+  {name:'EB Garamond', value:'EB Garamond', category:'serif'}
+];
+function _fontOpts(selected){
+  const groups={default:[],sans:[],serif:[],display:[]};
+  FONT_LIST.forEach(f=>{groups[f.category].push(f);});
+  let h='';
+  const mkOpt=f=>`<option value="${f.value}"${f.value===selected?' selected':''}${f.value?` style="font-family:'${f.value}'"`:''}">${f.name}</option>`;
+  h+=groups.default.map(mkOpt).join('');
+  h+=`<optgroup label="Sans-serif">${groups.sans.map(mkOpt).join('')}</optgroup>`;
+  h+=`<optgroup label="Serif">${groups.serif.map(mkOpt).join('')}</optgroup>`;
+  h+=`<optgroup label="Display">${groups.display.map(mkOpt).join('')}</optgroup>`;
+  return h;
+}
+function renderApparence(el){
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
+  const typo=ev.typography||{};
+  let h=`<div class="page-title">Apparence</div>
+  <div class="page-desc">Personnalisez la typographie et les couleurs du dashboard. Ces réglages s'appliquent globalement sur le mode classique et le mode expédition.</div>
+
+  <div class="admin-card"><h3>🔤 Familles de polices</h3>
+    <div class="page-desc" style="margin-bottom:12px">Choisissez les polices Google Fonts pour chaque usage. Un aperçu s'affiche à droite.</div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1"><label class="form-label">Titres (hero, sections, noms)</label><select class="form-input" id="typo-heading-font" onchange="previewFont('heading')">${_fontOpts(typo.headingFont||'')}</select></div>
+      <div style="flex:0 0 200px;padding-top:22px;font-size:22px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu titre</div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1"><label class="form-label">Corps (textes, articles, descriptions)</label><select class="form-input" id="typo-body-font" onchange="previewFont('body')">${_fontOpts(typo.bodyFont||'')}</select></div>
+      <div style="flex:0 0 200px;padding-top:22px;font-size:14px;color:var(--text2)" id="typo-body-preview">Aperçu du texte courant pour voir le rendu de la police.</div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1"><label class="form-label">UI / Labels (badges, tags, navigation, onglets)</label><select class="form-input" id="typo-ui-font" onchange="previewFont('ui')">${_fontOpts(typo.uiFont||'')}</select></div>
+      <div style="flex:0 0 200px;padding-top:22px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3)" id="typo-ui-preview">BADGE · TAG · LABEL</div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>📐 Tailles de police</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre hero <span id="typo-hero-size-val">${typo.heroTitleSize||32}</span>px</label><input type="range" class="form-input" id="typo-hero-size" min="20" max="52" value="${typo.heroTitleSize||32}" oninput="document.getElementById('typo-hero-size-val').textContent=this.value"></div>
+      <div class="form-row"><label class="form-label">Sous-titre hero <span id="typo-hero-sub-val">${typo.heroSubtitleSize||16}</span>px</label><input type="range" class="form-input" id="typo-hero-sub" min="11" max="24" value="${typo.heroSubtitleSize||16}" oninput="document.getElementById('typo-hero-sub-val').textContent=this.value"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titres sections <span id="typo-sec-size-val">${typo.sectionTitleSize||20}</span>px</label><input type="range" class="form-input" id="typo-sec-size" min="14" max="32" value="${typo.sectionTitleSize||20}" oninput="document.getElementById('typo-sec-size-val').textContent=this.value"></div>
+      <div class="form-row"><label class="form-label">Texte corps <span id="typo-body-size-val">${typo.bodySize||14}</span>px</label><input type="range" class="form-input" id="typo-body-size" min="11" max="20" value="${typo.bodySize||14}" oninput="document.getElementById('typo-body-size-val').textContent=this.value"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Labels / badges <span id="typo-ui-size-val">${typo.uiSize||11}</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="${typo.uiSize||11}" oninput="document.getElementById('typo-ui-size-val').textContent=this.value"></div>
+      <div class="form-row"><label class="form-label">Onglets phase <span id="typo-phase-size-val">${typo.phaseTabSize||13}</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="${typo.phaseTabSize||13}" oninput="document.getElementById('typo-phase-size-val').textContent=this.value"></div>
+    </div>
+  </div>
+
+  <div class="admin-card"><h3>🎨 Couleurs de texte</h3>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:180px"><label class="form-label">Titres</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-heading-color" value="${typo.headingColor||'#1E293B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-heading-color-hex" value="${typo.headingColor||'#1E293B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-heading-color').value=this.value"></div></div>
+      <div class="form-row" style="max-width:180px"><label class="form-label">Corps</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-body-color" value="${typo.bodyColor||'#334155'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-body-color-hex" value="${typo.bodyColor||'#334155'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-body-color').value=this.value"></div></div>
+      <div class="form-row" style="max-width:180px"><label class="form-label">Labels / UI</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-ui-color" value="${typo.uiColor||'#64748B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-ui-color-hex" value="${typo.uiColor||'#64748B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-ui-color').value=this.value"></div></div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:10px">
+    <button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer l'apparence</button>
+    <button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser</button>
+  </div>`;
+  el.innerHTML=h;
+  // Load preview fonts
+  ['heading','body','ui'].forEach(k=>previewFont(k));
+}
+function previewFont(type){
+  const sel=document.getElementById('typo-'+type+'-font');
+  const prev=document.getElementById('typo-'+type+'-preview');
+  if(!sel||!prev) return;
+  const font=sel.value;
+  if(font){
+    // Load Google Font for preview
+    const linkId='gf-preview-'+type;
+    let link=document.getElementById(linkId);
+    if(!link){link=document.createElement('link');link.id=linkId;link.rel='stylesheet';document.head.appendChild(link);}
+    link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(font)+':wght@400;600;700&display=swap';
+    prev.style.fontFamily="'"+font+"', sans-serif";
+  } else {
+    prev.style.fontFamily='';
+  }
+}
+async function saveApparence(){
+  const typography={
+    headingFont:document.getElementById('typo-heading-font').value,
+    bodyFont:document.getElementById('typo-body-font').value,
+    uiFont:document.getElementById('typo-ui-font').value,
+    heroTitleSize:parseInt(document.getElementById('typo-hero-size').value)||32,
+    heroSubtitleSize:parseInt(document.getElementById('typo-hero-sub').value)||16,
+    sectionTitleSize:parseInt(document.getElementById('typo-sec-size').value)||20,
+    bodySize:parseInt(document.getElementById('typo-body-size').value)||14,
+    uiSize:parseInt(document.getElementById('typo-ui-size').value)||11,
+    phaseTabSize:parseInt(document.getElementById('typo-phase-size').value)||13,
+    headingColor:document.getElementById('typo-heading-color').value,
+    bodyColor:document.getElementById('typo-body-color').value,
+    uiColor:document.getElementById('typo-ui-color').value
+  };
+  saving(true);
+  await db.collection('events').doc(currentEventId).update({typography});
+  toast('Apparence enregistrée');
+}
+async function resetApparence(){
+  if(!confirm('Réinitialiser toute la typographie aux valeurs par défaut ?')) return;
+  saving(true);
+  await db.collection('events').doc(currentEventId).update({typography:firebase.firestore.FieldValue.delete()});
+  toast('Apparence réinitialisée');
 }
 
 // ==================== PHASES / TEMPS FORTS ====================
