@@ -1062,6 +1062,7 @@ function modifyEvent(id){
           <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="m-ev-photo-credit" value="${((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')}" placeholder="© Photographe"></div>
         </div>
         <div class="form-row" style="margin-top:10px"><label class="form-label">Taille du logo dans le hero (px)</label><div style="display:flex;align-items:center;gap:10px"><input type="range" id="m-ev-logo-size" min="20" max="120" value="${ev.logoSize||48}" style="flex:1"><span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text3);min-width:36px" id="m-ev-logo-size-lbl">${ev.logoSize||48}px</span></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur maximale du logo affiché dans le hero du front expédition.</div></div>
+        <div class="form-row" style="margin-top:10px"><label class="form-label">Hauteur du hero (px)</label><div style="display:flex;align-items:center;gap:10px"><input type="number" class="form-input" id="m-ev-exp-hero-height" value="${ev.hero_height||420}" min="200" max="900" style="width:120px"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">Défaut : 420px</span></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Hauteur minimale du bandeau hero en mode expédition.</div></div>
       </div>
     </div>
 
@@ -1097,7 +1098,7 @@ async function updateEvent(id){
     color:document.getElementById('m-ev-color').value,
     logo_url:document.getElementById('m-ev-logo').value,
     hero_image:document.getElementById('m-ev-hero-image').value.trim(),
-    hero_height:parseInt(document.getElementById('m-ev-hero-height').value)||460,
+    hero_height:parseInt((document.getElementById('m-ev-exp-hero-height')||document.getElementById('m-ev-hero-height')||{}).value)||(document.getElementById('m-ev-mode').value==='expedition'?420:460),
     timelineBgColor:document.getElementById('m-ev-tl-custom').checked?document.getElementById('m-ev-tl-bg').value:'',
     timelineDotColor:document.getElementById('m-ev-tl-dot').value||'#E8842C',
     heroTags:(function(){var ns=document.querySelectorAll('[data-ht-name]'),cs=document.querySelectorAll('[data-ht-color]'),ls=document.querySelectorAll('[data-ht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
