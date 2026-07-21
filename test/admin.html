@@ -1182,7 +1182,11 @@ function renderApparence(el){
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Labels / badges <span id="typo-ui-size-val">${typo.uiSize||11}</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="${typo.uiSize||11}" oninput="document.getElementById('typo-ui-size-val').textContent=this.value"></div>
-      <div class="form-row"><label class="form-label">Onglets phase <span id="typo-phase-size-val">${typo.phaseTabSize||13}</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="${typo.phaseTabSize||13}" oninput="document.getElementById('typo-phase-size-val').textContent=this.value"></div>
+      <div class="form-row"><label class="form-label">Chiffres compteurs <span id="typo-counter-size-val">${typo.counterSize||40}</span>px</label><input type="range" class="form-input" id="typo-counter-size" min="20" max="64" value="${typo.counterSize||40}" oninput="document.getElementById('typo-counter-size-val').textContent=this.value"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Onglets phase — taille texte <span id="typo-phase-size-val">${typo.phaseTabSize||13}</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="${typo.phaseTabSize||13}" oninput="document.getElementById('typo-phase-size-val').textContent=this.value"></div>
+      <div class="form-row"><label class="form-label">Onglets phase — padding vertical <span id="typo-phase-pad-val">${typo.phaseTabPadY||7}</span>px</label><input type="range" class="form-input" id="typo-phase-pad" min="3" max="16" value="${typo.phaseTabPadY||7}" oninput="document.getElementById('typo-phase-pad-val').textContent=this.value"></div>
     </div>
   </div>
 
@@ -1229,6 +1233,8 @@ async function saveApparence(){
     bodySize:parseInt(document.getElementById('typo-body-size').value)||14,
     uiSize:parseInt(document.getElementById('typo-ui-size').value)||11,
     phaseTabSize:parseInt(document.getElementById('typo-phase-size').value)||13,
+    phaseTabPadY:parseInt(document.getElementById('typo-phase-pad').value)||7,
+    counterSize:parseInt(document.getElementById('typo-counter-size').value)||40,
     headingColor:document.getElementById('typo-heading-color').value,
     bodyColor:document.getElementById('typo-body-color').value,
     uiColor:document.getElementById('typo-ui-color').value
