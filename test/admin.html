@@ -5143,6 +5143,7 @@ function renderEtapes(el){
       </div>
       <div class="form-row"><label class="form-label">Description (optionnel)</label><textarea class="form-input" id="new-etape-desc" rows="5" style="resize:vertical"></textarea></div>
       <div class="form-row"><label class="form-label">Photo d'illustration (optionnel)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="new-etape-photo" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('new-etape-photo')}${mkUploadBtn('new-etape-photo')}</div><input class="form-input" id="new-etape-photo-cr" placeholder="© Crédit photo" style="margin-top:4px;width:200px;font-size:11px"></div>
+      ${mkPhaseSelect('new-etape-phase','')}
       <button class="btn btn-primary" onclick="addEtape()">Ajouter l'étape</button>
     </div>
   </details>`;
@@ -5210,7 +5211,8 @@ async function addEtape(){
     order: parseInt(document.getElementById('new-etape-order').value)||etapesData.length+1,
     description: document.getElementById('new-etape-desc').value.trim(),
     photo_url: document.getElementById('new-etape-photo').value.trim(),
-    photo_copyright: document.getElementById('new-etape-photo-cr').value.trim()
+    photo_copyright: document.getElementById('new-etape-photo-cr').value.trim(),
+    phase: document.getElementById('new-etape-phase')?.value||''
   };
   if(type==='route'){
     data.nameEnd = document.getElementById('new-etape-name-end').value.trim();
@@ -5282,6 +5284,7 @@ async function editEtape(id){
     </div>
     <div class="form-row"><label class="form-label">Description</label><textarea class="form-input" id="edit-etape-desc-${id}" rows="5" style="resize:vertical">${(et.description||'').replace(/</g,'&lt;')}</textarea></div>
     <div class="form-row"><label class="form-label">Photo d'illustration</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="edit-etape-photo-${id}" value="${(et.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('edit-etape-photo-'+id)}${mkUploadBtn('edit-etape-photo-'+id)}</div><input class="form-input" id="edit-etape-photo-cr-${id}" value="${(et.photo_copyright||'').replace(/"/g,'&quot;')}" placeholder="© Crédit photo" style="margin-top:4px;width:200px;font-size:11px"></div>
+    ${mkPhaseSelect("edit-etape-phase-"+id, et.phase||"")}
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="saveEtapeEdit('${id}')">💾 Enregistrer</button>
       <button class="btn btn-ghost btn-sm" onclick="editEtape('${id}')">Annuler</button>
@@ -5329,7 +5332,8 @@ async function saveEtapeEdit(id){
     order: parseInt(document.getElementById('edit-etape-order-'+id).value)||0,
     description: document.getElementById('edit-etape-desc-'+id).value.trim(),
     photo_url: document.getElementById('edit-etape-photo-'+id)?.value.trim()||'',
-    photo_copyright: document.getElementById('edit-etape-photo-cr-'+id)?.value.trim()||''
+    photo_copyright: document.getElementById('edit-etape-photo-cr-'+id)?.value.trim()||'',
+    phase: document.getElementById('edit-etape-phase-'+id)?.value||''
   };
   if(type==='route'){
     data.nameEnd = document.getElementById('edit-etape-name-end-'+id).value.trim();
