@@ -1711,6 +1711,11 @@ function initUnifiedBlockDrag(){
   // Sidebar anchor change handler
   const anchorSel=document.getElementById('sidebar-anchor');
   if(anchorSel) anchorSel.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
+
+  // Phase checkbox change handler — auto-save
+  list.querySelectorAll('.block-phase-chk').forEach(chk=>{
+    chk.addEventListener('change',()=>{ saveUnifiedBlockOrder(); });
+  });
 }
 
 function getUnifiedAfter(list,y){
