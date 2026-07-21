@@ -1421,6 +1421,7 @@ function renderModules(el){
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
+    {key:'phaseTabs',icon:'🔀',label:'Onglets Phases'},
     {key:'kpis',icon:'📊',label:'Chiffres clés'},
     {key:'flash',icon:'⚡',label:'Bandeau Flash'},
     {key:'essential',icon:'🧠',label:'Points essentiels (IA)'},
@@ -1452,6 +1453,7 @@ function renderModules(el){
   if(isExp){
     // In expedition mode, show expedition-specific block order with zone constraints
     const expBlocks = [
+      {key:'phaseTabs',icon:'🔀',label:'Onglets Phases',zones:['full']},
       {key:'kpis',icon:'📊',label:'Compteurs',zones:['full']},
       {key:'essential',icon:'🧠',label:'À retenir',zones:['full','main']},
       {key:'etapes',icon:'🗺️',label:'Carte & Étapes',zones:['full']},
@@ -1467,14 +1469,16 @@ function renderModules(el){
       {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
       {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
     ];
-    const expDefaultOrder = ['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
     const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
-    // Auto-inject new blocks (reporters, itinerary) for legacy events
+    // Auto-inject new blocks for legacy events
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)){
       if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'){
         const li=expOrder.indexOf('live'); expOrder.splice(li>=0?li+1:expOrder.length,0,b.key);
+      } else if(b.key==='phaseTabs'){
+        expOrder.unshift(b.key);
       } else { expOrder.push(b.key); }
     }});
     const expMap = Object.fromEntries(expBlocks.map(b=>[b.key,b]));
