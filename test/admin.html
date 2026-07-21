@@ -1384,6 +1384,21 @@ async function savePhaseEdit(idx){
 }
 
 // Generic phase filter for admin history lists
+// Block-level phase assignment checkboxes
+function mkBlockPhaseChecks(blockKey, assignedPhases, prefix){
+  const phases=getPhases();
+  if(!phases.length) return '';
+  const assigned=assignedPhases||[];
+  let h=`<div class="block-phase-row" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;padding-left:30px">`;
+  phases.forEach(p=>{
+    const checked=assigned.includes(p.id);
+    h+=`<label style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:1.5px solid ${checked?(p.color||'#6366F1')+'90':'var(--border)'};background:${checked?(p.color||'#6366F1')+'15':'transparent'};color:${checked?(p.color||'#6366F1'):'var(--text3)'};transition:all .15s"><input type="checkbox" class="block-phase-chk" data-prefix="${prefix}" data-block="${blockKey}" data-phase="${p.id}" ${checked?'checked':''} style="display:none">${p.name}</label>`;
+  });
+  h+=`<span style="font-size:8px;color:var(--text3);align-self:center;margin-left:4px">${assigned.length?'':'= toutes'}</span></div>`;
+  return h;
+}
+
+// Generic phase filter for admin history lists
 window.filterByPhaseAttr=function(containerId, filterId){
   const f=document.getElementById(filterId)?.value||'';
   const container=document.getElementById(containerId);
@@ -1523,7 +1538,7 @@ function renderModules(el){
           <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===expOrder.length-1?' disabled':''}>▼</button>
         </div>
-      </div>`;
+      </div>${mkBlockPhaseChecks(key, (ev?.expBlockPhases||{})[key], 'exp')}`;
     });
     h+=`</div>
       <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
@@ -1550,6 +1565,7 @@ function renderModules(el){
     const b=blockMap[key]; if(!b) return;
     const dis=mod[b.key]===false;
     const zone=blockZones[key]||defaultZones[key]||'main';
+    const bpMap=ev?.blockPhases||{};
     h+=`<div class="block-uni-item${dis?' disabled':''}" draggable="true" data-key="${key}" style="background:${zoneBgs[zone]||'#FFF'}">
       <span class="block-drag-handle">⠿</span>
       <span style="font-size:14px">${b.icon}</span>
@@ -1565,7 +1581,7 @@ function renderModules(el){
         <button class="btn btn-ghost btn-xs" data-act="blockUp" data-key="${key}"${i===0?' disabled':''}>▲</button>
         <button class="btn btn-ghost btn-xs" data-act="blockDown" data-key="${key}"${i===validKeys.length-1?' disabled':''}>▼</button>
       </div>
-    </div>`;
+    </div>${mkBlockPhaseChecks(key, bpMap[key], 'classic')}`;
   });
 
   h+=`</div>
@@ -1712,18 +1728,31 @@ async function saveUnifiedBlockOrder(){
       }
     });
     const expSidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
-    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;}
+    // Collect block phase assignments
+    const expBlockPhases={};
+    document.querySelectorAll('.block-phase-chk[data-prefix="exp"]:checked').forEach(chk=>{
+      const bk=chk.dataset.block, ph=chk.dataset.phase;
+      if(!expBlockPhases[bk]) expBlockPhases[bk]=[];
+      expBlockPhases[bk].push(ph);
+    });
+    if(ev){ev.expBlockOrder=newOrder;ev.expBlockZones=newExpZones;ev.expSidebarAnchor=expSidebarAnchor;ev.expBlockPhases=expBlockPhases;}
     try{
-      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor});
+      await evRef().update({expBlockOrder:newOrder,expBlockZones:newExpZones,expSidebarAnchor,expBlockPhases});
     }catch(e){
       console.error('[saveBlockOrder] Error:', e);
       toast('Erreur sauvegarde: '+e.message,'error');
     }
   } else {
-    // Classic: save blockOrder + zones + sidebar anchor
+    // Classic: save blockOrder + zones + sidebar anchor + block phases
     const sidebarAnchor=document.getElementById('sidebar-anchor')?.value||'live';
-    if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;}
-    await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor});
+    const blockPhases={};
+    document.querySelectorAll('.block-phase-chk[data-prefix="classic"]:checked').forEach(chk=>{
+      const bk=chk.dataset.block, ph=chk.dataset.phase;
+      if(!blockPhases[bk]) blockPhases[bk]=[];
+      blockPhases[bk].push(ph);
+    });
+    if(ev){ev.blockOrder=newOrder;ev.blockZones=newZones;ev.sidebarAnchor=sidebarAnchor;ev.blockPhases=blockPhases;}
+    await evRef().update({blockOrder:newOrder,blockZones:newZones,sidebarAnchor,blockPhases});
   }
   toast('Disposition mise à jour');
 }
