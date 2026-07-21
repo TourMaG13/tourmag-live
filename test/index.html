@@ -970,29 +970,28 @@ function render(data){
   }
   // Build dynamic style block — ONLY includes rules for values that are actually customized
   let _typoCSS = '';
-  const _headingSel = '.hero-title,.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-hero-title,.exp-section-title,.exp-counter-num,.cit-name,.exp-verbatim-name,.exp-itw-name';
-  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-live-text,.exp-live-title,.exp-art-title';
-  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab';
+  const _headingSel = '.hero-title,.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-hero h1,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name';
+  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title';
+  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab';
   // Font families
   if(_hFont) _typoCSS += `${_headingSel}{font-family:'${_hFont}',sans-serif !important}`;
   if(_bFont) _typoCSS += `${_bodySel}{font-family:'${_bFont}',sans-serif !important}`;
   if(_uFont) _typoCSS += `${_uiSel}{font-family:'${_uFont}',sans-serif !important}`;
   // Font sizes — only when explicitly customized
-  if(_typo.heroTitleSize) _typoCSS += `.hero-title,.exp-hero-title{font-size:${_typo.heroTitleSize}px !important}`;
+  if(_typo.heroTitleSize) _typoCSS += `.hero-title,.exp-hero h1{font-size:${_typo.heroTitleSize}px !important}`;
   if(_typo.heroSubtitleSize) _typoCSS += `.hero-subtitle-text,.exp-hero-subtitle{font-size:${_typo.heroSubtitleSize}px !important}`;
-  if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-title,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
+  if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-head h2,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
   if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
   if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
   if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
   // Colors — only when explicitly customized
-  if(_typo.headingColor) _typoCSS += `.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title{color:${_typo.headingColor} !important}`;
-  if(_typo.bodyColor) _typoCSS += `.live-text,.live-title,.cit-text,.exp-live-text,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
-  if(_typo.uiColor) _typoCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-live-tag,.exp-live-jr,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
+  if(_typo.headingColor) _typoCSS += `.hero-title,.sec-title h2,.exp-hero h1,.exp-section-head h2,.exp-entry h3{color:${_typo.headingColor} !important}`;
+  if(_typo.bodyColor) _typoCSS += `.live-text,.live-title,.cit-text,.exp-entry p,.exp-entry-body,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
+  if(_typo.uiColor) _typoCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-entry-meta,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
   // Inject or clear the dynamic style block
   let _typoStyle = document.getElementById('typo-overrides');
   if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
   _typoStyle.textContent = _typoCSS;
-  if(_typoCSS) console.log('[TYPO] CSS injected:', _typoCSS.substring(0, 200));
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
@@ -1556,7 +1555,15 @@ function render(data){
     blockZones[k] = z;
   });
   function getZone(k){ return blockZones[k] || defaultZones[k] || 'main'; }
-  function rb(k){ const fn=blockRenderers[k]; return fn ? fn() : ''; }
+  // Block-level phase visibility
+  const _blockPhases = event.blockPhases || {};
+  function _blockVisible(k){
+    if(!activePhase) return true; // "Tout voir" = all blocks visible
+    const bp = _blockPhases[k];
+    if(!bp || !bp.length) return true; // no phases assigned = always visible
+    return bp.includes(activePhase);
+  }
+  function rb(k){ if(!_blockVisible(k)) return ''; const fn=blockRenderers[k]; return fn ? fn() : ''; }
 
   const allSideKeys = validKeys.filter(k => getZone(k) === 'side');
   const sidebarAnchor = event.sidebarAnchor || 'live';
@@ -2229,7 +2236,15 @@ function renderExpedition(data){
 
   const expZones = event.expBlockZones || {};
   function getExpZone(k){ return expZones[k] || expDefaultZones[k] || 'main'; }
-  function expRb(k){ const fn=expBlockRenderers[k]; return fn ? fn() : ''; }
+  // Block-level phase visibility
+  const _expBlockPhases = event.expBlockPhases || {};
+  function _expBlockVisible(k){
+    if(!activePhase) return true;
+    const bp = _expBlockPhases[k];
+    if(!bp || !bp.length) return true;
+    return bp.includes(activePhase);
+  }
+  function expRb(k){ if(!_expBlockVisible(k)) return ''; const fn=expBlockRenderers[k]; return fn ? fn() : ''; }
 
   const allExpSideKeys = finalOrder.filter(k => getExpZone(k) === 'side' && expBlockRenderers[k]);
   const expSidebarAnchor = event.expSidebarAnchor || 'live';
