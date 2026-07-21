@@ -36,6 +36,42 @@
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ===== TYPOGRAPHY OVERRIDES (from Apparence settings) ===== */
+/* Headings */
+.hero-title,.hero-subtitle-text,.sec-title h2,.sec-title p,
+.exp-hero-title,.exp-hero-subtitle,.exp-section-title,
+.cit-name,.exp-verbatim-name,.exp-itw-name,
+h1,h2,h3{font-family:var(--font-heading, inherit)}
+.hero-title,.exp-hero-title{font-size:var(--typo-hero-size, 32px)}
+.hero-subtitle-text,.exp-hero-subtitle{font-size:var(--typo-hero-sub, 16px)}
+.sec-title h2,.exp-section-title{font-size:var(--typo-sec-size, 20px)}
+/* Body */
+.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,
+.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,
+.ess-card-text,.exp-ess-text,
+.exp-live-text,.exp-live-title,.exp-art-title,
+p,li,td{font-family:var(--font-body, inherit);font-size:var(--typo-body-size, inherit)}
+/* UI elements */
+.hero-badge-row span,.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,
+.live-tag,.live-jr,.live-time,
+.cit-role,.art-date,.art-author,
+.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta,
+.exp-live-tag,.exp-live-time,.exp-live-jr,
+.exp-counter-label,.exp-ess-tag,
+.exp-verbatim-role,.exp-itw-tag,
+.phase-tab,.sticky-nav,
+.sec-title-line+p,
+small,label,.badge{font-family:var(--font-ui, inherit);font-size:var(--typo-ui-size, inherit)}
+.phase-tab{font-size:var(--typo-phase-size, 13px) !important}
+/* Colors (only applied if set) */
+.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title,h1,h2,h3{color:var(--typo-heading-color, inherit)}
+.live-text,.cit-text,.exp-live-text,.exp-verbatim-text,
+.art-title,.exp-art-title,.prog-item-label,
+.ess-card-text,.exp-ess-text,p{color:var(--typo-body-color, inherit)}
+.live-tag,.live-jr,.cit-role,.art-date,
+.exp-live-tag,.exp-live-jr,.exp-counter-label,
+.exp-ess-tag,.phase-tab,small,.badge{color:var(--typo-ui-color, inherit)}
 img{display:block}a{text-decoration:none}
 
 /* LOADER */
@@ -953,6 +989,34 @@ function render(data){
   const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes} = data;
 
   // ===== SHARED CSS VARIABLES (applied for ALL modes) =====
+
+  // ===== TYPOGRAPHY =====
+  const _typo = event.typography || {};
+  const _hFont = _typo.headingFont || '';
+  const _bFont = _typo.bodyFont || '';
+  const _uFont = _typo.uiFont || '';
+  // Load Google Fonts
+  const _fontsToLoad = [...new Set([_hFont, _bFont, _uFont].filter(Boolean))];
+  if(_fontsToLoad.length){
+    const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
+    let gfLink = document.getElementById('gf-typo');
+    if(!gfLink){ gfLink=document.createElement('link'); gfLink.id='gf-typo'; gfLink.rel='stylesheet'; document.head.appendChild(gfLink); }
+    if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
+  }
+  const _r = document.documentElement.style;
+  if(_hFont) _r.setProperty('--font-heading', "'"+_hFont+"', sans-serif"); else _r.removeProperty('--font-heading');
+  if(_bFont) _r.setProperty('--font-body', "'"+_bFont+"', sans-serif"); else _r.removeProperty('--font-body');
+  if(_uFont) _r.setProperty('--font-ui', "'"+_uFont+"', sans-serif"); else _r.removeProperty('--font-ui');
+  _r.setProperty('--typo-hero-size', (_typo.heroTitleSize||32)+'px');
+  _r.setProperty('--typo-hero-sub', (_typo.heroSubtitleSize||16)+'px');
+  _r.setProperty('--typo-sec-size', (_typo.sectionTitleSize||20)+'px');
+  _r.setProperty('--typo-body-size', (_typo.bodySize||14)+'px');
+  _r.setProperty('--typo-ui-size', (_typo.uiSize||11)+'px');
+  _r.setProperty('--typo-phase-size', (_typo.phaseTabSize||13)+'px');
+  _r.setProperty('--typo-heading-color', _typo.headingColor||'');
+  _r.setProperty('--typo-body-color', _typo.bodyColor||'');
+  _r.setProperty('--typo-ui-color', _typo.uiColor||'');
+
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
   document.documentElement.style.setProperty('--cit-av', (event.citationAvatarSize || (_isExp ? 36 : 80)) + 'px');
@@ -1771,29 +1835,29 @@ function renderExpedition(data){
 
   h += `</section>`;
 
-  // ===== PHASE TABS =====
-  if(phases.length){
+
+  // ===== BLOCK-BASED RENDERING =====
+  const _b = {};
+
+  _b.phaseTabs = function(){
+    if(!phases.length) return '';
     const evId = new URLSearchParams(window.location.search).get('event')||'';
     const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
-    function _expPhaseUrl(slug){
+    function _ptUrl(slug){
       let params = new URLSearchParams();
       if(evId) params.set('event',evId);
       if(slug) params.set('phase',slug);
       if(frameId) params.set('frameId',frameId);
       return '?'+params.toString();
     }
-    h += '<div class="exp-dash"><div class="phase-tabs">';
-    h += `<a href="${_expPhaseUrl('')}" class="phase-tab phase-tab-all${!activePhase?' active':''}" onclick="window._switchPhase(event,'')">Tout voir</a>`;
+    let t = '<div class="phase-tabs">';
+    t += `<a href="${_ptUrl('')}" class="phase-tab phase-tab-all${!activePhase?' active':''}" onclick="window._switchPhase(event,'')">Tout voir</a>`;
     phases.forEach(p => {
       const isActive = activePhase === p.id;
-      h += `<a href="${_expPhaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
+      t += `<a href="${_ptUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
     });
-    h += '</div></div>';
-  }
-
-
-  // ===== BLOCK-BASED RENDERING =====
-  const _b = {};
+    return t + '</div>';
+  };
 
   _b.kpis = function(){
     if(!counters.length) return '';
@@ -2169,8 +2233,8 @@ function renderExpedition(data){
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
-  const defaultExpOrder = ['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
-  const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
+  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   // Auto-inject new blocks for legacy events
@@ -2178,6 +2242,8 @@ function renderExpedition(data){
     if(!finalOrder.includes(k)){
       if(k==='reporters'||k==='itinerary'){
         const li=finalOrder.indexOf('live'); finalOrder.splice(li>=0?li+1:finalOrder.length,0,k);
+      } else if(k==='phaseTabs'){
+        finalOrder.unshift(k);
       } else { finalOrder.push(k); }
     }
   });
