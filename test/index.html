@@ -36,40 +36,6 @@
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-
-/* ===== TYPOGRAPHY OVERRIDES (from Apparence settings) ===== */
-/* Headings — titles, names, numbers */
-.hero-title,.sec-title h2,.kpi-num,.ess-num,
-.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,
-.exp-hero-title,.exp-section-title,.exp-counter-num,
-.cit-name,.exp-verbatim-name,.exp-itw-name,
-h1,h2,h3{font-family:var(--font-heading, inherit) !important}
-.hero-title,.exp-hero-title{font-size:var(--typo-hero-size) !important}
-.hero-subtitle-text,.exp-hero-subtitle{font-size:var(--typo-hero-sub) !important}
-.sec-title h2,.exp-section-title,.itw-section-hd h2{font-size:var(--typo-sec-size) !important}
-/* Body — text content, subtitles, quotes, descriptions */
-.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,
-.exp-hero-subtitle,.exp-section-sub,
-.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,
-.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,
-.ess-card-text,.exp-ess-text,
-.exp-live-text,.exp-live-title,.exp-art-title{font-family:var(--font-body, inherit) !important}
-/* UI — badges, tags, labels, meta, navigation, counters */
-.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,
-.live-tag,.live-timestamp,.live-jr,.live-time,
-.art-card-tag,.art-card-cta,.art-date,.art-author,
-.itw-badge,.itw-cta,.cit-role,
-.flash-badge,.ess-tag,.ess-ia,.sl,
-.sticky-nav-brand,.sticky-nav a,.upd-bar,
-.hero-tl-date,.hero-tl-ia,
-.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,
-.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,
-.exp-counter-label,.exp-ess-tag,
-.exp-verbatim-role,.exp-itw-tag,
-.exp-footer small,
-.phase-tab{font-family:var(--font-ui, inherit) !important}
-.phase-tab{font-size:var(--typo-phase-size, 13px) !important;padding-top:var(--typo-phase-pad, 7px) !important;padding-bottom:var(--typo-phase-pad, 7px) !important}
-.kpi-num,.exp-counter-num{font-size:var(--typo-counter-size, 40px) !important}
 img{display:block}a{text-decoration:none}
 
 /* LOADER */
@@ -993,7 +959,7 @@ function render(data){
   const _hFont = _typo.headingFont || '';
   const _bFont = _typo.bodyFont || '';
   const _uFont = _typo.uiFont || '';
-  // Load Google Fonts
+  // Load Google Fonts only if needed
   const _fontsToLoad = [...new Set([_hFont, _bFont, _uFont].filter(Boolean))];
   if(_fontsToLoad.length){
     const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
@@ -1001,29 +967,30 @@ function render(data){
     if(!gfLink){ gfLink=document.createElement('link'); gfLink.id='gf-typo'; gfLink.rel='stylesheet'; document.head.appendChild(gfLink); }
     if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
   }
-  const _r = document.documentElement.style;
-  if(_hFont) _r.setProperty('--font-heading', "'"+_hFont+"', sans-serif"); else _r.removeProperty('--font-heading');
-  if(_bFont) _r.setProperty('--font-body', "'"+_bFont+"', sans-serif"); else _r.removeProperty('--font-body');
-  if(_uFont) _r.setProperty('--font-ui', "'"+_uFont+"', sans-serif"); else _r.removeProperty('--font-ui');
-  _r.setProperty('--typo-hero-size', (_typo.heroTitleSize||32)+'px');
-  _r.setProperty('--typo-hero-sub', (_typo.heroSubtitleSize||16)+'px');
-  _r.setProperty('--typo-sec-size', (_typo.sectionTitleSize||20)+'px');
-  _r.setProperty('--typo-body-size', (_typo.bodySize||14)+'px');
-  _r.setProperty('--typo-ui-size', (_typo.uiSize||11)+'px');
-  _r.setProperty('--typo-phase-size', (_typo.phaseTabSize||13)+'px');
-  _r.setProperty('--typo-phase-pad', (_typo.phaseTabPadY||7)+'px');
-  _r.setProperty('--typo-counter-size', (_typo.counterSize||40)+'px');
-  _r.setProperty('--typo-heading-color', _typo.headingColor||'');
-  _r.setProperty('--typo-body-color', _typo.bodyColor||'');
-  _r.setProperty('--typo-ui-color', _typo.uiColor||'');
-  // Dynamic color overrides (only when set)
-  let _typoColorCSS = '';
-  if(_typo.headingColor) _typoColorCSS += `.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title{color:${_typo.headingColor} !important}`;
-  if(_typo.bodyColor) _typoColorCSS += `.live-text,.live-title,.cit-text,.exp-live-text,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
-  if(_typo.uiColor) _typoColorCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-live-tag,.exp-live-jr,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
-  let _typoStyle = document.getElementById('typo-colors');
-  if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-colors'; document.head.appendChild(_typoStyle); }
-  _typoStyle.textContent = _typoColorCSS;
+  // Build dynamic style block — ONLY includes rules for values that are actually customized
+  let _typoCSS = '';
+  const _headingSel = '.hero-title,.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-hero-title,.exp-section-title,.exp-counter-num,.cit-name,.exp-verbatim-name,.exp-itw-name';
+  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-live-text,.exp-live-title,.exp-art-title';
+  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab';
+  // Font families
+  if(_hFont) _typoCSS += `${_headingSel}{font-family:'${_hFont}',sans-serif !important}`;
+  if(_bFont) _typoCSS += `${_bodySel}{font-family:'${_bFont}',sans-serif !important}`;
+  if(_uFont) _typoCSS += `${_uiSel}{font-family:'${_uFont}',sans-serif !important}`;
+  // Font sizes — only when explicitly customized
+  if(_typo.heroTitleSize) _typoCSS += `.hero-title,.exp-hero-title{font-size:${_typo.heroTitleSize}px !important}`;
+  if(_typo.heroSubtitleSize) _typoCSS += `.hero-subtitle-text,.exp-hero-subtitle{font-size:${_typo.heroSubtitleSize}px !important}`;
+  if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-title,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
+  if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
+  if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
+  if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
+  // Colors — only when explicitly customized
+  if(_typo.headingColor) _typoCSS += `.hero-title,.sec-title h2,.exp-hero-title,.exp-section-title{color:${_typo.headingColor} !important}`;
+  if(_typo.bodyColor) _typoCSS += `.live-text,.live-title,.cit-text,.exp-live-text,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
+  if(_typo.uiColor) _typoCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-live-tag,.exp-live-jr,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
+  // Inject or clear the dynamic style block
+  let _typoStyle = document.getElementById('typo-overrides');
+  if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
+  _typoStyle.textContent = _typoCSS;
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
