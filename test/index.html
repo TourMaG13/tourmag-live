@@ -987,6 +987,8 @@ function render(data){
   if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
   if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
   if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
+  if(_typo.bodySize) _typoCSS += `${_bodySel}{font-size:${_typo.bodySize}px !important}`;
+  if(_typo.uiSize) _typoCSS += `${_uiSel}{font-size:${_typo.uiSize}px !important}`;
   // Colors — hero title independent from section titles
   if(_typo.heroColor) _typoCSS += `${_heroTitleSel}{color:${_typo.heroColor} !important}`;
   if(_typo.headingColor) _typoCSS += `.sec-title h2,.exp-section-head h2,.exp-entry h3{color:${_typo.headingColor} !important}`;
@@ -1479,7 +1481,8 @@ function render(data){
   // ===== GALERIE =====
   function mkGallery(){
     if(mod.gallery===false) return '';
-    const photos = event.gallery || [];
+    const _rawPhotos = event.gallery || [];
+    const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
     if(!photos.length) return '';
     let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
     const galH = event.galleryHeight || 260;
@@ -1623,7 +1626,7 @@ function render(data){
   if(mod.interviews!==false && interviews && interviews.length) navModules.push({id:'section-interviews',label:'Interviews'});
   if(mod.citations!==false && citations && citations.length) navModules.push({id:'section-citations',label:'Verbatims'});
   if(mod.videos!==false && videos && videos.length) navModules.push({id:'section-videos',label:'Vidéos'});
-  if(mod.gallery!==false && event.gallery && event.gallery.length) navModules.push({id:'section-gallery',label:'Photos'});
+  if(mod.gallery!==false && event.gallery && (activePhase ? event.gallery.filter(p=>!p.phase||p.phase===activePhase) : event.gallery).length) navModules.push({id:'section-gallery',label:'Photos'});
 
   let navHtml = `<div class="sticky-nav-brand"><span class="dot"></span> ${event.title||'TourMaG Live'}</div>`;
   navModules.forEach(m => { navHtml += `<a href="#${m.id}">${m.label}</a>`; });
@@ -2112,7 +2115,9 @@ function renderExpedition(data){
   };
 
   _b.gallery = function(){
-    const gp=event.gallery||[]; if(mod.gallery===false || !gp.length) return '';
+    const _rawGp=event.gallery||[];
+    const gp=activePhase ? _rawGp.filter(p=>!p.phase||p.phase===activePhase) : _rawGp;
+    if(mod.gallery===false || !gp.length) return '';
     const GALLERY_VIS = 9;
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
