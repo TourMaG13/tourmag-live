@@ -1392,11 +1392,32 @@ function mkBlockPhaseChecks(blockKey, assignedPhases, prefix){
   let h=`<div class="block-phase-row" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;padding-left:30px">`;
   phases.forEach(p=>{
     const checked=assigned.includes(p.id);
-    h+=`<label style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:1.5px solid ${checked?(p.color||'#6366F1')+'90':'var(--border)'};background:${checked?(p.color||'#6366F1')+'15':'transparent'};color:${checked?(p.color||'#6366F1'):'var(--text3)'};transition:all .15s"><input type="checkbox" class="block-phase-chk" data-prefix="${prefix}" data-block="${blockKey}" data-phase="${p.id}" ${checked?'checked':''} style="display:none">${p.name}</label>`;
+    const c=p.color||'#6366F1';
+    h+=`<label style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:1.5px solid ${checked?c+'90':'var(--border)'};background:${checked?c+'15':'transparent'};color:${checked?c:'var(--text3)'};transition:all .15s" data-color="${c}"><input type="checkbox" class="block-phase-chk" data-prefix="${prefix}" data-block="${blockKey}" data-phase="${p.id}" ${checked?'checked':''} style="display:none" onchange="togglePhasePill(this)">${p.name}</label>`;
   });
   h+=`<span style="font-size:8px;color:var(--text3);align-self:center;margin-left:4px">${assigned.length?'':'= toutes'}</span></div>`;
   return h;
 }
+window.togglePhasePill=function(chk){
+  const lbl=chk.parentElement;
+  const c=lbl.dataset.color||'#6366F1';
+  if(chk.checked){
+    lbl.style.borderColor=c+'90';
+    lbl.style.background=c+'15';
+    lbl.style.color=c;
+  } else {
+    lbl.style.borderColor='var(--border)';
+    lbl.style.background='transparent';
+    lbl.style.color='var(--text3)';
+  }
+  // Update "= toutes" label
+  const row=lbl.closest('.block-phase-row');
+  if(row){
+    const anyChecked=row.querySelector('.block-phase-chk:checked');
+    const hint=row.querySelector('span:last-child');
+    if(hint) hint.textContent=anyChecked?'':'= toutes';
+  }
+};
 
 // Generic phase filter for admin history lists
 window.filterByPhaseAttr=function(containerId, filterId){
