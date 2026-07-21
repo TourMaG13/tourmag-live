@@ -1028,7 +1028,6 @@ function render(data){
 
   // ===== PHASE TABS =====
   function mkPhaseTabs(){
-    console.log('[DEBUG PHASES] mkPhaseTabs called, phases:', phases, 'length:', phases?.length);
     if(!phases.length) return '';
     const evId = new URLSearchParams(window.location.search).get('event')||'';
     const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
@@ -1506,7 +1505,6 @@ function render(data){
   insertAfter('sponsors','gallery');
   allBlockKeys.forEach(k=>{if(!orderedKeys.includes(k))orderedKeys.push(k);});
   const validKeys=orderedKeys.filter(k=>allBlockKeys.includes(k));
-  console.log('[DEBUG PHASES] orderedKeys:', orderedKeys, 'validKeys includes phaseTabs:', validKeys.includes('phaseTabs'));
 
   // Migrate old zone values: old 'full' → 'max' for hero/interviews/kpis
   const blockZones = {};
@@ -1647,12 +1645,28 @@ window._switchPhase = function(e, phaseId){
 var _expMapInstance = null;
 
 function renderExpedition(data){
-  const {event,essential,live,articles,journalists,etapes,citations,videos,interviews} = data;
+  const {event,essential:_rawEss,live:_rawLive,articles:_rawArt,journalists,etapes,citations:_rawCit,videos:_rawVid,interviews:_rawItw} = data;
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
   const accent = brand.accentColor || '#FF6C00';
   const mod = event.modules || {};
+
+  // ===== PHASE FILTERING =====
+  const phases = event.phases || [];
+  const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
+  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : '';
+  window._activePhase = activePhase;
+  function _pf(arr){
+    if(!activePhase || !phases.length) return arr;
+    return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
+  }
+  const live = _pf(_rawLive);
+  const citations = _pf(_rawCit);
+  const articles = _pf(_rawArt);
+  const videos = _pf(_rawVid);
+  const interviews = _pf(_rawItw);
+  const essential = _pf(_rawEss);
 
   // Apply expedition mode to body
   document.body.classList.add('mode-expedition');
@@ -1756,6 +1770,26 @@ function renderExpedition(data){
   }
 
   h += `</section>`;
+
+  // ===== PHASE TABS =====
+  if(phases.length){
+    const evId = new URLSearchParams(window.location.search).get('event')||'';
+    const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
+    function _expPhaseUrl(slug){
+      let params = new URLSearchParams();
+      if(evId) params.set('event',evId);
+      if(slug) params.set('phase',slug);
+      if(frameId) params.set('frameId',frameId);
+      return '?'+params.toString();
+    }
+    h += '<div class="exp-dash"><div class="phase-tabs">';
+    h += `<a href="${_expPhaseUrl('')}" class="phase-tab phase-tab-all${!activePhase?' active':''}" onclick="window._switchPhase(event,'')">Tout voir</a>`;
+    phases.forEach(p => {
+      const isActive = activePhase === p.id;
+      h += `<a href="${_expPhaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
+    });
+    h += '</div></div>';
+  }
 
 
   // ===== BLOCK-BASED RENDERING =====
