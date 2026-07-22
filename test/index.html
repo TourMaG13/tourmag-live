@@ -64,6 +64,7 @@ img{display:block}a{text-decoration:none}
 .phase-tab .phase-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .phase-tab-all{background:#fff;border-color:#E2E8F0}
 .phase-tab-all.active{border-color:#1E293B;color:#1E293B}
+.phase-active-title{text-align:center;padding:10px 0 6px;margin:0;line-height:1.2;transition:opacity .3s}
 .sticky-nav.visible{transform:translateY(0)}
 .sticky-nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:6px;padding:0 28px;height:50px}
 .sticky-nav-brand{font-family:'Josefin Sans';font-size:13px;font-weight:700;color:var(--pri);margin-right:auto;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
@@ -950,6 +951,20 @@ function _isPublished(entry){
   return !isNaN(sd)&&sd.getTime()<=Date.now();
 }
 
+function _mkPhaseTitle(event, activePhase, phases){
+  if(!activePhase) return '';
+  const pt = event.phaseTitle || {};
+  if(!pt.show) return '';
+  const phase = phases.find(p => p.id === activePhase);
+  if(!phase) return '';
+  const color = pt.usePhaseColor ? (phase.color || '#6366F1') : (pt.color || '#1E293B');
+  const size = pt.size || 28;
+  const weight = pt.weight || 700;
+  const align = pt.align || 'center';
+  const fontFam = pt.font ? `font-family:'${pt.font}',sans-serif;` : '';
+  return `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};text-align:${align};${fontFam}">${phase.name}</div>`;
+}
+
 function render(data){
   const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes} = data;
 
@@ -962,7 +977,7 @@ function render(data){
   const _bFont = _typo.bodyFont || '';
   const _uFont = _typo.uiFont || '';
   // Load Google Fonts only if needed
-  const _fontsToLoad = [...new Set([_heroFont, _hFont, _bFont, _uFont].filter(Boolean))];
+  const _fontsToLoad = [...new Set([_heroFont, _hFont, _bFont, _uFont, (event.phaseTitle||{}).font||''].filter(Boolean))];
   if(_fontsToLoad.length){
     const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
     let gfLink = document.getElementById('gf-typo');
@@ -1091,7 +1106,7 @@ function render(data){
       const isActive = activePhase === p.id;
       t += `<a href="${phaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
     });
-    t += '</div></div>';
+    t += '</div>' + _mkPhaseTitle(event, activePhase, phases) + '</div>';
     return t;
   }
 
@@ -1848,7 +1863,7 @@ function renderExpedition(data){
       const isActive = activePhase === p.id;
       t += `<a href="${_ptUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
     });
-    return t + '</div>';
+    return t + '</div>' + _mkPhaseTitle(event, activePhase, phases);
   };
 
   _b.kpis = function(){
