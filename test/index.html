@@ -1072,7 +1072,10 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
-  // Apply per-phase colors
+  // Apply global custom colors
+  if(event.accentColor) document.documentElement.style.setProperty('--acc', event.accentColor);
+  if(event.liveColor) document.documentElement.style.setProperty('--live', event.liveColor);
+  // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
     if(_activePhaseObj.accentColor) document.documentElement.style.setProperty('--acc', _activePhaseObj.accentColor);
@@ -1747,7 +1750,7 @@ function renderExpedition(data){
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
-  let accent = brand.accentColor || '#FF6C00';
+  let accent = brand.accentColor || event.accentColor || '#FF6C00';
   const mod = event.modules || {};
 
   // ===== PHASE FILTERING =====
@@ -1755,7 +1758,8 @@ function renderExpedition(data){
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
-  // Apply per-phase colors
+  // Apply global custom colors then per-phase overrides
+  if(event.liveColor) document.documentElement.style.setProperty('--live', event.liveColor);
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
     if(_activePhaseObj.accentColor){ accent = _activePhaseObj.accentColor; }
