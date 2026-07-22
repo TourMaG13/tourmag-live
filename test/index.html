@@ -1094,6 +1094,7 @@ function render(data){
   const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
   const _heroLocation = _ph.heroLocation || event.location || '';
   const _heroDates    = _ph.heroDates    || event.dates    || '';
+  console.log('[TourMaG Live] Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates}, eventFallbacks:{title:event.title,subtitle:event.subtitle,hero_image:event.hero_image,logo_url:event.logo_url,location:event.location,dates:event.dates}});
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
@@ -1788,6 +1789,7 @@ function renderExpedition(data){
   const _heroDates      = _ph.heroDates      || event.dates    || '';
   const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
   const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
+  console.log('[TourMaG Live] EXP Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates,_heroEyebrow,_heroPhotoCredit}});
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
