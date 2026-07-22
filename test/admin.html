@@ -1334,6 +1334,24 @@ function renderPhases(el){
       </div>`;
     });
     h+=`</div>`;
+
+    // Phase title display settings
+    const pt = ev.phaseTitle || {};
+    h+=`<div class="admin-card"><h3>🏷️ Titre de la phase active</h3>
+      <div class="page-desc" style="margin-bottom:12px">Quand un visiteur clique sur un onglet de phase, un titre peut s'afficher en gros sous les onglets pour identifier clairement la phase.</div>
+      <div class="form-row"><label class="form-label">Afficher le titre de la phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-show" ${pt.show?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
+      <div class="form-row-inline" style="margin-top:8px">
+        <div class="form-row" style="max-width:200px"><label class="form-label">Taille <span id="pt-size-val">${pt.size||28}</span>px</label><input type="range" class="form-input" id="pt-size" min="16" max="60" value="${pt.size||28}" oninput="document.getElementById('pt-size-val').textContent=this.value"></div>
+        <div class="form-row" style="max-width:160px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="pt-color" value="${pt.color||'#1E293B'}" style="height:42px;padding:4px"></div>
+        <div class="form-row" style="max-width:160px"><label class="form-label">Graisse</label><select class="form-input" id="pt-weight"><option value="400"${(pt.weight||700)==400?' selected':''}>Normal</option><option value="600"${pt.weight==600?' selected':''}>Semi-bold</option><option value="700"${(!pt.weight||pt.weight==700)?' selected':''}>Bold</option><option value="800"${pt.weight==800?' selected':''}>Extra-bold</option></select></div>
+      </div>
+      <div class="form-row-inline" style="margin-top:4px">
+        <div class="form-row"><label class="form-label">Police (optionnel)</label><input class="form-input" id="pt-font" value="${pt.font||''}" placeholder="Ex : Playfair Display, Archivo…" style="max-width:260px"></div>
+        <div class="form-row" style="max-width:160px"><label class="form-label">Alignement</label><select class="form-input" id="pt-align"><option value="center"${(!pt.align||pt.align==='center')?' selected':''}>Centré</option><option value="left"${pt.align==='left'?' selected':''}>Gauche</option><option value="right"${pt.align==='right'?' selected':''}>Droite</option></select></div>
+      </div>
+      <div class="form-row" style="margin-top:4px"><label class="form-label">Utiliser la couleur de la phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-use-phase-color" ${pt.usePhaseColor?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label><div style="font-size:9px;color:var(--text3);margin-top:3px">Si activé, le titre prend la couleur de la phase sélectionnée au lieu de la couleur fixe ci-dessus</div></div>
+      <div style="margin-top:14px"><button class="btn btn-primary" onclick="savePhaseTitleSettings()">💾 Enregistrer</button></div>
+    </div>`;
   } else {
     h+=`<div class="admin-card"><div class="empty"><div class="icon">🔀</div><div class="text">Aucune phase définie.<br><span style="font-size:11px;color:var(--text3)">Le front affichera tout le contenu sans onglets.</span></div></div></div>`;
   }
@@ -1394,6 +1412,20 @@ async function savePhaseEdit(idx){
   closeModal();saving(true);
   await db.collection('events').doc(currentEventId).update({phases});
   toast('Phase mise à jour');
+}
+async function savePhaseTitleSettings(){
+  const phaseTitle={
+    show:document.getElementById('pt-show').checked,
+    size:parseInt(document.getElementById('pt-size').value)||28,
+    color:document.getElementById('pt-color').value||'#1E293B',
+    weight:parseInt(document.getElementById('pt-weight').value)||700,
+    font:document.getElementById('pt-font').value.trim(),
+    align:document.getElementById('pt-align').value||'center',
+    usePhaseColor:document.getElementById('pt-use-phase-color').checked
+  };
+  saving(true);
+  await evRef().update({phaseTitle});
+  toast('Réglages titre de phase enregistrés');
 }
 
 // Generic phase filter for admin history lists
