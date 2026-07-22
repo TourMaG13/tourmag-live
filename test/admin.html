@@ -1104,232 +1104,116 @@ function renderApparence(el){
   const typo=ev.typography||{};
   const isExp=ev.mode==='expedition';
   const pt=ev.phaseTitle||{};
-  const citVisible=ev.citVisibleCount||6;
-  let h=`<div class="page-title">Apparence</div>
-  <div class="page-desc">Centralisez ici toute la personnalisation visuelle du dashboard : hero, typographie, couleurs, titres de sections, style des modules.</div>`;
+  // Helper: title/subtitle/show row
+  function _tss(prefix, title, sub, show, placeholderT, placeholderS){
+    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="'+prefix+'-title" value="'+(title||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderT+'"></div><div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="'+prefix+'-sub" value="'+(sub||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderS+'"></div><div class="form-row" style="max-width:100px"><label class="form-label">Visible</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="'+prefix+'-show" '+(show!==false?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
+  }
+  function _det(icon, label, inner, open){
+    return '<details class="admin-card" style="margin-bottom:10px"'+(open?' open':'')+'><summary style="cursor:pointer;font-size:14px;font-weight:700;padding:14px 0 4px;list-style:none;display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+icon+'</span>'+label+'<span style="margin-left:auto;font-size:10px;color:var(--text3)">▾</span></summary><div style="padding:8px 0 4px">'+inner+'</div></details>';
+  }
+  let h='<div class="page-title">Apparence</div><div class="page-desc">Tous les réglages visuels de votre dashboard, organisés par module. Cliquez sur une section pour la déplier.</div>';
 
-  // ==================== 1. HERO ====================
-  h+=`<div class="admin-card"><h3>🏠 Hero (bandeau principal)</h3>
-    <div class="form-row"><label class="form-label">Image hero (URL — photo d'ambiance)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="${ev.hero_image||''}" style="flex:1" placeholder="Photo affichée à droite du hero">${mkMediaPickerBtn('app-hero-image')}${mkUploadBtn('app-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Si renseignée, le hero passe en mode split-screen (texte à gauche, photo à droite).</div></div>
-    <div class="form-row-inline">
-      <div class="form-row" style="${isExp?'display:none':''}"><label class="form-label">Couleur (gradient hero)</label><input type="color" class="form-input" id="app-hero-color" value="${ev.color||'#2D1B4E'}" style="height:42px;padding:4px"></div>
-      <div class="form-row"><label class="form-label">Hauteur du hero (px)</label><input type="number" class="form-input" id="app-hero-height" value="${ev.hero_height||(isExp?420:460)}" min="200" max="900" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:3px">Défaut : ${isExp?420:460}px</div></div>
-      <div class="form-row" style="${isExp?'':'display:none'}"><label class="form-label">Taille logo hero (px)</label><div style="display:flex;align-items:center;gap:10px"><input type="range" id="app-logo-size" min="20" max="120" value="${ev.logoSize||48}" style="flex:1" oninput="document.getElementById('app-logo-size-lbl').textContent=this.value+'px'"><span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text3);min-width:36px" id="app-logo-size-lbl">${ev.logoSize||48}px</span></div></div>
-    </div>`;
-  // Expedition-only hero fields
-  h+=`<div style="${isExp?'':'display:none'}">
-      <div class="form-row-inline" style="margin-top:6px">
-        <div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="app-hero-eyebrow" value="${((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')}" placeholder="Expédition éditoriale · Dossier spécial"><div style="font-size:9px;color:var(--text3);margin-top:3px">Petite mention en capitales au-dessus du titre.</div></div>
-        <div class="form-row"><label class="form-label">Crédit photo hero</label><input class="form-input" id="app-hero-credit" value="${((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')}" placeholder="© Photographe"></div>
-      </div>
-    </div>`;
-  // Classic timeline
-  h+=`<div style="${isExp?'display:none':''}">
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Timeline</div>
-        <div class="form-row-inline">
-          <div class="form-row" style="max-width:200px"><label class="form-label">Couleur de fond</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-tl-bg" value="${ev.timelineBgColor||'#0B2636'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">${ev.timelineBgColor||'hérite du hero'}</span></div></div>
-          <div class="form-row" style="max-width:200px"><label class="form-label">Couleur des puces</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-tl-dot" value="${ev.timelineDotColor||'#E8842C'}" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div></div>
-          <div class="form-row"><label class="form-label"><input type="checkbox" id="app-tl-custom" ${ev.timelineBgColor?'checked':''}> Personnaliser le fond</label><div style="font-size:9px;color:var(--text3)">Si décoché, la timeline hérite du gradient hero.</div></div>
-        </div>
-      </div>
-    </div>`;
+  // ==================== GÉNÉRAL ====================
+  h+=_det('🎨','Couleurs globales','<div class="form-row-inline"><div class="form-row" style="max-width:180px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="app-accent-color" value="'+(ev.accentColor||'#E8842C')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div><div class="form-row" style="max-width:180px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="app-live-color" value="'+(ev.liveColor||'#DC2626')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div></div><div style="margin-top:10px"><button class="btn btn-primary" onclick="saveGlobalColors()">💾 Enregistrer</button></div>', true);
+
+  // ==================== HERO ====================
+  var heroInner = '';
+  heroInner += '<div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="'+(ev.hero_image||'')+'" style="flex:1" placeholder="Photo affichée à droite du hero">'+mkMediaPickerBtn('app-hero-image')+mkUploadBtn('app-hero-image')+'</div></div>';
+  heroInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Couleur gradient</label><input type="color" class="form-input" id="app-hero-color" value="'+(ev.color||'#2D1B4E')+'" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="app-hero-height" value="'+(ev.hero_height||(isExp?420:460))+'" min="200" max="900" style="width:120px"></div><div class="form-row"'+(isExp?'':' style="display:none"')+'><label class="form-label">Taille logo (px)</label><input type="number" class="form-input" id="app-logo-size" value="'+(ev.logoSize||48)+'" min="20" max="120" style="width:100px"></div></div>';
+  if(isExp){
+    heroInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="app-hero-eyebrow" value="'+((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')+'" placeholder="Expédition éditoriale · Dossier spécial"></div><div class="form-row"><label class="form-label">Crédit photo</label><input class="form-input" id="app-hero-credit" value="'+((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')+'" placeholder="© Photographe"></div></div>';
+  }
+  if(!isExp){
+    heroInner += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Timeline</div><div class="form-row-inline"><div class="form-row" style="max-width:200px"><label class="form-label">Couleur fond</label><input type="color" id="app-tl-bg" value="'+(ev.timelineBgColor||'#0B2636')+'" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Couleur puces</label><input type="color" id="app-tl-dot" value="'+(ev.timelineDotColor||'#E8842C')+'" style="width:34px;height:28px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label"><input type="checkbox" id="app-tl-custom" '+(ev.timelineBgColor?'checked':'')+'> Personnaliser le fond</label></div></div></div>';
+  }
   // Hero tags
-  // Build hero tags list HTML
   var _ahtHtml = '';
   (ev.heroTags||[]).forEach(function(t,i){
     var tn = (t.name||'').replace(/"/g,'&amp;quot;');
     var tl = (t.link||'').replace(/"/g,'&amp;quot;');
     _ahtHtml += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input class="form-input" value="'+tn+'" placeholder="Nom" style="width:120px" data-aht-name="'+i+'"><input type="color" value="'+(t.color||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" data-aht-color="'+i+'"><input class="form-input" value="'+tl+'" placeholder="URL (optionnel)" style="flex:1;font-size:10px" data-aht-link="'+i+'"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">✕</button></div>';
   });
-  h+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Tags du hero (badges cliquables)</div>
-      <div id="app-hero-tags-list">${_ahtHtml}</div>
-      <button type="button" class="btn btn-ghost btn-xs" onclick="(function(){var l=document.getElementById('app-hero-tags-list'),i=l.children.length,d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';d.innerHTML='<input class=&quot;form-input&quot; placeholder=&quot;Nom&quot; style=&quot;width:120px&quot; data-aht-name=&quot;'+i+'&quot;><input type=&quot;color&quot; value=&quot;#E8842C&quot; style=&quot;width:34px;height:30px;border:none;cursor:pointer;border-radius:4px&quot; data-aht-color=&quot;'+i+'&quot;><input class=&quot;form-input&quot; placeholder=&quot;URL (optionnel)&quot; style=&quot;flex:1;font-size:10px&quot; data-aht-link=&quot;'+i+'&quot;><button class=&quot;btn btn-danger btn-xs&quot; onclick=&quot;this.parentElement.remove()&quot;>✕</button>';l.appendChild(d)})()">＋ Ajouter un tag</button>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveHeroSettings()">💾 Enregistrer le hero</button></div>
-  </div>`;
+  heroInner += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Tags du hero</div><div id="app-hero-tags-list">'+_ahtHtml+'</div><button type="button" class="btn btn-ghost btn-xs" onclick="window._addHeroTag()">＋ Ajouter un tag</button></div>';
+  heroInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveHeroSettings()">💾 Enregistrer le hero</button></div>';
+  h+=_det('🏠','Hero (bandeau principal)',heroInner, false);
 
-  // ==================== 2. TYPOGRAPHIE ====================
-  h+=`<div class="admin-card"><h3>🔤 Familles de polices</h3>
-    <div class="page-desc" style="margin-bottom:12px">Choisissez les polices Google Fonts pour chaque usage. Un aperçu s'affiche à droite.</div>
-    <div class="form-row-inline">
-      <div class="form-row" style="flex:1"><label class="form-label">🏠 Titre du dashboard (hero)</label><select class="form-input" id="typo-hero-font" onchange="previewFont('hero')">${_fontOpts(typo.heroFont||'')}</select></div>
-      <div style="flex:0 0 200px;padding-top:22px;font-size:28px;font-weight:700;color:var(--text)" id="typo-hero-preview">Aperçu Hero</div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row" style="flex:1"><label class="form-label">Titres de sections (rubriques, noms)</label><select class="form-input" id="typo-heading-font" onchange="previewFont('heading')">${_fontOpts(typo.headingFont||'')}</select></div>
-      <div style="flex:0 0 200px;padding-top:22px;font-size:22px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu titre</div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row" style="flex:1"><label class="form-label">Corps (textes, articles, descriptions)</label><select class="form-input" id="typo-body-font" onchange="previewFont('body')">${_fontOpts(typo.bodyFont||'')}</select></div>
-      <div style="flex:0 0 200px;padding-top:22px;font-size:14px;color:var(--text2)" id="typo-body-preview">Aperçu du texte courant pour voir le rendu de la police.</div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row" style="flex:1"><label class="form-label">UI / Labels (badges, tags, navigation, onglets)</label><select class="form-input" id="typo-ui-font" onchange="previewFont('ui')">${_fontOpts(typo.uiFont||'')}</select></div>
-      <div style="flex:0 0 200px;padding-top:22px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3)" id="typo-ui-preview">BADGE · TAG · LABEL</div>
-    </div>
-  </div>
+  // ==================== TYPOGRAPHIE ====================
+  var typoInner = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Familles de polices</div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titre hero</label><select class="form-input" id="typo-hero-font" onchange="previewFont(\'hero\')">'+_fontOpts(typo.heroFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:24px;font-weight:700;color:var(--text)" id="typo-hero-preview">Aperçu</div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titres sections</label><select class="form-input" id="typo-heading-font" onchange="previewFont(\'heading\')">'+_fontOpts(typo.headingFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:18px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu</div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Corps</label><select class="form-input" id="typo-body-font" onchange="previewFont(\'body\')">'+_fontOpts(typo.bodyFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:13px;color:var(--text2)" id="typo-body-preview">Aperçu texte</div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">UI / Labels</label><select class="form-input" id="typo-ui-font" onchange="previewFont(\'ui\')">'+_fontOpts(typo.uiFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3)" id="typo-ui-preview">BADGE · TAG</div></div>';
+  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Tailles</div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre hero <span id="typo-hero-size-val">'+(typo.heroTitleSize||32)+'</span>px</label><input type="range" class="form-input" id="typo-hero-size" min="20" max="52" value="'+(typo.heroTitleSize||32)+'" oninput="document.getElementById(\'typo-hero-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Sous-titre hero <span id="typo-hero-sub-val">'+(typo.heroSubtitleSize||16)+'</span>px</label><input type="range" class="form-input" id="typo-hero-sub" min="11" max="24" value="'+(typo.heroSubtitleSize||16)+'" oninput="document.getElementById(\'typo-hero-sub-val\').textContent=this.value"></div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titres sections <span id="typo-sec-size-val">'+(typo.sectionTitleSize||20)+'</span>px</label><input type="range" class="form-input" id="typo-sec-size" min="14" max="32" value="'+(typo.sectionTitleSize||20)+'" oninput="document.getElementById(\'typo-sec-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Corps <span id="typo-body-size-val">'+(typo.bodySize||14)+'</span>px</label><input type="range" class="form-input" id="typo-body-size" min="11" max="20" value="'+(typo.bodySize||14)+'" oninput="document.getElementById(\'typo-body-size-val\').textContent=this.value"></div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Labels <span id="typo-ui-size-val">'+(typo.uiSize||11)+'</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="'+(typo.uiSize||11)+'" oninput="document.getElementById(\'typo-ui-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Compteurs <span id="typo-counter-size-val">'+(typo.counterSize||40)+'</span>px</label><input type="range" class="form-input" id="typo-counter-size" min="20" max="64" value="'+(typo.counterSize||40)+'" oninput="document.getElementById(\'typo-counter-size-val\').textContent=this.value"></div></div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Onglets phase <span id="typo-phase-size-val">'+(typo.phaseTabSize||13)+'</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="'+(typo.phaseTabSize||13)+'" oninput="document.getElementById(\'typo-phase-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Padding onglets <span id="typo-phase-pad-val">'+(typo.phaseTabPadY||7)+'</span>px</label><input type="range" class="form-input" id="typo-phase-pad" min="3" max="16" value="'+(typo.phaseTabPadY||7)+'" oninput="document.getElementById(\'typo-phase-pad-val\').textContent=this.value"></div></div></div>';
+  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Couleurs de texte</div>';
+  typoInner += '<div class="form-row-inline"><div class="form-row" style="max-width:160px"><label class="form-label">Titre hero</label><input type="color" class="form-input" id="typo-hero-color" value="'+(typo.heroColor||'#FFFFFF')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Titres sections</label><input type="color" class="form-input" id="typo-heading-color" value="'+(typo.headingColor||'#1E293B')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Corps</label><input type="color" class="form-input" id="typo-body-color" value="'+(typo.bodyColor||'#334155')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Labels / UI</label><input type="color" class="form-input" id="typo-ui-color" value="'+(typo.uiColor||'#64748B')+'" style="height:36px;width:50px;padding:3px"></div></div></div>';
+  typoInner += '<div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer</button><button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser</button></div>';
+  h+=_det('🔤','Typographie',typoInner, false);
 
-  <div class="admin-card"><h3>📐 Tailles de police</h3>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre hero <span id="typo-hero-size-val">${typo.heroTitleSize||32}</span>px</label><input type="range" class="form-input" id="typo-hero-size" min="20" max="52" value="${typo.heroTitleSize||32}" oninput="document.getElementById('typo-hero-size-val').textContent=this.value"></div>
-      <div class="form-row"><label class="form-label">Sous-titre hero <span id="typo-hero-sub-val">${typo.heroSubtitleSize||16}</span>px</label><input type="range" class="form-input" id="typo-hero-sub" min="11" max="24" value="${typo.heroSubtitleSize||16}" oninput="document.getElementById('typo-hero-sub-val').textContent=this.value"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titres sections <span id="typo-sec-size-val">${typo.sectionTitleSize||20}</span>px</label><input type="range" class="form-input" id="typo-sec-size" min="14" max="32" value="${typo.sectionTitleSize||20}" oninput="document.getElementById('typo-sec-size-val').textContent=this.value"></div>
-      <div class="form-row"><label class="form-label">Texte corps <span id="typo-body-size-val">${typo.bodySize||14}</span>px</label><input type="range" class="form-input" id="typo-body-size" min="11" max="20" value="${typo.bodySize||14}" oninput="document.getElementById('typo-body-size-val').textContent=this.value"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Labels / badges <span id="typo-ui-size-val">${typo.uiSize||11}</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="${typo.uiSize||11}" oninput="document.getElementById('typo-ui-size-val').textContent=this.value"></div>
-      <div class="form-row"><label class="form-label">Chiffres compteurs <span id="typo-counter-size-val">${typo.counterSize||40}</span>px</label><input type="range" class="form-input" id="typo-counter-size" min="20" max="64" value="${typo.counterSize||40}" oninput="document.getElementById('typo-counter-size-val').textContent=this.value"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Onglets phase — taille texte <span id="typo-phase-size-val">${typo.phaseTabSize||13}</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="${typo.phaseTabSize||13}" oninput="document.getElementById('typo-phase-size-val').textContent=this.value"></div>
-      <div class="form-row"><label class="form-label">Onglets phase — padding vertical <span id="typo-phase-pad-val">${typo.phaseTabPadY||7}</span>px</label><input type="range" class="form-input" id="typo-phase-pad" min="3" max="16" value="${typo.phaseTabPadY||7}" oninput="document.getElementById('typo-phase-pad-val').textContent=this.value"></div>
-    </div>
-  </div>
+  // ==================== PER-MODULE SECTIONS ====================
+  // 📡 Fil live
+  var liveInner = _tss('app-st-live', ev.liveTitle, ev.liveSubtitle, ev.liveShowTitle, 'Fil Live', 'Minute par minute');
+  liveInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-live-count" value="'+(ev.liveVisibleCount||5)+'" min="1" max="50"></div><div class="form-row" style="max-width:200px"><label class="form-label">Lignes max par entrée</label><input type="number" class="form-input" id="app-acc-live-clamp" value="'+(ev.liveLineClamp||0)+'" min="0" placeholder="0 = illimité"><div style="font-size:9px;color:var(--text3);margin-top:2px">0 = pas de troncature</div></div></div>';
+  liveInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'live\')">💾 Enregistrer</button></div>';
+  h+=_det('📡','Fil live',liveInner, false);
 
-  <div class="admin-card"><h3>🎨 Couleurs de texte</h3>
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:180px"><label class="form-label">Titre hero</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-hero-color" value="${typo.heroColor||'#FFFFFF'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-hero-color-hex" value="${typo.heroColor||'#FFFFFF'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-hero-color').value=this.value"></div></div>
-      <div class="form-row" style="max-width:180px"><label class="form-label">Titres sections</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-heading-color" value="${typo.headingColor||'#1E293B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-heading-color-hex" value="${typo.headingColor||'#1E293B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-heading-color').value=this.value"></div></div>
-      <div class="form-row" style="max-width:180px"><label class="form-label">Corps</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-body-color" value="${typo.bodyColor||'#334155'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-body-color-hex" value="${typo.bodyColor||'#334155'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-body-color').value=this.value"></div></div>
-      <div class="form-row" style="max-width:180px"><label class="form-label">Labels / UI</label><div style="display:flex;gap:6px;align-items:center"><input type="color" class="form-input" id="typo-ui-color" value="${typo.uiColor||'#64748B'}" style="height:38px;width:60px;padding:3px"><input class="form-input" id="typo-ui-color-hex" value="${typo.uiColor||'#64748B'}" style="font-family:'IBM Plex Mono';font-size:11px" onchange="document.getElementById('typo-ui-color').value=this.value"></div></div>
-    </div>
-    <div style="margin-top:14px;display:flex;gap:10px">
-      <button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer la typographie</button>
-      <button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser</button>
-    </div>
-  </div>`;
+  // 💬 Verbatims
+  var citInner = _tss('app-st-cit', ev.citationsTitle, ev.citationsSubtitle, ev.citationsShowTitle, 'Verbatims', 'Ce qu\'ils ont dit');
+  citInner += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style</div>';
+  citInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Style</label><select class="form-input" id="app-cit-style" style="width:180px"><option value="classic"'+((ev.citationStyle||'classic')==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(ev.citationStyle==='premium'?' selected':'')+'>Premium</option></select></div><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-cit-accent" value="'+(ev.citationAccentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Bordure (px)</label><input type="number" class="form-input" id="app-cit-bw" value="'+(ev.citationBorderWidth||2.5)+'" min="1" max="6" step="0.5" style="width:70px"></div><div class="form-row"><label class="form-label">Guillemets</label><select class="form-input" id="app-cit-qsize" style="width:100px"><option value="small"'+(ev.citationQuoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+((ev.citationQuoteSize||'medium')==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(ev.citationQuoteSize==='large'?' selected':'')+'>Grand</option></select></div></div>';
+  citInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Taille texte</label><input type="number" class="form-input" id="app-cit-tsize" value="'+(ev.citationTextSize||13)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille nom</label><input type="number" class="form-input" id="app-cit-nsize" value="'+(ev.citationNameSize||12)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille poste</label><input type="number" class="form-input" id="app-cit-rsize" value="'+(ev.citationRoleSize||10)+'" min="8" max="16" style="width:70px"></div><div class="form-row"><label class="form-label">Médaillons</label><select class="form-input" id="app-cit-avsize" style="width:120px"><option value="60"'+((ev.citationAvatarSize||80)==60?' selected':'')+'>60px</option><option value="80"'+((ev.citationAvatarSize||80)==80?' selected':'')+'>80px</option><option value="100"'+((ev.citationAvatarSize||80)==100?' selected':'')+'>100px</option><option value="120"'+((ev.citationAvatarSize||80)==120?' selected':'')+'>120px</option></select></div></div>';
+  citInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-cit-count" value="'+(ev.citVisibleCount||6)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="'+(ev.citationFeaturedBg||'#0F2B3C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div></div>';
+  citInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'citations\')">💾 Enregistrer</button></div>';
+  h+=_det('💬','Verbatims / Citations',citInner, false);
 
-  // ==================== 3. COULEURS GLOBALES ====================
-  h+=`<div class="admin-card"><h3>🎨 Couleurs globales</h3>
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:180px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="app-accent-color" value="${ev.accentColor||'#E8842C'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div>
-      <div class="form-row" style="max-width:180px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="app-live-color" value="${ev.liveColor||'#DC2626'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGlobalColors()">💾 Enregistrer les couleurs</button></div>
-  </div>`;
+  // 📰 Articles
+  var artInner = _tss('app-st-art', ev.articlesTitle, ev.articlesSubtitle, ev.articlesShowTitle, 'Nos articles', "L'événement vu par la rédaction");
+  artInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-art-count" value="'+(ev.articlesVisibleCount||4)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="'+(ev.articlesTitleSize||14)+'" min="10" max="24" style="width:70px"></div></div>';
+  artInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'articles\')">💾 Enregistrer</button></div>';
+  h+=_det('📰','Articles',artInner, false);
 
-  // ==================== 4. TITRES DE SECTIONS ====================
-  h+=`<div class="admin-card"><h3>📋 Titres de sections</h3>
-    <div class="page-desc" style="margin-bottom:12px">Personnalisez le titre et le sous-titre affichés au-dessus de chaque rubrique sur le front.</div>
-    <div style="display:grid;grid-template-columns:minmax(100px,1fr) minmax(100px,1fr) auto;gap:6px 12px;align-items:end">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Titre</div>
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Sous-titre</div>
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Visible</div>
+  // 🧠 L'essentiel
+  var essInner = _tss('app-st-ess', ev.essentialTitle, ev.essentialSubtitle, ev.essentialShowTitle, "L'essentiel", 'Les points clés à retenir');
+  essInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'essential\')">💾 Enregistrer</button></div>';
+  h+=_det('🧠',"L'essentiel",essInner, false);
 
-      <input class="form-input" id="app-st-live-title" value="${ev.liveTitle||''}" placeholder="Fil Live" style="font-size:12px">
-      <input class="form-input" id="app-st-live-sub" value="${ev.liveSubtitle||''}" placeholder="Minute par minute" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-live-show" ${ev.liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+  // 🎬 Vidéos
+  var vidInner = _tss('app-st-vid', ev.videosTitle, ev.videosSubtitle, ev.videosShowTitle, 'Vidéos', 'Reportages et temps forts');
+  vidInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'videos\')">💾 Enregistrer</button></div>';
+  h+=_det('🎬','Vidéos',vidInner, false);
 
-      <input class="form-input" id="app-st-cit-title" value="${ev.citationsTitle||''}" placeholder="Verbatims" style="font-size:12px">
-      <input class="form-input" id="app-st-cit-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-cit-show" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+  // 🎙️ Interviews
+  var itwInner = _tss('app-st-itw', ev.interviewsTitle, ev.interviewsSubtitle, ev.interviewsShowTitle, 'Interviews', 'Rencontres et visions');
+  itwInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-itw-count" value="'+(ev.itwVisibleCount||4)+'" min="1" max="20" style="width:70px"></div></div>';
+  itwInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'interviews\')">💾 Enregistrer</button></div>';
+  h+=_det('🎙️','Interviews',itwInner, false);
 
-      <input class="form-input" id="app-st-ess-title" value="${ev.essentialTitle||''}" placeholder="L'essentiel" style="font-size:12px">
-      <input class="form-input" id="app-st-ess-sub" value="${ev.essentialSubtitle||''}" placeholder="Les points clés à retenir" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-ess-show" ${ev.essentialShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+  // 📸 Galerie
+  var galInner = _tss('app-st-gal', ev.galleryTitle, ev.gallerySubtitle, ev.galleryShowTitle, 'Galerie', 'En images');
+  galInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label><input type="number" class="form-input" id="app-acc-gal-height" value="'+(ev.galleryHeight||260)+'" min="100" max="600" style="width:100px"></div></div>';
+  galInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'gallery\')">💾 Enregistrer</button></div>';
+  h+=_det('📸','Galerie photos',galInner, false);
 
-      <input class="form-input" id="app-st-art-title" value="${ev.articlesTitle||''}" placeholder="Nos articles" style="font-size:12px">
-      <input class="form-input" id="app-st-art-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-art-show" ${ev.articlesShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+  // 👤 Reporters
+  var jrInner = '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille nom (px)</label><input type="number" class="form-input" id="app-jr-nsize" value="'+(ev.journalistsNameSize||13)+'" min="10" max="24" style="width:70px"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille poste (px)</label><input type="number" class="form-input" id="app-jr-rsize" value="'+(ev.journalistsRoleSize||10)+'" min="8" max="16" style="width:70px"></div></div>';
+  jrInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'reporters\')">💾 Enregistrer</button></div>';
+  h+=_det('👤','Reporters',jrInner, false);
 
-      <input class="form-input" id="app-st-vid-title" value="${ev.videosTitle||''}" placeholder="Vidéos" style="font-size:12px">
-      <input class="form-input" id="app-st-vid-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-vid-show" ${ev.videosShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
-
-      <input class="form-input" id="app-st-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews" style="font-size:12px">
-      <input class="form-input" id="app-st-itw-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-itw-show" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
-
-      <input class="form-input" id="app-st-gal-title" value="${ev.galleryTitle||''}" placeholder="Galerie" style="font-size:12px">
-      <input class="form-input" id="app-st-gal-sub" value="${ev.gallerySubtitle||''}" placeholder="En images" style="font-size:12px">
-      <label class="toggle"><input type="checkbox" id="app-st-gal-show" ${ev.galleryShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
-
-      <input class="form-input" id="app-st-jr-title" value="${ev.journalistsTitle||''}" placeholder="Vos reporters" style="font-size:12px">
-      <div style="font-size:9px;color:var(--text3);font-style:italic">pas de sous-titre</div>
-      <div></div>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveSectionTitles()">💾 Enregistrer les titres</button></div>
-  </div>`;
-
-  // ==================== 5. ACCORDÉONS & AFFICHAGE ====================
-  h+=`<div class="admin-card"><h3>📏 Accordéons & affichage</h3>
-    <div class="page-desc" style="margin-bottom:12px">Nombre d'éléments visibles avant le bouton "Voir plus" et autres réglages de mise en forme par section.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px">
-      <div class="form-row"><label class="form-label">📡 Live — entrées visibles</label><input type="number" class="form-input" id="app-acc-live-count" value="${ev.liveVisibleCount||5}" min="1" max="50"></div>
-      <div class="form-row"><label class="form-label">📡 Live — lignes max / entrée</label><input type="number" class="form-input" id="app-acc-live-clamp" value="${ev.liveLineClamp||0}" min="0" placeholder="0 = illimité"></div>
-      <div class="form-row"><label class="form-label">💬 Citations visibles</label><input type="number" class="form-input" id="app-acc-cit-count" value="${ev.citVisibleCount||6}" min="1" max="20"></div>
-      <div class="form-row"><label class="form-label">📰 Articles visibles</label><input type="number" class="form-input" id="app-acc-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20"></div>
-      <div class="form-row"><label class="form-label">🎙️ Interviews visibles</label><input type="number" class="form-input" id="app-acc-itw-count" value="${ev.itwVisibleCount||4}" min="1" max="20"></div>
-      <div class="form-row"><label class="form-label">📸 Hauteur galerie (px)</label><input type="number" class="form-input" id="app-acc-gal-height" value="${ev.galleryHeight||260}" min="100" max="600"></div>
-      <div class="form-row"><label class="form-label">📰 Taille titre article (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="${ev.articlesTitleSize||14}" min="10" max="24"></div>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveAccordionSettings()">💾 Enregistrer</button></div>
-  </div>`;
-
-  // ==================== 4. STYLE CITATIONS ====================
-  h+=`<div class="admin-card"><h3>💬 Style des citations / verbatims</h3>
-    <div class="form-row-inline">
-      <div class="form-row" style="${isExp?'display:none':''}"><label class="form-label">Style</label>
-        <select class="form-input" id="app-cit-style" style="width:180px">
-          <option value="classic"${(ev.citationStyle||'classic')==='classic'?' selected':''}>Classique (fond sombre)</option>
-          <option value="premium"${ev.citationStyle==='premium'?' selected':''}>Premium (carte blanche)</option>
-        </select></div>
-      <div class="form-row"><label class="form-label">Couleur d'accent</label><div style="display:flex;gap:6px;align-items:center"><input type="color" id="app-cit-accent" value="${ev.citationAccentColor||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>
-      <div class="form-row"><label class="form-label">Épaisseur bordure</label><input type="number" class="form-input" id="app-cit-bw" value="${ev.citationBorderWidth||2.5}" min="1" max="6" step="0.5" style="width:70px"></div>
-      <div class="form-row"><label class="form-label">Taille guillemets</label>
-        <select class="form-input" id="app-cit-qsize" style="width:120px">
-          <option value="small"${ev.citationQuoteSize==='small'?' selected':''}>Petit</option>
-          <option value="medium"${(ev.citationQuoteSize||'medium')==='medium'?' selected':''}>Moyen</option>
-          <option value="large"${ev.citationQuoteSize==='large'?' selected':''}>Grand</option>
-        </select></div>
-    </div>
-    <div class="form-row-inline" style="margin-top:8px">
-      <div class="form-row"><label class="form-label">Taille texte</label><input type="number" class="form-input" id="app-cit-tsize" value="${ev.citationTextSize||13}" min="10" max="20" style="width:70px"></div>
-      <div class="form-row"><label class="form-label">Taille nom</label><input type="number" class="form-input" id="app-cit-nsize" value="${ev.citationNameSize||12}" min="10" max="20" style="width:70px"></div>
-      <div class="form-row"><label class="form-label">Taille poste</label><input type="number" class="form-input" id="app-cit-rsize" value="${ev.citationRoleSize||10}" min="8" max="16" style="width:70px"></div>
-      <div class="form-row"><label class="form-label">Médaillons</label>
-        <select class="form-input" id="app-cit-avsize" style="width:140px">
-          <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
-          <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px)</option>
-          <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
-          <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
-        </select></div>
-      <div class="form-row"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-cit-visible" value="${citVisible}" min="1" max="20" style="width:70px"></div>
-    </div>
-    <div class="form-row-inline" style="margin-top:8px">
-      <div class="form-row"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="${ev.citationFeaturedBg||'#0F2B3C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveCitStyleFromApparence()">💾 Enregistrer le style citations</button></div>
-  </div>`;
-
-  // ==================== 5. TITRE PHASE ACTIVE ====================
+  // 🏷️ Titre phase active
   if((ev.phases||[]).length){
-    h+=`<div class="admin-card"><h3>🏷️ Titre de la phase active</h3>
-      <div class="page-desc" style="margin-bottom:12px">Quand un visiteur clique sur un onglet de phase, un titre peut s'afficher en gros sous les onglets pour identifier clairement la phase.</div>
-      <div class="form-row-inline">
-        <div class="form-row" style="max-width:220px"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-show" ${pt.show?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-        <div class="form-row" style="max-width:220px"><label class="form-label">Couleur = couleur de la phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-use-phase-color" ${pt.usePhaseColor?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-      </div>
-      <div class="form-row-inline" style="margin-top:8px">
-        <div class="form-row" style="max-width:200px"><label class="form-label">Taille <span id="pt-size-val">${pt.size||28}</span>px</label><input type="range" class="form-input" id="pt-size" min="16" max="60" value="${pt.size||28}" oninput="document.getElementById('pt-size-val').textContent=this.value"></div>
-        <div class="form-row" style="max-width:120px"><label class="form-label">Couleur fixe</label><input type="color" class="form-input" id="pt-color" value="${pt.color||'#1E293B'}" style="height:42px;padding:4px"></div>
-        <div class="form-row" style="max-width:140px"><label class="form-label">Graisse</label><select class="form-input" id="pt-weight"><option value="400"${(pt.weight||700)==400?' selected':''}>Normal</option><option value="600"${pt.weight==600?' selected':''}>Semi-bold</option><option value="700"${(!pt.weight||pt.weight==700)?' selected':''}>Bold</option><option value="800"${pt.weight==800?' selected':''}>Extra-bold</option></select></div>
-      </div>
-      <div class="form-row-inline" style="margin-top:4px">
-        <div class="form-row" style="max-width:260px"><label class="form-label">Police</label><select class="form-input" id="pt-font">${_fontOpts(pt.font||'')}</select></div>
-        <div class="form-row" style="max-width:200px"><label class="form-label">Padding vertical <span id="pt-pad-val">${pt.padY||10}</span>px</label><input type="range" class="form-input" id="pt-pad" min="0" max="40" value="${pt.padY||10}" oninput="document.getElementById('pt-pad-val').textContent=this.value"></div>
-      </div>
-      <div style="margin-top:14px"><button class="btn btn-primary" onclick="savePhaseTitleSettings()">💾 Enregistrer</button></div>
-    </div>`;
+    var ptInner = '<div class="form-row-inline"><div class="form-row" style="max-width:180px"><label class="form-label">Afficher</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-show" '+(pt.show?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div class="form-row" style="max-width:200px"><label class="form-label">Couleur = phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pt-use-phase-color" '+(pt.usePhaseColor?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
+    ptInner += '<div class="form-row-inline" style="margin-top:8px"><div class="form-row" style="max-width:180px"><label class="form-label">Taille <span id="pt-size-val">'+(pt.size||28)+'</span>px</label><input type="range" class="form-input" id="pt-size" min="16" max="60" value="'+(pt.size||28)+'" oninput="document.getElementById(\'pt-size-val\').textContent=this.value"></div><div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="pt-color" value="'+(pt.color||'#1E293B')+'" style="height:38px;padding:4px"></div><div class="form-row" style="max-width:130px"><label class="form-label">Graisse</label><select class="form-input" id="pt-weight"><option value="400"'+((pt.weight||700)==400?' selected':'')+'>Normal</option><option value="600"'+(pt.weight==600?' selected':'')+'>Semi-bold</option><option value="700"'+((!pt.weight||pt.weight==700)?' selected':'')+'>Bold</option><option value="800"'+(pt.weight==800?' selected':'')+'>Extra-bold</option></select></div><div class="form-row" style="max-width:200px"><label class="form-label">Police</label><select class="form-input" id="pt-font">'+_fontOpts(pt.font||'')+'</select></div></div>';
+    ptInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="savePhaseTitleSettings()">💾 Enregistrer</button></div>';
+    h+=_det('🏷️','Titre de la phase active',ptInner, false);
   }
 
   el.innerHTML=h;
-  ['hero','heading','body','ui'].forEach(k=>previewFont(k));
+  ['hero','heading','body','ui'].forEach(function(k){previewFont(k);});
 }
+
 function previewFont(type){
   const sel=document.getElementById('typo-'+type+'-font');
   const prev=document.getElementById('typo-'+type+'-preview');
@@ -1458,6 +1342,51 @@ async function saveCitStyleFromApparence(){
     citationFeaturedBg:document.getElementById('app-cit-feat-bg').value||'#0F2B3C'
   });
   toast('Style citations enregistré');
+}
+window._addHeroTag=function(){
+  var l=document.getElementById('app-hero-tags-list');if(!l)return;
+  var i=l.children.length,d=document.createElement('div');
+  d.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+  d.innerHTML='<input class="form-input" placeholder="Nom" style="width:120px" data-aht-name="'+i+'"><input type="color" value="#E8842C" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" data-aht-color="'+i+'"><input class="form-input" placeholder="URL (optionnel)" style="flex:1;font-size:10px" data-aht-link="'+i+'"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">✕</button>';
+  l.appendChild(d);
+};
+async function saveModuleSettings(type){
+  saving(true);
+  var ud={};
+  function _v(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+  function _c(id){var el=document.getElementById(id);return el?el.checked:true;}
+  function _n(id,def){var el=document.getElementById(id);return el?parseInt(el.value)||def:def;}
+  if(type==='live'){
+    ud.liveTitle=_v('app-st-live-title');ud.liveSubtitle=_v('app-st-live-sub');ud.liveShowTitle=_c('app-st-live-show');
+    ud.liveVisibleCount=_n('app-acc-live-count',5);ud.liveLineClamp=_n('app-acc-live-clamp',0);
+  } else if(type==='citations'){
+    ud.citationsTitle=_v('app-st-cit-title');ud.citationsSubtitle=_v('app-st-cit-sub');ud.citationsShowTitle=_c('app-st-cit-show');
+    ud.citationStyle=_v('app-cit-style')||'classic';
+    ud.citationAccentColor=document.getElementById('app-cit-accent')?.value||'#E8842C';
+    ud.citationBorderWidth=parseFloat(document.getElementById('app-cit-bw')?.value)||2.5;
+    ud.citationQuoteSize=_v('app-cit-qsize')||'medium';
+    ud.citationTextSize=_n('app-cit-tsize',13);ud.citationNameSize=_n('app-cit-nsize',12);ud.citationRoleSize=_n('app-cit-rsize',10);
+    ud.citationAvatarSize=_n('app-cit-avsize',80);ud.citVisibleCount=_n('app-acc-cit-count',6);
+    ud.citationFeaturedBg=document.getElementById('app-cit-feat-bg')?.value||'#0F2B3C';
+  } else if(type==='articles'){
+    ud.articlesTitle=_v('app-st-art-title');ud.articlesSubtitle=_v('app-st-art-sub');ud.articlesShowTitle=_c('app-st-art-show');
+    ud.articlesVisibleCount=_n('app-acc-art-count',4);ud.articlesTitleSize=_n('app-acc-art-tsize',14);
+  } else if(type==='essential'){
+    ud.essentialTitle=_v('app-st-ess-title');ud.essentialSubtitle=_v('app-st-ess-sub');ud.essentialShowTitle=_c('app-st-ess-show');
+  } else if(type==='videos'){
+    ud.videosTitle=_v('app-st-vid-title');ud.videosSubtitle=_v('app-st-vid-sub');ud.videosShowTitle=_c('app-st-vid-show');
+  } else if(type==='interviews'){
+    ud.interviewsTitle=_v('app-st-itw-title');ud.interviewsSubtitle=_v('app-st-itw-sub');ud.interviewsShowTitle=_c('app-st-itw-show');
+    ud.itwVisibleCount=_n('app-acc-itw-count',4);
+  } else if(type==='gallery'){
+    ud.galleryTitle=_v('app-st-gal-title');ud.gallerySubtitle=_v('app-st-gal-sub');ud.galleryShowTitle=_c('app-st-gal-show');
+    ud.galleryHeight=_n('app-acc-gal-height',260);
+  } else if(type==='reporters'){
+    ud.journalistsTitle=_v('app-st-jr-title');
+    ud.journalistsNameSize=_n('app-jr-nsize',13);ud.journalistsRoleSize=_n('app-jr-rsize',10);
+  }
+  await evRef().update(ud);
+  toast('Réglages enregistrés');
 }
 
 // ==================== PHASES / TEMPS FORTS ====================
