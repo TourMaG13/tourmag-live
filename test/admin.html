@@ -5090,7 +5090,7 @@ function renderEtapes(el){
       <div class="form-row"><label class="form-label">Km total</label><input class="form-input" type="number" id="exp-total-km" value="${exp.totalKm||''}"></div>
     </div>
     <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Couleur accent</label><input class="form-input" type="color" id="exp-accent-color" value="${(exp.branding||{}).accentColor||'#FF6C00'}" style="height:42px;padding:4px"></div>
+      <div class="form-row"><label class="form-label">Couleur accent</label><input class="form-input" type="color" id="exp-accent-color" value="${ev.accentColor||(exp.branding||{}).accentColor||'#FF6C00'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Aussi modifiable dans Fil de route > Réglages</div></div>
     </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre carte</label><input class="form-input" id="exp-map-title" value="${(exp.mapTitle||'').replace(/"/g,'&quot;')}" placeholder="La route, en direct"></div>
@@ -5209,6 +5209,7 @@ async function saveExpeditionSettings(){
     'expedition.dateEnd': document.getElementById('exp-date-end').value,
     'expedition.totalKm': parseInt(document.getElementById('exp-total-km').value)||0,
     'expedition.branding.accentColor': document.getElementById('exp-accent-color').value,
+    accentColor: document.getElementById('exp-accent-color').value,
     'expedition.mapTitle': document.getElementById('exp-map-title').value.trim(),
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
     'expedition.mapNote': document.getElementById('exp-map-note').value.trim(),
