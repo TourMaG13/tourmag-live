@@ -1474,14 +1474,14 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor','brandnews'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
   const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
-  const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
+  const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',sponsors:'full'};
+  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
@@ -1497,6 +1497,7 @@ function renderModules(el){
     {key:'gallery',icon:'📸',label:'Galerie photos'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'journalists',icon:'👤',label:'Journalistes'},
+    {key:'brandnews',icon:'📢',label:'Brand News'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'}
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
@@ -2753,7 +2754,7 @@ function renderArticles(el){
     <div id="rss-preview" style="margin-top:12px"></div>
   </div>
 
-  ${ev.mode==='expedition'?`<!-- BRAND NEWS -->
+  <!-- BRAND NEWS -->
   <div class="admin-card"><h3>📢 Brand News (Publicité)</h3>
     <div class="page-desc" style="margin-bottom:12px">Bloc publicitaire affichant automatiquement le dernier article d'un flux RSS dédié. L'article sera affiché avec sa photo, son titre et un lien vers l'article TourMaG.</div>
     <div class="form-row"><label class="form-label">URL du flux RSS Brand News</label>
@@ -2769,7 +2770,7 @@ function renderArticles(el){
       <span style="font-size:10px;color:var(--text3)">Le flux est importé automatiquement par le script RSS toutes les 15 min.</span>
     </div>
     ${ev.brandNews?.rssUrl?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px;font-size:11px;color:#166534"><strong>✅ Flux configuré :</strong> ${ev.brandNews.rssUrl}<br>Période : ${ev.brandNews.startDate||'—'} → ${ev.brandNews.endDate||'—'}</div>`:''}
-  </div>`:''}
+  </div>
 
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
