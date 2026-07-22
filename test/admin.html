@@ -1291,6 +1291,12 @@ function mkPhaseBadge(phaseId){
   if(!p) return '';
   return `<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:4px;background:${p.color||'#6366F1'}20;color:${p.color||'#6366F1'};border:1px solid ${p.color||'#6366F1'}30">${p.name}</span>`;
 }
+function mkPhaseInlineSelect(attrName, attrVal, current){
+  const phases=getPhases();
+  if(!phases.length) return '';
+  const options=phases.map(p=>`<option value="${p.id}"${current===p.id?' selected':''}>${p.name}</option>`).join('');
+  return `<select class="form-input" ${attrName}="${attrVal}" style="width:auto;min-width:100px;font-size:10px;padding:3px 6px;height:28px" title="Phase"><option value=""${!current?' selected':''}>Ø Phase</option>${options}</select>`;
+}
 
 function renderPhases(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
@@ -3787,7 +3793,7 @@ function renderJournalistes(el){
   // Resolve assigned journalists with global data
   const assignedList=eventJournalists.map(ej=>{
     const g=journalistsGlobalData.find(j=>j.id===ej.globalId);
-    return g?{...g,_order:ej.order}:null;
+    return g?{...g,_order:ej.order,_phase:ej.phase||''}:null;
   }).filter(Boolean).sort((a,b)=>(a._order||0)-(b._order||0));
 
   let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
@@ -3820,6 +3826,7 @@ function renderJournalistes(el){
           <div style="font-size:13px;font-weight:600">${j.name}</div>
           <div style="font-size:11px;color:var(--text2)">${j.role||''}</div>
         </div>
+        ${mkPhaseInlineSelect('data-jr-phase',j.id,j._phase).replace('<select ','<select onchange="saveJournalistPhases()" ')}
         <div class="list-item-actions" style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-xs" onclick="moveEventJournalist('${j.id}',-1)"${i===0?' disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" onclick="moveEventJournalist('${j.id}',1)"${i===assignedList.length-1?' disabled':''}>▼</button>
@@ -4013,6 +4020,19 @@ async function moveEventJournalist(gid,dir){
   saving(true);
   await evRef().update({eventJournalists:ej});
   toast('Ordre modifié');
+}
+async function saveJournalistPhases(){
+  const ev=eventsData.find(e=>e.id===currentEventId);if(!ev)return;
+  const ej=[...(ev.eventJournalists||[])];
+  document.querySelectorAll('[data-jr-phase]').forEach(sel=>{
+    const gid=sel.getAttribute('data-jr-phase');
+    const entry=ej.find(x=>x.globalId===gid);
+    if(entry) entry.phase=sel.value;
+  });
+  saving(true);
+  await evRef().update({eventJournalists:ej});
+  if(ev) ev.eventJournalists=ej;
+  toast('Phases reporters enregistrées');
 }
 
 // ==================== ACCÈS ====================
@@ -4687,12 +4707,14 @@ function renderKpis(el){
         <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}">
         <input type="color" value="${k.color||'#FF6C00'}" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}">
         <input type="hidden" data-kpi-val="${i}" value="__countdown__">
+        ${mkPhaseInlineSelect('data-kpi-phase',i,k.phase||'')}
         <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
       </div>`;
     } else {
       h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
         <input class="form-input" value="${(k.value||'').toString().replace(/"/g,'&quot;')}" placeholder="1 200" style="width:120px" data-kpi-val="${i}">
         <input class="form-input" value="${(k.label||'').replace(/"/g,'&quot;')}" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}">
+        ${mkPhaseInlineSelect('data-kpi-phase',i,k.phase||'')}
         <button class="btn btn-danger btn-xs" onclick="removeKpi(${i})">🗑</button>
       </div>`;
     }
@@ -4711,7 +4733,7 @@ function addKpiRow(){
   const i=list.children.length;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`<input class="form-input" placeholder="1 200" style="width:120px" data-kpi-val="${i}"><input class="form-input" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<input class="form-input" placeholder="1 200" style="width:120px" data-kpi-val="${i}"><input class="form-input" placeholder="Exposants" style="flex:1" data-kpi-lbl="${i}">${mkPhaseInlineSelect('data-kpi-phase',i,'')}<button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
 function addCountdownRow(){
@@ -4721,7 +4743,7 @@ function addCountdownRow(){
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap';
   div.setAttribute('data-kpi-type','countdown');
-  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}"><input type="color" value="#FF6C00" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__"><button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
+  div.innerHTML=`<span style="font-size:18px">⏳</span><input type="date" class="form-input" style="width:160px" data-kpi-date="${i}"><input class="form-input" placeholder="Avant le départ" style="flex:1;min-width:120px" data-kpi-lbl="${i}"><input type="color" value="#FF6C00" title="Couleur" style="width:36px;height:32px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px" data-kpi-color="${i}"><input type="hidden" data-kpi-val="${i}" value="__countdown__">${mkPhaseInlineSelect('data-kpi-phase',i,'')}<button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()">🗑</button>`;
   list.appendChild(div);
 }
 async function removeKpi(idx){
@@ -4734,18 +4756,21 @@ async function saveKpis(){
   const lbls=document.querySelectorAll('[data-kpi-lbl]');
   const dateEls=document.querySelectorAll('[data-kpi-date]');
   const colorEls=document.querySelectorAll('[data-kpi-color]');
+  const phaseEls=document.querySelectorAll('[data-kpi-phase]');
   const dateMap={};dateEls.forEach(d=>{dateMap[d.getAttribute('data-kpi-date')]=d.value;});
   const colorMap={};colorEls.forEach(c=>{colorMap[c.getAttribute('data-kpi-color')]=c.value;});
+  const phaseMap={};phaseEls.forEach(p=>{phaseMap[p.getAttribute('data-kpi-phase')]=p.value;});
   const kpis=[];
   vals.forEach((v,i)=>{
     const lbl=lbls[i];
     const idx=v.getAttribute('data-kpi-val');
+    const ph=phaseMap[idx]||'';
     if(v.value==='__countdown__'){
       const td=dateMap[idx]||'';
       const cc=colorMap[idx]||'#FF6C00';
-      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',color:cc,order:i*10});
+      if(td) kpis.push({type:'countdown',targetDate:td,label:lbl?.value.trim()||'Avant le départ',color:cc,order:i*10,phase:ph});
     } else {
-      if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10});
+      if(v.value.trim()||lbl?.value.trim()) kpis.push({value:v.value.trim(),label:lbl?.value.trim()||'',order:i*10,phase:ph});
     }
   });
   saving(true);await evRef().update({kpis});toast('Chiffres clés enregistrés');
