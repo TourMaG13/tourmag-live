@@ -1406,7 +1406,7 @@ function editPhase(idx){
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Hero de la phase (optionnel)</div>
-      <div class="form-row"><label class="form-label">Image hero</label><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale"><div style="font-size:9px;color:var(--text3);margin-top:3px">Remplace l'image du bandeau hero quand cette phase est active.</div></div>
+      <div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale" style="flex:1">${mkMediaPickerBtn('m-phase-hero-image')}${mkUploadBtn('m-phase-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Remplace l'image du bandeau hero quand cette phase est active.</div></div>
       <div class="form-row"><label class="form-label">Sous-titre hero</label><input class="form-input" id="m-phase-hero-subtitle" value="${(p.heroSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Vide = sous-titre global"><div style="font-size:9px;color:var(--text3);margin-top:3px">Remplace le sous-titre du hero quand cette phase est active.</div></div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
