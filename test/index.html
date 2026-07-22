@@ -1751,7 +1751,7 @@ function renderExpedition(data){
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
-  let accent = brand.accentColor || event.accentColor || '#FF6C00';
+  let accent = event.accentColor || brand.accentColor || '#FF6C00';
   const mod = event.modules || {};
 
   // ===== PHASE FILTERING =====
