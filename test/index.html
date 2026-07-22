@@ -1148,7 +1148,7 @@ function render(data){
   function mkKpis(){
     if(mod.kpis===false || !event.kpis || !event.kpis.length) return '';
     const _now = new Date(); _now.setHours(0,0,0,0);
-    const kpis = event.kpis.sort((a,b)=>(a.order||0)-(b.order||0)).filter(k=>{
+    const kpis = event.kpis.filter(k => !activePhase || !k.phase || k.phase === activePhase).sort((a,b)=>(a.order||0)-(b.order||0)).filter(k=>{
       if(k.type==='countdown' && k.targetDate){ const d=new Date(k.targetDate); d.setHours(0,0,0,0); return Math.ceil((d-_now)/(1000*60*60*24))>0; }
       return true;
     });
@@ -1464,9 +1464,12 @@ function render(data){
   const _jrIcoIg='<svg width="12" height="12" viewBox="0 0 24 24" fill="#E4405F"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>';
 
   function mkJournalists(){
+  function mkJournalists(){
     if(mod.journalists===false || !journalists || !journalists.length) return '';
+    const _jrs = activePhase ? journalists.filter(j => !j.phase || j.phase === activePhase) : journalists;
+    if(!_jrs.length) return '';
     let o = `<div class="jr-block fi"><div class="jr-hd"><div class="ci">${ICO.pen}</div><span class="ct">${event.journalistsTitle||'Vos reporters'}</span></div>`;
-    journalists.forEach(j=>{
+    _jrs.forEach(j=>{
       o+=`<div class="jr-card"><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${j.bio?`<div class="jr-bio">${j.bio}</div>`:''}`;
       const socials=[];
       if(j.twitter){const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');socials.push(`<a class="jr-social-link" href="${tw}" target="_blank" rel="noopener">${_jrIcoX} <span>𝕏</span></a>`);}
@@ -1753,7 +1756,8 @@ function renderExpedition(data){
 
   // Counters: use only KPIs configured in admin
   const counters = [];
-  if(event.kpis && event.kpis.length) event.kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(k=>{
+  const _phaseKpis = (event.kpis||[]).filter(k => !activePhase || !k.phase || k.phase === activePhase);
+  if(_phaseKpis.length) _phaseKpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(k=>{
     if(k.type==='countdown'){
       const td = k.targetDate || '';
       if(!td){ return; }
@@ -1989,7 +1993,8 @@ function renderExpedition(data){
 
   _b.reporters = function(){
     if(mod.journalists===false) return '';
-    const reporters = journalists||[];
+    const allReporters = journalists||[];
+    const reporters = activePhase ? allReporters.filter(r => !r.phase || r.phase === activePhase) : allReporters;
     if(!reporters.length) return '';
     let o = '';
     reporters.forEach(reporter => {
@@ -2821,7 +2826,7 @@ async function init(){
   var _allGlobalJournalists=jrS?toArr(jrS):[];
   function resolveJournalists(evData,globalArr){
     const ej=evData.eventJournalists||[];
-    return ej.sort((a,b)=>(a.order||0)-(b.order||0)).map(x=>globalArr.find(g=>g.id===x.globalId)).filter(Boolean);
+    return ej.sort((a,b)=>(a.order||0)-(b.order||0)).map(x=>{const g=globalArr.find(g=>g.id===x.globalId);return g?{...g,phase:x.phase||''}:null;}).filter(Boolean);
   }
   const ess=toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0));
   const li=toArr(liS).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
