@@ -92,8 +92,9 @@ img{display:block}a{text-decoration:none}
 .hero-tag{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1);transition:all .15s;display:inline-block}
 .hero-tag:hover{opacity:.8}
 .hero-split-image{position:relative;overflow:hidden}
-.hero-split-image img{width:100%;height:100%;object-fit:cover}
+.hero-split-image img{width:100%;height:100%;object-fit:cover;animation:heroImgFade .5s ease}
 .hero-split-image::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--hero-bg1) 0%,transparent 30%)}
+@keyframes heroImgFade{from{opacity:0}to{opacity:1}}
 @media(max-width:860px){.hero-split{grid-template-columns:1fr;min-height:auto}.hero-split-text{padding:28px 16px 22px}.hero-title{font-size:26px}.hero-subtitle-text{font-size:13px}.hero-split-image{height:220px}}
 
 /* HERO TIMELINE */
@@ -473,7 +474,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.06);display:inline-block;transition:border-color .2s}
 .exp-hero-tag:hover{border-color:rgba(255,255,255,.5)}
 .exp-hero-photo{position:relative;overflow:hidden}
-.exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block;animation:heroImgFade .5s ease}
 .exp-hero-credit{position:absolute;bottom:12px;right:14px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.7);background:rgba(17,17,17,.5);padding:4px 8px}
 
 /* Counters */
@@ -1082,6 +1083,9 @@ function render(data){
     if(_activePhaseObj.accentColor) document.documentElement.style.setProperty('--acc', _activePhaseObj.accentColor);
     if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
   }
+  // Per-phase hero overrides
+  const _phaseHeroImage = (_activePhaseObj && _activePhaseObj.heroImage) ? _activePhaseObj.heroImage : '';
+  const _phaseHeroSubtitle = (_activePhaseObj && _activePhaseObj.heroSubtitle) ? _activePhaseObj.heroSubtitle : '';
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
@@ -1129,7 +1133,9 @@ function render(data){
 
   // ===== HERO =====
   function mkHero(){
-    const hasImage = !!event.hero_image;
+    const _hImg = _phaseHeroImage || event.hero_image;
+    const _hSub = _phaseHeroSubtitle || event.subtitle;
+    const hasImage = !!_hImg;
     console.log("[TourMaG Live] hero_height:", event.hero_height, typeof event.hero_height);
     const hh = event.hero_height;
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
@@ -1137,7 +1143,7 @@ function render(data){
     o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">Dossier spécial TourMaG</span></div>`;
     if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
     if(event.title) o += `<h1 class="hero-title">${event.title}</h1>`;
-    if(event.subtitle) o += `<p class="hero-subtitle-text">${event.subtitle}</p>`;
+    if(_hSub) o += `<p class="hero-subtitle-text">${_hSub}</p>`;
     o += `<div class="hero-meta-row">`;
     if(event.location) o += `<span class="hero-meta-item">${ICO.mapPin} ${event.location}</span>`;
     if(event.dates) o += `<span class="hero-meta-item">${ICO.calendar} ${event.dates}</span>`;
@@ -1154,7 +1160,7 @@ function render(data){
       o += `</div>`;
     }
     o += `</div>`;
-    if(hasImage) o += `<div class="hero-split-image"><img src="${event.hero_image}" alt="" onerror="this.parentElement.remove()"></div>`;
+    if(hasImage) o += `<div class="hero-split-image"><img src="${_hImg}" alt="" onerror="this.parentElement.remove()"></div>`;
     o += `</div>`;
 
     // Timeline
@@ -1765,6 +1771,9 @@ function renderExpedition(data){
     if(_activePhaseObj.accentColor){ accent = _activePhaseObj.accentColor; }
     if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
   }
+  // Per-phase hero overrides
+  const _phaseHeroImage = (_activePhaseObj && _activePhaseObj.heroImage) ? _activePhaseObj.heroImage : '';
+  const _phaseHeroSubtitle = (_activePhaseObj && _activePhaseObj.heroSubtitle) ? _activePhaseObj.heroSubtitle : '';
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1841,7 +1850,9 @@ function renderExpedition(data){
   </header>`;
 
   // ===== HERO =====
-  const hasHeroImage = !!event.hero_image;
+  const _expHImg = _phaseHeroImage || event.hero_image;
+  const _expHSub = _phaseHeroSubtitle || event.subtitle;
+  const hasHeroImage = !!_expHImg;
   const _expHeroH = event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
   h += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  h += `<div class="exp-hero-text">`;
@@ -1854,7 +1865,7 @@ function renderExpedition(data){
   if(event.logo_url) h += `<img src="${event.logo_url}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
   if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
   h += `<h1>${event.title || ''}</h1>`;
-  if(event.subtitle) h += `<p class="exp-hero-subtitle">${event.subtitle}</p>`;
+  if(_expHSub) h += `<p class="exp-hero-subtitle">${_expHSub}</p>`;
 
   // Meta row (location + dates)
   const metaItems = [];
@@ -1881,7 +1892,7 @@ function renderExpedition(data){
   // Photo side
   if(hasHeroImage){
     h += `<div class="exp-hero-photo">`;
-    h += `<img src="${event.hero_image}" alt="" onerror="this.parentElement.remove()">`;
+    h += `<img src="${_expHImg}" alt="" onerror="this.parentElement.remove()">`;
     if(exp.photoCredit) h += `<span class="exp-hero-credit">© ${exp.photoCredit}</span>`;
     h += `</div>`;
   }
