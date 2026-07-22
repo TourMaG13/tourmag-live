@@ -1739,11 +1739,19 @@ async function saveUnifiedBlockOrder(){
 async function toggleModule(key,val){
   saving(true);
   console.log('[toggleModule]', key, val, 'eventId:', currentEventId);
+  // Optimistic local update — prevents checkbox flicker on re-render
+  const ev=eventsData.find(e=>e.id===currentEventId);
+  if(ev){
+    if(!ev.modules) ev.modules={};
+    ev.modules[key]=val;
+  }
   try{
     await evRef().update({[`modules.${key}`]:val});
     console.log('[toggleModule] OK — modules.'+key+'='+val);
     toast(val?'Module activé':'Module désactivé');
   }catch(e){
+    // Rollback optimistic update on error
+    if(ev && ev.modules) ev.modules[key]=!val;
     console.error('[toggleModule] ERREUR:', e);
     toast('Erreur: '+e.message,'error');
   }
@@ -1949,7 +1957,8 @@ function renderLive(el){
       <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="live-s-show-title" ${(eventsData.find(e=>e.id===currentEventId)||{}).liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     </div>
     <div class="form-row-inline" style="margin-top:8px">
-      <div class="form-row" style="max-width:220px"><label class="form-label">Lignes max avant accordéon</label><input type="number" class="form-input" id="live-s-lineclamp" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveLineClamp||0}" min="0" step="1" placeholder="0 = désactivé"><div style="font-size:9px;color:var(--text3);margin-top:3px">0 = pas de troncature</div></div>
+      <div class="form-row" style="max-width:220px"><label class="form-label">Lignes max avant accordéon</label><input type="number" class="form-input" id="live-s-lineclamp" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveLineClamp||0}" min="0" step="1" placeholder="0 = désactivé"><div style="font-size:9px;color:var(--text3);margin-top:3px">0 = pas de troncature du texte</div></div>
+      <div class="form-row" style="max-width:220px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="live-s-visiblecount" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveVisibleCount||5}" min="1" max="50" step="1"><div style="font-size:9px;color:var(--text3);margin-top:3px">5 par défaut</div></div>
     </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
     </details>
@@ -2200,7 +2209,8 @@ async function saveLiveSettings(){
     liveTitle:document.getElementById('live-s-title').value.trim(),
     liveSubtitle:document.getElementById('live-s-sub').value.trim(),
     liveShowTitle:document.getElementById('live-s-show-title').checked,
-    liveLineClamp:parseInt(document.getElementById('live-s-lineclamp').value)||0
+    liveLineClamp:parseInt(document.getElementById('live-s-lineclamp').value)||0,
+    liveVisibleCount:parseInt(document.getElementById('live-s-visiblecount').value)||5
   });
   toast('Réglages fil live enregistrés');
 }
