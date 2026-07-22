@@ -985,10 +985,11 @@ function render(data){
   if(_typo.heroSubtitleSize) _typoCSS += `.hero-subtitle-text,.exp-hero-subtitle{font-size:${_typo.heroSubtitleSize}px !important}`;
   if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-head h2,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
   if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
-  if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
-  if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
   if(_typo.bodySize) _typoCSS += `${_bodySel}{font-size:${_typo.bodySize}px !important}`;
   if(_typo.uiSize) _typoCSS += `${_uiSel}{font-size:${_typo.uiSize}px !important}`;
+  // Phase tab overrides AFTER generic ui — more specific wins with same !important
+  if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
+  if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
   // Colors — hero title independent from section titles
   if(_typo.heroColor) _typoCSS += `${_heroTitleSel}{color:${_typo.heroColor} !important}`;
   if(_typo.headingColor) _typoCSS += `.sec-title h2,.exp-section-head h2,.exp-entry h3{color:${_typo.headingColor} !important}`;
@@ -1848,7 +1849,7 @@ function renderExpedition(data){
   };
 
   _b.kpis = function(){
-    if(!counters.length) return '';
+    if(mod.kpis===false || !counters.length) return '';
     let o = `<section class="exp-counters">`;
     counters.forEach(c => {
       const cdCls = c.isCountdown ? ' exp-counter-countdown' : '';
@@ -1948,6 +1949,7 @@ function renderExpedition(data){
   };
 
   _b.live = function(){
+    if(mod.live===false) return '';
     let o = '';
     if(event.liveShowTitle!==false){
       o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
@@ -1986,6 +1988,7 @@ function renderExpedition(data){
   };
 
   _b.reporters = function(){
+    if(mod.journalists===false) return '';
     const reporters = journalists||[];
     if(!reporters.length) return '';
     let o = '';
@@ -2003,7 +2006,7 @@ function renderExpedition(data){
   };
 
   _b.itinerary = function(){
-    if(!filteredEtapes.length) return '';
+    if(mod.etapes===false || !filteredEtapes.length) return '';
     let o = '';
     const EXP_ITIN_VIS = 5;
     let nIdx = filteredEtapes.findIndex(et => et.status === 'now');
