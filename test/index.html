@@ -1041,6 +1041,10 @@ function render(data){
   // Gallery height
   document.documentElement.style.setProperty('--gal-h', (event.galleryHeight || 260) + 'px');
 
+  // ===== GLOBAL CUSTOM COLORS (applied for ALL modes, before branching) =====
+  if(event.accentColor) document.documentElement.style.setProperty('--acc', event.accentColor);
+  if(event.liveColor) document.documentElement.style.setProperty('--live', event.liveColor);
+
   // ===== MODE BRANCHING =====
   if(event.mode === 'expedition'){
     renderExpedition(data);
@@ -1072,9 +1076,6 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
-  // Apply global custom colors
-  if(event.accentColor) document.documentElement.style.setProperty('--acc', event.accentColor);
-  if(event.liveColor) document.documentElement.style.setProperty('--live', event.liveColor);
   // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
@@ -1759,7 +1760,6 @@ function renderExpedition(data){
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   // Apply global custom colors then per-phase overrides
-  if(event.liveColor) document.documentElement.style.setProperty('--live', event.liveColor);
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
     if(_activePhaseObj.accentColor){ accent = _activePhaseObj.accentColor; }
@@ -1780,6 +1780,7 @@ function renderExpedition(data){
   document.body.classList.add('mode-expedition');
   document.body.classList.remove('mode-live');
   document.documentElement.style.setProperty('--exp-accent', accent);
+  document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
   document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
   // Expedition reporter sizes — override classic defaults with larger expedition defaults
