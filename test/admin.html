@@ -1405,9 +1405,19 @@ function editPhase(idx){
       <div class="form-row"><label class="form-label">Date fin</label><input type="date" class="form-input" id="m-phase-end" value="${p.dateEnd||''}"></div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Hero de la phase (optionnel)</div>
-      <div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale" style="flex:1">${mkMediaPickerBtn('m-phase-hero-image')}${mkUploadBtn('m-phase-hero-image')}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">Remplace l'image du bandeau hero quand cette phase est active.</div></div>
-      <div class="form-row"><label class="form-label">Sous-titre hero</label><input class="form-input" id="m-phase-hero-subtitle" value="${(p.heroSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Vide = sous-titre global"><div style="font-size:9px;color:var(--text3);margin-top:3px">Remplace le sous-titre du hero quand cette phase est active.</div></div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Hero de la phase (optionnel — vide = valeur globale)</div>
+      <div class="form-row"><label class="form-label">Titre hero</label><input class="form-input" id="m-phase-hero-title" value="${(p.heroTitle||'').replace(/"/g,'&quot;')}" placeholder="Vide = titre global de l'événement"></div>
+      <div class="form-row"><label class="form-label">Sous-titre hero</label><input class="form-input" id="m-phase-hero-subtitle" value="${(p.heroSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Vide = sous-titre global"></div>
+      <div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale" style="flex:1">${mkMediaPickerBtn('m-phase-hero-image')}${mkUploadBtn('m-phase-hero-image')}</div></div>
+      <div class="form-row"><label class="form-label">Logo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-logo" value="${(p.heroLogo||'').replace(/"/g,'&quot;')}" placeholder="Vide = logo global" style="flex:1">${mkMediaPickerBtn('m-phase-hero-logo')}${mkUploadBtn('m-phase-hero-logo')}</div></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-phase-hero-location" value="${(p.heroLocation||'').replace(/"/g,'&quot;')}" placeholder="Vide = lieu global"></div>
+        <div class="form-row"><label class="form-label">Dates</label><input class="form-input" id="m-phase-hero-dates" value="${(p.heroDates||'').replace(/"/g,'&quot;')}" placeholder="Vide = dates globales"></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Eyebrow <span style="font-size:9px;color:var(--text3)">(expédition)</span></label><input class="form-input" id="m-phase-hero-eyebrow" value="${(p.heroEyebrow||'').replace(/"/g,'&quot;')}" placeholder="Vide = eyebrow global"></div>
+        <div class="form-row"><label class="form-label">Crédit photo</label><input class="form-input" id="m-phase-hero-credit" value="${(p.heroPhotoCredit||'').replace(/"/g,'&quot;')}" placeholder="Vide = crédit global"></div>
+      </div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Carte & Expédition (optionnel)</div>
@@ -1432,8 +1442,14 @@ async function savePhaseEdit(idx){
     liveColor:document.getElementById('m-phase-live-color').value||'',
     dateStart:document.getElementById('m-phase-start').value||'',
     dateEnd:document.getElementById('m-phase-end').value||'',
-    heroImage:document.getElementById('m-phase-hero-image').value.trim(),
+    heroTitle:document.getElementById('m-phase-hero-title').value.trim(),
     heroSubtitle:document.getElementById('m-phase-hero-subtitle').value.trim(),
+    heroImage:document.getElementById('m-phase-hero-image').value.trim(),
+    heroLogo:document.getElementById('m-phase-hero-logo').value.trim(),
+    heroLocation:document.getElementById('m-phase-hero-location').value.trim(),
+    heroDates:document.getElementById('m-phase-hero-dates').value.trim(),
+    heroEyebrow:document.getElementById('m-phase-hero-eyebrow').value.trim(),
+    heroPhotoCredit:document.getElementById('m-phase-hero-credit').value.trim(),
     mapTitle:document.getElementById('m-phase-map-title').value.trim(),
     mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
     mapNote:document.getElementById('m-phase-map-note').value.trim()
@@ -4790,7 +4806,7 @@ function renderKpis(el){
   h+=`</div>
     <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="addKpiRow()">＋ Ajouter un chiffre</button>
-      ${hasCountdown?'':'<button class="btn btn-ghost btn-sm" onclick="addCountdownRow()" style="color:#EA580C;border-color:#FDBA74">⏳ Ajouter un compte à rebours</button>'}
+      <button class="btn btn-ghost btn-sm" onclick="addCountdownRow()" style="color:#EA580C;border-color:#FDBA74">⏳ Ajouter un compte à rebours</button>
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveKpis()">💾 Enregistrer les chiffres clés</button></div>
   </div>`;
@@ -4806,7 +4822,6 @@ function addKpiRow(){
 }
 function addCountdownRow(){
   const list=document.getElementById('kpis-list');if(!list)return;
-  if(list.querySelector('[data-kpi-type="countdown"]')){toast('Un seul compte à rebours autorisé');return;}
   const i=list.children.length;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px 12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;flex-wrap:wrap';
