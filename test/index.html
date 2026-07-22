@@ -1593,6 +1593,22 @@ function render(data){
     return o;
   }
 
+  // ===== DIAGNOSTIC LOG =====
+  console.log('[TourMaG Live] CLASSIC MODE DIAGNOSTIC:', {
+    activePhase, phasesCount: phases.length,
+    modules: mod,
+    dataCounts: {
+      live: live?.length||0, rawLive: _rawLive?.length||0,
+      citations: citations?.length||0, articles: articles?.length||0,
+      essential: essential?.length||0, rawEssential: _rawEss?.length||0,
+      videos: videos?.length||0, interviews: interviews?.length||0,
+      programme: programme?.length||0, journalists: journalists?.length||0,
+      kpis: (event.kpis||[]).length, timeline: timeline?.length||0
+    },
+    blockOrder: event.blockOrder,
+    heroImage: _heroImage, heroTitle: _heroTitle
+  });
+
   // ===== LAYOUT ASSEMBLY — 4 zones: main, side, full, max =====
   // main  = colonne principale (dans layout 2 colonnes)
   // side  = sidebar droite
@@ -1630,7 +1646,8 @@ function render(data){
     blockZones[k] = z;
   });
   function getZone(k){ return blockZones[k] || defaultZones[k] || 'main'; }
-  function rb(k){ const fn=blockRenderers[k]; return fn ? fn() : ''; }
+  const _renderedBlocks = [];
+  function rb(k){ const fn=blockRenderers[k]; const html=fn ? fn() : ''; if(html) _renderedBlocks.push(k); else console.log('[TourMaG Live] Block EMPTY:', k, '| mod.'+k+'=', mod[k]); return html; }
 
   const allSideKeys = validKeys.filter(k => getZone(k) === 'side');
   const sidebarAnchor = event.sidebarAnchor || 'live';
@@ -1684,6 +1701,7 @@ function render(data){
 
   h += `<div class="dash"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>`;
 
+  console.log('[TourMaG Live] RENDERED BLOCKS:', _renderedBlocks, '| EMPTY:', validKeys.filter(k=>!_renderedBlocks.includes(k)));
   document.getElementById('app').innerHTML = h;
   document.getElementById('upd-bar').innerHTML = `Dernière mise à jour : ${fmtDT(new Date().toISOString())}`;
 
