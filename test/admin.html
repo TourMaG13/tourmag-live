@@ -1395,10 +1395,20 @@ function editPhase(idx){
   const p=(ev?.phases||[])[idx];if(!p)return;
   openModal(`<h3>Modifier la phase</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-phase-name" value="${p.name.replace(/"/g,'&quot;')}"></div>
-    <div class="form-row" style="max-width:160px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-phase-color" value="${p.color||'#6366F1'}" style="height:42px;padding:4px"></div>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:160px"><label class="form-label">Couleur (badge)</label><input type="color" class="form-input" id="m-phase-color" value="${p.color||'#6366F1'}" style="height:42px;padding:4px"></div>
+      <div class="form-row" style="max-width:160px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="m-phase-accent" value="${p.accentColor||'#E8842C'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Fil live, liens, UI</div></div>
+      <div class="form-row" style="max-width:160px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="m-phase-live-color" value="${p.liveColor||'#DC2626'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>
+    </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Date début</label><input type="date" class="form-input" id="m-phase-start" value="${p.dateStart||''}"></div>
       <div class="form-row"><label class="form-label">Date fin</label><input type="date" class="form-input" id="m-phase-end" value="${p.dateEnd||''}"></div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Carte & Expédition (optionnel)</div>
+      <div class="form-row"><label class="form-label">Titre de la carte</label><input class="form-input" id="m-phase-map-title" value="${(p.mapTitle||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide = titre global"></div>
+      <div class="form-row"><label class="form-label">Sous-titre de la carte</label><input class="form-input" id="m-phase-map-sub" value="${(p.mapSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide = sous-titre global"></div>
+      <div class="form-row"><label class="form-label">Note carte (bas)</label><input class="form-input" id="m-phase-map-note" value="${(p.mapNote||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide = note globale"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
@@ -1410,7 +1420,17 @@ async function savePhaseEdit(idx){
   if(!name){toast('Nom requis','error');return;}
   const ev=eventsData.find(e=>e.id===currentEventId);
   const phases=[...(ev?.phases||[])];
-  phases[idx]={...phases[idx],name,color:document.getElementById('m-phase-color').value,dateStart:document.getElementById('m-phase-start').value||'',dateEnd:document.getElementById('m-phase-end').value||''};
+  phases[idx]={...phases[idx],
+    name,
+    color:document.getElementById('m-phase-color').value,
+    accentColor:document.getElementById('m-phase-accent').value||'',
+    liveColor:document.getElementById('m-phase-live-color').value||'',
+    dateStart:document.getElementById('m-phase-start').value||'',
+    dateEnd:document.getElementById('m-phase-end').value||'',
+    mapTitle:document.getElementById('m-phase-map-title').value.trim(),
+    mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
+    mapNote:document.getElementById('m-phase-map-note').value.trim()
+  };
   closeModal();saving(true);
   await db.collection('events').doc(currentEventId).update({phases});
   toast('Phase mise à jour');
