@@ -413,6 +413,14 @@ img{display:block}a{text-decoration:none}
 .sponsors-block p{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
 .sponsors-logos{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
 .sponsors-logos img{height:30px;opacity:.4;filter:grayscale(100%);transition:all .2s}
+.bn-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s;text-decoration:none;display:block;color:inherit}
+.bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.bn-card-img{width:100%;aspect-ratio:16/9;overflow:hidden}
+.bn-card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.bn-card-body{padding:16px 20px}
+.bn-card-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#7C3AED,#5B21B6);padding:4px 10px;border-radius:5px;margin-bottom:10px}
+.bn-card-title{font-size:15px;font-weight:600;line-height:1.4;margin-bottom:8px}
+.bn-card-cta{font-size:11px;font-weight:600;color:var(--acc)}
 .sponsors-logos img:hover{opacity:.8;filter:none}
 
 /* ==================== SOCIAL SIDEBAR ==================== */
@@ -607,9 +615,9 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-card-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:var(--exp-accent);padding:5px 12px;display:inline-block;margin-bottom:16px;font-weight:600}
 .exp-reporter{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .exp-reporter img{width:52px;height:52px;border-radius:6px;object-fit:cover}
-.exp-reporter-name{font-family:'Libre Caslon Display',serif;font-size:21px}
-.exp-reporter-role{font-size:12.5px;color:var(--exp-grey);margin-top:3px;line-height:1.4}
-.exp-card p{font-size:13.5px;line-height:1.6;color:#333}
+.exp-reporter-name{font-family:'Libre Caslon Display',serif;font-size:var(--jr-ns,21px)}
+.exp-reporter-role{font-size:var(--jr-rs,12.5px);color:var(--exp-grey);margin-top:3px;line-height:1.4}
+.exp-card p{font-size:var(--jr-rs,13.5px);line-height:1.6;color:#333}
 .exp-card .sig{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-ink);margin-top:12px;font-size:14.5px}
 .exp-card-socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .exp-card-socials a{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--exp-grey);text-decoration:none;padding:4px 10px;border:1px solid var(--exp-line);border-radius:4px;transition:all .15s}
@@ -960,9 +968,9 @@ function _mkPhaseTitle(event, activePhase, phases){
   const color = pt.usePhaseColor ? (phase.color || '#6366F1') : (pt.color || '#1E293B');
   const size = pt.size || 28;
   const weight = pt.weight || 700;
-  const align = pt.align || 'center';
+  const padY = pt.padY || 10;
   const fontFam = pt.font ? `font-family:'${pt.font}',sans-serif;` : '';
-  return `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};text-align:${align};${fontFam}">${phase.name}</div>`;
+  return `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};padding:${padY}px 0;${fontFam}">${phase.name}</div>`;
 }
 
 function render(data){
@@ -987,9 +995,9 @@ function render(data){
   // Build dynamic style block — ONLY includes rules for values that are actually customized
   let _typoCSS = '';
   const _heroTitleSel = '.hero-title,.exp-hero h1';
-  const _headingSel = '.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name';
-  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title';
-  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab';
+  const _headingSel = '.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name,.exp-reporter-name';
+  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p';
+  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab,.exp-card-label';
   // Font families — hero title independent
   if(_heroFont) _typoCSS += `${_heroTitleSel}{font-family:'${_heroFont}',sans-serif !important}`;
   if(_hFont) _typoCSS += `${_headingSel}{font-family:'${_hFont}',sans-serif !important}`;
@@ -1544,15 +1552,34 @@ function render(data){
     return o;
   }
 
+  // ===== BRAND NEWS =====
+  function mkBrandNews(){
+    if(mod.brandnews===false) return '';
+    const bn = event.brandNews;
+    if(!bn || !bn.rssUrl) return '';
+    const now = new Date();
+    const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    if(bn.startDate && today < bn.startDate) return '';
+    if(bn.endDate && today > bn.endDate) return '';
+    const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    if(!bnArticles.length) return '';
+    const a = bnArticles[0];
+    const label = bn.label || 'Brand News';
+    let o = `<div class="bn-card" onclick="window.open('${a.link}','_blank')">`;
+    if(a.image) o += `<div class="bn-card-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
+    o += `<div class="bn-card-body"><div class="bn-card-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div><div class="bn-card-title">${a.title||''}</div><div class="bn-card-cta">Lire l'article →</div></div></div>`;
+    return o;
+  }
+
   // ===== LAYOUT ASSEMBLY — 4 zones: main, side, full, max =====
   // main  = colonne principale (dans layout 2 colonnes)
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors};
-  const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews};
+  const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side'};
   const allBlockKeys = Object.keys(blockRenderers);
-  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'];
+  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors'];
 
   const fullBlockOrder = event.blockOrder || defaultOrder;
   const orderedKeys = [...fullBlockOrder];
@@ -1740,6 +1767,9 @@ function renderExpedition(data){
   document.documentElement.style.setProperty('--exp-accent', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
   document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
+  // Expedition reporter sizes — override classic defaults with larger expedition defaults
+  document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 21) + 'px');
+  document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 12) + 'px');
 
   const jrPhotoMap = {};
   (journalists||[]).forEach(j => { if(j.name) jrPhotoMap[j.name.toLowerCase().trim()]=j.photoUrl||''; });
@@ -2182,6 +2212,7 @@ function renderExpedition(data){
   };
 
   _b.brandnews = function(){
+    if(mod.brandnews===false) return '';
     const bn = event.brandNews;
     if(!bn || !bn.rssUrl) return '';
     const now = new Date();
