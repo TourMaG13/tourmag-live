@@ -1203,24 +1203,71 @@ function renderApparence(el){
     </div>
   </div>`;
 
-  // ==================== 3. TITRES DE SECTIONS ====================
+  // ==================== 3. COULEURS GLOBALES ====================
+  h+=`<div class="admin-card"><h3>🎨 Couleurs globales</h3>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:180px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="app-accent-color" value="${ev.accentColor||'#E8842C'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div>
+      <div class="form-row" style="max-width:180px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="app-live-color" value="${ev.liveColor||'#DC2626'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGlobalColors()">💾 Enregistrer les couleurs</button></div>
+  </div>`;
+
+  // ==================== 4. TITRES DE SECTIONS ====================
   h+=`<div class="admin-card"><h3>📋 Titres de sections</h3>
     <div class="page-desc" style="margin-bottom:12px">Personnalisez le titre et le sous-titre affichés au-dessus de chaque rubrique sur le front.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px 12px;align-items:end">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Section</div>
+    <div style="display:grid;grid-template-columns:minmax(100px,1fr) minmax(100px,1fr) auto;gap:6px 12px;align-items:end">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Titre</div>
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Sous-titre</div>
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">Visible</div>
-      <input class="form-input" id="app-st-live-title" value="${ev.liveTitle||''}" placeholder="Fil Live">
-      <input class="form-input" id="app-st-live-sub" value="${ev.liveSubtitle||''}" placeholder="Minute par minute">
+
+      <input class="form-input" id="app-st-live-title" value="${ev.liveTitle||''}" placeholder="Fil Live" style="font-size:12px">
+      <input class="form-input" id="app-st-live-sub" value="${ev.liveSubtitle||''}" placeholder="Minute par minute" style="font-size:12px">
       <label class="toggle"><input type="checkbox" id="app-st-live-show" ${ev.liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
-      <input class="form-input" id="app-st-cit-title" value="${ev.citationsTitle||''}" placeholder="Verbatims">
-      <input class="form-input" id="app-st-cit-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit">
+
+      <input class="form-input" id="app-st-cit-title" value="${ev.citationsTitle||''}" placeholder="Verbatims" style="font-size:12px">
+      <input class="form-input" id="app-st-cit-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit" style="font-size:12px">
       <label class="toggle"><input type="checkbox" id="app-st-cit-show" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
-      <input class="form-input" id="app-st-ess-title" value="${ev.essentialTitle||''}" placeholder="L'essentiel">
-      <input class="form-input" id="app-st-ess-sub" value="${ev.essentialSubtitle||''}" placeholder="Les points clés à retenir">
+
+      <input class="form-input" id="app-st-ess-title" value="${ev.essentialTitle||''}" placeholder="L'essentiel" style="font-size:12px">
+      <input class="form-input" id="app-st-ess-sub" value="${ev.essentialSubtitle||''}" placeholder="Les points clés à retenir" style="font-size:12px">
       <label class="toggle"><input type="checkbox" id="app-st-ess-show" ${ev.essentialShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+
+      <input class="form-input" id="app-st-art-title" value="${ev.articlesTitle||''}" placeholder="Nos articles" style="font-size:12px">
+      <input class="form-input" id="app-st-art-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction" style="font-size:12px">
+      <label class="toggle"><input type="checkbox" id="app-st-art-show" ${ev.articlesShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+
+      <input class="form-input" id="app-st-vid-title" value="${ev.videosTitle||''}" placeholder="Vidéos" style="font-size:12px">
+      <input class="form-input" id="app-st-vid-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts" style="font-size:12px">
+      <label class="toggle"><input type="checkbox" id="app-st-vid-show" ${ev.videosShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+
+      <input class="form-input" id="app-st-itw-title" value="${ev.interviewsTitle||''}" placeholder="Interviews" style="font-size:12px">
+      <input class="form-input" id="app-st-itw-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions" style="font-size:12px">
+      <label class="toggle"><input type="checkbox" id="app-st-itw-show" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+
+      <input class="form-input" id="app-st-gal-title" value="${ev.galleryTitle||''}" placeholder="Galerie" style="font-size:12px">
+      <input class="form-input" id="app-st-gal-sub" value="${ev.gallerySubtitle||''}" placeholder="En images" style="font-size:12px">
+      <label class="toggle"><input type="checkbox" id="app-st-gal-show" ${ev.galleryShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label>
+
+      <input class="form-input" id="app-st-jr-title" value="${ev.journalistsTitle||''}" placeholder="Vos reporters" style="font-size:12px">
+      <div style="font-size:9px;color:var(--text3);font-style:italic">pas de sous-titre</div>
+      <div></div>
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveSectionTitles()">💾 Enregistrer les titres</button></div>
+  </div>`;
+
+  // ==================== 5. ACCORDÉONS & AFFICHAGE ====================
+  h+=`<div class="admin-card"><h3>📏 Accordéons & affichage</h3>
+    <div class="page-desc" style="margin-bottom:12px">Nombre d'éléments visibles avant le bouton "Voir plus" et autres réglages de mise en forme par section.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px">
+      <div class="form-row"><label class="form-label">📡 Live — entrées visibles</label><input type="number" class="form-input" id="app-acc-live-count" value="${ev.liveVisibleCount||5}" min="1" max="50"></div>
+      <div class="form-row"><label class="form-label">📡 Live — lignes max / entrée</label><input type="number" class="form-input" id="app-acc-live-clamp" value="${ev.liveLineClamp||0}" min="0" placeholder="0 = illimité"></div>
+      <div class="form-row"><label class="form-label">💬 Citations visibles</label><input type="number" class="form-input" id="app-acc-cit-count" value="${ev.citVisibleCount||6}" min="1" max="20"></div>
+      <div class="form-row"><label class="form-label">📰 Articles visibles</label><input type="number" class="form-input" id="app-acc-art-count" value="${ev.articlesVisibleCount||4}" min="1" max="20"></div>
+      <div class="form-row"><label class="form-label">🎙️ Interviews visibles</label><input type="number" class="form-input" id="app-acc-itw-count" value="${ev.itwVisibleCount||4}" min="1" max="20"></div>
+      <div class="form-row"><label class="form-label">📸 Hauteur galerie (px)</label><input type="number" class="form-input" id="app-acc-gal-height" value="${ev.galleryHeight||260}" min="100" max="600"></div>
+      <div class="form-row"><label class="form-label">📰 Taille titre article (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="${ev.articlesTitleSize||14}" min="10" max="24"></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveAccordionSettings()">💾 Enregistrer</button></div>
   </div>`;
 
   // ==================== 4. STYLE CITATIONS ====================
@@ -1358,9 +1405,43 @@ async function saveSectionTitles(){
     citationsShowTitle:document.getElementById('app-st-cit-show').checked,
     essentialTitle:document.getElementById('app-st-ess-title').value.trim(),
     essentialSubtitle:document.getElementById('app-st-ess-sub').value.trim(),
-    essentialShowTitle:document.getElementById('app-st-ess-show').checked
+    essentialShowTitle:document.getElementById('app-st-ess-show').checked,
+    articlesTitle:document.getElementById('app-st-art-title').value.trim(),
+    articlesSubtitle:document.getElementById('app-st-art-sub').value.trim(),
+    articlesShowTitle:document.getElementById('app-st-art-show').checked,
+    videosTitle:document.getElementById('app-st-vid-title').value.trim(),
+    videosSubtitle:document.getElementById('app-st-vid-sub').value.trim(),
+    videosShowTitle:document.getElementById('app-st-vid-show').checked,
+    interviewsTitle:document.getElementById('app-st-itw-title').value.trim(),
+    interviewsSubtitle:document.getElementById('app-st-itw-sub').value.trim(),
+    interviewsShowTitle:document.getElementById('app-st-itw-show').checked,
+    galleryTitle:document.getElementById('app-st-gal-title').value.trim(),
+    gallerySubtitle:document.getElementById('app-st-gal-sub').value.trim(),
+    galleryShowTitle:document.getElementById('app-st-gal-show').checked,
+    journalistsTitle:document.getElementById('app-st-jr-title').value.trim()
   });
   toast('Titres de sections enregistrés');
+}
+async function saveAccordionSettings(){
+  saving(true);
+  await evRef().update({
+    liveVisibleCount:parseInt(document.getElementById('app-acc-live-count').value)||5,
+    liveLineClamp:parseInt(document.getElementById('app-acc-live-clamp').value)||0,
+    citVisibleCount:parseInt(document.getElementById('app-acc-cit-count').value)||6,
+    articlesVisibleCount:parseInt(document.getElementById('app-acc-art-count').value)||4,
+    articlesTitleSize:parseInt(document.getElementById('app-acc-art-tsize').value)||14,
+    itwVisibleCount:parseInt(document.getElementById('app-acc-itw-count').value)||4,
+    galleryHeight:parseInt(document.getElementById('app-acc-gal-height').value)||260
+  });
+  toast('Réglages accordéons enregistrés');
+}
+async function saveGlobalColors(){
+  saving(true);
+  await evRef().update({
+    accentColor:document.getElementById('app-accent-color').value||'',
+    liveColor:document.getElementById('app-live-color').value||''
+  });
+  toast('Couleurs globales enregistrées');
 }
 async function saveCitStyleFromApparence(){
   saving(true);
@@ -2129,24 +2210,7 @@ function renderLive(el){
 
   let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="live-s-title" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveTitle||''}" placeholder="Fil Live"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="live-s-sub" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveSubtitle||''}" placeholder="Minute par minute, depuis l'événement"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="live-s-show-title" ${(eventsData.find(e=>e.id===currentEventId)||{}).liveShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div class="form-row-inline" style="margin-top:8px">
-      <div class="form-row" style="max-width:220px"><label class="form-label">Lignes max avant accordéon</label><input type="number" class="form-input" id="live-s-lineclamp" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveLineClamp||0}" min="0" step="1" placeholder="0 = désactivé"><div style="font-size:9px;color:var(--text3);margin-top:3px">0 = pas de troncature du texte</div></div>
-      <div class="form-row" style="max-width:220px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="live-s-visiblecount" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveVisibleCount||5}" min="1" max="50" step="1"><div style="font-size:9px;color:var(--text3);margin-top:3px">5 par défaut</div></div>
-    </div>
-    <div class="form-row-inline" style="margin-top:8px">
-      <div class="form-row" style="max-width:160px"><label class="form-label">🎨 Couleur accent</label><input type="color" class="form-input" id="live-s-accent" value="${(eventsData.find(e=>e.id===currentEventId)||{}).accentColor||'#E8842C'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div>
-      <div class="form-row" style="max-width:160px"><label class="form-label">🔴 Couleur pastille live</label><input type="color" class="form-input" id="live-s-livecolor" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveColor||'#DC2626'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
@@ -2423,87 +2487,7 @@ function renderCitations(el){
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details id="cit-settings-details"><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="cit-s-title" value="${ev.citationsTitle||''}" placeholder="Verbatims"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="cit-s-sub" value="${ev.citationsSubtitle||''}" placeholder="Ce qu'ils ont dit"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="cit-s-show-title" ${ev.citationsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">${isExp?'Style des verbatims':'Style des cartes'}</div>
-      <div class="form-row-inline">
-        <div class="form-row" style="${isExp?'display:none':''}"><label class="form-label">Style</label>
-          <select class="form-input" id="cit-s-style" style="width:180px">
-            <option value="classic"${(ev.citationStyle||'classic')==='classic'?' selected':''}>Classique (fond sombre)</option>
-            <option value="premium"${ev.citationStyle==='premium'?' selected':''}>Premium (carte blanche)</option>
-          </select>
-        </div>
-        <div class="form-row"><label class="form-label">Couleur d'accent</label>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="color" id="cit-s-accent" value="${ev.citationAccentColor||'#E8842C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px" oninput="document.getElementById('cit-s-accent-lbl').textContent=this.value">
-            <span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)" id="cit-s-accent-lbl">${ev.citationAccentColor||'#E8842C'}</span>
-          </div>
-        </div>
-        <div class="form-row"><label class="form-label">Épaisseur bordure (px)</label>
-          <input type="number" class="form-input" id="cit-s-bw" value="${ev.citationBorderWidth||2.5}" min="1" max="6" step="0.5" style="width:70px">
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Typographie</div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Taille texte citation (px)</label>
-          <input type="number" class="form-input" id="cit-s-tsize" value="${ev.citationTextSize||13}" min="10" max="20" style="width:70px">
-        </div>
-        <div class="form-row"><label class="form-label">Taille nom (px)</label>
-          <input type="number" class="form-input" id="cit-s-nsize" value="${ev.citationNameSize||12}" min="10" max="20" style="width:70px">
-        </div>
-        <div class="form-row"><label class="form-label">Taille poste (px)</label>
-          <input type="number" class="form-input" id="cit-s-rsize" value="${ev.citationRoleSize||10}" min="8" max="16" style="width:70px">
-        </div>
-        <div class="form-row"><label class="form-label">Taille guillemets</label>
-          <select class="form-input" id="cit-s-qsize" style="width:120px">
-            <option value="small"${ev.citationQuoteSize==='small'?' selected':''}>Petit</option>
-            <option value="medium"${(ev.citationQuoteSize||'medium')==='medium'?' selected':''}>Moyen</option>
-            <option value="large"${ev.citationQuoteSize==='large'?' selected':''}>Grand</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Photos & accordéon</div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Taille médaillons</label>
-          <select class="form-input" id="cit-s-avsize" style="width:160px">
-            <option value="60"${(ev.citationAvatarSize||80)==60?' selected':''}>Petit (60px)</option>
-            <option value="80"${(ev.citationAvatarSize||80)==80?' selected':''}>Moyen (80px)</option>
-            <option value="100"${(ev.citationAvatarSize||80)==100?' selected':''}>Grand (100px)</option>
-            <option value="120"${(ev.citationAvatarSize||80)==120?' selected':''}>Très grand (120px)</option>
-          </select>
-        </div>
-        <div class="form-row" style="max-width:260px"><label class="form-label">Citations visibles avant accordéon</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="range" min="1" max="20" value="${citVisible}" id="cit-s-visible" oninput="document.getElementById('cit-s-visible-lbl').textContent=this.value" style="flex:1">
-            <span id="cit-s-visible-lbl" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${citVisible}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Citation mise en avant</div>
-      <div class="form-row-inline">
-        <div class="form-row"><label class="form-label">Fond de la citation vedette</label>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="color" id="cit-s-feat-bg" value="${ev.citationFeaturedBg||'#0F2B3C'}" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px">
-          </div>
-        </div>
-      </div>
-      <div style="font-size:9px;color:var(--text3);margin-top:4px">Cochez ⭐ sur une citation ci-dessous pour la mettre en avant. Elle s'affichera en grand au-dessus de la grille.</div>
-    </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveCitSettings()">💾 Enregistrer les réglages</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
@@ -2855,24 +2839,7 @@ function renderArticles(el){
 
   let h=`<div class="page-title">Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="art-s-title" value="${ev.articlesTitle||''}" placeholder="Nos articles"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="art-s-sub" value="${ev.articlesSubtitle||''}" placeholder="L'événement vu par la rédaction"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="art-s-show-title" ${ev.articlesShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:200px"><label class="form-label">Articles visibles avant accordéon</label>
-        <input type="number" class="form-input" id="art-s-count" value="${ev.articlesVisibleCount||4}" min="1" max="20" style="width:80px">
-      </div>
-      <div class="form-row" style="max-width:200px"><label class="form-label">Taille titre article (px)</label>
-        <input type="number" class="form-input" id="art-s-tsize" value="${ev.articlesTitleSize||14}" min="10" max="24" style="width:80px">
-      </div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveArtSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <!-- AJOUT MANUEL -->
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
@@ -3524,16 +3491,7 @@ function renderIAHTML(){
 
   let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="ess-s-title" value="${ev.essentialTitle||''}" placeholder="L'essentiel"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="ess-s-sub" value="${ev.essentialSubtitle||''}" placeholder="Les points clés à retenir"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="ess-s-show-title" ${ev.essentialShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveEssSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>🤖 Génération IA</h3>
     <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
@@ -3692,16 +3650,7 @@ function renderVideos(el){
 
   let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="vid-s-title" value="${ev.videosTitle||''}" placeholder="Vidéos"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="vid-s-sub" value="${ev.videosSubtitle||''}" placeholder="Reportages et temps forts"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="vid-s-show-title" ${ev.videosShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveVidSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>📂 Sections</h3>
     <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
@@ -3978,22 +3927,7 @@ function renderJournalistes(el){
 
   let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre du bloc</label>
-        <input class="form-input" id="jr-s-title" value="${ev.journalistsTitle||'Vos reporters'}" placeholder="Vos reporters">
-      </div>
-      <div class="form-row"><label class="form-label">Taille nom (px)</label>
-        <input type="number" class="form-input" id="jr-s-nsize" value="${ev.journalistsNameSize||13}" min="10" max="20" style="width:70px">
-      </div>
-      <div class="form-row"><label class="form-label">Taille poste (px)</label>
-        <input type="number" class="form-input" id="jr-s-rsize" value="${ev.journalistsRoleSize||10}" min="8" max="16" style="width:70px">
-      </div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveJrSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>📌 Assignés à cet événement (${assignedList.length})</h3>`;
   if(!currentEventId) h+=`<div class="empty"><div class="text">Sélectionnez un événement</div></div>`;
@@ -4794,24 +4728,7 @@ function renderInterviews(el){
   const items=interviewsData||[];
   let h=`<div class="page-title">🎙️ Interviews</div><div class="page-desc">Ajoutez des interviews à mettre en avant sur le dashboard. Chaque interview peut renvoyer vers un article complet.</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="itw-s-title" value="${ev.interviewsTitle||''}" placeholder="Interviews"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="itw-s-sub" value="${ev.interviewsSubtitle||''}" placeholder="Rencontres et visions"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="itw-s-show-title" ${ev.interviewsShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div class="form-row" style="max-width:300px"><label class="form-label">Interviews visibles avant accordéon</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input type="range" min="1" max="20" value="${ev.itwVisibleCount||4}" id="itw-s-visible" oninput="document.getElementById('itw-s-visible-lbl').textContent=this.value" style="flex:1">
-          <span id="itw-s-visible-lbl" style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--acc);min-width:24px;text-align:center">${ev.itwVisibleCount||4}</span>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveItwSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="addInterview()">＋ Nouvelle interview</button></div>`;
   if(!items.length) h+=`<div class="empty"><div class="text">Aucune interview</div></div>`;
@@ -5525,19 +5442,7 @@ function renderGallery(el){
   const photos=ev.gallery||[];
   let h=`<div class="page-title">📸 Galerie photos</div><div class="page-desc">Ajoutez des photos d'ambiance. Elles s'affichent en grille sur le dashboard. Activez/désactivez via le module "Galerie photos".</div>
 
-  <div class="admin-card"><h3>⚙️ Réglages d'affichage</h3>
-    <details><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Afficher / masquer les réglages</summary>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Titre de la section</label><input class="form-input" id="gal-s-title" value="${ev.galleryTitle||''}" placeholder="Galerie"></div>
-      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="gal-s-sub" value="${ev.gallerySubtitle||''}" placeholder="En images"></div>
-      <div class="form-row"><label class="form-label">Afficher le titre</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="gal-s-show-title" ${ev.galleryShowTitle!==false?'checked':''}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
-    </div>
-    <div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label>
-      <input type="number" class="form-input" id="gal-s-height" value="${ev.galleryHeight||260}" min="100" max="500" style="width:80px">
-    </div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveGalSettings()">💾 Enregistrer</button></div>
-    </details>
-  </div>
+  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
 
   <div class="admin-card"><h3>Photos</h3><div id="gallery-list">`;
   photos.forEach((p,i)=>{
