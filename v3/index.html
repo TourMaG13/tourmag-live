@@ -856,6 +856,7 @@ const ART_VISIBLE_DEFAULT = 4;
 // HELPERS
 // ============================================================
 function fmtTime(v){try{const d=v?.toDate?v.toDate():(v?new Date(v):null);return d&&!isNaN(d)?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'--:--';}catch(e){return '--:--';}}
+function displayTime(entry){return entry.scheduledAt||entry.time;}
 function fmtDT(v){try{const d=v?.toDate?v.toDate():(v?new Date(v):null);return d&&!isNaN(d)?d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';} catch(e){return '';}}
 function fmtDateFr(str){
   if(!str)return '';
@@ -1103,7 +1104,7 @@ function render(data){
     const avatarHtml = jrPhoto
       ? `<img class="live-avatar${isFirst?' live-avatar-first':''}" src="${jrPhoto}" alt="" onerror="this.className='live-dot'">`
       : `<div class="live-dot"></div>`;
-    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div><div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
+    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(displayTime(e))}</span><span class="live-journalist">${e.journalist||''}</span></div><div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
   }
 
   function mkLive(){
@@ -1813,7 +1814,8 @@ function renderExpedition(data){
       let _lastDay = '';
       function dayHeader(entry){
         try {
-          const d = entry.time?.toDate ? entry.time.toDate() : (entry.time ? new Date(entry.time) : null);
+          const _dt = displayTime(entry);
+          const d = _dt?.toDate ? _dt.toDate() : (_dt ? new Date(_dt) : null);
           if(!d || isNaN(d)) return '';
           const key = d.toISOString().slice(0,10);
           if(key === _lastDay) return '';
@@ -2579,7 +2581,7 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
 
   let o = `<div class="exp-entry${isNow?' now':''}${isLatest?' exp-entry-latest':''}">`;
   o += `<div class="exp-entry-meta">`;
-  o += `<span>${fmtTime(entry.time)}</span>`;
+  o += `<span>${fmtTime(displayTime(entry))}</span>`;
   if(entry.tag) o += `<span class="tag">${entry.tag}</span>`;
   if(entry.journalist) o += `<span>${entry.journalist}</span>`;
   if(etape) o += `<span>📍 ${etape.name}</span>`;
@@ -2668,7 +2670,7 @@ async function init(){
     return ej.sort((a,b)=>(a.order||0)-(b.order||0)).map(x=>globalArr.find(g=>g.id===x.globalId)).filter(Boolean);
   }
   const ess=toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0));
-  const li=toArr(liS).sort((a,b)=>tsVal(b.time)-tsVal(a.time));
+  const li=toArr(liS).sort((a,b)=>tsVal(displayTime(b))-tsVal(displayTime(a)));
   const ru=toArr(ruS).sort((a,b)=>(a.order||0)-(b.order||0));
   const ci=toArr(ciS).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));
   const ar=toArr(arS).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));
@@ -2683,7 +2685,7 @@ async function init(){
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et};
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); }
 
-  ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
+  ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(displayTime(b))-tsVal(displayTime(a)));rtRender();});
   ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('articles').onSnapshot(snap=>{rtState.articles=toArr(snap).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));rtRender();});
   ec.collection('citations').onSnapshot(snap=>{rtState.citations=toArr(snap).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));rtRender();});
