@@ -1077,15 +1077,23 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
+  // Reset colors to event defaults before applying phase overrides
+  document.documentElement.style.setProperty('--acc', event.accentColor || '#E8842C');
+  document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
     if(_activePhaseObj.accentColor) document.documentElement.style.setProperty('--acc', _activePhaseObj.accentColor);
     if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
   }
-  // Per-phase hero overrides
-  const _phaseHeroImage = (_activePhaseObj && _activePhaseObj.heroImage) ? _activePhaseObj.heroImage : '';
-  const _phaseHeroSubtitle = (_activePhaseObj && _activePhaseObj.heroSubtitle) ? _activePhaseObj.heroSubtitle : '';
+  // Per-phase hero overrides (empty string = use event default)
+  const _ph = _activePhaseObj || {};
+  const _heroTitle    = _ph.heroTitle    || event.title    || '';
+  const _heroSubtitle = _ph.heroSubtitle || event.subtitle || '';
+  const _heroImage    = _ph.heroImage    || event.hero_image || '';
+  const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
+  const _heroLocation = _ph.heroLocation || event.location || '';
+  const _heroDates    = _ph.heroDates    || event.dates    || '';
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
@@ -1133,20 +1141,18 @@ function render(data){
 
   // ===== HERO =====
   function mkHero(){
-    const _hImg = _phaseHeroImage || event.hero_image;
-    const _hSub = _phaseHeroSubtitle || event.subtitle;
-    const hasImage = !!_hImg;
+    const hasImage = !!_heroImage;
     console.log("[TourMaG Live] hero_height:", event.hero_height, typeof event.hero_height);
     const hh = event.hero_height;
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
     let o = `<div class="hero-split${hasImage?'':' no-image'} fi" ${heroStyle}><div class="hero-split-text">`;
     o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">Dossier spécial TourMaG</span></div>`;
-    if(event.logo_url) o += `<img class="hero-logo" src="${event.logo_url}" alt="" onerror="this.remove()">`;
-    if(event.title) o += `<h1 class="hero-title">${event.title}</h1>`;
-    if(_hSub) o += `<p class="hero-subtitle-text">${_hSub}</p>`;
+    if(_heroLogo) o += `<img class="hero-logo" src="${_heroLogo}" alt="" onerror="this.remove()">`;
+    if(_heroTitle) o += `<h1 class="hero-title">${_heroTitle}</h1>`;
+    if(_heroSubtitle) o += `<p class="hero-subtitle-text">${_heroSubtitle}</p>`;
     o += `<div class="hero-meta-row">`;
-    if(event.location) o += `<span class="hero-meta-item">${ICO.mapPin} ${event.location}</span>`;
-    if(event.dates) o += `<span class="hero-meta-item">${ICO.calendar} ${event.dates}</span>`;
+    if(_heroLocation) o += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
+    if(_heroDates) o += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
     o += `</div>`;
     // Hero tags (separate from live feed tag colors)
     const heroTags = event.heroTags || [];
@@ -1160,7 +1166,7 @@ function render(data){
       o += `</div>`;
     }
     o += `</div>`;
-    if(hasImage) o += `<div class="hero-split-image"><img src="${_hImg}" alt="" onerror="this.parentElement.remove()"></div>`;
+    if(hasImage) o += `<div class="hero-split-image"><img src="${_heroImage}" alt="" onerror="this.parentElement.remove()"></div>`;
     o += `</div>`;
 
     // Timeline
@@ -1766,14 +1772,22 @@ function renderExpedition(data){
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   // Apply global custom colors then per-phase overrides
+  document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
     if(_activePhaseObj.accentColor){ accent = _activePhaseObj.accentColor; }
     if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
   }
-  // Per-phase hero overrides
-  const _phaseHeroImage = (_activePhaseObj && _activePhaseObj.heroImage) ? _activePhaseObj.heroImage : '';
-  const _phaseHeroSubtitle = (_activePhaseObj && _activePhaseObj.heroSubtitle) ? _activePhaseObj.heroSubtitle : '';
+  // Per-phase hero overrides (empty string = use event/expedition default)
+  const _ph = _activePhaseObj || {};
+  const _heroTitle      = _ph.heroTitle      || event.title    || '';
+  const _heroSubtitle   = _ph.heroSubtitle   || event.subtitle || '';
+  const _heroImage      = _ph.heroImage      || event.hero_image || '';
+  const _heroLogo       = _ph.heroLogo       || event.logo_url || '';
+  const _heroLocation   = _ph.heroLocation   || event.location || '';
+  const _heroDates      = _ph.heroDates      || event.dates    || '';
+  const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
+  const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1850,9 +1864,7 @@ function renderExpedition(data){
   </header>`;
 
   // ===== HERO =====
-  const _expHImg = _phaseHeroImage || event.hero_image;
-  const _expHSub = _phaseHeroSubtitle || event.subtitle;
-  const hasHeroImage = !!_expHImg;
+  const hasHeroImage = !!_heroImage;
   const _expHeroH = event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
   h += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  h += `<div class="exp-hero-text">`;
@@ -1862,15 +1874,15 @@ function renderExpedition(data){
   if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
   h += `</div>`;
 
-  if(event.logo_url) h += `<img src="${event.logo_url}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
-  if(exp.eyebrow) h += `<div class="exp-hero-eyebrow">${exp.eyebrow}</div>`;
-  h += `<h1>${event.title || ''}</h1>`;
-  if(_expHSub) h += `<p class="exp-hero-subtitle">${_expHSub}</p>`;
+  if(_heroLogo) h += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
+  if(_heroEyebrow) h += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
+  h += `<h1>${_heroTitle}</h1>`;
+  if(_heroSubtitle) h += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
 
   // Meta row (location + dates)
   const metaItems = [];
-  if(event.location) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${event.location}</span>`);
-  if(event.dates) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${event.dates}</span>`);
+  if(_heroLocation) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
+  if(_heroDates) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
   if(metaItems.length) h += `<div class="exp-hero-meta-row">${metaItems.join('')}</div>`;
 
   // Hero tags
@@ -1892,8 +1904,8 @@ function renderExpedition(data){
   // Photo side
   if(hasHeroImage){
     h += `<div class="exp-hero-photo">`;
-    h += `<img src="${_expHImg}" alt="" onerror="this.parentElement.remove()">`;
-    if(exp.photoCredit) h += `<span class="exp-hero-credit">© ${exp.photoCredit}</span>`;
+    h += `<img src="${_heroImage}" alt="" onerror="this.parentElement.remove()">`;
+    if(_heroPhotoCredit) h += `<span class="exp-hero-credit">© ${_heroPhotoCredit}</span>`;
     h += `</div>`;
   }
 
