@@ -1052,7 +1052,7 @@ function render(data){
   // ===== PHASE FILTERING =====
   const phases = event.phases || [];
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
-  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : '';
+  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
@@ -1072,6 +1072,12 @@ function render(data){
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
+  // Apply per-phase colors
+  const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
+  if(_activePhaseObj){
+    if(_activePhaseObj.accentColor) document.documentElement.style.setProperty('--acc', _activePhaseObj.accentColor);
+    if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
+  }
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
   const _citQuoteSize = event.citationQuoteSize || 'medium';
@@ -1109,7 +1115,6 @@ function render(data){
       return '?'+params.toString();
     }
     let t = '<div class="dash"><div class="phase-tabs">';
-    t += `<a href="${phaseUrl('')}" class="phase-tab phase-tab-all${!activePhase?' active':''}" onclick="window._switchPhase(event,'')">Tout voir</a>`;
     phases.forEach(p => {
       const isActive = activePhase === p.id;
       t += `<a href="${phaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
@@ -1742,14 +1747,20 @@ function renderExpedition(data){
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
-  const accent = brand.accentColor || '#FF6C00';
+  let accent = brand.accentColor || '#FF6C00';
   const mod = event.modules || {};
 
   // ===== PHASE FILTERING =====
   const phases = event.phases || [];
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
-  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : '';
+  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
+  // Apply per-phase colors
+  const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
+  if(_activePhaseObj){
+    if(_activePhaseObj.accentColor){ accent = _activePhaseObj.accentColor; }
+    if(_activePhaseObj.liveColor) document.documentElement.style.setProperty('--live', _activePhaseObj.liveColor);
+  }
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1888,7 +1899,6 @@ function renderExpedition(data){
       return '?'+params.toString();
     }
     let t = '<div class="phase-tabs">';
-    t += `<a href="${_ptUrl('')}" class="phase-tab phase-tab-all${!activePhase?' active':''}" onclick="window._switchPhase(event,'')">Tout voir</a>`;
     phases.forEach(p => {
       const isActive = activePhase === p.id;
       t += `<a href="${_ptUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
@@ -1972,9 +1982,12 @@ function renderExpedition(data){
 
   _b.etapes = function(){
     if(!filteredEtapes.length || mod.etapes===false) return '';
+    const _mt = (_activePhaseObj && _activePhaseObj.mapTitle) || exp.mapTitle || 'La route, en direct';
+    const _ms = (_activePhaseObj && _activePhaseObj.mapSubtitle) || exp.mapSubtitle || "Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant.";
+    const _mn = (_activePhaseObj && _activePhaseObj.mapNote) || exp.mapNote || '';
     return `<section class="exp-mapsec">
-      <div class="exp-section-head"><h2>${exp.mapTitle||'La route, en direct'}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${exp.mapSubtitle||"Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant."}</p>
+      <div class="exp-section-head"><h2>${_mt}</h2><div class="rule"></div></div>
+      <p class="exp-section-sub">${_ms}</p>
       <div class="exp-map-wrap">
         <div id="exp-routemap"></div>
         <div class="exp-map-panel" id="exp-map-panel">
@@ -1992,7 +2005,7 @@ function renderExpedition(data){
           <div class="exp-lg-row"><span style="display:inline-flex;width:22px;flex-shrink:0;justify-content:center"><svg width="12" height="12" viewBox="0 0 22 22"><path d="M4 17 L11 5 L18 17" stroke="var(--exp-accent)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Sens du parcours</span></div>
         </div>
       </div>
-      ${exp.mapNote ? `<p class="exp-map-note">${exp.mapNote}</p>` : ''}
+      ${_mn ? `<p class="exp-map-note">${_mn}</p>` : ''}
     </section>`;
   };
 
