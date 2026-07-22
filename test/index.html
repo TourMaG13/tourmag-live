@@ -1203,8 +1203,9 @@ function render(data){
     const pubLive=live.filter(_isPublished);
     if(!pubLive.length) return '';
     let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
-    const vis = pubLive.slice(0, LIVE_VISIBLE);
-    const ext = pubLive.slice(LIVE_VISIBLE);
+    const _liveVis = event.liveVisibleCount || LIVE_VISIBLE;
+    const vis = pubLive.slice(0, _liveVis);
+    const ext = pubLive.slice(_liveVis);
     vis.forEach((e,i) => { o += mkLiveEntry(e, i===0); });
     if(ext.length){
       o += `<div class="expand-wrap" id="live-expand">`;
@@ -1953,7 +1954,7 @@ function renderExpedition(data){
       o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
     }
     if(pubLive.length){
-      const EXP_LIVE_VIS = event.expLiveVisibleCount || 5;
+      const EXP_LIVE_VIS = event.liveVisibleCount || event.expLiveVisibleCount || 5;
       const _lineClamp = event.liveLineClamp || 0;
       const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
       const extraEntries = pubLive.slice(EXP_LIVE_VIS);
@@ -1971,10 +1972,10 @@ function renderExpedition(data){
         } catch(e){ return ''; }
       }
       o += `<div class="exp-feed">`;
-      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, i===0, _lineClamp); });
+      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, i===0, _lineClamp); });
       if(extraEntries.length){
         o += `<div class="exp-expand" id="exp-feed-expand">`;
-        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, sortedEtapes, jrPhotoMap, false, _lineClamp); });
+        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, false, _lineClamp); });
         o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length},'▴ Réduire','▾ Voir les ${extraEntries.length} entrées précédentes')">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
       }
       o += `</div>`;
@@ -2545,8 +2546,8 @@ function renderExpedition(data){
     }
 
     // Auto-open panel on current étape (or first if trip hasn't started)
-    const nowEtape = sortedEtapes.find(e => e.status==='now');
-    const autoEtape = nowEtape || sortedEtapes[0];
+    const nowEtape = filteredEtapes.find(e => e.status==='now');
+    const autoEtape = nowEtape || filteredEtapes[0];
     if(autoEtape) setTimeout(()=>{ openExpMapPanel(autoEtape); }, 400);
   }
 
