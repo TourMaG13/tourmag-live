@@ -2021,6 +2021,10 @@ function renderLive(el){
       <div class="form-row" style="max-width:220px"><label class="form-label">Lignes max avant accordéon</label><input type="number" class="form-input" id="live-s-lineclamp" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveLineClamp||0}" min="0" step="1" placeholder="0 = désactivé"><div style="font-size:9px;color:var(--text3);margin-top:3px">0 = pas de troncature du texte</div></div>
       <div class="form-row" style="max-width:220px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="live-s-visiblecount" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveVisibleCount||5}" min="1" max="50" step="1"><div style="font-size:9px;color:var(--text3);margin-top:3px">5 par défaut</div></div>
     </div>
+    <div class="form-row-inline" style="margin-top:8px">
+      <div class="form-row" style="max-width:160px"><label class="form-label">🎨 Couleur accent</label><input type="color" class="form-input" id="live-s-accent" value="${(eventsData.find(e=>e.id===currentEventId)||{}).accentColor||'#E8842C'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div>
+      <div class="form-row" style="max-width:160px"><label class="form-label">🔴 Couleur pastille live</label><input type="color" class="form-input" id="live-s-livecolor" value="${(eventsData.find(e=>e.id===currentEventId)||{}).liveColor||'#DC2626'}" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>
+    </div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLiveSettings()">💾 Enregistrer</button></div>
     </details>
   </div>
@@ -2271,7 +2275,9 @@ async function saveLiveSettings(){
     liveSubtitle:document.getElementById('live-s-sub').value.trim(),
     liveShowTitle:document.getElementById('live-s-show-title').checked,
     liveLineClamp:parseInt(document.getElementById('live-s-lineclamp').value)||0,
-    liveVisibleCount:parseInt(document.getElementById('live-s-visiblecount').value)||5
+    liveVisibleCount:parseInt(document.getElementById('live-s-visiblecount').value)||5,
+    accentColor:document.getElementById('live-s-accent').value||'',
+    liveColor:document.getElementById('live-s-livecolor').value||''
   });
   toast('Réglages fil live enregistrés');
 }
