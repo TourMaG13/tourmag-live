@@ -1231,27 +1231,40 @@ function previewFont(type){
   }
 }
 async function saveApparence(){
-  const typography={
-    heroFont:document.getElementById('typo-hero-font').value,
-    headingFont:document.getElementById('typo-heading-font').value,
-    bodyFont:document.getElementById('typo-body-font').value,
-    uiFont:document.getElementById('typo-ui-font').value,
-    heroTitleSize:parseInt(document.getElementById('typo-hero-size').value)||32,
-    heroSubtitleSize:parseInt(document.getElementById('typo-hero-sub').value)||16,
-    sectionTitleSize:parseInt(document.getElementById('typo-sec-size').value)||20,
-    bodySize:parseInt(document.getElementById('typo-body-size').value)||14,
-    uiSize:parseInt(document.getElementById('typo-ui-size').value)||11,
-    phaseTabSize:parseInt(document.getElementById('typo-phase-size').value)||13,
-    phaseTabPadY:parseInt(document.getElementById('typo-phase-pad').value)||7,
-    counterSize:parseInt(document.getElementById('typo-counter-size').value)||40,
-    heroColor:document.getElementById('typo-hero-color').value,
-    headingColor:document.getElementById('typo-heading-color').value,
-    bodyColor:document.getElementById('typo-body-color').value,
-    uiColor:document.getElementById('typo-ui-color').value
-  };
-  saving(true);
-  await db.collection('events').doc(currentEventId).update({typography});
-  toast('Apparence enregistrée');
+  // Start from the event's existing typography so a missing field never wipes others
+  const _ev = eventsData.find(e=>e.id===currentEventId) || {};
+  const typography = Object.assign({}, _ev.typography || {});
+  const _val = (id)=>{ const el=document.getElementById(id); return el? el.value : undefined; };
+  const _int = (id,def)=>{ const el=document.getElementById(id); return el? (parseInt(el.value)||def) : undefined; };
+  // Only overwrite keys whose inputs are actually present in the DOM
+  const _set = (k,v)=>{ if(v!==undefined) typography[k]=v; };
+  _set('heroFont', _val('typo-hero-font'));
+  _set('headingFont', _val('typo-heading-font'));
+  _set('bodyFont', _val('typo-body-font'));
+  _set('uiFont', _val('typo-ui-font'));
+  _set('heroTitleSize', _int('typo-hero-size',32));
+  _set('heroSubtitleSize', _int('typo-hero-sub',16));
+  _set('sectionTitleSize', _int('typo-sec-size',20));
+  _set('bodySize', _int('typo-body-size',14));
+  _set('uiSize', _int('typo-ui-size',11));
+  _set('phaseTabSize', _int('typo-phase-size',13));
+  _set('phaseTabPadY', _int('typo-phase-pad',7));
+  _set('counterSize', _int('typo-counter-size',40));
+  _set('heroColor', _val('typo-hero-color'));
+  _set('headingColor', _val('typo-heading-color'));
+  _set('bodyColor', _val('typo-body-color'));
+  _set('uiColor', _val('typo-ui-color'));
+  try{
+    saving(true);
+    await db.collection('events').doc(currentEventId).update({typography});
+    // keep local cache in sync so a re-render of the tab reflects the save immediately
+    if(_ev) _ev.typography = typography;
+    console.log('[Admin] Typography saved for', currentEventId, typography);
+    toast('Apparence enregistrée');
+  }catch(err){
+    console.error('[Admin] saveApparence failed:', err);
+    toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement typographie'));
+  }
 }
 async function resetApparence(){
   if(!confirm('Réinitialiser toute la typographie aux valeurs par défaut ?')) return;
