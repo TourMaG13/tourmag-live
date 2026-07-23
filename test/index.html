@@ -1023,6 +1023,7 @@ function render(data){
   let _typoStyle = document.getElementById('typo-overrides');
   if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
   _typoStyle.textContent = _typoCSS;
+  console.log('[TourMaG Live] TYPO mode=%s keys=%o cssLen=%d', event.mode||'live', Object.keys(_typo), _typoCSS.length);
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
