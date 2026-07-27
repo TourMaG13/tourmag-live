@@ -2,9 +2,9 @@
   TourMaG Live — Dashboard événementiel v2
   ==========================================
   Hébergé sur GitHub Pages (tourmag13.github.io/tourmag-live/)
-  
+
   EMBED SNIPPET — à coller sur TourMaG.com :
-  
+
   <iframe src="https://tourmag13.github.io/tourmag-live/v2/?event=EVENT_ID"
     style="width:100%;border:none;min-height:280px" id="tourmag-live-v2-w"></iframe>
   <script>
@@ -803,7 +803,7 @@ body.mode-expedition .social-float{display:none}
 </style>
 </head>
 <body>
-<script async src="//www.instagram.com/embed.js"></script>
+<script async src="https://www.instagram.com/embed.js"></script>
 <nav class="sticky-nav" id="sticky-nav"><div class="sticky-nav-inner" id="sticky-nav-inner"></div></nav>
 <div class="upd-bar" id="upd-bar"></div>
 <div id="app">
@@ -1989,7 +1989,9 @@ function renderExpedition(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     let o=`<section class="exp-articles">`;
     if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
-    const sorted=articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
+    //const sorted=articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
+    const sorted=[...articles].sort((a,b)=> tsVal(b.date)-tsVal(a.date));
+    console.log(articles.filter(a=>a.pinned).map(a=>a.title));
     const visCount=event.articlesVisibleCount||4;
     const visArts=sorted.slice(0,visCount);
     const extraArts=sorted.slice(visCount);
