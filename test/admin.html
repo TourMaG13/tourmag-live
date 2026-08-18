@@ -1150,20 +1150,20 @@ function _fontOpts(selected){
   // Titre/sous-titre de SECTION par module (classe distinctive dans le HTML).
   // Global par défaut (via ZONE_SEL.body .sec-title), surchargeable ici par module.
   var SECTION_SEL = {
-    live:       { title:'.sec-title-live h2',       sub:'.sec-title-live p' },
-    citations:  { title:'.sec-title-citations h2',  sub:'.sec-title-citations p' },
-    articles:   { title:'.sec-title-articles h2',   sub:'.sec-title-articles p' },
-    essential:  { title:'.sec-title-essential h2',  sub:'.sec-title-essential p' },
-    videos:     { title:'.sec-title-videos h2',     sub:'.sec-title-videos p' },
-    gallery:    { title:'.sec-title-gallery h2',    sub:'.sec-title-gallery p' },
-    interviews: { title:'.itw-section-hd h2',       sub:'.itw-section-hd p' }
+    live:       { title:'.sec-title-live h2,.exp-sec-live h2',             sub:'.sec-title-live p,.exp-sec-live + .exp-section-sub' },
+    citations:  { title:'.sec-title-citations h2,.exp-sec-citations h2',   sub:'.sec-title-citations p,.exp-sec-citations + .exp-section-sub' },
+    articles:   { title:'.sec-title-articles h2,.exp-sec-articles h2',     sub:'.sec-title-articles p,.exp-sec-articles + .exp-section-sub' },
+    essential:  { title:'.sec-title-essential h2,.exp-sec-essential h2',   sub:'.sec-title-essential p,.exp-sec-essential + .exp-section-sub' },
+    videos:     { title:'.sec-title-videos h2,.exp-sec-videos h2',         sub:'.sec-title-videos p,.exp-sec-videos + .exp-section-sub' },
+    gallery:    { title:'.sec-title-gallery h2,.exp-sec-gallery h2',       sub:'.sec-title-gallery p,.exp-sec-gallery + .exp-section-sub' },
+    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' }
   };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
   var MODULE_SEL = {
     live: {
       zone:'body',
-      title:'',
+      title:'.live-title,.exp-entry h3',
       text:'.live-text,.exp-entry-body,.exp-entry p',
       ui:'.live-tag,.live-timestamp,.live-journalist,.exp-entry-meta,.exp-live-pill,.exp-entry-km,.exp-entry-toggle'
     },
