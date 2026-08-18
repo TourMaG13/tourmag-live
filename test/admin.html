@@ -1326,14 +1326,198 @@ function _fontOpts(selected){
 
 </script>
 <script>
+// ============================================================================
+// Helpers typo GLOBAUX (réutilisés par l'onglet Apparence ET par chaque onglet
+// module, pour que les réglages fins vivent dans l'onglet de leur module).
+// ============================================================================
+function _typoRoleBlock(idBase, roleLabel, vals){
+  var v = vals || {};
+  var fontSel = '<select class="form-input" id="'+idBase+'-font">'+_fontOpts(v.Font||'')+'</select>';
+  var sizeVal = (v.Size!=null&&v.Size!=='')?v.Size:'';
+  var lhVal = (v.LH!=null&&v.LH!=='')?v.LH:'';
+  var color = v.Color||'#000000';
+  var isHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
+  var colorInput = '<input type="color" class="form-input" id="'+idBase+'-color" value="'+(isHex?color:'#ffffff')+'" data-init="'+(isHex?color:'')+'" data-set="'+(v.Color?'1':'')+'" oninput="this.dataset.set=\'1\'" style="height:34px;width:46px;padding:3px">';
+  var wv = (v.Weight!=null&&v.Weight!=='')?(''+v.Weight):'';
+  var wOpt = function(val,lab){ return '<option value="'+val+'"'+(wv===val?' selected':'')+'>'+lab+'</option>'; };
+  var weightSel = '<select class="form-input" id="'+idBase+'-weight" style="width:120px">'+wOpt('','—')+wOpt('300','Léger')+wOpt('400','Normal')+wOpt('500','Medium')+wOpt('600','Semi-bold')+wOpt('700','Gras')+wOpt('800','Extra-bold')+'</select>';
+  var isItal = (v.Style==='italic');
+  var styleToggle = '<label class="toggle" style="margin-top:4px"><input type="checkbox" id="'+idBase+'-italic" '+(isItal?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label>';
+  var h = '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+  h += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">'+roleLabel+'</div>';
+  h += '<div class="form-row-inline">';
+  h += '<div class="form-row" style="flex:2"><label class="form-label">Police</label>'+fontSel+'</div>';
+  h += '<div class="form-row" style="max-width:120px"><label class="form-label">Taille (px)</label><input type="number" class="form-input" id="'+idBase+'-size" value="'+sizeVal+'" placeholder="auto" min="6" max="90" step="0.5" style="width:90px"></div>';
+  h += '<div class="form-row" style="max-width:120px"><label class="form-label">Interligne</label><input type="number" class="form-input" id="'+idBase+'-lh" value="'+lhVal+'" placeholder="auto" min="0.8" max="2.6" step="0.05" style="width:90px"></div>';
+  h += '<div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label>'+colorInput+'</div>';
+  h += '</div>';
+  h += '<div class="form-row-inline" style="margin-top:4px">';
+  h += '<div class="form-row" style="max-width:140px"><label class="form-label">Graisse</label>'+weightSel+'</div>';
+  h += '<div class="form-row" style="max-width:110px"><label class="form-label">Italique</label>'+styleToggle+'</div>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+// 3 rôles pour un préfixe donné, à partir d'un objet de valeurs {titleFont,...}
+function _typoRolesFor(idPrefix, src){
+  var s = src || {};
+  var h = '';
+  h += _typoRoleBlock(idPrefix+'-title','Titres / nom', {Font:s.titleFont,Size:s.titleSize,Color:s.titleColor,LH:s.titleLH,Weight:s.titleWeight,Style:s.titleStyle});
+  h += _typoRoleBlock(idPrefix+'-text','Texte courant', {Font:s.textFont,Size:s.textSize,Color:s.textColor,LH:s.textLH,Weight:s.textWeight,Style:s.textStyle});
+  h += _typoRoleBlock(idPrefix+'-ui','Labels / petits éléments', {Font:s.uiFont,Size:s.uiSize,Color:s.uiColor,LH:s.uiLH,Weight:s.uiWeight,Style:s.uiStyle});
+  return h;
+}
+// Correspondance onglet (data-tab) -> clé de module typo dans le moteur
+var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary' };
+// Modules override vs blocs autonomes
+function _isAutoModule(key){ return key==='reporters' || key==='itinerary'; }
+
+// Panneau typo complet d'un module, à insérer dans son onglet. moduleKey est la
+// clé moteur (ex 'live','citations','reporters','itinerary').
+function moduleTypoPanel(moduleKey){
+  var _T = window.TourMagTypo;
+  var ev = eventsData.find(function(e){return e.id===currentEventId;}) || {};
+  var isExp = ev.mode==='expedition';
+  var modeLabel = isExp ? 'Expédition' : 'Classique';
+  var badgeBg = isExp ? '#0F2B3C' : '#E8842C';
+  var mt = _T.getModeTypo(ev);
+  var h = '';
+  h += '<div style="display:flex;align-items:center;gap:8px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;padding:8px 12px;margin:10px 0;font-size:11px;color:#0369A1">🎯 Réglages propres à ce module — mode <span style="background:'+badgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px">'+modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:#0C4A6E">Le style global se règle dans <b>Apparence</b>.</span></div>';
+  if(_isAutoModule(moduleKey)){
+    if(moduleKey==='itinerary' && !isExp){
+      return h+'<div style="font-size:11px;color:var(--text3);padding:8px 2px">Le bloc itinéraire n\'existe qu\'en mode expédition.</div>';
+    }
+    var av = (mt.auto||{})[moduleKey] || {};
+    h += _typoRolesFor('a-'+moduleKey, av);
+  } else {
+    var mv = (mt.modules||{})[moduleKey] || {};
+    var on = !!mv.enabled;
+    h += '<div class="form-row" style="max-width:260px;margin-bottom:8px"><label class="form-label"><input type="checkbox" id="m-'+moduleKey+'-enabled" '+(on?'checked':'')+' onchange="var b=document.getElementById(\'m-'+moduleKey+'-body\'); if(b) b.style.display=this.checked?\'block\':\'none\'"> Personnaliser la typo de ce module</label><div style="font-size:9px;color:var(--text3);margin-top:2px">Décoché = suit la zone « Corps de page » du Design global.</div></label></div>';
+    h += '<div id="m-'+moduleKey+'-body" style="display:'+(on?'block':'none')+'">'+_typoRolesFor('m-'+moduleKey, mv)+'</div>';
+  }
+  return h;
+}
+
+// Enregistre en UNE fois les réglages fins (via saveModuleSettings) + la typo du
+// module, sans écraser le reste de la structure typography.
+async function saveModule(tabKey){
+  var _T = window.TourMagTypo;
+  var ev = eventsData.find(function(e){return e.id===currentEventId;}) || {};
+  var mk = _T.modeKey(ev);
+  // 1) Réglages fins existants (titre/sous-titre/options) — réutilise la logique existante
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
+  // 2) Typo du module
+  var existing = ev.typography || {};
+  var root = {};
+  if(existing.classic) root.classic = existing.classic;
+  if(existing.expedition) root.expedition = existing.expedition;
+  if(existing.phaseTabSize!==undefined) root.phaseTabSize = existing.phaseTabSize;
+  if(existing.phaseTabPadY!==undefined) root.phaseTabPadY = existing.phaseTabPadY;
+  var cur = Object.assign({ zones:{}, modules:{}, auto:{} }, root[mk]||{});
+  cur.zones = (root[mk]&&root[mk].zones)||{};
+  cur.modules = Object.assign({}, (root[mk]&&root[mk].modules)||{});
+  cur.auto = Object.assign({}, (root[mk]&&root[mk].auto)||{});
+  if(root[mk]){ if(root[mk].phaseTabs)cur.phaseTabs=root[mk].phaseTabs; if(root[mk].phaseTitle)cur.phaseTitle=root[mk].phaseTitle; if(root[mk].phaseSubtitle)cur.phaseSubtitle=root[mk].phaseSubtitle; }
+
+  var typoKey = (tabKey==='journalistes') ? 'reporters' : MODULE_TYPO_KEY[tabKey];
+  if(typoKey){
+    if(_isAutoModule(typoKey)){
+      if(document.getElementById('a-'+typoKey+'-title-size')!==null){
+        var aObj={};
+        ['title','text','ui'].forEach(function(r){ Object.assign(aObj, _roleToFields(r, _readRoleBlock('a-'+typoKey+'-'+r), false)); });
+        cur.auto[typoKey]=aObj;
+      }
+    } else {
+      var enEl=document.getElementById('m-'+typoKey+'-enabled');
+      if(enEl){
+        if(enEl.checked){
+          var mObj={enabled:true};
+          ['title','text','ui'].forEach(function(r){ Object.assign(mObj, _roleToFields(r, _readRoleBlock('m-'+typoKey+'-'+r), true)); });
+          cur.modules[typoKey]=mObj;
+        } else {
+          delete cur.modules[typoKey];
+        }
+      }
+    }
+  }
+  root[mk]=cur;
+  try{
+    saving(true);
+    if(settingsType){ await _collectModuleSettings(settingsType); } // écrit les champs fins
+    await db.collection('events').doc(currentEventId).update({typography:root});
+    ev.typography = root;
+    toast('Module enregistré ('+(mk==='expedition'?'Expédition':'Classique')+')');
+  }catch(err){
+    console.error('[Admin] saveModule failed:', err);
+    toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement'));
+  }
+}
+
+// Titre/sous-titre/visible d'une section (helper global, réutilisé partout)
+function _tss(prefix, title, sub, show, placeholderT, placeholderS){
+  return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="'+prefix+'-title" value="'+(title||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderT+'"></div><div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="'+prefix+'-sub" value="'+(sub||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderS+'"></div><div class="form-row" style="max-width:100px"><label class="form-label">Visible</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="'+prefix+'-show" '+(show!==false?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
+}
+// Panneau des réglages fins d'un module (titre/sous-titre + options), SANS bouton.
+// Réutilise les mêmes IDs que _collectModuleSettings pour la sauvegarde.
+function moduleSettingsPanel(type, ev){
+  ev = ev || eventsData.find(function(e){return e.id===currentEventId;}) || {};
+  var isExp = ev.mode==='expedition';
+  if(type==='live'){
+    var s=_tss('app-st-live', ev.liveTitle, ev.liveSubtitle, ev.liveShowTitle, 'Fil Live', 'Minute par minute');
+    s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-live-count" value="'+(ev.liveVisibleCount||5)+'" min="1" max="50"></div><div class="form-row" style="max-width:200px"><label class="form-label">Lignes max par entrée</label><input type="number" class="form-input" id="app-acc-live-clamp" value="'+(ev.liveLineClamp||0)+'" min="0" placeholder="0 = illimité"><div style="font-size:9px;color:var(--text3);margin-top:2px">0 = pas de troncature</div></div></div>';
+    return s;
+  }
+  if(type==='citations'){
+    var s=_tss('app-st-cit', ev.citationsTitle, ev.citationsSubtitle, ev.citationsShowTitle, 'Verbatims', 'Ce qu\'ils ont dit');
+    s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style</div>';
+    s+='<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Style</label><select class="form-input" id="app-cit-style" style="width:180px"><option value="classic"'+((ev.citationStyle||'classic')==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(ev.citationStyle==='premium'?' selected':'')+'>Premium</option></select></div><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-cit-accent" value="'+(ev.citationAccentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Bordure (px)</label><input type="number" class="form-input" id="app-cit-bw" value="'+(ev.citationBorderWidth||2.5)+'" min="1" max="6" step="0.5" style="width:70px"></div><div class="form-row"><label class="form-label">Guillemets</label><select class="form-input" id="app-cit-qsize" style="width:100px"><option value="small"'+(ev.citationQuoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+((ev.citationQuoteSize||'medium')==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(ev.citationQuoteSize==='large'?' selected':'')+'>Grand</option></select></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Taille texte</label><input type="number" class="form-input" id="app-cit-tsize" value="'+(ev.citationTextSize||13)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille nom</label><input type="number" class="form-input" id="app-cit-nsize" value="'+(ev.citationNameSize||12)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille poste</label><input type="number" class="form-input" id="app-cit-rsize" value="'+(ev.citationRoleSize||10)+'" min="8" max="16" style="width:70px"></div><div class="form-row"><label class="form-label">Médaillons</label><select class="form-input" id="app-cit-avsize" style="width:120px"><option value="60"'+((ev.citationAvatarSize||80)==60?' selected':'')+'>60px</option><option value="80"'+((ev.citationAvatarSize||80)==80?' selected':'')+'>80px</option><option value="100"'+((ev.citationAvatarSize||80)==100?' selected':'')+'>100px</option><option value="120"'+((ev.citationAvatarSize||80)==120?' selected':'')+'>120px</option></select></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-cit-count" value="'+(ev.citVisibleCount||6)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="'+(ev.citationFeaturedBg||'#0F2B3C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div></div>';
+    return s;
+  }
+  if(type==='articles'){
+    var s=_tss('app-st-art', ev.articlesTitle, ev.articlesSubtitle, ev.articlesShowTitle, 'Nos articles', "L'événement vu par la rédaction");
+    s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-art-count" value="'+(ev.articlesVisibleCount||4)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="'+(ev.articlesTitleSize||14)+'" min="10" max="24" style="width:70px"></div></div>';
+    return s;
+  }
+  if(type==='essential'){
+    return _tss('app-st-ess', ev.essentialTitle, ev.essentialSubtitle, ev.essentialShowTitle, "L'essentiel", 'Les points clés à retenir');
+  }
+  if(type==='videos'){
+    return _tss('app-st-vid', ev.videosTitle, ev.videosSubtitle, ev.videosShowTitle, 'Vidéos', 'Reportages et temps forts');
+  }
+  if(type==='interviews'){
+    var s=_tss('app-st-itw', ev.interviewsTitle, ev.interviewsSubtitle, ev.interviewsShowTitle, 'Interviews', 'Rencontres et visions');
+    s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-itw-count" value="'+(ev.itwVisibleCount||4)+'" min="1" max="20" style="width:70px"></div></div>';
+    return s;
+  }
+  if(type==='gallery'){
+    var s=_tss('app-st-gal', ev.galleryTitle, ev.gallerySubtitle, ev.galleryShowTitle, 'Galerie', 'En images');
+    s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label><input type="number" class="form-input" id="app-acc-gal-height" value="'+(ev.galleryHeight||260)+'" min="100" max="600" style="width:100px"></div></div>';
+    return s;
+  }
+  if(type==='reporters'){
+    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille nom (px)</label><input type="number" class="form-input" id="app-jr-nsize" value="'+(ev.journalistsNameSize||13)+'" min="10" max="24" style="width:70px"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille poste (px)</label><input type="number" class="form-input" id="app-jr-rsize" value="'+(ev.journalistsRoleSize||10)+'" min="8" max="16" style="width:70px"></div></div>';
+  }
+  return '';
+}
+// Bloc complet "Paramétrage du module" à insérer dans un onglet : réglages fins
+// + typo + un seul bouton d'enregistrement. tabKey = data-tab de l'onglet.
+function moduleConfigBlock(tabKey){
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
+  var typoKey = (tabKey==='journalistes') ? 'reporters' : MODULE_TYPO_KEY[tabKey];
+  var inner = '';
+  if(settingsType) inner += moduleSettingsPanel(settingsType);
+  if(typoKey) inner += moduleTypoPanel(typoKey);
+  inner += '<div style="margin-top:12px"><button class="btn btn-primary" onclick="saveModule(\''+tabKey+'\')">💾 Enregistrer ce module</button></div>';
+  return '<details class="admin-card" style="margin:0 0 16px"><summary style="cursor:pointer;font-weight:700;padding:12px 0;list-style:none">⚙️ Paramétrage &amp; apparence de ce module</summary><div style="padding:6px 0">'+inner+'</div></details>';
+}
+
 function renderApparence(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
   const isExp=ev.mode==='expedition';
   // Helper: title/subtitle/show row
-  function _tss(prefix, title, sub, show, placeholderT, placeholderS){
-    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="'+prefix+'-title" value="'+(title||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderT+'"></div><div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="'+prefix+'-sub" value="'+(sub||'').replace(/"/g,'&quot;')+'" placeholder="'+placeholderS+'"></div><div class="form-row" style="max-width:100px"><label class="form-label">Visible</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="'+prefix+'-show" '+(show!==false?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
-  }
   function _det(icon, label, inner, open){
     return '<details class="admin-card" style="margin-bottom:10px"'+(open?' open':'')+'><summary style="cursor:pointer;font-size:14px;font-weight:700;padding:14px 0 4px;list-style:none;display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+icon+'</span>'+label+'<span style="margin-left:auto;font-size:10px;color:var(--text3)">▾</span></summary><div style="padding:8px 0 4px">'+inner+'</div></details>';
   }
@@ -1414,47 +1598,13 @@ function renderApparence(el){
     }
 
     var typoInner = '';
-    typoInner += '<div style="display:flex;align-items:center;gap:8px;background:var(--bg2,#F8FAFC);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--text2)">🎛️ Typographie du mode <span style="background:'+_modeBadgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px">'+_modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">3 zones + personnalisation par module.</span></div>';
+    typoInner += '<div style="display:flex;align-items:center;gap:8px;background:var(--bg2,#F8FAFC);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--text2)">🌍 Typographie <b>globale</b> — mode <span style="background:'+_modeBadgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px">'+_modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">Le style d\'un module précis se règle dans son onglet.</span></div>';
 
     // ----- Les 3 zones -----
     typoInner += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:6px 0 10px">Zones</div>';
     typoInner += '<details class="admin-card" style="margin-bottom:10px" open><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">🏠 Zone Hero <span style="font-weight:400;color:var(--text3);font-size:11px">— bandeau principal (fond sombre)</span></summary><div style="padding:6px 0">'+zoneBlock('hero','Hero',_mt.zones.hero)+'</div></details>';
     typoInner += '<details class="admin-card" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">📄 Zone Corps de page <span style="font-weight:400;color:var(--text3);font-size:11px">— fond clair : fil live, articles, essentiel…</span></summary><div style="padding:6px 0">'+zoneBlock('body','Corps',_mt.zones.body)+'</div></details>';
     typoInner += '<details class="admin-card" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">🌑 Zone Blocs sombres <span style="font-weight:400;color:var(--text3);font-size:11px">— interviews, verbatim vedette, footer…</span></summary><div style="padding:6px 0">'+zoneBlock('dark','Blocs sombres',_mt.zones.dark)+'</div></details>';
-
-    // ----- Override par module -----
-    typoInner += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:16px 0 6px">Personnalisation par module</div>';
-    typoInner += '<div style="font-size:10px;color:var(--text3);margin-bottom:10px">Chaque module hérite de sa zone. Activez la personnalisation pour affiner uniquement ce module (les champs laissés vides suivent la zone).</div>';
-    var _mods = _mt.modules || {};
-    _T.TYPO_MODULES.forEach(function(m){
-      var mv = _mods[m.key] || {};
-      var on = !!mv.enabled;
-      var body = '';
-      body += '<div class="form-row" style="max-width:230px;margin-bottom:8px"><label class="form-label"><input type="checkbox" id="m-'+m.key+'-enabled" '+(on?'checked':'')+' onchange="var b=document.getElementById(\'m-'+m.key+'-body\'); if(b) b.style.display=this.checked?\'block\':\'none\'"> Personnaliser ce module</label></div>';
-      body += '<div id="m-'+m.key+'-body" style="display:'+(on?'block':'none')+'">';
-      body += roleBlock('m-'+m.key+'-title','Titres', {Font:mv.titleFont,Size:mv.titleSize,Color:mv.titleColor,LH:mv.titleLH,Weight:mv.titleWeight,Style:mv.titleStyle});
-      body += roleBlock('m-'+m.key+'-text','Texte courant', {Font:mv.textFont,Size:mv.textSize,Color:mv.textColor,LH:mv.textLH,Weight:mv.textWeight,Style:mv.textStyle});
-      body += roleBlock('m-'+m.key+'-ui','Labels / petits éléments', {Font:mv.uiFont,Size:mv.uiSize,Color:mv.uiColor,LH:mv.uiLH,Weight:mv.uiWeight,Style:mv.uiStyle});
-      body += '</div>';
-      typoInner += '<details class="admin-card" style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">'+m.icon+' '+m.label+(on?' <span style="color:var(--acc);font-size:10px">● personnalisé</span>':'')+'</summary><div style="padding:6px 0">'+body+'</div></details>';
-    });
-
-    // ----- Modules AUTONOMES (reporters / itinéraire) : toujours actifs -----
-    typoInner += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:16px 0 6px">Blocs autonomes</div>';
-    typoInner += '<div style="font-size:10px;color:var(--text3);margin-bottom:10px">Ces blocs ont leur propre style, indépendant des zones. Les champs vides gardent leur valeur d\'origine.</div>';
-    var _auto = _mt.auto || {};
-    _T.AUTO_MODULES.forEach(function(m){
-      if(m.expOnly && !isExp){
-        typoInner += '<details class="admin-card" style="margin-bottom:8px;opacity:.55"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">'+m.icon+' '+m.label+' <span style="font-weight:400;color:var(--text3);font-size:10px">— mode expédition uniquement</span></summary><div style="padding:8px 2px;font-size:11px;color:var(--text3)">Ce bloc n\'apparaît qu\'en mode expédition. Passez l\'événement en mode expédition pour le régler.</div></details>';
-        return;
-      }
-      var av = _auto[m.key] || {};
-      var body = '';
-      body += roleBlock('a-'+m.key+'-title','Titres / nom', {Font:av.titleFont,Size:av.titleSize,Color:av.titleColor,LH:av.titleLH,Weight:av.titleWeight,Style:av.titleStyle});
-      body += roleBlock('a-'+m.key+'-text','Texte courant', {Font:av.textFont,Size:av.textSize,Color:av.textColor,LH:av.textLH,Weight:av.textWeight,Style:av.textStyle});
-      body += roleBlock('a-'+m.key+'-ui','Labels / petits éléments', {Font:av.uiFont,Size:av.uiSize,Color:av.uiColor,LH:av.uiLH,Weight:av.uiWeight,Style:av.uiStyle});
-      typoInner += '<details class="admin-card" style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">'+m.icon+' '+m.label+'</summary><div style="padding:6px 0">'+body+'</div></details>';
-    });
 
     // ----- Onglets de phase (typo + apparence, par mode) -----
     if((ev.phases||[]).length){
@@ -1494,55 +1644,6 @@ function renderApparence(el){
 
     h+=_det('🔤','Typographie',typoInner, false);
   })();
-
-  // ==================== PER-MODULE SECTIONS ====================
-  // 📡 Fil live
-  var liveInner = _tss('app-st-live', ev.liveTitle, ev.liveSubtitle, ev.liveShowTitle, 'Fil Live', 'Minute par minute');
-  liveInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Entrées visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-live-count" value="'+(ev.liveVisibleCount||5)+'" min="1" max="50"></div><div class="form-row" style="max-width:200px"><label class="form-label">Lignes max par entrée</label><input type="number" class="form-input" id="app-acc-live-clamp" value="'+(ev.liveLineClamp||0)+'" min="0" placeholder="0 = illimité"><div style="font-size:9px;color:var(--text3);margin-top:2px">0 = pas de troncature</div></div></div>';
-  liveInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'live\')">💾 Enregistrer</button></div>';
-  h+=_det('📡','Fil live',liveInner, false);
-
-  // 💬 Verbatims
-  var citInner = _tss('app-st-cit', ev.citationsTitle, ev.citationsSubtitle, ev.citationsShowTitle, 'Verbatims', 'Ce qu\'ils ont dit');
-  citInner += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style</div>';
-  citInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Style</label><select class="form-input" id="app-cit-style" style="width:180px"><option value="classic"'+((ev.citationStyle||'classic')==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(ev.citationStyle==='premium'?' selected':'')+'>Premium</option></select></div><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-cit-accent" value="'+(ev.citationAccentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Bordure (px)</label><input type="number" class="form-input" id="app-cit-bw" value="'+(ev.citationBorderWidth||2.5)+'" min="1" max="6" step="0.5" style="width:70px"></div><div class="form-row"><label class="form-label">Guillemets</label><select class="form-input" id="app-cit-qsize" style="width:100px"><option value="small"'+(ev.citationQuoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+((ev.citationQuoteSize||'medium')==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(ev.citationQuoteSize==='large'?' selected':'')+'>Grand</option></select></div></div>';
-  citInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Taille texte</label><input type="number" class="form-input" id="app-cit-tsize" value="'+(ev.citationTextSize||13)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille nom</label><input type="number" class="form-input" id="app-cit-nsize" value="'+(ev.citationNameSize||12)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille poste</label><input type="number" class="form-input" id="app-cit-rsize" value="'+(ev.citationRoleSize||10)+'" min="8" max="16" style="width:70px"></div><div class="form-row"><label class="form-label">Médaillons</label><select class="form-input" id="app-cit-avsize" style="width:120px"><option value="60"'+((ev.citationAvatarSize||80)==60?' selected':'')+'>60px</option><option value="80"'+((ev.citationAvatarSize||80)==80?' selected':'')+'>80px</option><option value="100"'+((ev.citationAvatarSize||80)==100?' selected':'')+'>100px</option><option value="120"'+((ev.citationAvatarSize||80)==120?' selected':'')+'>120px</option></select></div></div>';
-  citInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-cit-count" value="'+(ev.citVisibleCount||6)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="'+(ev.citationFeaturedBg||'#0F2B3C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div></div>';
-  citInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'citations\')">💾 Enregistrer</button></div>';
-  h+=_det('💬','Verbatims / Citations',citInner, false);
-
-  // 📰 Articles
-  var artInner = _tss('app-st-art', ev.articlesTitle, ev.articlesSubtitle, ev.articlesShowTitle, 'Nos articles', "L'événement vu par la rédaction");
-  artInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-art-count" value="'+(ev.articlesVisibleCount||4)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="'+(ev.articlesTitleSize||14)+'" min="10" max="24" style="width:70px"></div></div>';
-  artInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'articles\')">💾 Enregistrer</button></div>';
-  h+=_det('📰','Articles',artInner, false);
-
-  // 🧠 L'essentiel
-  var essInner = _tss('app-st-ess', ev.essentialTitle, ev.essentialSubtitle, ev.essentialShowTitle, "L'essentiel", 'Les points clés à retenir');
-  essInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'essential\')">💾 Enregistrer</button></div>';
-  h+=_det('🧠',"L'essentiel",essInner, false);
-
-  // 🎬 Vidéos
-  var vidInner = _tss('app-st-vid', ev.videosTitle, ev.videosSubtitle, ev.videosShowTitle, 'Vidéos', 'Reportages et temps forts');
-  vidInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'videos\')">💾 Enregistrer</button></div>';
-  h+=_det('🎬','Vidéos',vidInner, false);
-
-  // 🎙️ Interviews
-  var itwInner = _tss('app-st-itw', ev.interviewsTitle, ev.interviewsSubtitle, ev.interviewsShowTitle, 'Interviews', 'Rencontres et visions');
-  itwInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-itw-count" value="'+(ev.itwVisibleCount||4)+'" min="1" max="20" style="width:70px"></div></div>';
-  itwInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'interviews\')">💾 Enregistrer</button></div>';
-  h+=_det('🎙️','Interviews',itwInner, false);
-
-  // 📸 Galerie
-  var galInner = _tss('app-st-gal', ev.galleryTitle, ev.gallerySubtitle, ev.galleryShowTitle, 'Galerie', 'En images');
-  galInner += '<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Hauteur galerie (px)</label><input type="number" class="form-input" id="app-acc-gal-height" value="'+(ev.galleryHeight||260)+'" min="100" max="600" style="width:100px"></div></div>';
-  galInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'gallery\')">💾 Enregistrer</button></div>';
-  h+=_det('📸','Galerie photos',galInner, false);
-
-  // 👤 Reporters
-  var jrInner = '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille nom (px)</label><input type="number" class="form-input" id="app-jr-nsize" value="'+(ev.journalistsNameSize||13)+'" min="10" max="24" style="width:70px"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille poste (px)</label><input type="number" class="form-input" id="app-jr-rsize" value="'+(ev.journalistsRoleSize||10)+'" min="8" max="16" style="width:70px"></div></div>';
-  jrInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveModuleSettings(\'reporters\')">💾 Enregistrer</button></div>';
-  h+=_det('👤','Reporters',jrInner, false);
 
   el.innerHTML=h;
 }
@@ -1619,34 +1720,10 @@ async function saveApparence(){
     });
     zones[z] = zObj;
   });
-  // ---- Modules (override optionnel) ----
-  const modules = {};
-  _T.TYPO_MODULES.forEach(function(m){
-    var enEl = document.getElementById('m-'+m.key+'-enabled');
-    var enabled = !!(enEl && enEl.checked);
-    if(!enabled) return; // module non personnalisé => pas stocké
-    var mObj = { enabled:true };
-    ['title','text','ui'].forEach(function(r){
-      Object.assign(mObj, _roleToFields(r, _readRoleBlock('m-'+m.key+'-'+r), true));
-    });
-    modules[m.key] = mObj;
-  });
-  // ---- Blocs autonomes (reporters / itinéraire : portée complète) ----
-  const auto = {};
-  _T.AUTO_MODULES.forEach(function(m){
-    // Panneau non rendu (ex: itinéraire hors mode expédition) => préserver l'existant.
-    var probe = document.getElementById('a-'+m.key+'-title-size');
-    if(!probe){
-      var prev = ((existing[mk]||{}).auto||{})[m.key];
-      if(prev) auto[m.key] = prev;
-      return;
-    }
-    var aObj = {};
-    ['title','text','ui'].forEach(function(r){
-      Object.assign(aObj, _roleToFields(r, _readRoleBlock('a-'+m.key+'-'+r), false));
-    });
-    auto[m.key] = aObj;
-  });
+  // ---- Modules & blocs autonomes : gérés dans leurs onglets respectifs.
+  //      Apparence ne touche QU'AU global -> on préserve tel quel l'existant.
+  const modules = Object.assign({}, (existing[mk]||{}).modules || {});
+  const auto = Object.assign({}, (existing[mk]||{}).auto || {});
 
   root[mk] = { zones: zones, modules: modules, auto: auto };
   // ---- Onglets de phase + titre/sous-titre de phase (si panneaux rendus) ----
@@ -1816,6 +1893,11 @@ window._addHeroTag=function(){
 };
 async function saveModuleSettings(type){
   saving(true);
+  await _collectModuleSettings(type);
+  toast('Réglages enregistrés');
+}
+// Construit et écrit les réglages fins d'un module (sans toast) — réutilisé par saveModule.
+async function _collectModuleSettings(type){
   var ud={};
   function _v(id){var el=document.getElementById(id);return el?el.value.trim():'';}
   function _c(id){var el=document.getElementById(id);return el?el.checked:true;}
@@ -1850,7 +1932,6 @@ async function saveModuleSettings(type){
     ud.journalistsNameSize=_n('app-jr-nsize',13);ud.journalistsRoleSize=_n('app-jr-rsize',10);
   }
   await evRef().update(ud);
-  toast('Réglages enregistrés');
 }
 
 // ==================== PHASES / TEMPS FORTS ====================
@@ -2605,7 +2686,7 @@ function renderLive(el){
 
   let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('live')+`
 
   <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
@@ -2882,7 +2963,7 @@ function renderCitations(el){
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
   let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('citations')+`
 
   <div class="admin-card"><h3>🎤 Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
@@ -3234,7 +3315,7 @@ function renderArticles(el){
 
   let h=`<div class="page-title">Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('articles')+`
 
   <!-- AJOUT MANUEL -->
   <div class="admin-card"><h3>✏️ Ajout manuel</h3>
@@ -3886,7 +3967,7 @@ function renderIAHTML(){
 
   let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('essentiel')+`
 
   <div class="admin-card"><h3>🤖 Génération IA</h3>
     <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
@@ -4045,7 +4126,7 @@ function renderVideos(el){
 
   let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('videos')+`
 
   <div class="admin-card"><h3>📂 Sections</h3>
     <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
@@ -4322,7 +4403,7 @@ function renderJournalistes(el){
 
   let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('journalistes')+`
 
   <div class="admin-card"><h3>📌 Assignés à cet événement (${assignedList.length})</h3>`;
   if(!currentEventId) h+=`<div class="empty"><div class="text">Sélectionnez un événement</div></div>`;
@@ -5123,7 +5204,7 @@ function renderInterviews(el){
   const items=interviewsData||[];
   let h=`<div class="page-title">🎙️ Interviews</div><div class="page-desc">Ajoutez des interviews à mettre en avant sur le dashboard. Chaque interview peut renvoyer vers un article complet.</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('interviews')+`
 
   <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="addInterview()">＋ Nouvelle interview</button></div>`;
   if(!items.length) h+=`<div class="empty"><div class="text">Aucune interview</div></div>`;
@@ -5628,6 +5709,7 @@ function renderEtapes(el){
     </div>
   </details>`;
   h+=`</div>`;
+  h+=`<div style="margin-top:8px">`+moduleConfigBlock('etapes')+`</div>`;
 
   el.innerHTML=h;
 }
@@ -5837,7 +5919,7 @@ function renderGallery(el){
   const photos=ev.gallery||[];
   let h=`<div class="page-title">📸 Galerie photos</div><div class="page-desc">Ajoutez des photos d'ambiance. Elles s'affichent en grille sur le dashboard. Activez/désactivez via le module "Galerie photos".</div>
 
-  <div style="margin-bottom:16px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:11px;color:#0369A1">💡 Les réglages d'affichage sont centralisés dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>
+  `+moduleConfigBlock('gallery')+`
 
   <div class="admin-card"><h3>Photos</h3><div id="gallery-list">`;
   photos.forEach((p,i)=>{
