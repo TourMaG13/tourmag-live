@@ -1042,6 +1042,17 @@ function _mkPhaseTitle(event, activePhase, phases){
       ui:    '.itw-badge,.itw-cta,.citation-card .cit-role,.exp-footer small'
     }
   };
+  // Titre/sous-titre de SECTION par module (classe distinctive dans le HTML).
+  // Global par défaut (via ZONE_SEL.body .sec-title), surchargeable ici par module.
+  var SECTION_SEL = {
+    live:       { title:'.sec-title-live h2',       sub:'.sec-title-live p' },
+    citations:  { title:'.sec-title-citations h2',  sub:'.sec-title-citations p' },
+    articles:   { title:'.sec-title-articles h2',   sub:'.sec-title-articles p' },
+    essential:  { title:'.sec-title-essential h2',  sub:'.sec-title-essential p' },
+    videos:     { title:'.sec-title-videos h2',     sub:'.sec-title-videos p' },
+    gallery:    { title:'.sec-title-gallery h2',    sub:'.sec-title-gallery p' },
+    interviews: { title:'.itw-section-hd h2',       sub:'.itw-section-hd p' }
+  };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
   var MODULE_SEL = {
@@ -1053,9 +1064,9 @@ function _mkPhaseTitle(event, activePhase, phases){
     },
     citations: {
       zone:'body',
-      title:'.cit-name,.cit-pm-name,.cit-hero-name,.citation-name,.exp-verbatim-name',
-      text:'.cit-text,.cit-pm-text,.cit-pm-quote,.cit-hero-text,.citation-text,.exp-verbatim-text',
-      ui:'.cit-role,.cit-pm-role,.cit-hero-role,.citation-role,.citation-author,.exp-verbatim-role,.exp-verbatim-author,.cit-hero-badge,.cit-pm-badge'
+      title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.cit-hero-name,.citation-name,.exp-verbatim-name',
+      text:'.cit-text,.cit-pm-text,.cit-pm-quote,.citation-card-pm .cit-pm-text,.cit-hero-text,.citation-text,.exp-verbatim-text',
+      ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.cit-hero-role,.citation-role,.exp-verbatim-role,.cit-hero-badge,.cit-pm-badge'
     },
     articles: {
       zone:'body',
@@ -1096,9 +1107,9 @@ function _mkPhaseTitle(event, activePhase, phases){
       ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
-      title: '.exp-card-label-itin',
-      text:  '.exp-route-name',
-      ui:    '.exp-route-detail,.exp-route-acc-btn'
+      title: '.exp-route-name',
+      text:  '.exp-route-detail',
+      ui:    '.exp-card-label-itin,.exp-route-acc-btn'
     }
   };
 
@@ -1202,8 +1213,13 @@ function _mkPhaseTitle(event, activePhase, phases){
     var mods = modeTypo.modules || {};
     Object.keys(mods).forEach(function(mkey){
       var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
-      var map = MODULE_SEL[mkey]; if(!map) return;
-      ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); });
+      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); }); }
+      // Titre/sous-titre de section propres au module (surcharge le global)
+      var sec = SECTION_SEL[mkey];
+      if(sec){
+        if(sec.title) css += _emit(sec.title, { Font:mo.secFont, Size:mo.secSize, Color:mo.secColor, LH:mo.secLH, Weight:mo.secWeight, Style:mo.secStyle }, {});
+        if(sec.sub)   css += _emit(sec.sub,   { Font:mo.secSubFont, Size:mo.secSubSize, Color:mo.secSubColor, LH:mo.secSubLH, Weight:mo.secSubWeight, Style:mo.secSubStyle }, {});
+      }
     });
     css += buildPhaseTabsCSS(modeTypo.phaseTabs || {});
     return css;
@@ -1248,7 +1264,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     return Object.keys(set);
   }
 
-  var API = { TYPO_MODULES, AUTO_MODULES, ZONE_SEL, MODULE_SEL, AUTO_SEL, COUNTER_SEL, ROLES, PROPS,
+  var API = { TYPO_MODULES, AUTO_MODULES, ZONE_SEL, MODULE_SEL, AUTO_SEL, SECTION_SEL, COUNTER_SEL, ROLES, PROPS,
               zoneDefaults, autoDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, buildPhaseTabsCSS, collectFonts };
   if(typeof module!=='undefined' && module.exports) module.exports = API;
   root.TourMagTypo = API;
@@ -1478,7 +1494,7 @@ function render(data){
     if(mod.essential===false || !essential || !essential.length) return '';
     const defaultColors=['#3B82F6','#DC2626','#D97706','#059669','#7C3AED','#0891B2','#EA580C','#6366F1','#0D9488','#DB2777'];
     let o = '';
-    if(event.essentialShowTitle!==false) o += `<div id="section-essential"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(5,150,105,.08);color:#059669">${ICO.clipboard}</div><h2>${event.essentialTitle||"L'essentiel"}</h2><div class="sec-title-line"></div><p>${event.essentialSubtitle||'Les points clés à retenir'}</p></div></div>`;
+    if(event.essentialShowTitle!==false) o += `<div id="section-essential"><div class="sec-title sec-title-essential fi"><div class="sec-title-icon" style="background:rgba(5,150,105,.08);color:#059669">${ICO.clipboard}</div><h2>${event.essentialTitle||"L'essentiel"}</h2><div class="sec-title-line"></div><p>${event.essentialSubtitle||'Les points clés à retenir'}</p></div></div>`;
     o += `<div class="ess-grid fi">`;
     essential.forEach((p,i) => {
       const tc = tagColorMap[(p.tag||'').toUpperCase()] || defaultColors[i % defaultColors.length];
@@ -1511,7 +1527,7 @@ function render(data){
     if(mod.live===false || !live || !live.length) return '';
     const pubLive=live.filter(_isPublished);
     if(!pubLive.length) return '';
-    let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
+    let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title sec-title-live fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
     const _liveVis = event.liveVisibleCount || LIVE_VISIBLE;
     const vis = pubLive.slice(0, _liveVis);
     const ext = pubLive.slice(_liveVis);
@@ -1538,7 +1554,7 @@ function render(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     const artTitle = event.articlesTitle || 'Nos articles';
     const artSub = event.articlesSubtitle || "L'événement vu par la rédaction";
-    let o = `<div id="section-articles">${event.articlesShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div>`:""}</div>`;
+    let o = `<div id="section-articles">${event.articlesShowTitle!==false?`<div class="sec-title sec-title-articles fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div>`:""}</div>`;
     const va = articles.slice(0, ART_VIS);
     const ea = articles.slice(ART_VIS);
     o += `<div class="art-bento fi">`;
@@ -1586,7 +1602,7 @@ function render(data){
     if(mod.citations===false || !citations || !citations.length) return '';
     const pubCitations=citations.filter(_isPublished);
     if(!pubCitations.length) return '';
-    let o = `<div id="section-citations">${event.citationsShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div>`:""}</div>`;
+    let o = `<div id="section-citations">${event.citationsShowTitle!==false?`<div class="sec-title sec-title-citations fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div>`:""}</div>`;
 
     // Featured citation (explicitly marked with featured:true)
     const featured = pubCitations.find(c => c.featured);
@@ -1727,7 +1743,7 @@ function render(data){
     if(mod.videos===false || !videos || !videos.length) return '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
-    let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
+    let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title sec-title-videos fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
 
     function mkVidEmbed(v){
       const platform=v.platform||'youtube';const isShort=v.type==='short';
@@ -1796,7 +1812,7 @@ function render(data){
     const _rawPhotos = event.gallery || [];
     const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
     if(!photos.length) return '';
-    let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
+    let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
     const galH = event.galleryHeight || 260;
     function galImg(p){
       const url=typeof p==='string'?p:p.url||'';
