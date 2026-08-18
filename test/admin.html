@@ -1098,27 +1098,212 @@ function _fontOpts(selected){
   h+=`<optgroup label="Display">${groups.display.map(mkOpt).join('')}</optgroup>`;
   return h;
 }
-// ---- Per-mode typography model ----------------------------------------------
-// New shape: ev.typography = { classic:{...}, expedition:{...} }
-// Legacy shape was a flat object shared by both modes. This helper migrates the
-// flat object into BOTH sub-objects the first time (identical values, so nothing
-// changes visually) and returns the sub-object for a given mode.
-function _typoModeKey(ev){ return (ev&&ev.mode==='expedition')?'expedition':'classic'; }
-function _isTypoSplit(t){ return !!(t && (t.classic || t.expedition)); }
-function getTypoForMode(ev){
-  const t = (ev && ev.typography) || {};
-  if(_isTypoSplit(t)){
-    return t[_typoModeKey(ev)] || {};
+</script>
+<script>
+/* ===== MOTEUR TYPO (inliné, identique dans admin.html et index.html) ===== */
+/* ============================================================================
+   TourMaG Live — Moteur typographique (partagé admin.html + index.html)
+   Modèle: ev.typography = {
+     classic:    { zones:{hero,body,dark}, modules:{ live?, articles?, ... } },
+     expedition: { zones:{hero,body,dark}, modules:{ ... } }
+   }
+   Chaque bloc de réglage (zone.role ou module) contient un sous-ensemble de :
+     titleFont,titleSize,titleColor,titleLH,
+     textFont,textSize,textColor,textLH,
+     uiFont,uiSize,uiColor,uiLH
+   Cascade (faible -> fort) : CSS de base -> zone -> override module.
+   On n'injecte QUE les champs explicitement définis (sinon le CSS de base,
+   y compris les clamp() responsive du hero expédition, reste actif).
+   ========================================================================== */
+(function(root){
+  'use strict';
+
+  // --- Modules proposés à l'override (le hero et les blocs sombres sont gérés
+  //     par leurs zones dédiées, pas besoin d'override module). --------------
+  var TYPO_MODULES = [
+    {key:'live',       label:'Fil live',   icon:'📡'},
+    {key:'articles',   label:'Articles',   icon:'📰'},
+    {key:'essential',  label:"L'essentiel",icon:'🧠'},
+    {key:'citations',  label:'Verbatims',  icon:'💬'},
+    {key:'videos',     label:'Vidéos',     icon:'🎬'},
+    {key:'interviews', label:'Interviews', icon:'🎙️'},
+    {key:'gallery',    label:'Galerie',    icon:'📸'},
+    {key:'reporters',  label:'Reporters',  icon:'👤'}
+  ];
+
+  // --- Sélecteurs par zone et par rôle (title / text / ui). -----------------
+  //     UNE SEULE source de vérité : font, size, color, line-height d'un rôle
+  //     utilisent tous la même liste => plus jamais de "taille change mais pas
+  //     la couleur". _NOCOLORLH = éléments à exclure de color+line-height pour
+  //     préserver les accents (compteurs numériques).
+  var ZONE_SEL = {
+    hero: {
+      title: '.hero-title,.exp-hero h1',
+      text:  '.hero-subtitle-text,.exp-hero-subtitle',
+      ui:    '.hero-meta-item,.hero-tag,.exp-hero-eyebrow,.exp-hero-meta-item,.exp-hero-badge-live,.exp-hero-badge-label'
+    },
+    body: {
+      title: '.sec-title h2,.exp-section-head h2,.art-card-title,.rubrique-name,.ess-num,.exp-entry h3,.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.exp-verbatim-name,.exp-reporter-name',
+      text:  '.sec-title p,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p,.exp-verbatim-text',
+      ui:    '.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.ess-tag,.ess-ia,.rubrique-name,.exp-entry-meta,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-reporter-role,.exp-card-label'
+    },
+    dark: {
+      title: '.itw-section-hd h2,.itw-name,.cit-name',
+      text:  '.itw-section-hd p,.itw-quote,.citation-card .cit-text,.citation-card .cit-pm-text',
+      ui:    '.itw-badge,.itw-cta,.citation-card .cit-role,.exp-footer small'
+    }
+  };
+  // Compteurs : exclus de color + line-height (accent voulu). Leur size/font
+  // suivent quand même la zone body/title via les règles générales.
+  var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
+
+  // --- Sélecteurs additionnels par MODULE (pour l'override). ----------------
+  //     Chaque module = { zone, title, text, ui } ; on réutilise des sous-
+  //     ensembles ciblés des zones pour cet override, plus spécifiques.
+  var MODULE_SEL = {
+    live:       { zone:'body', title:'', text:'.live-text,.live-title', ui:'.live-tag,.live-timestamp,.live-jr,.live-time' },
+    articles:   { zone:'body', title:'.art-card-title', text:'.art-title', ui:'.art-card-tag,.art-card-cta,.art-date,.art-author' },
+    essential:  { zone:'body', title:'.ess-num', text:'.ess-txt,.ess-card-text,.exp-ess-text', ui:'.ess-tag,.ess-ia,.exp-ess-tag' },
+    citations:  { zone:'body', title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name', text:'.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text', ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role' },
+    videos:     { zone:'body', title:'', text:'.vid-caption,.exp-vid-caption', ui:'.vid-ext-platform-tag' },
+    interviews: { zone:'dark', title:'.itw-name,.itw-section-hd h2', text:'.itw-quote,.itw-section-hd p', ui:'.itw-badge,.itw-cta' },
+    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' },
+    reporters:  { zone:'body', title:'.exp-reporter-name', text:'.exp-reporter-role', ui:'' }
+  };
+
+  // --- Défauts par mode (reproduisent le CSS de base). Size en px, LH ratio.
+  //     Le titre hero expédition garde son clamp() : pas de size par défaut.
+  function zoneDefaults(mode){
+    var exp = (mode==='expedition');
+    return {
+      hero: {
+        titleFont:'', titleSize: exp?null:38, titleColor:'#FFFFFF',                 titleLH: exp?0.98:1.1,
+        textFont:'',  textSize:  exp?12.5:15, textColor:'rgba(255,255,255,0.5)',    textLH:1.6,
+        uiFont:'',    uiSize:    exp?12:12,   uiColor:'rgba(255,255,255,0.5)',      uiLH:1.4
+      },
+      body: {
+        titleFont:'', titleSize:24,  titleColor: exp?'#111111':'#0F2B3C',           titleLH:1.3,
+        textFont:'',  textSize:12.5, textColor: exp?'#333333':'#111827',            textLH:1.6,
+        uiFont:'',    uiSize:11,     uiColor: exp?'#666666':'#4B5563',              uiLH:1.4
+      },
+      dark: {
+        titleFont:'', titleSize:20,  titleColor:'#FFFFFF',                          titleLH:1.3,
+        textFont:'',  textSize:14,   textColor:'rgba(255,255,255,0.7)',            textLH:1.6,
+        uiFont:'',    uiSize:11,     uiColor:'#FFFFFF',                             uiLH:1.4
+      }
+    };
   }
-  // Legacy flat object: expose it for the current mode without mutating storage.
-  // (Actual persistence into the split shape happens on first save, see saveApparence.)
-  return t;
-}
+
+  var ROLES = ['title','text','ui'];
+  var PROPS = ['Font','Size','Color','LH'];
+
+  function modeKey(ev){ return (ev && ev.mode==='expedition') ? 'expedition' : 'classic'; }
+
+  // Version POUR L'UI ADMIN : zones fusionnées avec les défauts, pour que les
+  // curseurs/champs affichent les vraies valeurs de départ.
+  function getModeTypo(ev){
+    var t = (ev && ev.typography) || {};
+    var mk = modeKey(ev);
+    var raw = t[mk] || {};
+    var def = zoneDefaults(mk);
+    var zones = raw.zones || {};
+    var out = { zones:{}, modules: raw.modules || {} };
+    ['hero','body','dark'].forEach(function(z){
+      out.zones[z] = Object.assign({}, def[z], zones[z]||{});
+    });
+    return out;
+  }
+
+  // Version POUR L'INJECTION : uniquement les champs RÉELLEMENT réglés par
+  // l'utilisateur (diff vs défaut). Un dashboard neuf => aucune injection, donc
+  // le CSS de base (dont les clamp() responsive) reste intact. C'est ce qui
+  // garantit qu'on ne casse rien tant qu'on ne touche à rien.
+  function getModeTypoRaw(ev){
+    var t = (ev && ev.typography) || {};
+    var mk = modeKey(ev);
+    var raw = t[mk] || {};
+    var zones = raw.zones || {};
+    var out = { zones:{}, modules: raw.modules || {} };
+    ['hero','body','dark'].forEach(function(z){
+      out.zones[z] = Object.assign({}, zones[z]||{}); // pas de merge avec défaut
+    });
+    return out;
+  }
+
+  // Construit le CSS d'injection à partir du bloc typo BRUT (getModeTypoRaw).
+  function buildCSS(modeTypo){
+    var css = '';
+    function excl(sel, removeList){
+      return sel.split(',').filter(function(s){ return removeList.indexOf(s)===-1; }).join(',');
+    }
+    function emit(sel, block, opts){
+      if(!sel) return;
+      opts = opts || {};
+      // FONT
+      if(block.Font) css += sel+"{font-family:'"+block.Font+"',sans-serif !important}";
+      // SIZE (null => on n'injecte pas, garde clamp()/base)
+      if(block.Size!=null && block.Size!=='') css += sel+"{font-size:"+block.Size+"px !important}";
+      // COLOR / LH — éventuellement sur un sélecteur nettoyé des compteurs
+      var selCL = opts.stripCounters ? excl(sel, COUNTER_SEL) : sel;
+      if(selCL){
+        if(block.Color) css += selCL+"{color:"+block.Color+" !important}";
+        if(block.LH!=null && block.LH!=='') css += selCL+"{line-height:"+block.LH+" !important}";
+      }
+    }
+    // 1) ZONES
+    ['hero','body','dark'].forEach(function(z){
+      var zt = modeTypo.zones[z] || {};
+      ROLES.forEach(function(r){
+        var sel = ZONE_SEL[z][r];
+        var block = { Font:zt[r+'Font'], Size:zt[r+'Size'], Color:zt[r+'Color'], LH:zt[r+'LH'] };
+        // Les compteurs vivent dans body.title (.ess-num n'en est pas un, mais
+        // .kpi-num/.exp-counter-num pourraient être ajoutés ailleurs) : on
+        // strip color+LH pour title et ui de la zone body par sécurité.
+        emit(sel, block, { stripCounters: (z==='body') });
+      });
+    });
+    // 2) OVERRIDES MODULE (après les zones => plus spécifiques l'emportent)
+    var mods = modeTypo.modules || {};
+    Object.keys(mods).forEach(function(mkey){
+      var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
+      var map = MODULE_SEL[mkey]; if(!map) return;
+      ROLES.forEach(function(r){
+        var sel = map[r]; if(!sel) return;
+        var block = { Font:mo[r+'Font'], Size:mo[r+'Size'], Color:mo[r+'Color'], LH:mo[r+'LH'] };
+        emit(sel, block, { stripCounters:true });
+      });
+    });
+    return css;
+  }
+
+  // Polices Google à charger (toutes les Font non vides, zones + modules + phase)
+  function collectFonts(modeTypo, extra){
+    var set = {};
+    function add(f){ if(f) set[f]=1; }
+    ['hero','body','dark'].forEach(function(z){
+      var zt = modeTypo.zones[z]||{};
+      ROLES.forEach(function(r){ add(zt[r+'Font']); });
+    });
+    var mods = modeTypo.modules||{};
+    Object.keys(mods).forEach(function(k){
+      var mo=mods[k]||{}; ROLES.forEach(function(r){ add(mo[r+'Font']); });
+    });
+    (extra||[]).forEach(add);
+    return Object.keys(set);
+  }
+
+  var API = { TYPO_MODULES, ZONE_SEL, MODULE_SEL, COUNTER_SEL, ROLES, PROPS,
+              zoneDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, collectFonts };
+  if(typeof module!=='undefined' && module.exports) module.exports = API;
+  root.TourMagTypo = API;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
 function renderApparence(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
   const isExp=ev.mode==='expedition';
-  const typo=getTypoForMode(ev);
   const pt=ev.phaseTitle||{};
   // Helper: title/subtitle/show row
   function _tss(prefix, title, sub, show, placeholderT, placeholderS){
@@ -1153,29 +1338,79 @@ function renderApparence(el){
   heroInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveHeroSettings()">💾 Enregistrer le hero</button></div>';
   h+=_det('🏠','Hero (bandeau principal)',heroInner, false);
 
-  // ==================== TYPOGRAPHIE ====================
-  var _modeLabel = isExp ? 'Expédition' : 'Classique';
-  var _modeBadgeBg = isExp ? '#0F2B3C' : '#E8842C';
-  var typoInner = '<div style="display:flex;align-items:center;gap:8px;background:var(--bg2,#F8FAFC);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--text2)">🎛️ Vous réglez la typographie du mode <span style="background:'+_modeBadgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px;letter-spacing:.3px">'+_modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">Chaque mode a ses propres réglages.</span></div>';
-  typoInner += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Familles de polices</div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titre hero</label><select class="form-input" id="typo-hero-font" onchange="previewFont(\'hero\')">'+_fontOpts(typo.heroFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:24px;font-weight:700;color:var(--text)" id="typo-hero-preview">Aperçu</div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titres sections</label><select class="form-input" id="typo-heading-font" onchange="previewFont(\'heading\')">'+_fontOpts(typo.headingFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:18px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu</div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Corps</label><select class="form-input" id="typo-body-font" onchange="previewFont(\'body\')">'+_fontOpts(typo.bodyFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:13px;color:var(--text2)" id="typo-body-preview">Aperçu texte</div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">UI / Labels</label><select class="form-input" id="typo-ui-font" onchange="previewFont(\'ui\')">'+_fontOpts(typo.uiFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3)" id="typo-ui-preview">BADGE · TAG</div></div>';
-  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Tailles</div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre hero <span id="typo-hero-size-val">'+(typo.heroTitleSize||32)+'</span>px</label><input type="range" class="form-input" id="typo-hero-size" min="20" max="52" value="'+(typo.heroTitleSize||32)+'" oninput="document.getElementById(\'typo-hero-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Sous-titre hero <span id="typo-hero-sub-val">'+(typo.heroSubtitleSize||16)+'</span>px</label><input type="range" class="form-input" id="typo-hero-sub" min="11" max="24" value="'+(typo.heroSubtitleSize||16)+'" oninput="document.getElementById(\'typo-hero-sub-val\').textContent=this.value"></div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titres sections <span id="typo-sec-size-val">'+(typo.sectionTitleSize||20)+'</span>px</label><input type="range" class="form-input" id="typo-sec-size" min="14" max="32" value="'+(typo.sectionTitleSize||20)+'" oninput="document.getElementById(\'typo-sec-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Corps <span id="typo-body-size-val">'+(typo.bodySize||14)+'</span>px</label><input type="range" class="form-input" id="typo-body-size" min="11" max="20" value="'+(typo.bodySize||14)+'" oninput="document.getElementById(\'typo-body-size-val\').textContent=this.value"></div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Labels <span id="typo-ui-size-val">'+(typo.uiSize||11)+'</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="'+(typo.uiSize||11)+'" oninput="document.getElementById(\'typo-ui-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Compteurs <span id="typo-counter-size-val">'+(typo.counterSize||40)+'</span>px</label><input type="range" class="form-input" id="typo-counter-size" min="20" max="64" value="'+(typo.counterSize||40)+'" oninput="document.getElementById(\'typo-counter-size-val\').textContent=this.value"></div></div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Onglets phase <span id="typo-phase-size-val">'+(typo.phaseTabSize||13)+'</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="'+(typo.phaseTabSize||13)+'" oninput="document.getElementById(\'typo-phase-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Padding onglets <span id="typo-phase-pad-val">'+(typo.phaseTabPadY||7)+'</span>px</label><input type="range" class="form-input" id="typo-phase-pad" min="3" max="16" value="'+(typo.phaseTabPadY||7)+'" oninput="document.getElementById(\'typo-phase-pad-val\').textContent=this.value"></div></div></div>';
-  // Interlignage (line-height) — 4 familles
-  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Interlignage</div>';
-  var _lhRow = function(id,label,val,def){ var v=(val!=null?val:def); return '<div class="form-row"><label class="form-label">'+label+' <span id="'+id+'-val">'+v+'</span></label><input type="range" class="form-input" id="'+id+'" min="0.9" max="2.4" step="0.05" value="'+v+'" oninput="document.getElementById(\''+id+'-val\').textContent=this.value"></div>'; };
-  typoInner += '<div class="form-row-inline">'+_lhRow('typo-hero-lh','Titre hero',typo.heroLineHeight,1.1)+_lhRow('typo-heading-lh','Titres sections',typo.headingLineHeight,1.3)+'</div>';
-  typoInner += '<div class="form-row-inline">'+_lhRow('typo-body-lh','Corps',typo.bodyLineHeight,1.6)+_lhRow('typo-ui-lh','Labels / UI',typo.uiLineHeight,1.4)+'</div></div>';
-  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Couleurs de texte</div>';
-  typoInner += '<div class="form-row-inline"><div class="form-row" style="max-width:160px"><label class="form-label">Titre hero</label><input type="color" class="form-input" id="typo-hero-color" value="'+(typo.heroColor||'#FFFFFF')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Titres sections</label><input type="color" class="form-input" id="typo-heading-color" value="'+(typo.headingColor||'#1E293B')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Corps</label><input type="color" class="form-input" id="typo-body-color" value="'+(typo.bodyColor||'#334155')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Labels / UI</label><input type="color" class="form-input" id="typo-ui-color" value="'+(typo.uiColor||'#64748B')+'" style="height:36px;width:50px;padding:3px"></div></div></div>';
-  typoInner += '<div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer</button><button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser</button></div>';
-  h+=_det('🔤','Typographie',typoInner, false);
+  // ==================== TYPOGRAPHIE (par zone + override module) ====================
+  (function(){
+    var _T = window.TourMagTypo;
+    var _mt = _T.getModeTypo(ev);            // zones fusionnées avec défauts (pour l'UI)
+    var _modeLabel = isExp ? 'Expédition' : 'Classique';
+    var _modeBadgeBg = isExp ? '#0F2B3C' : '#E8842C';
+    var esc = function(v){ return (v==null?'':(''+v)).replace(/"/g,'&quot;'); };
+
+    // --- helper : un bloc "rôle" (Titre / Texte / Labels) avec 4 réglages ---
+    // idBase ex: 'z-hero-title' ou 'm-articles-text'
+    function roleBlock(idBase, roleLabel, vals){
+      var v = vals || {};
+      var fontSel = '<select class="form-input" id="'+idBase+'-font">'+_fontOpts(v.Font||'')+'</select>';
+      var sizeVal = (v.Size!=null&&v.Size!=='')?v.Size:'';
+      var lhVal = (v.LH!=null&&v.LH!=='')?v.LH:'';
+      var color = v.Color||'#000000';
+      // color input n'accepte que le hex : on convertit rgba() -> checkbox "hérité"
+      var isHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
+      // data-init = valeur hex affichée à l'ouverture ; data-set = "1" si l'utilisateur
+      // a une couleur explicitement enregistrée. On ne persiste la couleur que si
+      // elle est explicitement définie OU modifiée (évite d'écraser un rgba() par du hex).
+      var colorInput = '<input type="color" class="form-input" id="'+idBase+'-color" value="'+(isHex?color:'#ffffff')+'" data-init="'+(isHex?color:'')+'" data-set="'+(v.Color?'1':'')+'" oninput="this.dataset.set=\'1\'" style="height:34px;width:46px;padding:3px">';
+      var h = '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">'+roleLabel+'</div>';
+      h += '<div class="form-row-inline">';
+      h += '<div class="form-row" style="flex:2"><label class="form-label">Police</label>'+fontSel+'</div>';
+      h += '<div class="form-row" style="max-width:120px"><label class="form-label">Taille (px)</label><input type="number" class="form-input" id="'+idBase+'-size" value="'+sizeVal+'" placeholder="auto" min="6" max="90" step="0.5" style="width:90px"></div>';
+      h += '<div class="form-row" style="max-width:120px"><label class="form-label">Interligne</label><input type="number" class="form-input" id="'+idBase+'-lh" value="'+lhVal+'" placeholder="auto" min="0.8" max="2.6" step="0.05" style="width:90px"></div>';
+      h += '<div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label>'+colorInput+'</div>';
+      h += '</div></div>';
+      return h;
+    }
+
+    // --- helper : une zone (3 rôles) ---
+    function zoneBlock(zoneKey, zoneLabel, zoneVals){
+      var inner = '';
+      inner += roleBlock('z-'+zoneKey+'-title', 'Titres', {Font:zoneVals.titleFont,Size:zoneVals.titleSize,Color:zoneVals.titleColor,LH:zoneVals.titleLH});
+      inner += roleBlock('z-'+zoneKey+'-text',  'Texte courant', {Font:zoneVals.textFont,Size:zoneVals.textSize,Color:zoneVals.textColor,LH:zoneVals.textLH});
+      inner += roleBlock('z-'+zoneKey+'-ui',    'Labels / petits éléments', {Font:zoneVals.uiFont,Size:zoneVals.uiSize,Color:zoneVals.uiColor,LH:zoneVals.uiLH});
+      return inner;
+    }
+
+    var typoInner = '';
+    typoInner += '<div style="display:flex;align-items:center;gap:8px;background:var(--bg2,#F8FAFC);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--text2)">🎛️ Typographie du mode <span style="background:'+_modeBadgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px">'+_modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">3 zones + personnalisation par module.</span></div>';
+
+    // ----- Les 3 zones -----
+    typoInner += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:6px 0 10px">Zones</div>';
+    typoInner += '<details class="admin-card" style="margin-bottom:10px" open><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">🏠 Zone Hero <span style="font-weight:400;color:var(--text3);font-size:11px">— bandeau principal (fond sombre)</span></summary><div style="padding:6px 0">'+zoneBlock('hero','Hero',_mt.zones.hero)+'</div></details>';
+    typoInner += '<details class="admin-card" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">📄 Zone Corps de page <span style="font-weight:400;color:var(--text3);font-size:11px">— fond clair : fil live, articles, essentiel…</span></summary><div style="padding:6px 0">'+zoneBlock('body','Corps',_mt.zones.body)+'</div></details>';
+    typoInner += '<details class="admin-card" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">🌑 Zone Blocs sombres <span style="font-weight:400;color:var(--text3);font-size:11px">— interviews, verbatim vedette, footer…</span></summary><div style="padding:6px 0">'+zoneBlock('dark','Blocs sombres',_mt.zones.dark)+'</div></details>';
+
+    // ----- Override par module -----
+    typoInner += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:16px 0 6px">Personnalisation par module</div>';
+    typoInner += '<div style="font-size:10px;color:var(--text3);margin-bottom:10px">Chaque module hérite de sa zone. Activez la personnalisation pour affiner uniquement ce module (les champs laissés vides suivent la zone).</div>';
+    var _mods = _mt.modules || {};
+    _T.TYPO_MODULES.forEach(function(m){
+      var mv = _mods[m.key] || {};
+      var on = !!mv.enabled;
+      var body = '';
+      body += '<div class="form-row" style="max-width:230px;margin-bottom:8px"><label class="form-label"><input type="checkbox" id="m-'+m.key+'-enabled" '+(on?'checked':'')+' onchange="var b=document.getElementById(\'m-'+m.key+'-body\'); if(b) b.style.display=this.checked?\'block\':\'none\'"> Personnaliser ce module</label></div>';
+      body += '<div id="m-'+m.key+'-body" style="display:'+(on?'block':'none')+'">';
+      body += roleBlock('m-'+m.key+'-title','Titres', {Font:mv.titleFont,Size:mv.titleSize,Color:mv.titleColor,LH:mv.titleLH});
+      body += roleBlock('m-'+m.key+'-text','Texte courant', {Font:mv.textFont,Size:mv.textSize,Color:mv.textColor,LH:mv.textLH});
+      body += roleBlock('m-'+m.key+'-ui','Labels / petits éléments', {Font:mv.uiFont,Size:mv.uiSize,Color:mv.uiColor,LH:mv.uiLH});
+      body += '</div>';
+      typoInner += '<details class="admin-card" style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">'+m.icon+' '+m.label+(on?' <span style="color:var(--acc);font-size:10px">● personnalisé</span>':'')+'</summary><div style="padding:6px 0">'+body+'</div></details>';
+    });
+
+    typoInner += '<div style="margin-top:16px;display:flex;gap:10px"><button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer la typographie</button><button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser ce mode</button></div>';
+    typoInner += '<div style="font-size:10px;color:var(--text3);margin-top:8px">« Réinitialiser » ne touche que le mode '+_modeLabel+'. L\'autre mode est préservé.</div>';
+
+    h+=_det('🔤','Typographie',typoInner, false);
+  })();
 
   // ==================== PER-MODULE SECTIONS ====================
   // 📡 Fil live
@@ -1235,7 +1470,6 @@ function renderApparence(el){
   }
 
   el.innerHTML=h;
-  ['hero','heading','body','ui'].forEach(function(k){previewFont(k);});
 }
 
 function previewFont(type){
@@ -1254,78 +1488,94 @@ function previewFont(type){
     prev.style.fontFamily='';
   }
 }
+// Lit un "roleBlock" du DOM (idBase). Retourne un objet avec SEULEMENT les
+// champs réellement renseignés (police non vide, taille/interligne non vides,
+// couleur uniquement si data-set="1"). Un champ vide => hérite (zone) / défaut.
+function _readRoleBlock(idBase){
+  var out = {};
+  var fEl = document.getElementById(idBase+'-font');
+  var sEl = document.getElementById(idBase+'-size');
+  var lEl = document.getElementById(idBase+'-lh');
+  var cEl = document.getElementById(idBase+'-color');
+  if(fEl && fEl.value) out.Font = fEl.value;
+  if(sEl && sEl.value!=='') { var s=parseFloat(sEl.value); if(!isNaN(s)) out.Size = s; }
+  if(lEl && lEl.value!=='') { var l=parseFloat(lEl.value); if(!isNaN(l)) out.LH = l; }
+  if(cEl && cEl.dataset.set==='1') out.Color = cEl.value;
+  return out;
+}
+// Convertit {Font,Size,Color,LH} -> {titleFont,...} pour une clé de rôle donnée
+function _roleToFields(role, rb){
+  var o = {};
+  if(rb.Font!==undefined) o[role+'Font']=rb.Font;
+  if(rb.Size!==undefined) o[role+'Size']=rb.Size;
+  if(rb.Color!==undefined) o[role+'Color']=rb.Color;
+  if(rb.LH!==undefined)   o[role+'LH']=rb.LH;
+  return o;
+}
 async function saveApparence(){
+  const _T = window.TourMagTypo;
   const _ev = eventsData.find(e=>e.id===currentEventId) || {};
-  const _existing = _ev.typography || {};
-  const modeKey = _typoModeKey(_ev);
-  // Build the full split object. If storage is still in the legacy flat shape,
-  // seed BOTH modes from it so the other (non-edited) mode keeps identical values.
-  let root;
-  if(_isTypoSplit(_existing)){
-    root = { classic: Object.assign({}, _existing.classic||{}), expedition: Object.assign({}, _existing.expedition||{}) };
-  } else {
-    const flat = Object.assign({}, _existing);
-    root = { classic: Object.assign({}, flat), expedition: Object.assign({}, flat) };
-  }
-  // Start from the current mode's existing values so a missing field never wipes others
-  const typography = Object.assign({}, root[modeKey]);
-  const _val = (id)=>{ const el=document.getElementById(id); return el? el.value : undefined; };
-  const _int = (id,def)=>{ const el=document.getElementById(id); return el? (parseInt(el.value)||def) : undefined; };
-  const _flt = (id,def)=>{ const el=document.getElementById(id); return el? (parseFloat(el.value)||def) : undefined; };
-  // Only overwrite keys whose inputs are actually present in the DOM
-  const _set = (k,v)=>{ if(v!==undefined) typography[k]=v; };
-  _set('heroFont', _val('typo-hero-font'));
-  _set('headingFont', _val('typo-heading-font'));
-  _set('bodyFont', _val('typo-body-font'));
-  _set('uiFont', _val('typo-ui-font'));
-  _set('heroTitleSize', _int('typo-hero-size',32));
-  _set('heroSubtitleSize', _int('typo-hero-sub',16));
-  _set('sectionTitleSize', _int('typo-sec-size',20));
-  _set('bodySize', _int('typo-body-size',14));
-  _set('uiSize', _int('typo-ui-size',11));
-  _set('phaseTabSize', _int('typo-phase-size',13));
-  _set('phaseTabPadY', _int('typo-phase-pad',7));
-  _set('counterSize', _int('typo-counter-size',40));
-  _set('heroLineHeight', _flt('typo-hero-lh',1.1));
-  _set('headingLineHeight', _flt('typo-heading-lh',1.3));
-  _set('bodyLineHeight', _flt('typo-body-lh',1.6));
-  _set('uiLineHeight', _flt('typo-ui-lh',1.4));
-  _set('heroColor', _val('typo-hero-color'));
-  _set('headingColor', _val('typo-heading-color'));
-  _set('bodyColor', _val('typo-body-color'));
-  _set('uiColor', _val('typo-ui-color'));
-  root[modeKey] = typography;
+  const mk = _T.modeKey(_ev);
+  const existing = _ev.typography || {};
+  // Repartir de la structure existante ; préserver l'autre mode intact.
+  const root = {};
+  if(existing.classic) root.classic = existing.classic;
+  if(existing.expedition) root.expedition = existing.expedition;
+  // Conserver les réglages historiques d'onglets de phase au niveau racine.
+  if(existing.phaseTabSize!==undefined) root.phaseTabSize = existing.phaseTabSize;
+  if(existing.phaseTabPadY!==undefined) root.phaseTabPadY = existing.phaseTabPadY;
+
+  // ---- Zones ----
+  const zones = {};
+  ['hero','body','dark'].forEach(function(z){
+    var zObj = {};
+    ['title','text','ui'].forEach(function(r){
+      Object.assign(zObj, _roleToFields(r, _readRoleBlock('z-'+z+'-'+r)));
+    });
+    zones[z] = zObj;
+  });
+  // ---- Modules (override) ----
+  const modules = {};
+  _T.TYPO_MODULES.forEach(function(m){
+    var enEl = document.getElementById('m-'+m.key+'-enabled');
+    var enabled = !!(enEl && enEl.checked);
+    if(!enabled) return; // module non personnalisé => pas stocké
+    var mObj = { enabled:true };
+    ['title','text','ui'].forEach(function(r){
+      Object.assign(mObj, _roleToFields(r, _readRoleBlock('m-'+m.key+'-'+r)));
+    });
+    modules[m.key] = mObj;
+  });
+
+  root[mk] = { zones: zones, modules: modules };
   try{
     saving(true);
     await db.collection('events').doc(currentEventId).update({typography:root});
-    // keep local cache in sync so a re-render of the tab reflects the save immediately
-    if(_ev) _ev.typography = root;
-    console.log('[Admin] Typography saved for', currentEventId, 'mode=', modeKey, root);
-    toast('Apparence enregistrée ('+ (modeKey==='expedition'?'Expédition':'Classique') +')');
+    _ev.typography = root; // cache local
+    console.log('[Admin] Typography saved for', currentEventId, 'mode=', mk, root);
+    toast('Typographie enregistrée ('+(mk==='expedition'?'Expédition':'Classique')+')');
   }catch(err){
     console.error('[Admin] saveApparence failed:', err);
     toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement typographie'));
   }
 }
 async function resetApparence(){
+  const _T = window.TourMagTypo;
   const _ev = eventsData.find(e=>e.id===currentEventId) || {};
-  const modeKey = _typoModeKey(_ev);
-  const _existing = _ev.typography || {};
-  if(!confirm('Réinitialiser la typographie du mode '+(modeKey==='expedition'?'Expédition':'Classique')+' aux valeurs par défaut ?\n(L\'autre mode n\'est pas affecté.)')) return;
+  const mk = _T.modeKey(_ev);
+  if(!confirm('Réinitialiser la typographie du mode '+(mk==='expedition'?'Expédition':'Classique')+' aux valeurs par défaut ?\n(L\'autre mode n\'est pas affecté.)')) return;
   saving(true);
-  // Only clear the current mode; preserve the other one.
-  let root;
-  if(_isTypoSplit(_existing)){
-    root = { classic: Object.assign({}, _existing.classic||{}), expedition: Object.assign({}, _existing.expedition||{}) };
-  } else {
-    const flat = Object.assign({}, _existing);
-    root = { classic: Object.assign({}, flat), expedition: Object.assign({}, flat) };
-  }
-  root[modeKey] = {};
+  const existing = _ev.typography || {};
+  const root = {};
+  if(existing.classic) root.classic = existing.classic;
+  if(existing.expedition) root.expedition = existing.expedition;
+  if(existing.phaseTabSize!==undefined) root.phaseTabSize = existing.phaseTabSize;
+  if(existing.phaseTabPadY!==undefined) root.phaseTabPadY = existing.phaseTabPadY;
+  root[mk] = { zones:{}, modules:{} }; // vide => tout revient aux défauts
   try{
     await db.collection('events').doc(currentEventId).update({typography:root});
-    if(_ev) _ev.typography = root;
-    toast('Apparence réinitialisée ('+(modeKey==='expedition'?'Expédition':'Classique')+')');
+    _ev.typography = root;
+    toast('Typographie réinitialisée ('+(mk==='expedition'?'Expédition':'Classique')+')');
     const main=document.getElementById('main-content'); if(main) renderApparence(main);
   }catch(err){
     console.error('[Admin] resetApparence failed:', err);
