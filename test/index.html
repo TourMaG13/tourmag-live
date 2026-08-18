@@ -974,77 +974,235 @@ function _mkPhaseTitle(event, activePhase, phases){
   return `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};padding:${padY}px 0;${fontFam}">${phase.name}</div>`;
 }
 
+</script>
+<script>
+/* ===== MOTEUR TYPO (inliné, identique dans admin.html et index.html) ===== */
+/* ============================================================================
+   TourMaG Live — Moteur typographique (partagé admin.html + index.html)
+   Modèle: ev.typography = {
+     classic:    { zones:{hero,body,dark}, modules:{ live?, articles?, ... } },
+     expedition: { zones:{hero,body,dark}, modules:{ ... } }
+   }
+   Chaque bloc de réglage (zone.role ou module) contient un sous-ensemble de :
+     titleFont,titleSize,titleColor,titleLH,
+     textFont,textSize,textColor,textLH,
+     uiFont,uiSize,uiColor,uiLH
+   Cascade (faible -> fort) : CSS de base -> zone -> override module.
+   On n'injecte QUE les champs explicitement définis (sinon le CSS de base,
+   y compris les clamp() responsive du hero expédition, reste actif).
+   ========================================================================== */
+(function(root){
+  'use strict';
+
+  // --- Modules proposés à l'override (le hero et les blocs sombres sont gérés
+  //     par leurs zones dédiées, pas besoin d'override module). --------------
+  var TYPO_MODULES = [
+    {key:'live',       label:'Fil live',   icon:'📡'},
+    {key:'articles',   label:'Articles',   icon:'📰'},
+    {key:'essential',  label:"L'essentiel",icon:'🧠'},
+    {key:'citations',  label:'Verbatims',  icon:'💬'},
+    {key:'videos',     label:'Vidéos',     icon:'🎬'},
+    {key:'interviews', label:'Interviews', icon:'🎙️'},
+    {key:'gallery',    label:'Galerie',    icon:'📸'},
+    {key:'reporters',  label:'Reporters',  icon:'👤'}
+  ];
+
+  // --- Sélecteurs par zone et par rôle (title / text / ui). -----------------
+  //     UNE SEULE source de vérité : font, size, color, line-height d'un rôle
+  //     utilisent tous la même liste => plus jamais de "taille change mais pas
+  //     la couleur". _NOCOLORLH = éléments à exclure de color+line-height pour
+  //     préserver les accents (compteurs numériques).
+  var ZONE_SEL = {
+    hero: {
+      title: '.hero-title,.exp-hero h1',
+      text:  '.hero-subtitle-text,.exp-hero-subtitle',
+      ui:    '.hero-meta-item,.hero-tag,.exp-hero-eyebrow,.exp-hero-meta-item,.exp-hero-badge-live,.exp-hero-badge-label'
+    },
+    body: {
+      title: '.sec-title h2,.exp-section-head h2,.art-card-title,.rubrique-name,.ess-num,.exp-entry h3,.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.exp-verbatim-name,.exp-reporter-name',
+      text:  '.sec-title p,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p,.exp-verbatim-text',
+      ui:    '.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.ess-tag,.ess-ia,.rubrique-name,.exp-entry-meta,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-reporter-role,.exp-card-label'
+    },
+    dark: {
+      title: '.itw-section-hd h2,.itw-name,.cit-name',
+      text:  '.itw-section-hd p,.itw-quote,.citation-card .cit-text,.citation-card .cit-pm-text',
+      ui:    '.itw-badge,.itw-cta,.citation-card .cit-role,.exp-footer small'
+    }
+  };
+  // Compteurs : exclus de color + line-height (accent voulu). Leur size/font
+  // suivent quand même la zone body/title via les règles générales.
+  var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
+
+  // --- Sélecteurs additionnels par MODULE (pour l'override). ----------------
+  //     Chaque module = { zone, title, text, ui } ; on réutilise des sous-
+  //     ensembles ciblés des zones pour cet override, plus spécifiques.
+  var MODULE_SEL = {
+    live:       { zone:'body', title:'', text:'.live-text,.live-title', ui:'.live-tag,.live-timestamp,.live-jr,.live-time' },
+    articles:   { zone:'body', title:'.art-card-title', text:'.art-title', ui:'.art-card-tag,.art-card-cta,.art-date,.art-author' },
+    essential:  { zone:'body', title:'.ess-num', text:'.ess-txt,.ess-card-text,.exp-ess-text', ui:'.ess-tag,.ess-ia,.exp-ess-tag' },
+    citations:  { zone:'body', title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name', text:'.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text', ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role' },
+    videos:     { zone:'body', title:'', text:'.vid-caption,.exp-vid-caption', ui:'.vid-ext-platform-tag' },
+    interviews: { zone:'dark', title:'.itw-name,.itw-section-hd h2', text:'.itw-quote,.itw-section-hd p', ui:'.itw-badge,.itw-cta' },
+    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' },
+    reporters:  { zone:'body', title:'.exp-reporter-name', text:'.exp-reporter-role', ui:'' }
+  };
+
+  // --- Défauts par mode (reproduisent le CSS de base). Size en px, LH ratio.
+  //     Le titre hero expédition garde son clamp() : pas de size par défaut.
+  function zoneDefaults(mode){
+    var exp = (mode==='expedition');
+    return {
+      hero: {
+        titleFont:'', titleSize: exp?null:38, titleColor:'#FFFFFF',                 titleLH: exp?0.98:1.1,
+        textFont:'',  textSize:  exp?12.5:15, textColor:'rgba(255,255,255,0.5)',    textLH:1.6,
+        uiFont:'',    uiSize:    exp?12:12,   uiColor:'rgba(255,255,255,0.5)',      uiLH:1.4
+      },
+      body: {
+        titleFont:'', titleSize:24,  titleColor: exp?'#111111':'#0F2B3C',           titleLH:1.3,
+        textFont:'',  textSize:12.5, textColor: exp?'#333333':'#111827',            textLH:1.6,
+        uiFont:'',    uiSize:11,     uiColor: exp?'#666666':'#4B5563',              uiLH:1.4
+      },
+      dark: {
+        titleFont:'', titleSize:20,  titleColor:'#FFFFFF',                          titleLH:1.3,
+        textFont:'',  textSize:14,   textColor:'rgba(255,255,255,0.7)',            textLH:1.6,
+        uiFont:'',    uiSize:11,     uiColor:'#FFFFFF',                             uiLH:1.4
+      }
+    };
+  }
+
+  var ROLES = ['title','text','ui'];
+  var PROPS = ['Font','Size','Color','LH'];
+
+  function modeKey(ev){ return (ev && ev.mode==='expedition') ? 'expedition' : 'classic'; }
+
+  // Version POUR L'UI ADMIN : zones fusionnées avec les défauts, pour que les
+  // curseurs/champs affichent les vraies valeurs de départ.
+  function getModeTypo(ev){
+    var t = (ev && ev.typography) || {};
+    var mk = modeKey(ev);
+    var raw = t[mk] || {};
+    var def = zoneDefaults(mk);
+    var zones = raw.zones || {};
+    var out = { zones:{}, modules: raw.modules || {} };
+    ['hero','body','dark'].forEach(function(z){
+      out.zones[z] = Object.assign({}, def[z], zones[z]||{});
+    });
+    return out;
+  }
+
+  // Version POUR L'INJECTION : uniquement les champs RÉELLEMENT réglés par
+  // l'utilisateur (diff vs défaut). Un dashboard neuf => aucune injection, donc
+  // le CSS de base (dont les clamp() responsive) reste intact. C'est ce qui
+  // garantit qu'on ne casse rien tant qu'on ne touche à rien.
+  function getModeTypoRaw(ev){
+    var t = (ev && ev.typography) || {};
+    var mk = modeKey(ev);
+    var raw = t[mk] || {};
+    var zones = raw.zones || {};
+    var out = { zones:{}, modules: raw.modules || {} };
+    ['hero','body','dark'].forEach(function(z){
+      out.zones[z] = Object.assign({}, zones[z]||{}); // pas de merge avec défaut
+    });
+    return out;
+  }
+
+  // Construit le CSS d'injection à partir du bloc typo BRUT (getModeTypoRaw).
+  function buildCSS(modeTypo){
+    var css = '';
+    function excl(sel, removeList){
+      return sel.split(',').filter(function(s){ return removeList.indexOf(s)===-1; }).join(',');
+    }
+    function emit(sel, block, opts){
+      if(!sel) return;
+      opts = opts || {};
+      // FONT
+      if(block.Font) css += sel+"{font-family:'"+block.Font+"',sans-serif !important}";
+      // SIZE (null => on n'injecte pas, garde clamp()/base)
+      if(block.Size!=null && block.Size!=='') css += sel+"{font-size:"+block.Size+"px !important}";
+      // COLOR / LH — éventuellement sur un sélecteur nettoyé des compteurs
+      var selCL = opts.stripCounters ? excl(sel, COUNTER_SEL) : sel;
+      if(selCL){
+        if(block.Color) css += selCL+"{color:"+block.Color+" !important}";
+        if(block.LH!=null && block.LH!=='') css += selCL+"{line-height:"+block.LH+" !important}";
+      }
+    }
+    // 1) ZONES
+    ['hero','body','dark'].forEach(function(z){
+      var zt = modeTypo.zones[z] || {};
+      ROLES.forEach(function(r){
+        var sel = ZONE_SEL[z][r];
+        var block = { Font:zt[r+'Font'], Size:zt[r+'Size'], Color:zt[r+'Color'], LH:zt[r+'LH'] };
+        // Les compteurs vivent dans body.title (.ess-num n'en est pas un, mais
+        // .kpi-num/.exp-counter-num pourraient être ajoutés ailleurs) : on
+        // strip color+LH pour title et ui de la zone body par sécurité.
+        emit(sel, block, { stripCounters: (z==='body') });
+      });
+    });
+    // 2) OVERRIDES MODULE (après les zones => plus spécifiques l'emportent)
+    var mods = modeTypo.modules || {};
+    Object.keys(mods).forEach(function(mkey){
+      var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
+      var map = MODULE_SEL[mkey]; if(!map) return;
+      ROLES.forEach(function(r){
+        var sel = map[r]; if(!sel) return;
+        var block = { Font:mo[r+'Font'], Size:mo[r+'Size'], Color:mo[r+'Color'], LH:mo[r+'LH'] };
+        emit(sel, block, { stripCounters:true });
+      });
+    });
+    return css;
+  }
+
+  // Polices Google à charger (toutes les Font non vides, zones + modules + phase)
+  function collectFonts(modeTypo, extra){
+    var set = {};
+    function add(f){ if(f) set[f]=1; }
+    ['hero','body','dark'].forEach(function(z){
+      var zt = modeTypo.zones[z]||{};
+      ROLES.forEach(function(r){ add(zt[r+'Font']); });
+    });
+    var mods = modeTypo.modules||{};
+    Object.keys(mods).forEach(function(k){
+      var mo=mods[k]||{}; ROLES.forEach(function(r){ add(mo[r+'Font']); });
+    });
+    (extra||[]).forEach(add);
+    return Object.keys(set);
+  }
+
+  var API = { TYPO_MODULES, ZONE_SEL, MODULE_SEL, COUNTER_SEL, ROLES, PROPS,
+              zoneDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, collectFonts };
+  if(typeof module!=='undefined' && module.exports) module.exports = API;
+  root.TourMagTypo = API;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
 function render(data){
   const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes} = data;
 
   // ===== SHARED CSS VARIABLES (applied for ALL modes) =====
 
-  // ===== TYPOGRAPHY =====
-  // Per-mode typography: event.typography = { classic:{...}, expedition:{...} }.
-  // Legacy flat objects (no classic/expedition key) are read as-is for both modes.
-  const _typoRoot = event.typography || {};
-  const _isExpMode = event.mode === 'expedition';
-  const _typo = (_typoRoot.classic || _typoRoot.expedition)
-    ? (_typoRoot[_isExpMode ? 'expedition' : 'classic'] || {})
-    : _typoRoot;
-  const _heroFont = _typo.heroFont || '';
-  const _hFont = _typo.headingFont || '';
-  const _bFont = _typo.bodyFont || '';
-  const _uFont = _typo.uiFont || '';
-  // Load Google Fonts only if needed
-  const _fontsToLoad = [...new Set([_heroFont, _hFont, _bFont, _uFont, (event.phaseTitle||{}).font||''].filter(Boolean))];
-  if(_fontsToLoad.length){
-    const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
-    let gfLink = document.getElementById('gf-typo');
-    if(!gfLink){ gfLink=document.createElement('link'); gfLink.id='gf-typo'; gfLink.rel='stylesheet'; document.head.appendChild(gfLink); }
-    if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
-  }
-  // -------- SINGLE SOURCE OF TRUTH for selectors --------
-  // Each family lists EVERY element it controls. font-family, font-size, color
-  // and line-height all reuse the SAME list per family, so a module can never be
-  // "half-styled" (size changes but colour doesn't, etc.).
-  const _SEL = {
-    hero:    '.hero-title,.exp-hero h1',
-    heading: '.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name,.exp-reporter-name',
-    body:    '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p',
-    ui:      '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab,.exp-card-label'
-  };
-  // Build dynamic style block — ONLY includes rules for values that are actually customized
-  let _typoCSS = '';
-  // Font families — same list per family as everything else
-  if(_heroFont) _typoCSS += `${_SEL.hero}{font-family:'${_heroFont}',sans-serif !important}`;
-  if(_hFont) _typoCSS += `${_SEL.heading}{font-family:'${_hFont}',sans-serif !important}`;
-  if(_bFont) _typoCSS += `${_SEL.body}{font-family:'${_bFont}',sans-serif !important}`;
-  if(_uFont) _typoCSS += `${_SEL.ui}{font-family:'${_uFont}',sans-serif !important}`;
-  // Font sizes — only when explicitly customized
-  if(_typo.heroTitleSize) _typoCSS += `${_SEL.hero}{font-size:${_typo.heroTitleSize}px !important}`;
-  if(_typo.heroSubtitleSize) _typoCSS += `.hero-subtitle-text,.exp-hero-subtitle{font-size:${_typo.heroSubtitleSize}px !important}`;
-  if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-head h2,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
-  if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
-  if(_typo.bodySize) _typoCSS += `${_SEL.body}{font-size:${_typo.bodySize}px !important}`;
-  if(_typo.uiSize) _typoCSS += `${_SEL.ui}{font-size:${_typo.uiSize}px !important}`;
-  // Line-height (interlignage) — per family, same selectors
-  if(_typo.heroLineHeight) _typoCSS += `${_SEL.hero}{line-height:${_typo.heroLineHeight} !important}`;
-  if(_typo.headingLineHeight) _typoCSS += `${_SEL.heading.split(',').filter(s=>s!=='.kpi-num'&&s!=='.exp-counter-num').join(',')}{line-height:${_typo.headingLineHeight} !important}`;
-  if(_typo.bodyLineHeight) _typoCSS += `${_SEL.body}{line-height:${_typo.bodyLineHeight} !important}`;
-  if(_typo.uiLineHeight) _typoCSS += `${_SEL.ui}{line-height:${_typo.uiLineHeight} !important}`;
-  // Phase tab overrides AFTER generic ui — more specific wins with same !important
-  if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
-  if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
-  // Colors — same list per family as size/font, so colour reaches every module.
-  // EXCEPTION: numeric counters (.kpi-num/.exp-counter-num) keep their accent
-  // colour, so they are excluded from the heading colour rule (their size/font
-  // still follow the heading family via the rules above).
-  const _headingColorSel = _SEL.heading.split(',').filter(s=>s!=='.kpi-num'&&s!=='.exp-counter-num').join(',');
-  if(_typo.heroColor) _typoCSS += `${_SEL.hero}{color:${_typo.heroColor} !important}`;
-  if(_typo.headingColor) _typoCSS += `${_headingColorSel}{color:${_typo.headingColor} !important}`;
-  if(_typo.bodyColor) _typoCSS += `${_SEL.body}{color:${_typo.bodyColor} !important}`;
-  if(_typo.uiColor) _typoCSS += `${_SEL.ui}{color:${_typo.uiColor} !important}`;
-  // Inject or clear the dynamic style block
-  let _typoStyle = document.getElementById('typo-overrides');
-  if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
-  _typoStyle.textContent = _typoCSS;
-  console.log('[TourMaG Live] TYPO mode=%s keys=%o cssLen=%d', event.mode||'live', Object.keys(_typo), _typoCSS.length);
+  // ===== TYPOGRAPHY (moteur par zone + override module) =====
+  try {
+    const _T = window.TourMagTypo;
+    const _rawTypo = _T.getModeTypoRaw(event);           // uniquement les champs réglés
+    // Polices Google à charger (zones + modules + police du titre de phase)
+    const _fontsToLoad = _T.collectFonts(_rawTypo, [ (event.phaseTitle||{}).font || '' ]);
+    if(_fontsToLoad.length){
+      const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
+      let gfLink = document.getElementById('gf-typo');
+      if(!gfLink){ gfLink=document.createElement('link'); gfLink.id='gf-typo'; gfLink.rel='stylesheet'; document.head.appendChild(gfLink); }
+      if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
+    }
+    let _typoCSS = _T.buildCSS(_rawTypo);
+    // Onglets de phase — inchangé, réglages historiques conservés
+    const _legacy = event.typography || {};
+    if(_legacy.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_legacy.phaseTabSize}px !important}`;
+    if(_legacy.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_legacy.phaseTabPadY}px !important;padding-bottom:${_legacy.phaseTabPadY}px !important}`;
+    let _typoStyle = document.getElementById('typo-overrides');
+    if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
+    _typoStyle.textContent = _typoCSS;
+    console.log('[TourMaG Live] TYPO(zones) mode=%s cssLen=%d', event.mode||'live', _typoCSS.length);
+  } catch(_e){ console.error('[TourMaG Live] Typo engine error:', _e); }
 
   // Citation settings — expedition defaults differ from classic
   const _isExp = event.mode === 'expedition';
