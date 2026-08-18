@@ -1098,11 +1098,27 @@ function _fontOpts(selected){
   h+=`<optgroup label="Display">${groups.display.map(mkOpt).join('')}</optgroup>`;
   return h;
 }
+// ---- Per-mode typography model ----------------------------------------------
+// New shape: ev.typography = { classic:{...}, expedition:{...} }
+// Legacy shape was a flat object shared by both modes. This helper migrates the
+// flat object into BOTH sub-objects the first time (identical values, so nothing
+// changes visually) and returns the sub-object for a given mode.
+function _typoModeKey(ev){ return (ev&&ev.mode==='expedition')?'expedition':'classic'; }
+function _isTypoSplit(t){ return !!(t && (t.classic || t.expedition)); }
+function getTypoForMode(ev){
+  const t = (ev && ev.typography) || {};
+  if(_isTypoSplit(t)){
+    return t[_typoModeKey(ev)] || {};
+  }
+  // Legacy flat object: expose it for the current mode without mutating storage.
+  // (Actual persistence into the split shape happens on first save, see saveApparence.)
+  return t;
+}
 function renderApparence(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
-  const typo=ev.typography||{};
   const isExp=ev.mode==='expedition';
+  const typo=getTypoForMode(ev);
   const pt=ev.phaseTitle||{};
   // Helper: title/subtitle/show row
   function _tss(prefix, title, sub, show, placeholderT, placeholderS){
@@ -1138,7 +1154,10 @@ function renderApparence(el){
   h+=_det('🏠','Hero (bandeau principal)',heroInner, false);
 
   // ==================== TYPOGRAPHIE ====================
-  var typoInner = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Familles de polices</div>';
+  var _modeLabel = isExp ? 'Expédition' : 'Classique';
+  var _modeBadgeBg = isExp ? '#0F2B3C' : '#E8842C';
+  var typoInner = '<div style="display:flex;align-items:center;gap:8px;background:var(--bg2,#F8FAFC);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--text2)">🎛️ Vous réglez la typographie du mode <span style="background:'+_modeBadgeBg+';color:#fff;font-weight:700;padding:2px 8px;border-radius:5px;font-size:10px;letter-spacing:.3px">'+_modeLabel+'</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">Chaque mode a ses propres réglages.</span></div>';
+  typoInner += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Familles de polices</div>';
   typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titre hero</label><select class="form-input" id="typo-hero-font" onchange="previewFont(\'hero\')">'+_fontOpts(typo.heroFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:24px;font-weight:700;color:var(--text)" id="typo-hero-preview">Aperçu</div></div>';
   typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Titres sections</label><select class="form-input" id="typo-heading-font" onchange="previewFont(\'heading\')">'+_fontOpts(typo.headingFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:18px;font-weight:700;color:var(--text)" id="typo-heading-preview">Aperçu</div></div>';
   typoInner += '<div class="form-row-inline"><div class="form-row" style="flex:1"><label class="form-label">Corps</label><select class="form-input" id="typo-body-font" onchange="previewFont(\'body\')">'+_fontOpts(typo.bodyFont||'')+'</select></div><div style="flex:0 0 180px;padding-top:22px;font-size:13px;color:var(--text2)" id="typo-body-preview">Aperçu texte</div></div>';
@@ -1148,6 +1167,11 @@ function renderApparence(el){
   typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titres sections <span id="typo-sec-size-val">'+(typo.sectionTitleSize||20)+'</span>px</label><input type="range" class="form-input" id="typo-sec-size" min="14" max="32" value="'+(typo.sectionTitleSize||20)+'" oninput="document.getElementById(\'typo-sec-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Corps <span id="typo-body-size-val">'+(typo.bodySize||14)+'</span>px</label><input type="range" class="form-input" id="typo-body-size" min="11" max="20" value="'+(typo.bodySize||14)+'" oninput="document.getElementById(\'typo-body-size-val\').textContent=this.value"></div></div>';
   typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Labels <span id="typo-ui-size-val">'+(typo.uiSize||11)+'</span>px</label><input type="range" class="form-input" id="typo-ui-size" min="8" max="16" value="'+(typo.uiSize||11)+'" oninput="document.getElementById(\'typo-ui-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Compteurs <span id="typo-counter-size-val">'+(typo.counterSize||40)+'</span>px</label><input type="range" class="form-input" id="typo-counter-size" min="20" max="64" value="'+(typo.counterSize||40)+'" oninput="document.getElementById(\'typo-counter-size-val\').textContent=this.value"></div></div>';
   typoInner += '<div class="form-row-inline"><div class="form-row"><label class="form-label">Onglets phase <span id="typo-phase-size-val">'+(typo.phaseTabSize||13)+'</span>px</label><input type="range" class="form-input" id="typo-phase-size" min="10" max="18" value="'+(typo.phaseTabSize||13)+'" oninput="document.getElementById(\'typo-phase-size-val\').textContent=this.value"></div><div class="form-row"><label class="form-label">Padding onglets <span id="typo-phase-pad-val">'+(typo.phaseTabPadY||7)+'</span>px</label><input type="range" class="form-input" id="typo-phase-pad" min="3" max="16" value="'+(typo.phaseTabPadY||7)+'" oninput="document.getElementById(\'typo-phase-pad-val\').textContent=this.value"></div></div></div>';
+  // Interlignage (line-height) — 4 familles
+  typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Interlignage</div>';
+  var _lhRow = function(id,label,val,def){ var v=(val!=null?val:def); return '<div class="form-row"><label class="form-label">'+label+' <span id="'+id+'-val">'+v+'</span></label><input type="range" class="form-input" id="'+id+'" min="0.9" max="2.4" step="0.05" value="'+v+'" oninput="document.getElementById(\''+id+'-val\').textContent=this.value"></div>'; };
+  typoInner += '<div class="form-row-inline">'+_lhRow('typo-hero-lh','Titre hero',typo.heroLineHeight,1.1)+_lhRow('typo-heading-lh','Titres sections',typo.headingLineHeight,1.3)+'</div>';
+  typoInner += '<div class="form-row-inline">'+_lhRow('typo-body-lh','Corps',typo.bodyLineHeight,1.6)+_lhRow('typo-ui-lh','Labels / UI',typo.uiLineHeight,1.4)+'</div></div>';
   typoInner += '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">Couleurs de texte</div>';
   typoInner += '<div class="form-row-inline"><div class="form-row" style="max-width:160px"><label class="form-label">Titre hero</label><input type="color" class="form-input" id="typo-hero-color" value="'+(typo.heroColor||'#FFFFFF')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Titres sections</label><input type="color" class="form-input" id="typo-heading-color" value="'+(typo.headingColor||'#1E293B')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Corps</label><input type="color" class="form-input" id="typo-body-color" value="'+(typo.bodyColor||'#334155')+'" style="height:36px;width:50px;padding:3px"></div><div class="form-row" style="max-width:160px"><label class="form-label">Labels / UI</label><input type="color" class="form-input" id="typo-ui-color" value="'+(typo.uiColor||'#64748B')+'" style="height:36px;width:50px;padding:3px"></div></div></div>';
   typoInner += '<div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary" onclick="saveApparence()">💾 Enregistrer</button><button class="btn btn-ghost" onclick="resetApparence()">↩️ Réinitialiser</button></div>';
@@ -1231,11 +1255,23 @@ function previewFont(type){
   }
 }
 async function saveApparence(){
-  // Start from the event's existing typography so a missing field never wipes others
   const _ev = eventsData.find(e=>e.id===currentEventId) || {};
-  const typography = Object.assign({}, _ev.typography || {});
+  const _existing = _ev.typography || {};
+  const modeKey = _typoModeKey(_ev);
+  // Build the full split object. If storage is still in the legacy flat shape,
+  // seed BOTH modes from it so the other (non-edited) mode keeps identical values.
+  let root;
+  if(_isTypoSplit(_existing)){
+    root = { classic: Object.assign({}, _existing.classic||{}), expedition: Object.assign({}, _existing.expedition||{}) };
+  } else {
+    const flat = Object.assign({}, _existing);
+    root = { classic: Object.assign({}, flat), expedition: Object.assign({}, flat) };
+  }
+  // Start from the current mode's existing values so a missing field never wipes others
+  const typography = Object.assign({}, root[modeKey]);
   const _val = (id)=>{ const el=document.getElementById(id); return el? el.value : undefined; };
   const _int = (id,def)=>{ const el=document.getElementById(id); return el? (parseInt(el.value)||def) : undefined; };
+  const _flt = (id,def)=>{ const el=document.getElementById(id); return el? (parseFloat(el.value)||def) : undefined; };
   // Only overwrite keys whose inputs are actually present in the DOM
   const _set = (k,v)=>{ if(v!==undefined) typography[k]=v; };
   _set('heroFont', _val('typo-hero-font'));
@@ -1250,27 +1286,51 @@ async function saveApparence(){
   _set('phaseTabSize', _int('typo-phase-size',13));
   _set('phaseTabPadY', _int('typo-phase-pad',7));
   _set('counterSize', _int('typo-counter-size',40));
+  _set('heroLineHeight', _flt('typo-hero-lh',1.1));
+  _set('headingLineHeight', _flt('typo-heading-lh',1.3));
+  _set('bodyLineHeight', _flt('typo-body-lh',1.6));
+  _set('uiLineHeight', _flt('typo-ui-lh',1.4));
   _set('heroColor', _val('typo-hero-color'));
   _set('headingColor', _val('typo-heading-color'));
   _set('bodyColor', _val('typo-body-color'));
   _set('uiColor', _val('typo-ui-color'));
+  root[modeKey] = typography;
   try{
     saving(true);
-    await db.collection('events').doc(currentEventId).update({typography});
+    await db.collection('events').doc(currentEventId).update({typography:root});
     // keep local cache in sync so a re-render of the tab reflects the save immediately
-    if(_ev) _ev.typography = typography;
-    console.log('[Admin] Typography saved for', currentEventId, typography);
-    toast('Apparence enregistrée');
+    if(_ev) _ev.typography = root;
+    console.log('[Admin] Typography saved for', currentEventId, 'mode=', modeKey, root);
+    toast('Apparence enregistrée ('+ (modeKey==='expedition'?'Expédition':'Classique') +')');
   }catch(err){
     console.error('[Admin] saveApparence failed:', err);
     toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement typographie'));
   }
 }
 async function resetApparence(){
-  if(!confirm('Réinitialiser toute la typographie aux valeurs par défaut ?')) return;
+  const _ev = eventsData.find(e=>e.id===currentEventId) || {};
+  const modeKey = _typoModeKey(_ev);
+  const _existing = _ev.typography || {};
+  if(!confirm('Réinitialiser la typographie du mode '+(modeKey==='expedition'?'Expédition':'Classique')+' aux valeurs par défaut ?\n(L\'autre mode n\'est pas affecté.)')) return;
   saving(true);
-  await db.collection('events').doc(currentEventId).update({typography:firebase.firestore.FieldValue.delete()});
-  toast('Apparence réinitialisée');
+  // Only clear the current mode; preserve the other one.
+  let root;
+  if(_isTypoSplit(_existing)){
+    root = { classic: Object.assign({}, _existing.classic||{}), expedition: Object.assign({}, _existing.expedition||{}) };
+  } else {
+    const flat = Object.assign({}, _existing);
+    root = { classic: Object.assign({}, flat), expedition: Object.assign({}, flat) };
+  }
+  root[modeKey] = {};
+  try{
+    await db.collection('events').doc(currentEventId).update({typography:root});
+    if(_ev) _ev.typography = root;
+    toast('Apparence réinitialisée ('+(modeKey==='expedition'?'Expédition':'Classique')+')');
+    const main=document.getElementById('main-content'); if(main) renderApparence(main);
+  }catch(err){
+    console.error('[Admin] resetApparence failed:', err);
+    toast('Erreur : '+(err&&err.message?err.message:'échec réinitialisation'));
+  }
 }
 async function saveHeroSettings(){
   saving(true);
