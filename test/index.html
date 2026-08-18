@@ -980,7 +980,13 @@ function render(data){
   // ===== SHARED CSS VARIABLES (applied for ALL modes) =====
 
   // ===== TYPOGRAPHY =====
-  const _typo = event.typography || {};
+  // Per-mode typography: event.typography = { classic:{...}, expedition:{...} }.
+  // Legacy flat objects (no classic/expedition key) are read as-is for both modes.
+  const _typoRoot = event.typography || {};
+  const _isExpMode = event.mode === 'expedition';
+  const _typo = (_typoRoot.classic || _typoRoot.expedition)
+    ? (_typoRoot[_isExpMode ? 'expedition' : 'classic'] || {})
+    : _typoRoot;
   const _heroFont = _typo.heroFont || '';
   const _hFont = _typo.headingFont || '';
   const _bFont = _typo.bodyFont || '';
@@ -993,32 +999,47 @@ function render(data){
     if(!gfLink){ gfLink=document.createElement('link'); gfLink.id='gf-typo'; gfLink.rel='stylesheet'; document.head.appendChild(gfLink); }
     if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
   }
+  // -------- SINGLE SOURCE OF TRUTH for selectors --------
+  // Each family lists EVERY element it controls. font-family, font-size, color
+  // and line-height all reuse the SAME list per family, so a module can never be
+  // "half-styled" (size changes but colour doesn't, etc.).
+  const _SEL = {
+    hero:    '.hero-title,.exp-hero h1',
+    heading: '.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name,.exp-reporter-name',
+    body:    '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p',
+    ui:      '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab,.exp-card-label'
+  };
   // Build dynamic style block — ONLY includes rules for values that are actually customized
   let _typoCSS = '';
-  const _heroTitleSel = '.hero-title,.exp-hero h1';
-  const _headingSel = '.sec-title h2,.kpi-num,.ess-num,.art-card-title,.itw-section-hd h2,.itw-name,.rubrique-name,.exp-section-head h2,.exp-counter-num,.exp-entry h3,.cit-name,.exp-verbatim-name,.exp-itw-name,.exp-reporter-name';
-  const _bodySel = '.hero-subtitle-text,.sec-title p,.itw-quote,.itw-section-hd p,.exp-hero-subtitle,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.exp-verbatim-text,.exp-itw-quote,.exp-itw-bio,.ess-card-text,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p';
-  const _uiSel = '.bdg-live,.bdg-event,.hero-tag,.hero-meta-item,.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.itw-badge,.itw-cta,.cit-role,.flash-badge,.ess-tag,.ess-ia,.sl,.sticky-nav-brand,.sticky-nav a,.upd-bar,.hero-tl-date,.hero-tl-ia,.exp-hero-eyebrow,.exp-hero-badge-live,.exp-hero-badge-label,.exp-hero-meta-item,.exp-entry-meta,.exp-live-tag,.exp-live-time,.exp-live-jr,.exp-live-day-label,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-itw-tag,.exp-footer small,.phase-tab,.exp-card-label';
-  // Font families — hero title independent
-  if(_heroFont) _typoCSS += `${_heroTitleSel}{font-family:'${_heroFont}',sans-serif !important}`;
-  if(_hFont) _typoCSS += `${_headingSel}{font-family:'${_hFont}',sans-serif !important}`;
-  if(_bFont) _typoCSS += `${_bodySel}{font-family:'${_bFont}',sans-serif !important}`;
-  if(_uFont) _typoCSS += `${_uiSel}{font-family:'${_uFont}',sans-serif !important}`;
+  // Font families — same list per family as everything else
+  if(_heroFont) _typoCSS += `${_SEL.hero}{font-family:'${_heroFont}',sans-serif !important}`;
+  if(_hFont) _typoCSS += `${_SEL.heading}{font-family:'${_hFont}',sans-serif !important}`;
+  if(_bFont) _typoCSS += `${_SEL.body}{font-family:'${_bFont}',sans-serif !important}`;
+  if(_uFont) _typoCSS += `${_SEL.ui}{font-family:'${_uFont}',sans-serif !important}`;
   // Font sizes — only when explicitly customized
-  if(_typo.heroTitleSize) _typoCSS += `${_heroTitleSel}{font-size:${_typo.heroTitleSize}px !important}`;
+  if(_typo.heroTitleSize) _typoCSS += `${_SEL.hero}{font-size:${_typo.heroTitleSize}px !important}`;
   if(_typo.heroSubtitleSize) _typoCSS += `.hero-subtitle-text,.exp-hero-subtitle{font-size:${_typo.heroSubtitleSize}px !important}`;
   if(_typo.sectionTitleSize) _typoCSS += `.sec-title h2,.exp-section-head h2,.itw-section-hd h2{font-size:${_typo.sectionTitleSize}px !important}`;
   if(_typo.counterSize) _typoCSS += `.kpi-num,.exp-counter-num{font-size:${_typo.counterSize}px !important}`;
-  if(_typo.bodySize) _typoCSS += `${_bodySel}{font-size:${_typo.bodySize}px !important}`;
-  if(_typo.uiSize) _typoCSS += `${_uiSel}{font-size:${_typo.uiSize}px !important}`;
+  if(_typo.bodySize) _typoCSS += `${_SEL.body}{font-size:${_typo.bodySize}px !important}`;
+  if(_typo.uiSize) _typoCSS += `${_SEL.ui}{font-size:${_typo.uiSize}px !important}`;
+  // Line-height (interlignage) — per family, same selectors
+  if(_typo.heroLineHeight) _typoCSS += `${_SEL.hero}{line-height:${_typo.heroLineHeight} !important}`;
+  if(_typo.headingLineHeight) _typoCSS += `${_SEL.heading.split(',').filter(s=>s!=='.kpi-num'&&s!=='.exp-counter-num').join(',')}{line-height:${_typo.headingLineHeight} !important}`;
+  if(_typo.bodyLineHeight) _typoCSS += `${_SEL.body}{line-height:${_typo.bodyLineHeight} !important}`;
+  if(_typo.uiLineHeight) _typoCSS += `${_SEL.ui}{line-height:${_typo.uiLineHeight} !important}`;
   // Phase tab overrides AFTER generic ui — more specific wins with same !important
   if(_typo.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_typo.phaseTabSize}px !important}`;
   if(_typo.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_typo.phaseTabPadY}px !important;padding-bottom:${_typo.phaseTabPadY}px !important}`;
-  // Colors — hero title independent from section titles
-  if(_typo.heroColor) _typoCSS += `${_heroTitleSel}{color:${_typo.heroColor} !important}`;
-  if(_typo.headingColor) _typoCSS += `.sec-title h2,.exp-section-head h2,.exp-entry h3{color:${_typo.headingColor} !important}`;
-  if(_typo.bodyColor) _typoCSS += `.live-text,.live-title,.cit-text,.exp-entry p,.exp-entry-body,.exp-verbatim-text,.art-title,.exp-art-title,.prog-item-label,.ess-card-text,.exp-ess-text{color:${_typo.bodyColor} !important}`;
-  if(_typo.uiColor) _typoCSS += `.live-tag,.live-jr,.cit-role,.art-date,.exp-entry-meta,.exp-counter-label,.exp-ess-tag{color:${_typo.uiColor} !important}`;
+  // Colors — same list per family as size/font, so colour reaches every module.
+  // EXCEPTION: numeric counters (.kpi-num/.exp-counter-num) keep their accent
+  // colour, so they are excluded from the heading colour rule (their size/font
+  // still follow the heading family via the rules above).
+  const _headingColorSel = _SEL.heading.split(',').filter(s=>s!=='.kpi-num'&&s!=='.exp-counter-num').join(',');
+  if(_typo.heroColor) _typoCSS += `${_SEL.hero}{color:${_typo.heroColor} !important}`;
+  if(_typo.headingColor) _typoCSS += `${_headingColorSel}{color:${_typo.headingColor} !important}`;
+  if(_typo.bodyColor) _typoCSS += `${_SEL.body}{color:${_typo.bodyColor} !important}`;
+  if(_typo.uiColor) _typoCSS += `${_SEL.ui}{color:${_typo.uiColor} !important}`;
   // Inject or clear the dynamic style block
   let _typoStyle = document.getElementById('typo-overrides');
   if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
