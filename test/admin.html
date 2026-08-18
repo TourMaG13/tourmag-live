@@ -1147,28 +1147,74 @@ function _fontOpts(selected){
       ui:    '.itw-badge,.itw-cta,.citation-card .cit-role,.exp-footer small'
     }
   };
+  // Titre/sous-titre de SECTION par module (classe distinctive dans le HTML).
+  // Global par défaut (via ZONE_SEL.body .sec-title), surchargeable ici par module.
+  var SECTION_SEL = {
+    live:       { title:'.sec-title-live h2',       sub:'.sec-title-live p' },
+    citations:  { title:'.sec-title-citations h2',  sub:'.sec-title-citations p' },
+    articles:   { title:'.sec-title-articles h2',   sub:'.sec-title-articles p' },
+    essential:  { title:'.sec-title-essential h2',  sub:'.sec-title-essential p' },
+    videos:     { title:'.sec-title-videos h2',     sub:'.sec-title-videos p' },
+    gallery:    { title:'.sec-title-gallery h2',    sub:'.sec-title-gallery p' },
+    interviews: { title:'.itw-section-hd h2',       sub:'.itw-section-hd p' }
+  };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
   var MODULE_SEL = {
-    live:       { zone:'body', title:'', text:'.live-text,.live-title', ui:'.live-tag,.live-timestamp,.live-jr,.live-time' },
-    articles:   { zone:'body', title:'.art-card-title', text:'.art-title', ui:'.art-card-tag,.art-card-cta,.art-date,.art-author' },
-    essential:  { zone:'body', title:'.ess-num', text:'.ess-txt,.ess-card-text,.exp-ess-text', ui:'.ess-tag,.ess-ia,.exp-ess-tag' },
-    citations:  { zone:'body', title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name', text:'.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text', ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role' },
-    videos:     { zone:'body', title:'', text:'.vid-caption,.exp-vid-caption', ui:'.vid-ext-platform-tag' },
-    interviews: { zone:'dark', title:'.itw-name,.itw-section-hd h2', text:'.itw-quote,.itw-section-hd p', ui:'.itw-badge,.itw-cta' },
-    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' }
+    live: {
+      zone:'body',
+      title:'',
+      text:'.live-text,.exp-entry-body,.exp-entry p',
+      ui:'.live-tag,.live-timestamp,.live-journalist,.exp-entry-meta,.exp-live-pill,.exp-entry-km,.exp-entry-toggle'
+    },
+    citations: {
+      zone:'body',
+      title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.cit-hero-name,.citation-name,.exp-verbatim-name',
+      text:'.cit-text,.cit-pm-text,.cit-pm-quote,.citation-card-pm .cit-pm-text,.cit-hero-text,.citation-text,.exp-verbatim-text',
+      ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.cit-hero-role,.citation-role,.exp-verbatim-role,.cit-hero-badge,.cit-pm-badge'
+    },
+    articles: {
+      zone:'body',
+      title:'.art-card-title',
+      text:'.art-card-excerpt,.exp-art-body',
+      ui:'.art-card-tag,.art-card-cta,.art-card-byline,.art-date,.art-author,.exp-art-date'
+    },
+    essential: {
+      zone:'body',
+      title:'.ess-num,.exp-essential-num',
+      text:'.ess-txt,.ess-card-text,.exp-essential-text,.exp-ess-text',
+      ui:'.ess-tag,.ess-ia,.exp-essential-tag,.exp-ess-tag'
+    },
+    videos: {
+      zone:'body',
+      title:'.vid-title,.vid-hd',
+      text:'.vid-caption,.exp-vid-caption',
+      ui:'.vid-ext-platform-tag,.vid-popup-link'
+    },
+    interviews: {
+      zone:'dark',
+      title:'.itw-name,.itw-section-hd h2,.exp-itw-name',
+      text:'.itw-quote,.itw-bio,.itw-section-hd p,.exp-itw-quote,.exp-itw-bio',
+      ui:'.itw-badge,.itw-cta,.exp-itw-tag,.exp-itw-role,.exp-itw-cta'
+    },
+    gallery: {
+      zone:'body',
+      title:'',
+      text:'.gal-caption,.exp-gal-caption',
+      ui:'.exp-gal-credit'
+    }
   };
 
   var AUTO_SEL = {
     reporters: {
       title: '.jr-name,.exp-reporter-name',
       text:  '.jr-bio,.exp-card p',
-      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters'
+      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
-      title: '.exp-card-label-itin',
-      text:  '.exp-route-name',
-      ui:    '.exp-route-detail'
+      title: '.exp-route-name',
+      text:  '.exp-route-detail',
+      ui:    '.exp-card-label-itin,.exp-route-acc-btn'
     }
   };
 
@@ -1272,8 +1318,13 @@ function _fontOpts(selected){
     var mods = modeTypo.modules || {};
     Object.keys(mods).forEach(function(mkey){
       var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
-      var map = MODULE_SEL[mkey]; if(!map) return;
-      ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); });
+      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); }); }
+      // Titre/sous-titre de section propres au module (surcharge le global)
+      var sec = SECTION_SEL[mkey];
+      if(sec){
+        if(sec.title) css += _emit(sec.title, { Font:mo.secFont, Size:mo.secSize, Color:mo.secColor, LH:mo.secLH, Weight:mo.secWeight, Style:mo.secStyle }, {});
+        if(sec.sub)   css += _emit(sec.sub,   { Font:mo.secSubFont, Size:mo.secSubSize, Color:mo.secSubColor, LH:mo.secSubLH, Weight:mo.secSubWeight, Style:mo.secSubStyle }, {});
+      }
     });
     css += buildPhaseTabsCSS(modeTypo.phaseTabs || {});
     return css;
@@ -1318,7 +1369,7 @@ function _fontOpts(selected){
     return Object.keys(set);
   }
 
-  var API = { TYPO_MODULES, AUTO_MODULES, ZONE_SEL, MODULE_SEL, AUTO_SEL, COUNTER_SEL, ROLES, PROPS,
+  var API = { TYPO_MODULES, AUTO_MODULES, ZONE_SEL, MODULE_SEL, AUTO_SEL, SECTION_SEL, COUNTER_SEL, ROLES, PROPS,
               zoneDefaults, autoDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, buildPhaseTabsCSS, collectFonts };
   if(typeof module!=='undefined' && module.exports) module.exports = API;
   root.TourMagTypo = API;
@@ -1359,12 +1410,14 @@ function _typoRoleBlock(idBase, roleLabel, vals){
   return h;
 }
 // 3 rôles pour un préfixe donné, à partir d'un objet de valeurs {titleFont,...}
-function _typoRolesFor(idPrefix, src){
+function _typoRolesFor(idPrefix, src, selMap){
   var s = src || {};
   var h = '';
-  h += _typoRoleBlock(idPrefix+'-title','Titres / nom', {Font:s.titleFont,Size:s.titleSize,Color:s.titleColor,LH:s.titleLH,Weight:s.titleWeight,Style:s.titleStyle});
-  h += _typoRoleBlock(idPrefix+'-text','Texte courant', {Font:s.textFont,Size:s.textSize,Color:s.textColor,LH:s.textLH,Weight:s.textWeight,Style:s.textStyle});
-  h += _typoRoleBlock(idPrefix+'-ui','Labels / petits éléments', {Font:s.uiFont,Size:s.uiSize,Color:s.uiColor,LH:s.uiLH,Weight:s.uiWeight,Style:s.uiStyle});
+  // selMap (optionnel) : {title,text,ui} sélecteurs. Un rôle sans cible n'est pas affiché.
+  var has = function(role){ return !selMap || (selMap[role] && selMap[role].trim()!==''); };
+  if(has('title')) h += _typoRoleBlock(idPrefix+'-title','Titres / nom', {Font:s.titleFont,Size:s.titleSize,Color:s.titleColor,LH:s.titleLH,Weight:s.titleWeight,Style:s.titleStyle});
+  if(has('text'))  h += _typoRoleBlock(idPrefix+'-text','Texte courant', {Font:s.textFont,Size:s.textSize,Color:s.textColor,LH:s.textLH,Weight:s.textWeight,Style:s.textStyle});
+  if(has('ui'))    h += _typoRoleBlock(idPrefix+'-ui','Labels / petits éléments', {Font:s.uiFont,Size:s.uiSize,Color:s.uiColor,LH:s.uiLH,Weight:s.uiWeight,Style:s.uiStyle});
   return h;
 }
 // Correspondance onglet (data-tab) -> clé de module typo dans le moteur
@@ -1388,12 +1441,22 @@ function moduleTypoPanel(moduleKey){
       return h+'<div style="font-size:11px;color:var(--text3);padding:8px 2px">Le bloc itinéraire n\'existe qu\'en mode expédition.</div>';
     }
     var av = (mt.auto||{})[moduleKey] || {};
-    h += _typoRolesFor('a-'+moduleKey, av);
+    h += _typoRolesFor('a-'+moduleKey, av, (_T.AUTO_SEL||{})[moduleKey]);
   } else {
     var mv = (mt.modules||{})[moduleKey] || {};
     var on = !!mv.enabled;
-    h += '<div class="form-row" style="max-width:260px;margin-bottom:8px"><label class="form-label"><input type="checkbox" id="m-'+moduleKey+'-enabled" '+(on?'checked':'')+' onchange="var b=document.getElementById(\'m-'+moduleKey+'-body\'); if(b) b.style.display=this.checked?\'block\':\'none\'"> Personnaliser la typo de ce module</label><div style="font-size:9px;color:var(--text3);margin-top:2px">Décoché = suit la zone « Corps de page » du Design global.</div></label></div>';
-    h += '<div id="m-'+moduleKey+'-body" style="display:'+(on?'block':'none')+'">'+_typoRolesFor('m-'+moduleKey, mv)+'</div>';
+    var selMap = (_T.MODULE_SEL||{})[moduleKey];
+    // Bloc "Titre de section" (surcharge le global) si le module a une section identifiable
+    var secMap = (_T.SECTION_SEL||{})[moduleKey];
+    if(secMap){
+      h += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:6px 0 8px">Titre de section (grand titre du bloc)</div>';
+      h += '<div style="font-size:9px;color:var(--text3);margin-bottom:8px">Laissez vide pour suivre le style global (Apparence).</div>';
+      if(secMap.title) h += _typoRoleBlock('sec-'+moduleKey+'-title','Titre', {Font:mv.secFont,Size:mv.secSize,Color:mv.secColor,LH:mv.secLH,Weight:mv.secWeight,Style:mv.secStyle});
+      if(secMap.sub)   h += _typoRoleBlock('sec-'+moduleKey+'-sub','Sous-titre', {Font:mv.secSubFont,Size:mv.secSubSize,Color:mv.secSubColor,LH:mv.secSubLH,Weight:mv.secSubWeight,Style:mv.secSubStyle});
+      h += '<div style="height:1px;background:var(--border);margin:12px 0"></div>';
+    }
+    h += '<div class="form-row" style="max-width:260px;margin-bottom:8px"><label class="form-label"><input type="checkbox" id="m-'+moduleKey+'-enabled" '+(on?'checked':'')+' onchange="var b=document.getElementById(\'m-'+moduleKey+'-body\'); if(b) b.style.display=this.checked?\'block\':\'none\'"> Personnaliser la typo du contenu</label><div style="font-size:9px;color:var(--text3);margin-top:2px">Décoché = suit la zone « Corps de page » du Design global.</div></div>';
+    h += '<div id="m-'+moduleKey+'-body" style="display:'+(on?'block':'none')+'">'+_typoRolesFor('m-'+moduleKey, mv, selMap)+'</div>';
   }
   return h;
 }
@@ -1428,16 +1491,47 @@ async function saveModule(tabKey){
         cur.auto[typoKey]=aObj;
       }
     } else {
-      var enEl=document.getElementById('m-'+typoKey+'-enabled');
-      if(enEl){
-        if(enEl.checked){
-          var mObj={enabled:true};
-          ['title','text','ui'].forEach(function(r){ Object.assign(mObj, _roleToFields(r, _readRoleBlock('m-'+typoKey+'-'+r), true)); });
-          cur.modules[typoKey]=mObj;
-        } else {
-          delete cur.modules[typoKey];
-        }
+      // Construire l'objet module en fusionnant : titre de section (toujours lu si présent)
+      // + typo du contenu (selon le toggle).
+      var existingMod = Object.assign({}, cur.modules[typoKey] || {});
+      var mObj = {};
+      // Titre/sous-titre de section (bloc indépendant du toggle)
+      var secMap = (_T.SECTION_SEL||{})[typoKey];
+      if(secMap){
+        var secKeys = { title:['sec','sec-'+typoKey+'-title'], sub:['secSub','sec-'+typoKey+'-sub'] };
+        Object.keys(secKeys).forEach(function(part){
+          var prefixProp = secKeys[part][0];   // 'sec' ou 'secSub'
+          var idBase = secKeys[part][1];
+          if(document.getElementById(idBase+'-size')!==null || document.getElementById(idBase+'-color')!==null){
+            var rb = _readRoleBlock(idBase);
+            // Mapper {Font,Size,...} -> secFont/secSize... ou secSubFont/...
+            if(rb.Font!==undefined) mObj[prefixProp+'Font']=rb.Font;
+            if(rb.Size!==undefined) mObj[prefixProp+'Size']=rb.Size;
+            if(rb.Color!==undefined) mObj[prefixProp+'Color']=rb.Color;
+            if(rb.LH!==undefined) mObj[prefixProp+'LH']=rb.LH;
+            if(rb.Weight!==undefined) mObj[prefixProp+'Weight']=rb.Weight;
+            if(rb.Style!==undefined) mObj[prefixProp+'Style']=rb.Style;
+          }
+        });
       }
+      // Typo du contenu selon le toggle
+      var enEl=document.getElementById('m-'+typoKey+'-enabled');
+      if(enEl && enEl.checked){
+        mObj.enabled=true;
+        ['title','text','ui'].forEach(function(r){ Object.assign(mObj, _roleToFields(r, _readRoleBlock('m-'+typoKey+'-'+r), true)); });
+      }
+      // Conserver les clés section existantes si le bloc n'était pas rendu, etc.
+      var merged = Object.assign({}, existingMod, mObj);
+      // Nettoyage : si rien d'utile, retirer le module
+      var hasContent = merged.enabled;
+      var hasSection = Object.keys(merged).some(function(k){ return k.indexOf('sec')===0; });
+      if(!hasContent){
+        // retirer les clés de contenu mais garder la section
+        ['title','text','ui'].forEach(function(r){ ['Font','Size','Color','LH','Weight','Style'].forEach(function(p){ delete merged[r+p]; }); });
+        delete merged.enabled;
+      }
+      if(hasContent || hasSection){ cur.modules[typoKey]=merged; }
+      else { delete cur.modules[typoKey]; }
     }
   }
   root[mk]=cur;
