@@ -1018,7 +1018,10 @@ function _mkPhaseTitle(event, activePhase, phases){
     {key:'citations',  label:'Verbatims',  icon:'\uD83D\uDCAC'},
     {key:'videos',     label:'Vidéos',     icon:'\uD83C\uDFAC'},
     {key:'interviews', label:'Interviews', icon:'\uD83C\uDF99\uFE0F'},
-    {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'}
+    {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'},
+    {key:'sponsors',   label:'Partenaires',icon:'\uD83E\uDD1D'},
+    {key:'contact',    label:'Contact',    icon:'\u2709\uFE0F'},
+    {key:'kpis',       label:'Compteurs',  icon:'\uD83D\uDCCA'}
   ];
 
   var AUTO_MODULES = [
@@ -1052,7 +1055,9 @@ function _mkPhaseTitle(event, activePhase, phases){
     essential:  { title:'.sec-title-essential h2,.exp-sec-essential h2',   sub:'.sec-title-essential p,.exp-sec-essential + .exp-section-sub' },
     videos:     { title:'.sec-title-videos h2,.exp-sec-videos h2',         sub:'.sec-title-videos p,.exp-sec-videos + .exp-section-sub' },
     gallery:    { title:'.sec-title-gallery h2,.exp-sec-gallery h2',       sub:'.sec-title-gallery p,.exp-sec-gallery + .exp-section-sub' },
-    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' }
+    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' },
+    sponsors:   { title:'.sponsors-block h3,.exp-sec-sponsors h2',         sub:'.sponsors-block p,.exp-sec-sponsors + .exp-section-sub' },
+    contact:    { title:'.exp-sec-contact h2',                             sub:'.exp-sec-contact + .exp-section-sub' }
   };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
@@ -1071,7 +1076,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     },
     articles: {
       zone:'body',
-      title:'.art-card-title',
+      title:'.art-card-title,.exp-art h4',
       text:'.art-card-excerpt,.exp-art-body',
       ui:'.art-card-tag,.art-card-cta,.art-card-byline,.art-date,.art-author,.exp-art-date'
     },
@@ -1098,6 +1103,24 @@ function _mkPhaseTitle(event, activePhase, phases){
       title:'',
       text:'.gal-caption,.exp-gal-caption',
       ui:'.exp-gal-credit'
+    },
+    sponsors: {
+      zone:'body',
+      title:'',
+      text:'',
+      ui:''
+    },
+    contact: {
+      zone:'body',
+      title:'.exp-contact-name',
+      text:'.exp-contact-msg',
+      ui:'.exp-contact-role,.exp-contact-btn'
+    },
+    kpis: {
+      zone:'body',
+      title:'',
+      text:'',
+      ui:'.kpi-label,.exp-counter-label'
     }
   };
 
@@ -2576,7 +2599,7 @@ function renderExpedition(data){
   _b.sponsors = function(){
     const sp=(event.sponsors||[]).sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
-    let o=`<section class="exp-sponsors"><div class="exp-section-head"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p><div class="exp-sponsors-grid">`;
+    let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p><div class="exp-sponsors-grid">`;
     sp.forEach(s=>{ if(s.logo_url){const cl=s.url?` onclick="window.open('${s.url}','_blank')"`:'';o+=`<img src="${s.logo_url}" alt="${s.name||''}"${cl} onerror="this.remove()">`;}else if(s.name)o+=`<span>${s.name}</span>`; });
     return o+`</div></section>`;
   };
@@ -2598,7 +2621,7 @@ function renderExpedition(data){
     if(btnC) cardStyle += `--_ct-btn-color:${btnC};`;
     if(!bgC) cardStyle += '--_ct-bg:var(--exp-stone);';
 
-    let o = `<section class="exp-contact"><div class="exp-section-head"><h2>` +
+    let o = `<section class="exp-contact"><div class="exp-section-head exp-sec-contact"><h2>` +
       `${ct.title||'Contact'}</h2><div class="rule"></div></div>`;
     o += `<div class="exp-contact-card"${cardStyle?` style="${cardStyle}"`:''}>`;
     if(ct.photo_url) o += `<img class="exp-contact-photo" src="${ct.photo_url}" alt="" onerror="this.outerHTML='<div class=\\'exp-contact-photo-ph\\'>${ini}</div>'">`;
