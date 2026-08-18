@@ -1045,25 +1045,60 @@ function _mkPhaseTitle(event, activePhase, phases){
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
   var MODULE_SEL = {
-    live:       { zone:'body', title:'', text:'.live-text,.live-title', ui:'.live-tag,.live-timestamp,.live-jr,.live-time' },
-    articles:   { zone:'body', title:'.art-card-title', text:'.art-title', ui:'.art-card-tag,.art-card-cta,.art-date,.art-author' },
-    essential:  { zone:'body', title:'.ess-num', text:'.ess-txt,.ess-card-text,.exp-ess-text', ui:'.ess-tag,.ess-ia,.exp-ess-tag' },
-    citations:  { zone:'body', title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name', text:'.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text', ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role' },
-    videos:     { zone:'body', title:'', text:'.vid-caption,.exp-vid-caption', ui:'.vid-ext-platform-tag' },
-    interviews: { zone:'dark', title:'.itw-name,.itw-section-hd h2', text:'.itw-quote,.itw-section-hd p', ui:'.itw-badge,.itw-cta' },
-    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' }
+    live: {
+      zone:'body',
+      title:'',
+      text:'.live-text,.exp-entry-body,.exp-entry p',
+      ui:'.live-tag,.live-timestamp,.live-journalist,.exp-entry-meta,.exp-live-pill,.exp-entry-km,.exp-entry-toggle'
+    },
+    citations: {
+      zone:'body',
+      title:'.cit-name,.cit-pm-name,.cit-hero-name,.citation-name,.exp-verbatim-name',
+      text:'.cit-text,.cit-pm-text,.cit-pm-quote,.cit-hero-text,.citation-text,.exp-verbatim-text',
+      ui:'.cit-role,.cit-pm-role,.cit-hero-role,.citation-role,.citation-author,.exp-verbatim-role,.exp-verbatim-author,.cit-hero-badge,.cit-pm-badge'
+    },
+    articles: {
+      zone:'body',
+      title:'.art-card-title',
+      text:'.art-card-excerpt,.exp-art-body',
+      ui:'.art-card-tag,.art-card-cta,.art-card-byline,.art-date,.art-author,.exp-art-date'
+    },
+    essential: {
+      zone:'body',
+      title:'.ess-num,.exp-essential-num',
+      text:'.ess-txt,.ess-card-text,.exp-essential-text,.exp-ess-text',
+      ui:'.ess-tag,.ess-ia,.exp-essential-tag,.exp-ess-tag'
+    },
+    videos: {
+      zone:'body',
+      title:'.vid-title,.vid-hd',
+      text:'.vid-caption,.exp-vid-caption',
+      ui:'.vid-ext-platform-tag,.vid-popup-link'
+    },
+    interviews: {
+      zone:'dark',
+      title:'.itw-name,.itw-section-hd h2,.exp-itw-name',
+      text:'.itw-quote,.itw-bio,.itw-section-hd p,.exp-itw-quote,.exp-itw-bio',
+      ui:'.itw-badge,.itw-cta,.exp-itw-tag,.exp-itw-role,.exp-itw-cta'
+    },
+    gallery: {
+      zone:'body',
+      title:'',
+      text:'.gal-caption,.exp-gal-caption',
+      ui:'.exp-gal-credit'
+    }
   };
 
   var AUTO_SEL = {
     reporters: {
       title: '.jr-name,.exp-reporter-name',
       text:  '.jr-bio,.exp-card p',
-      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters'
+      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
       title: '.exp-card-label-itin',
       text:  '.exp-route-name',
-      ui:    '.exp-route-detail'
+      ui:    '.exp-route-detail,.exp-route-acc-btn'
     }
   };
 
