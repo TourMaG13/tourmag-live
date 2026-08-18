@@ -962,56 +962,69 @@ function _isPublished(entry){
 
 function _mkPhaseTitle(event, activePhase, phases){
   if(!activePhase) return '';
-  const pt = event.phaseTitle || {};
-  if(!pt.show) return '';
   const phase = phases.find(p => p.id === activePhase);
   if(!phase) return '';
-  const color = pt.usePhaseColor ? (phase.color || '#6366F1') : (pt.color || '#1E293B');
-  const size = pt.size || 28;
-  const weight = pt.weight || 700;
-  const padY = pt.padY || 10;
-  const fontFam = pt.font ? `font-family:'${pt.font}',sans-serif;` : '';
-  return `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};padding:${padY}px 0;${fontFam}">${phase.name}</div>`;
+  const mk = (event.mode==='expedition') ? 'expedition' : 'classic';
+  const modeTypo = (event.typography && event.typography[mk]) || {};
+  // Titre : réglage par-mode (typography[mode].phaseTitle) sinon repli global (event.phaseTitle)
+  const pt = modeTypo.phaseTitle || event.phaseTitle || {};
+  const ps = modeTypo.phaseSubtitle || {};
+  let out = '';
+  if(pt.show){
+    const color = pt.usePhaseColor ? (phase.color || '#6366F1') : (pt.color || '#1E293B');
+    const size = pt.size || 28;
+    const weight = pt.weight || 700;
+    const padY = pt.padY || 10;
+    const fontFam = pt.font ? `font-family:'${pt.font}',sans-serif;` : '';
+    const styl = pt.italic ? 'font-style:italic;' : '';
+    out += `<div class="phase-active-title" style="font-size:${size}px;font-weight:${weight};color:${color};padding:${padY}px 0;${fontFam}${styl}">${phase.name}</div>`;
+  }
+  // Sous-titre de la phase active (contenu par phase, style par-mode)
+  const subText = (phase.subtitle||'').trim();
+  if(ps.show && subText){
+    const scolor = ps.usePhaseColor ? (phase.color || '#6366F1') : (ps.color || '#64748B');
+    const ssize = ps.size || 15;
+    const sweight = ps.weight || 400;
+    const sfont = ps.font ? `font-family:'${ps.font}',sans-serif;` : '';
+    const sstyl = ps.italic ? 'font-style:italic;' : '';
+    const slh = ps.lineHeight || 1.4;
+    out += `<div class="phase-active-subtitle" style="text-align:center;font-size:${ssize}px;font-weight:${sweight};color:${scolor};line-height:${slh};padding:0 0 6px;${sfont}${sstyl}">${subText}</div>`;
+  }
+  return out;
 }
 
 </script>
 <script>
 /* ===== MOTEUR TYPO (inliné, identique dans admin.html et index.html) ===== */
 /* ============================================================================
-   TourMaG Live — Moteur typographique (partagé admin.html + index.html)
+   TourMaG Live — Moteur typographique (identique dans admin.html et index.html)
    Modèle: ev.typography = {
-     classic:    { zones:{hero,body,dark}, modules:{ live?, articles?, ... } },
-     expedition: { zones:{hero,body,dark}, modules:{ ... } }
+     classic:    { zones:{hero,body,dark}, modules:{...}, auto:{reporters,itinerary} },
+     expedition: { zones:{...}, modules:{...}, auto:{...} }
    }
-   Chaque bloc de réglage (zone.role ou module) contient un sous-ensemble de :
-     titleFont,titleSize,titleColor,titleLH,
-     textFont,textSize,textColor,textLH,
-     uiFont,uiSize,uiColor,uiLH
-   Cascade (faible -> fort) : CSS de base -> zone -> override module.
-   On n'injecte QUE les champs explicitement définis (sinon le CSS de base,
-   y compris les clamp() responsive du hero expédition, reste actif).
+   Roles: title/text/ui ; props: Font,Size,Color,LH,Weight,Style.
+   ZONES: défauts appliqués seulement dans l'UI. MODULES: override optionnel.
+   AUTO (reporters/itinerary): autonomes, sortis des zones, défauts propres.
+   Injection = uniquement les champs réglés (getModeTypoRaw) => neuf n'injecte rien.
    ========================================================================== */
 (function(root){
   'use strict';
 
-  // --- Modules proposés à l'override (le hero et les blocs sombres sont gérés
-  //     par leurs zones dédiées, pas besoin d'override module). --------------
   var TYPO_MODULES = [
-    {key:'live',       label:'Fil live',   icon:'📡'},
-    {key:'articles',   label:'Articles',   icon:'📰'},
-    {key:'essential',  label:"L'essentiel",icon:'🧠'},
-    {key:'citations',  label:'Verbatims',  icon:'💬'},
-    {key:'videos',     label:'Vidéos',     icon:'🎬'},
-    {key:'interviews', label:'Interviews', icon:'🎙️'},
-    {key:'gallery',    label:'Galerie',    icon:'📸'},
-    {key:'reporters',  label:'Reporters',  icon:'👤'}
+    {key:'live',       label:'Fil live',   icon:'\uD83D\uDCE1'},
+    {key:'articles',   label:'Articles',   icon:'\uD83D\uDCF0'},
+    {key:'essential',  label:"L'essentiel",icon:'\uD83E\uDDE0'},
+    {key:'citations',  label:'Verbatims',  icon:'\uD83D\uDCAC'},
+    {key:'videos',     label:'Vidéos',     icon:'\uD83C\uDFAC'},
+    {key:'interviews', label:'Interviews', icon:'\uD83C\uDF99\uFE0F'},
+    {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'}
   ];
 
-  // --- Sélecteurs par zone et par rôle (title / text / ui). -----------------
-  //     UNE SEULE source de vérité : font, size, color, line-height d'un rôle
-  //     utilisent tous la même liste => plus jamais de "taille change mais pas
-  //     la couleur". _NOCOLORLH = éléments à exclure de color+line-height pour
-  //     préserver les accents (compteurs numériques).
+  var AUTO_MODULES = [
+    {key:'reporters', label:'Vos reporters', icon:'\uD83D\uDC64', expOnly:false},
+    {key:'itinerary', label:'Itinéraire',    icon:'\uD83D\uDDFA\uFE0F', expOnly:true}
+  ];
+
   var ZONE_SEL = {
     hero: {
       title: '.hero-title,.exp-hero h1',
@@ -1019,9 +1032,9 @@ function _mkPhaseTitle(event, activePhase, phases){
       ui:    '.hero-meta-item,.hero-tag,.exp-hero-eyebrow,.exp-hero-meta-item,.exp-hero-badge-live,.exp-hero-badge-label'
     },
     body: {
-      title: '.sec-title h2,.exp-section-head h2,.art-card-title,.rubrique-name,.ess-num,.exp-entry h3,.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.exp-verbatim-name,.exp-reporter-name',
-      text:  '.sec-title p,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-reporter-role,.exp-card p,.exp-verbatim-text',
-      ui:    '.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.ess-tag,.ess-ia,.rubrique-name,.exp-entry-meta,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role,.exp-reporter-role,.exp-card-label'
+      title: '.sec-title h2,.exp-section-head h2,.art-card-title,.rubrique-name,.ess-num,.exp-entry h3,.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name,.exp-verbatim-name',
+      text:  '.sec-title p,.exp-section-sub,.live-text,.live-title,.art-title,.prog-item-label,.prog-item-desc,.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text,.ess-card-text,.ess-txt,.exp-ess-text,.exp-entry p,.exp-entry-body,.exp-art-title,.exp-card p,.exp-verbatim-text',
+      ui:    '.live-tag,.live-timestamp,.live-jr,.live-time,.art-card-tag,.art-card-cta,.art-date,.art-author,.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role,.ess-tag,.ess-ia,.rubrique-name,.exp-entry-meta,.exp-counter-label,.exp-ess-tag,.exp-verbatim-role'
     },
     dark: {
       title: '.itw-section-hd h2,.itw-name,.cit-name',
@@ -1029,13 +1042,8 @@ function _mkPhaseTitle(event, activePhase, phases){
       ui:    '.itw-badge,.itw-cta,.citation-card .cit-role,.exp-footer small'
     }
   };
-  // Compteurs : exclus de color + line-height (accent voulu). Leur size/font
-  // suivent quand même la zone body/title via les règles générales.
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
-  // --- Sélecteurs additionnels par MODULE (pour l'override). ----------------
-  //     Chaque module = { zone, title, text, ui } ; on réutilise des sous-
-  //     ensembles ciblés des zones pour cet override, plus spécifiques.
   var MODULE_SEL = {
     live:       { zone:'body', title:'', text:'.live-text,.live-title', ui:'.live-tag,.live-timestamp,.live-jr,.live-time' },
     articles:   { zone:'body', title:'.art-card-title', text:'.art-title', ui:'.art-card-tag,.art-card-cta,.art-date,.art-author' },
@@ -1043,133 +1051,170 @@ function _mkPhaseTitle(event, activePhase, phases){
     citations:  { zone:'body', title:'.cit-name,.cit-pm-name,.citation-card-pm .cit-pm-name', text:'.cit-text,.cit-pm-text,.citation-card-pm .cit-pm-text', ui:'.cit-role,.cit-pm-role,.citation-card-pm .cit-pm-role' },
     videos:     { zone:'body', title:'', text:'.vid-caption,.exp-vid-caption', ui:'.vid-ext-platform-tag' },
     interviews: { zone:'dark', title:'.itw-name,.itw-section-hd h2', text:'.itw-quote,.itw-section-hd p', ui:'.itw-badge,.itw-cta' },
-    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' },
-    reporters:  { zone:'body', title:'.exp-reporter-name', text:'.exp-reporter-role', ui:'' }
+    gallery:    { zone:'body', title:'', text:'.gal-caption,.exp-gal-caption', ui:'' }
   };
 
-  // --- Défauts par mode (reproduisent le CSS de base). Size en px, LH ratio.
-  //     Le titre hero expédition garde son clamp() : pas de size par défaut.
+  var AUTO_SEL = {
+    reporters: {
+      title: '.jr-name,.exp-reporter-name',
+      text:  '.jr-bio,.exp-card p',
+      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters'
+    },
+    itinerary: {
+      title: '.exp-card-label-itin',
+      text:  '.exp-route-name',
+      ui:    '.exp-route-detail'
+    }
+  };
+
   function zoneDefaults(mode){
     var exp = (mode==='expedition');
     return {
       hero: {
-        titleFont:'', titleSize: exp?null:38, titleColor:'#FFFFFF',                 titleLH: exp?0.98:1.1,
-        textFont:'',  textSize:  exp?12.5:15, textColor:'rgba(255,255,255,0.5)',    textLH:1.6,
-        uiFont:'',    uiSize:    exp?12:12,   uiColor:'rgba(255,255,255,0.5)',      uiLH:1.4
+        titleFont:'', titleSize: exp?null:38, titleColor:'#FFFFFF',              titleLH: exp?0.98:1.1, titleWeight: exp?400:700, titleStyle:'normal',
+        textFont:'',  textSize:  exp?12.5:15, textColor:'rgba(255,255,255,0.5)', textLH:1.6,            textWeight:400,           textStyle: exp?'normal':'italic',
+        uiFont:'',    uiSize:    12,          uiColor:'rgba(255,255,255,0.5)',   uiLH:1.4,              uiWeight:600,             uiStyle:'normal'
       },
       body: {
-        titleFont:'', titleSize:24,  titleColor: exp?'#111111':'#0F2B3C',           titleLH:1.3,
-        textFont:'',  textSize:12.5, textColor: exp?'#333333':'#111827',            textLH:1.6,
-        uiFont:'',    uiSize:11,     uiColor: exp?'#666666':'#4B5563',              uiLH:1.4
+        titleFont:'', titleSize:24,  titleColor: exp?'#111111':'#0F2B3C',        titleLH:1.3, titleWeight:700, titleStyle:'normal',
+        textFont:'',  textSize:12.5, textColor: exp?'#333333':'#111827',         textLH:1.6,  textWeight:400,  textStyle:'normal',
+        uiFont:'',    uiSize:11,     uiColor: exp?'#666666':'#4B5563',           uiLH:1.4,    uiWeight:600,    uiStyle:'normal'
       },
       dark: {
-        titleFont:'', titleSize:20,  titleColor:'#FFFFFF',                          titleLH:1.3,
-        textFont:'',  textSize:14,   textColor:'rgba(255,255,255,0.7)',            textLH:1.6,
-        uiFont:'',    uiSize:11,     uiColor:'#FFFFFF',                             uiLH:1.4
+        titleFont:'', titleSize:20,  titleColor:'#FFFFFF',                       titleLH:1.3, titleWeight:700, titleStyle:'normal',
+        textFont:'',  textSize:14,   textColor:'rgba(255,255,255,0.7)',          textLH:1.6,  textWeight:400,  textStyle: exp?'normal':'italic',
+        uiFont:'',    uiSize:11,     uiColor:'#FFFFFF',                           uiLH:1.4,    uiWeight:700,    uiStyle:'normal'
+      }
+    };
+  }
+
+  function autoDefaults(mode){
+    var exp = (mode==='expedition');
+    return {
+      reporters: {
+        titleFont:'', titleSize: exp?21:13, titleColor: exp?'':'#111827',       titleLH:1.3,  titleWeight:700, titleStyle:'normal',
+        textFont:'',  textSize:12.5,        textColor: exp?'':'#4B5563',         textLH:1.55,  textWeight:400,  textStyle:'normal',
+        uiFont:'',    uiSize:10,            uiColor:'',                          uiLH:1.4,     uiWeight:600,    uiStyle:'normal'
+      },
+      itinerary: {
+        titleFont:'', titleSize:10,  titleColor:'',                             titleLH:1.2,  titleWeight:600, titleStyle:'normal',
+        textFont:'',  textSize:13,   textColor:'',                              textLH:1.3,   textWeight:600,  textStyle:'normal',
+        uiFont:'',    uiSize:10,     uiColor:'',                                uiLH:1.4,     uiWeight:400,    uiStyle:'normal'
       }
     };
   }
 
   var ROLES = ['title','text','ui'];
-  var PROPS = ['Font','Size','Color','LH'];
+  var PROPS = ['Font','Size','Color','LH','Weight','Style'];
 
   function modeKey(ev){ return (ev && ev.mode==='expedition') ? 'expedition' : 'classic'; }
 
-  // Version POUR L'UI ADMIN : zones fusionnées avec les défauts, pour que les
-  // curseurs/champs affichent les vraies valeurs de départ.
   function getModeTypo(ev){
     var t = (ev && ev.typography) || {};
     var mk = modeKey(ev);
     var raw = t[mk] || {};
-    var def = zoneDefaults(mk);
-    var zones = raw.zones || {};
-    var out = { zones:{}, modules: raw.modules || {} };
-    ['hero','body','dark'].forEach(function(z){
-      out.zones[z] = Object.assign({}, def[z], zones[z]||{});
-    });
+    var zdef = zoneDefaults(mk), adef = autoDefaults(mk);
+    var out = { zones:{}, modules: raw.modules || {}, auto:{}, phaseTabs: raw.phaseTabs || {}, phaseTitle: raw.phaseTitle || null, phaseSubtitle: raw.phaseSubtitle || {} };
+    ['hero','body','dark'].forEach(function(z){ out.zones[z] = Object.assign({}, zdef[z], (raw.zones||{})[z]||{}); });
+    ['reporters','itinerary'].forEach(function(k){ out.auto[k] = Object.assign({}, adef[k], (raw.auto||{})[k]||{}); });
     return out;
   }
 
-  // Version POUR L'INJECTION : uniquement les champs RÉELLEMENT réglés par
-  // l'utilisateur (diff vs défaut). Un dashboard neuf => aucune injection, donc
-  // le CSS de base (dont les clamp() responsive) reste intact. C'est ce qui
-  // garantit qu'on ne casse rien tant qu'on ne touche à rien.
   function getModeTypoRaw(ev){
     var t = (ev && ev.typography) || {};
     var mk = modeKey(ev);
     var raw = t[mk] || {};
-    var zones = raw.zones || {};
-    var out = { zones:{}, modules: raw.modules || {} };
-    ['hero','body','dark'].forEach(function(z){
-      out.zones[z] = Object.assign({}, zones[z]||{}); // pas de merge avec défaut
-    });
+    var out = { zones:{}, modules: raw.modules || {}, auto:{}, phaseTabs: raw.phaseTabs || {} };
+    ['hero','body','dark'].forEach(function(z){ out.zones[z] = Object.assign({}, (raw.zones||{})[z]||{}); });
+    ['reporters','itinerary'].forEach(function(k){ out.auto[k] = Object.assign({}, (raw.auto||{})[k]||{}); });
     return out;
   }
 
-  // Construit le CSS d'injection à partir du bloc typo BRUT (getModeTypoRaw).
+  function _excl(sel, removeList){
+    return sel.split(',').filter(function(s){ return removeList.indexOf(s)===-1; }).join(',');
+  }
+  function _emit(sel, block, opts){
+    if(!sel) return '';
+    opts = opts||{};
+    var css = '';
+    if(block.Font)  css += sel+"{font-family:'"+block.Font+"',sans-serif !important}";
+    if(block.Size!=null && block.Size!=='') css += sel+"{font-size:"+block.Size+"px !important}";
+    if(block.Weight!=null && block.Weight!=='') css += sel+"{font-weight:"+block.Weight+" !important}";
+    if(block.Style) css += sel+"{font-style:"+block.Style+" !important}";
+    var selCL = opts.stripCounters ? _excl(sel, COUNTER_SEL) : sel;
+    if(selCL){
+      if(block.Color) css += selCL+"{color:"+block.Color+" !important}";
+      if(block.LH!=null && block.LH!=='') css += selCL+"{line-height:"+block.LH+" !important}";
+    }
+    return css;
+  }
+  function _blockOf(src, r){
+    return { Font:src[r+'Font'], Size:src[r+'Size'], Color:src[r+'Color'],
+             LH:src[r+'LH'], Weight:src[r+'Weight'], Style:src[r+'Style'] };
+  }
+
   function buildCSS(modeTypo){
     var css = '';
-    function excl(sel, removeList){
-      return sel.split(',').filter(function(s){ return removeList.indexOf(s)===-1; }).join(',');
-    }
-    function emit(sel, block, opts){
-      if(!sel) return;
-      opts = opts || {};
-      // FONT
-      if(block.Font) css += sel+"{font-family:'"+block.Font+"',sans-serif !important}";
-      // SIZE (null => on n'injecte pas, garde clamp()/base)
-      if(block.Size!=null && block.Size!=='') css += sel+"{font-size:"+block.Size+"px !important}";
-      // COLOR / LH — éventuellement sur un sélecteur nettoyé des compteurs
-      var selCL = opts.stripCounters ? excl(sel, COUNTER_SEL) : sel;
-      if(selCL){
-        if(block.Color) css += selCL+"{color:"+block.Color+" !important}";
-        if(block.LH!=null && block.LH!=='') css += selCL+"{line-height:"+block.LH+" !important}";
-      }
-    }
-    // 1) ZONES
     ['hero','body','dark'].forEach(function(z){
       var zt = modeTypo.zones[z] || {};
-      ROLES.forEach(function(r){
-        var sel = ZONE_SEL[z][r];
-        var block = { Font:zt[r+'Font'], Size:zt[r+'Size'], Color:zt[r+'Color'], LH:zt[r+'LH'] };
-        // Les compteurs vivent dans body.title (.ess-num n'en est pas un, mais
-        // .kpi-num/.exp-counter-num pourraient être ajoutés ailleurs) : on
-        // strip color+LH pour title et ui de la zone body par sécurité.
-        emit(sel, block, { stripCounters: (z==='body') });
-      });
+      ROLES.forEach(function(r){ css += _emit(ZONE_SEL[z][r], _blockOf(zt,r), { stripCounters:(z==='body') }); });
     });
-    // 2) OVERRIDES MODULE (après les zones => plus spécifiques l'emportent)
+    var au = modeTypo.auto || {};
+    Object.keys(AUTO_SEL).forEach(function(k){
+      var src = au[k]; if(!src) return;
+      ROLES.forEach(function(r){ css += _emit(AUTO_SEL[k][r], _blockOf(src,r), { stripCounters:true }); });
+    });
     var mods = modeTypo.modules || {};
     Object.keys(mods).forEach(function(mkey){
       var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
       var map = MODULE_SEL[mkey]; if(!map) return;
-      ROLES.forEach(function(r){
-        var sel = map[r]; if(!sel) return;
-        var block = { Font:mo[r+'Font'], Size:mo[r+'Size'], Color:mo[r+'Color'], LH:mo[r+'LH'] };
-        emit(sel, block, { stripCounters:true });
-      });
+      ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); });
     });
+    css += buildPhaseTabsCSS(modeTypo.phaseTabs || {});
     return css;
   }
 
-  // Polices Google à charger (toutes les Font non vides, zones + modules + phase)
+  // CSS des onglets de phase (typo + apparence). N'injecte que les champs réglés.
+  // La couleur/fond ACTIF n'est injecté que si défini, sinon --phase-color reste.
+  function buildPhaseTabsCSS(pt){
+    if(!pt || !Object.keys(pt).length) return '';
+    var css = '';
+    var base = '';
+    if(pt.font)   base += "font-family:'"+pt.font+"',sans-serif !important;";
+    if(pt.size!=null && pt.size!=='')     base += 'font-size:'+pt.size+'px !important;';
+    if(pt.weight!=null && pt.weight!=='') base += 'font-weight:'+pt.weight+' !important;';
+    if(pt.color)  base += 'color:'+pt.color+' !important;';
+    if(pt.bg)     base += 'background:'+pt.bg+' !important;';
+    if(pt.borderColor) base += 'border-color:'+pt.borderColor+' !important;';
+    if(pt.borderWidth!=null && pt.borderWidth!=='') base += 'border-width:'+pt.borderWidth+'px !important;border-style:solid !important;';
+    if(pt.radius!=null && pt.radius!=='') base += 'border-radius:'+pt.radius+'px !important;';
+    if(pt.padY!=null && pt.padY!=='') base += 'padding-top:'+pt.padY+'px !important;padding-bottom:'+pt.padY+'px !important;';
+    if(pt.padX!=null && pt.padX!=='') base += 'padding-left:'+pt.padX+'px !important;padding-right:'+pt.padX+'px !important;';
+    if(base) css += '.phase-tab{'+base+'}';
+    var act = '';
+    if(pt.activeColor)  act += 'color:'+pt.activeColor+' !important;';
+    if(pt.activeBg)     act += 'background:'+pt.activeBg+' !important;';
+    if(pt.activeBorderColor) act += 'border-color:'+pt.activeBorderColor+' !important;';
+    if(act) css += '.phase-tab.active{'+act+'}';
+    if(pt.gap!=null && pt.gap!=='') css += '.phase-tabs{gap:'+pt.gap+'px !important}';
+    return css;
+  }
+
   function collectFonts(modeTypo, extra){
     var set = {};
     function add(f){ if(f) set[f]=1; }
-    ['hero','body','dark'].forEach(function(z){
-      var zt = modeTypo.zones[z]||{};
-      ROLES.forEach(function(r){ add(zt[r+'Font']); });
-    });
+    ['hero','body','dark'].forEach(function(z){ var zt=modeTypo.zones[z]||{}; ROLES.forEach(function(r){ add(zt[r+'Font']); }); });
+    var au = modeTypo.auto||{};
+    Object.keys(au).forEach(function(k){ var s=au[k]||{}; ROLES.forEach(function(r){ add(s[r+'Font']); }); });
     var mods = modeTypo.modules||{};
-    Object.keys(mods).forEach(function(k){
-      var mo=mods[k]||{}; ROLES.forEach(function(r){ add(mo[r+'Font']); });
-    });
+    Object.keys(mods).forEach(function(k){ var s=mods[k]||{}; ROLES.forEach(function(r){ add(s[r+'Font']); }); });
+    if(modeTypo.phaseTabs && modeTypo.phaseTabs.font) add(modeTypo.phaseTabs.font);
     (extra||[]).forEach(add);
     return Object.keys(set);
   }
 
-  var API = { TYPO_MODULES, ZONE_SEL, MODULE_SEL, COUNTER_SEL, ROLES, PROPS,
-              zoneDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, collectFonts };
+  var API = { TYPO_MODULES, AUTO_MODULES, ZONE_SEL, MODULE_SEL, AUTO_SEL, COUNTER_SEL, ROLES, PROPS,
+              zoneDefaults, autoDefaults, modeKey, getModeTypo, getModeTypoRaw, buildCSS, buildPhaseTabsCSS, collectFonts };
   if(typeof module!=='undefined' && module.exports) module.exports = API;
   root.TourMagTypo = API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -1194,10 +1239,13 @@ function render(data){
       if(gfLink.href !== gfUrl) gfLink.href = gfUrl;
     }
     let _typoCSS = _T.buildCSS(_rawTypo);
-    // Onglets de phase — inchangé, réglages historiques conservés
+    // Repli legacy : anciens réglages globaux d'onglets, seulement si le nouveau
+    // bloc phaseTabs (par mode) n'est pas défini.
     const _legacy = event.typography || {};
-    if(_legacy.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_legacy.phaseTabSize}px !important}`;
-    if(_legacy.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_legacy.phaseTabPadY}px !important;padding-bottom:${_legacy.phaseTabPadY}px !important}`;
+    if(!(_rawTypo.phaseTabs && Object.keys(_rawTypo.phaseTabs).length)){
+      if(_legacy.phaseTabSize) _typoCSS += `.phase-tab{font-size:${_legacy.phaseTabSize}px !important}`;
+      if(_legacy.phaseTabPadY) _typoCSS += `.phase-tab{padding-top:${_legacy.phaseTabPadY}px !important;padding-bottom:${_legacy.phaseTabPadY}px !important}`;
+    }
     let _typoStyle = document.getElementById('typo-overrides');
     if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
     _typoStyle.textContent = _typoCSS;
@@ -2283,7 +2331,7 @@ function renderExpedition(data){
     if(!reporters.length) return '';
     let o = '';
     reporters.forEach(reporter => {
-      o += `<div class="exp-card"><div class="exp-card-label">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+      o += `<div class="exp-card"><div class="exp-card-label exp-card-label-reporters">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
       const socials = [];
       if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);}
       if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
@@ -2311,7 +2359,7 @@ function renderExpedition(data){
       const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
       return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
     }
-    o += `<div class="exp-card"><div class="exp-card-label">Itinéraire</div><ul class="exp-route">`;
+    o += `<div class="exp-card"><div class="exp-card-label exp-card-label-itin">Itinéraire</div><ul class="exp-route">`;
     if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
     visible.forEach(et => { o += mkEtapeLi(et); });
     if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
