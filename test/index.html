@@ -180,6 +180,7 @@ img{display:block}a{text-decoration:none}
 .live-timestamp{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
 .live-journalist{font-size:9px;color:var(--acc);font-weight:600}
 .live-text{font-size:12.5px;line-height:1.6;color:var(--text)}
+.live-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);line-height:1.25;margin-bottom:4px}
 .live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
 .live-text u{text-decoration:underline}
@@ -1045,20 +1046,20 @@ function _mkPhaseTitle(event, activePhase, phases){
   // Titre/sous-titre de SECTION par module (classe distinctive dans le HTML).
   // Global par défaut (via ZONE_SEL.body .sec-title), surchargeable ici par module.
   var SECTION_SEL = {
-    live:       { title:'.sec-title-live h2',       sub:'.sec-title-live p' },
-    citations:  { title:'.sec-title-citations h2',  sub:'.sec-title-citations p' },
-    articles:   { title:'.sec-title-articles h2',   sub:'.sec-title-articles p' },
-    essential:  { title:'.sec-title-essential h2',  sub:'.sec-title-essential p' },
-    videos:     { title:'.sec-title-videos h2',     sub:'.sec-title-videos p' },
-    gallery:    { title:'.sec-title-gallery h2',    sub:'.sec-title-gallery p' },
-    interviews: { title:'.itw-section-hd h2',       sub:'.itw-section-hd p' }
+    live:       { title:'.sec-title-live h2,.exp-sec-live h2',             sub:'.sec-title-live p,.exp-sec-live + .exp-section-sub' },
+    citations:  { title:'.sec-title-citations h2,.exp-sec-citations h2',   sub:'.sec-title-citations p,.exp-sec-citations + .exp-section-sub' },
+    articles:   { title:'.sec-title-articles h2,.exp-sec-articles h2',     sub:'.sec-title-articles p,.exp-sec-articles + .exp-section-sub' },
+    essential:  { title:'.sec-title-essential h2,.exp-sec-essential h2',   sub:'.sec-title-essential p,.exp-sec-essential + .exp-section-sub' },
+    videos:     { title:'.sec-title-videos h2,.exp-sec-videos h2',         sub:'.sec-title-videos p,.exp-sec-videos + .exp-section-sub' },
+    gallery:    { title:'.sec-title-gallery h2,.exp-sec-gallery h2',       sub:'.sec-title-gallery p,.exp-sec-gallery + .exp-section-sub' },
+    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' }
   };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
   var MODULE_SEL = {
     live: {
       zone:'body',
-      title:'',
+      title:'.live-title,.exp-entry h3',
       text:'.live-text,.exp-entry-body,.exp-entry p',
       ui:'.live-tag,.live-timestamp,.live-journalist,.exp-entry-meta,.exp-live-pill,.exp-entry-km,.exp-entry-toggle'
     },
@@ -1520,7 +1521,7 @@ function render(data){
     const avatarHtml = jrPhoto
       ? `<img class="live-avatar${isFirst?' live-avatar-first':''}" src="${jrPhoto}" alt="" onerror="this.className='live-dot'">`
       : `<div class="live-dot"></div>`;
-    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div><div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
+    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
   }
 
   function mkLive(){
@@ -2298,7 +2299,7 @@ function renderExpedition(data){
     }
 
     let o = `<section class="exp-essential">`;
-    if(event.essentialShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.essentialTitle||'À retenir'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.essentialSubtitle||'Les points clés de l\'expédition'}</p>`;
+    if(event.essentialShowTitle!==false) o += `<div class="exp-section-head exp-sec-essential"><h2>${event.essentialTitle||'À retenir'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.essentialSubtitle||'Les points clés de l\'expédition'}</p>`;
     o += `<div class="exp-essential-grid">`;
     essential.forEach((p,i) => {
       const st=_tagStyle(p.tag);
@@ -2340,7 +2341,7 @@ function renderExpedition(data){
     if(mod.live===false) return '';
     let o = '';
     if(event.liveShowTitle!==false){
-      o += `<div class="exp-section-head"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
+      o += `<div class="exp-section-head exp-sec-live"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
       o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
     }
     if(pubLive.length){
@@ -2424,7 +2425,7 @@ function renderExpedition(data){
     const visible = pubCitations.slice(0, CIT_VIS);
     const extra = pubCitations.slice(CIT_VIS);
     let o = `<section class="exp-verbatims">`;
-    if(event.citationsShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p>`;
+    if(event.citationsShowTitle!==false) o += `<div class="exp-section-head exp-sec-citations"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p>`;
     o += `<div class="exp-verbatim-grid">`;
     function mkVCard(c){
       const ini = (c.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -2454,7 +2455,7 @@ function renderExpedition(data){
     const visItw = pubItw.slice(0, ITW_VIS);
     const extraItw = pubItw.slice(ITW_VIS);
     let o = `<section class="exp-interviews">`;
-    if(event.interviewsShowTitle!==false){ o += `<div class="exp-section-head"><h2>${event.interviewsTitle||'Interviews'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.interviewsSubtitle||'Rencontres et regards croisés'}</p>`; }
+    if(event.interviewsShowTitle!==false){ o += `<div class="exp-section-head exp-sec-interviews"><h2>${event.interviewsTitle||'Interviews'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.interviewsSubtitle||'Rencontres et regards croisés'}</p>`; }
     o += `<div class="exp-itw-grid">`;
     function mkItwCard(itw){
       const ini = (itw.name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -2483,7 +2484,7 @@ function renderExpedition(data){
     if(mod.videos===false || !videos || !videos.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
     let o = `<section class="exp-videos">`;
-    if(event.videosShowTitle!==false) o += `<div class="exp-section-head"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
+    if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-videos"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
       let out='';
@@ -2513,7 +2514,7 @@ function renderExpedition(data){
     if(mod.gallery===false || !gp.length) return '';
     const GALLERY_VIS = 9;
     let o=`<section class="exp-gallery">`;
-    if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
+    if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
     function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
     const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
     const extraPhotos = gp.slice(GALLERY_VIS);
@@ -2529,7 +2530,7 @@ function renderExpedition(data){
   _b.articles = function(){
     if(mod.articles===false || !articles || !articles.length) return '';
     let o=`<section class="exp-articles">`;
-    if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
+    if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head exp-sec-articles"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
     const sorted=articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
     const visCount=event.articlesVisibleCount||4;
     const visArts=sorted.slice(0,visCount);
