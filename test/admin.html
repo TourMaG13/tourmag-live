@@ -1122,7 +1122,10 @@ function _fontOpts(selected){
     {key:'citations',  label:'Verbatims',  icon:'\uD83D\uDCAC'},
     {key:'videos',     label:'Vidéos',     icon:'\uD83C\uDFAC'},
     {key:'interviews', label:'Interviews', icon:'\uD83C\uDF99\uFE0F'},
-    {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'}
+    {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'},
+    {key:'sponsors',   label:'Partenaires',icon:'\uD83E\uDD1D'},
+    {key:'contact',    label:'Contact',    icon:'\u2709\uFE0F'},
+    {key:'kpis',       label:'Compteurs',  icon:'\uD83D\uDCCA'}
   ];
 
   var AUTO_MODULES = [
@@ -1156,7 +1159,9 @@ function _fontOpts(selected){
     essential:  { title:'.sec-title-essential h2,.exp-sec-essential h2',   sub:'.sec-title-essential p,.exp-sec-essential + .exp-section-sub' },
     videos:     { title:'.sec-title-videos h2,.exp-sec-videos h2',         sub:'.sec-title-videos p,.exp-sec-videos + .exp-section-sub' },
     gallery:    { title:'.sec-title-gallery h2,.exp-sec-gallery h2',       sub:'.sec-title-gallery p,.exp-sec-gallery + .exp-section-sub' },
-    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' }
+    interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' },
+    sponsors:   { title:'.sponsors-block h3,.exp-sec-sponsors h2',         sub:'.sponsors-block p,.exp-sec-sponsors + .exp-section-sub' },
+    contact:    { title:'.exp-sec-contact h2',                             sub:'.exp-sec-contact + .exp-section-sub' }
   };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
@@ -1175,7 +1180,7 @@ function _fontOpts(selected){
     },
     articles: {
       zone:'body',
-      title:'.art-card-title',
+      title:'.art-card-title,.exp-art h4',
       text:'.art-card-excerpt,.exp-art-body',
       ui:'.art-card-tag,.art-card-cta,.art-card-byline,.art-date,.art-author,.exp-art-date'
     },
@@ -1202,6 +1207,24 @@ function _fontOpts(selected){
       title:'',
       text:'.gal-caption,.exp-gal-caption',
       ui:'.exp-gal-credit'
+    },
+    sponsors: {
+      zone:'body',
+      title:'',
+      text:'',
+      ui:''
+    },
+    contact: {
+      zone:'body',
+      title:'.exp-contact-name',
+      text:'.exp-contact-msg',
+      ui:'.exp-contact-role,.exp-contact-btn'
+    },
+    kpis: {
+      zone:'body',
+      title:'',
+      text:'',
+      ui:'.kpi-label,.exp-counter-label'
     }
   };
 
@@ -1421,7 +1444,7 @@ function _typoRolesFor(idPrefix, src, selMap){
   return h;
 }
 // Correspondance onglet (data-tab) -> clé de module typo dans le moteur
-var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary' };
+var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis' };
 // Modules override vs blocs autonomes
 function _isAutoModule(key){ return key==='reporters' || key==='itinerary'; }
 
@@ -5393,6 +5416,7 @@ function renderKpis(el){
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveKpis()">💾 Enregistrer les chiffres clés</button></div>
   </div>`;
+  h += moduleConfigBlock('kpis');
   el.innerHTML=h;
 }
 function addKpiRow(){
@@ -5476,6 +5500,7 @@ function renderContact(el){
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer</button></div>
   </div>`;
+  h += moduleConfigBlock('contact');
   el.innerHTML=h;
   // Sync color pickers ↔ text inputs
   ['bg','name','role','btn'].forEach(k=>{
@@ -6190,6 +6215,7 @@ function renderSponsors(el){
     </div>`;
   });
   h+=`<div style="margin-top:14px"><button class="btn btn-primary" onclick="saveSponsorsConfig()">💾 Enregistrer la configuration</button></div></div>`;
+  h += moduleConfigBlock('sponsors');
   el.innerHTML=h;
 }
 function addSponsor(){
