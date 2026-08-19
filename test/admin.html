@@ -1222,7 +1222,7 @@ function _fontOpts(selected){
     },
     kpis: {
       zone:'body',
-      title:'',
+      title:'.kpi-num,.exp-counter-num',
       text:'',
       ui:'.kpi-label,.exp-counter-label'
     }
@@ -1235,9 +1235,9 @@ function _fontOpts(selected){
       ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
-      title: '.exp-route-name',
-      text:  '.exp-route-detail',
-      ui:    '.exp-card-label-itin,.exp-route-acc-btn'
+      title: '.exp-route-name,.exp-map-panel-name',
+      text:  '.exp-route-detail,.exp-map-panel-desc',
+      ui:    '.exp-card-label-itin,.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
     }
   };
 
@@ -1341,7 +1341,9 @@ function _fontOpts(selected){
     var mods = modeTypo.modules || {};
     Object.keys(mods).forEach(function(mkey){
       var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
-      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); }); }
+      // Le module « kpis » cible volontairement les compteurs -> ne pas les exclure.
+      var _strip = (mkey!=='kpis');
+      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:_strip }); }); }
       // Titre/sous-titre de section propres au module (surcharge le global)
       var sec = SECTION_SEL[mkey];
       if(sec){
@@ -1749,10 +1751,12 @@ function renderApparence(el){
       tsInner += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Titre (nom de la phase)</div>';
       tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:110px"><label class="form-label">Afficher</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="ptt-show" '+(_ptt.show?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div class="form-row" style="max-width:150px"><label class="form-label">Couleur = phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="ptt-usephase" '+(_ptt.usePhaseColor?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div class="form-row" style="max-width:120px"><label class="form-label">Taille (px)</label>'+num('ptt-size',(_ptt.size!=null?_ptt.size:''),16,60,1)+'</div><div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label>'+col('ptt-color',_ptt.color)+'</div></div>';
       tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:130px"><label class="form-label">Graisse</label>'+wSel('ptt-weight',_ptt.weight)+'</div><div class="form-row" style="flex:1"><label class="form-label">Police</label><select class="form-input" id="ptt-font">'+_fontOpts(_ptt.font||'')+'</select></div><div class="form-row" style="max-width:110px"><label class="form-label">Italique</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="ptt-italic" '+(_ptt.italic?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
+      tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:200px"><label class="form-label">Espace avec les onglets (px)</label>'+num('ptt-topgap',(_ptt.topGap!=null?_ptt.topGap:''),0,80,1)+'<div style="font-size:9px;color:var(--text3);margin-top:2px">Décale le titre + sous-titre vers le bas. Vide = 14px.</div></div></div>';
       tsInner += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border)">Sous-titre</div>';
       tsInner += '<div style="font-size:9px;color:var(--text3);margin-bottom:8px">Le texte du sous-titre se règle dans chaque phase (onglet Phases). Ici, son style.</div>';
       tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:110px"><label class="form-label">Afficher</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pst-show" '+(_pst.show?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div class="form-row" style="max-width:150px"><label class="form-label">Couleur = phase</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pst-usephase" '+(_pst.usePhaseColor?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div class="form-row" style="max-width:120px"><label class="form-label">Taille (px)</label>'+num('pst-size',(_pst.size!=null?_pst.size:''),10,32,1)+'</div><div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label>'+col('pst-color',_pst.color)+'</div></div>';
       tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:130px"><label class="form-label">Graisse</label>'+wSel('pst-weight',_pst.weight)+'</div><div class="form-row" style="flex:1"><label class="form-label">Police</label><select class="form-input" id="pst-font">'+_fontOpts(_pst.font||'')+'</select></div><div class="form-row" style="max-width:120px"><label class="form-label">Interligne</label>'+num('pst-lh',(_pst.lineHeight!=null?_pst.lineHeight:''),0.9,2.4,0.05)+'</div><div class="form-row" style="max-width:110px"><label class="form-label">Italique</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="pst-italic" '+(_pst.italic?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
+      tsInner += '<div class="form-row-inline"><div class="form-row" style="max-width:220px"><label class="form-label">Largeur max (px)</label>'+num('pst-maxw',(_pst.maxWidth!=null?_pst.maxWidth:''),0,1200,10)+'<div style="font-size:9px;color:var(--text3);margin-top:2px">Force le retour à la ligne du sous-titre. Vide ou 0 = pleine largeur.</div></div></div>';
       typoInner += '<details class="admin-card" style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:700;padding:10px 0;list-style:none">🏷️ Titre & sous-titre de phase</summary><div style="padding:6px 0">'+tsInner+'</div></details>';
     }
 
@@ -1866,6 +1870,7 @@ async function saveApparence(){
       var wt=iw('ptt-weight'); if(wt!==undefined) ptt.weight=wt;
       if(g('ptt-font')) ptt.font=g('ptt-font');
       var cc=cs('ptt-color'); if(cc!==undefined) ptt.color=cc;
+      var tg=n('ptt-topgap'); if(tg!==undefined) ptt.topGap=tg;
       root[mk].phaseTitle = ptt;
     }
     if(document.getElementById('pst-size')!==null){
@@ -1875,6 +1880,7 @@ async function saveApparence(){
       if(g('pst-font')) pst.font=g('pst-font');
       var c2=cs('pst-color'); if(c2!==undefined) pst.color=c2;
       var lh=n('pst-lh'); if(lh!==undefined) pst.lineHeight=lh;
+      var mw=n('pst-maxw'); if(mw!==undefined) pst.maxWidth=mw;
       root[mk].phaseSubtitle = pst;
     } else if((existing[mk]||{}).phaseSubtitle){
       root[mk].phaseSubtitle = existing[mk].phaseSubtitle;
