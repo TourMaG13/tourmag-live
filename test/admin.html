@@ -1643,7 +1643,17 @@ function renderApparence(el){
   let h='<div class="page-title">Apparence</div><div class="page-desc">Tous les réglages visuels de votre dashboard, organisés par module. Cliquez sur une section pour la déplier.</div>';
 
   // ==================== GÉNÉRAL ====================
-  h+=_det('🎨','Couleurs globales','<div class="form-row-inline"><div class="form-row" style="max-width:180px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="app-accent-color" value="'+(ev.accentColor||'#E8842C')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div><div class="form-row" style="max-width:180px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="app-live-color" value="'+(ev.liveColor||'#DC2626')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div></div><div style="margin-top:10px"><button class="btn btn-primary" onclick="saveGlobalColors()">💾 Enregistrer</button></div>', true);
+  var _gcInner = '';
+  _gcInner += '<div class="form-row-inline">';
+  _gcInner += '<div class="form-row" style="max-width:180px"><label class="form-label">Couleur accent</label><input type="color" class="form-input" id="app-accent-color" value="'+(ev.accentColor||'#E8842C')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Liens, fil live, UI globale</div></div>';
+  _gcInner += '<div class="form-row" style="max-width:180px"><label class="form-label">Couleur pastille live</label><input type="color" class="form-input" id="app-live-color" value="'+(ev.liveColor||'#DC2626')+'" style="height:42px;padding:4px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Dot pulsant, badge LIVE</div></div>';
+  _gcInner += '</div>';
+  _gcInner += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Fonds & traits de section</div><div class="form-row-inline">';
+  _gcInner += '<div class="form-row" style="max-width:220px"><label class="form-label">Fond bandeau Interviews</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-itw-bg" value="'+(ev.interviewsBgColor||'#FFF4EC')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"><label class="form-label" style="margin:0;font-size:10px"><input type="checkbox" id="app-itw-bg-on" '+(ev.interviewsBgColor?'checked':'')+'> Personnaliser</label></div></div>';
+  _gcInner += '<div class="form-row" style="max-width:220px"><label class="form-label">Trait des titres de rubrique</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-sec-rule" value="'+(ev.sectionRuleColor||ev.accentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"><label class="form-label" style="margin:0;font-size:10px"><input type="checkbox" id="app-sec-rule-on" '+(ev.sectionRuleColor?'checked':'')+'> Personnaliser</label></div></div>';
+  _gcInner += '</div><div style="font-size:9px;color:var(--text3);margin-top:2px">Décoché = couleur par défaut du thème. La couleur de fond du bloc Contact se règle dans l\'onglet <b>Contact</b>.</div></div>';
+  _gcInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveGlobalColors()">💾 Enregistrer</button></div>';
+  h+=_det('🎨','Couleurs globales',_gcInner, true);
 
   // ==================== HERO ====================
   var heroInner = '';
@@ -1925,22 +1935,34 @@ async function resetApparence(){
 }
 async function saveHeroSettings(){
   saving(true);
+  const _isExp = eventsData.find(e=>e.id===currentEventId)?.mode==='expedition';
+  const _gv=function(id){var e=document.getElementById(id);return e?e.value:undefined;};
   const ud={
     hero_image:document.getElementById('app-hero-image').value.trim(),
-    hero_height:parseInt(document.getElementById('app-hero-height').value)||(eventsData.find(e=>e.id===currentEventId)?.mode==='expedition'?420:460),
-    color:document.getElementById('app-hero-color').value,
-    timelineBgColor:document.getElementById('app-tl-custom').checked?document.getElementById('app-tl-bg').value:'',
-    timelineDotColor:document.getElementById('app-tl-dot').value||'#E8842C',
-    heroTags:(function(){var ns=document.querySelectorAll('[data-aht-name]'),cs=document.querySelectorAll('[data-aht-color]'),ls=document.querySelectorAll('[data-aht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})()
+    hero_height:parseInt(document.getElementById('app-hero-height').value)||(_isExp?420:460)
   };
+  const colEl=document.getElementById('app-hero-color');
+  if(colEl) ud.color=colEl.value;
+  // Timeline : champs présents uniquement en mode classique
+  const tlCustom=document.getElementById('app-tl-custom');
+  if(tlCustom){
+    ud.timelineBgColor = tlCustom.checked ? (_gv('app-tl-bg')||'') : '';
+    ud.timelineDotColor = _gv('app-tl-dot')||'#E8842C';
+  }
+  ud.heroTags=(function(){var ns=document.querySelectorAll('[data-aht-name]'),cs=document.querySelectorAll('[data-aht-color]'),ls=document.querySelectorAll('[data-aht-link]'),r=[];ns.forEach(function(n,i){if(n.value.trim())r.push({name:n.value.trim(),color:cs[i]?cs[i].value:'#E8842C',link:ls[i]?ls[i].value.trim():''});});return r;})();
   const eyeEl=document.getElementById('app-hero-eyebrow');
   const credEl=document.getElementById('app-hero-credit');
   if(eyeEl) ud['expedition.eyebrow']=eyeEl.value.trim();
   if(credEl) ud['expedition.photoCredit']=credEl.value.trim();
   const lsEl=document.getElementById('app-logo-size');
   if(lsEl) ud.logoSize=parseInt(lsEl.value)||48;
-  await evRef().update(ud);
-  toast('Réglages hero enregistrés');
+  try{
+    await evRef().update(ud);
+    toast('Réglages hero enregistrés');
+  }catch(err){
+    console.error('[Admin] saveHeroSettings failed:', err);
+    toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement hero'));
+  }
 }
 async function saveSectionTitles(){
   saving(true);
@@ -1985,11 +2007,20 @@ async function saveAccordionSettings(){
 }
 async function saveGlobalColors(){
   saving(true);
-  await evRef().update({
-    accentColor:document.getElementById('app-accent-color').value||'',
-    liveColor:document.getElementById('app-live-color').value||''
-  });
-  toast('Couleurs globales enregistrées');
+  var _on=function(id){var e=document.getElementById(id);return e&&e.checked;};
+  var _v=function(id){var e=document.getElementById(id);return e?e.value:'';};
+  try{
+    await evRef().update({
+      accentColor:document.getElementById('app-accent-color').value||'',
+      liveColor:document.getElementById('app-live-color').value||'',
+      interviewsBgColor:_on('app-itw-bg-on')?_v('app-itw-bg'):'',
+      sectionRuleColor:_on('app-sec-rule-on')?_v('app-sec-rule'):''
+    });
+    toast('Couleurs globales enregistrées');
+  }catch(err){
+    console.error('[Admin] saveGlobalColors failed:', err);
+    toast('Erreur : '+(err&&err.message?err.message:'échec enregistrement couleurs'));
+  }
 }
 async function saveCitStyleFromApparence(){
   saving(true);
