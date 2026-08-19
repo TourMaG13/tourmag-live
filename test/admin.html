@@ -1225,6 +1225,12 @@ function _fontOpts(selected){
       title:'.kpi-num,.exp-counter-num',
       text:'',
       ui:'.kpi-label,.exp-counter-label'
+    },
+    programme: {
+      zone:'body',
+      title:'.prog-card .ct,.exp-prog .exp-card-label',
+      text:'.prog-label,.exp-prog-label',
+      ui:'.prog-time,.prog-desc,.prog-status,.exp-prog-time,.exp-prog-desc,.exp-prog-status,.exp-prog-day'
     }
   };
 
@@ -1446,7 +1452,7 @@ function _typoRolesFor(idPrefix, src, selMap){
   return h;
 }
 // Correspondance onglet (data-tab) -> clé de module typo dans le moteur
-var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis' };
+var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis', programme:'programme' };
 // Modules override vs blocs autonomes
 function _isAutoModule(key){ return key==='reporters' || key==='itinerary'; }
 
@@ -1658,7 +1664,7 @@ function renderApparence(el){
   // ==================== HERO ====================
   var heroInner = '';
   heroInner += '<div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="'+(ev.hero_image||'')+'" style="flex:1" placeholder="Photo affichée à droite du hero">'+mkMediaPickerBtn('app-hero-image')+mkUploadBtn('app-hero-image')+'</div></div>';
-  heroInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Couleur gradient</label><input type="color" class="form-input" id="app-hero-color" value="'+(ev.color||'#2D1B4E')+'" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="app-hero-height" value="'+(ev.hero_height||(isExp?420:460))+'" min="200" max="900" style="width:120px"></div><div class="form-row"><label class="form-label">Taille logo (px)</label><input type="number" class="form-input" id="app-logo-size" value="'+(ev.logoSize||(isExp?48:56))+'" min="20" max="120" style="width:100px"></div></div>';
+  heroInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Couleur gradient</label><input type="color" class="form-input" id="app-hero-color" value="'+(ev.color||'#2D1B4E')+'" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="app-hero-height" value="'+(ev.hero_height||(isExp?420:460))+'" min="200" max="900" style="width:120px"></div><div class="form-row"><label class="form-label">Taille logo (px)</label><input type="number" class="form-input" id="app-logo-size" value="'+(ev.logoSize||(isExp?48:56))+'" min="20" max="120" style="width:100px"></div><div class="form-row"><label class="form-label">Position logo</label><select class="form-input" id="app-logo-align" style="width:120px"><option value="left"'+((ev.logoAlign||'left')==='left'?' selected':'')+'>◀ Gauche</option><option value="center"'+(ev.logoAlign==='center'?' selected':'')+'>■ Centré</option><option value="right"'+(ev.logoAlign==='right'?' selected':'')+'>Droite ▶</option></select></div></div>';
   if(isExp){
     heroInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="app-hero-eyebrow" value="'+((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')+'" placeholder="Expédition éditoriale · Dossier spécial"></div><div class="form-row"><label class="form-label">Crédit photo</label><input class="form-input" id="app-hero-credit" value="'+((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')+'" placeholder="© Photographe"></div></div>';
     heroInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:260px"><label class="form-label">Couleur de fond du bandeau</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-hero-bg" value="'+(ev.heroBgColor||'#111111')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"><label class="form-label" style="margin:0;font-size:10px"><input type="checkbox" id="app-hero-bg-on" '+(ev.heroBgColor?'checked':'')+'> Personnaliser</label></div><div style="font-size:9px;color:var(--text3);margin-top:2px">Fond de la colonne texte du hero. Décoché = noir par défaut.</div></div></div>';
@@ -1972,6 +1978,8 @@ async function saveHeroSettings(){
   if(credEl) ud['expedition.photoCredit']=credEl.value.trim();
   const lsEl=document.getElementById('app-logo-size');
   if(lsEl) ud.logoSize=parseInt(lsEl.value)||(_isExp?48:56);
+  const laEl=document.getElementById('app-logo-align');
+  if(laEl) ud.logoAlign=laEl.value||'left';
   const hbgEl=document.getElementById('app-hero-bg');
   const hbgOn=document.getElementById('app-hero-bg-on');
   if(hbgEl) ud.heroBgColor = (hbgOn && hbgOn.checked) ? hbgEl.value : '';
@@ -3282,16 +3290,11 @@ function renderProgramme(el){
 
   <div class="admin-card"><h3>🎨 Apparence de l'encart</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="max-width:220px"><label class="form-label">Espace au-dessus du bloc (px)</label><input type="number" class="form-input" id="prog-mt" value="${ev.programmeMarginTop!=null?ev.programmeMarginTop:''}" min="0" max="120" placeholder="0" style="width:100px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Évite que le bloc soit collé au bloc précédent.</div></div>
-      <div class="form-row" style="max-width:160px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="prog-title-size" value="${ev.programmeTitleSize||''}" min="10" max="28" placeholder="14" style="width:90px"></div>
-    </div>
-    <div class="form-row-inline" style="margin-top:6px">
-      <div class="form-row" style="max-width:160px"><label class="form-label">Taille intitulé (px)</label><input type="number" class="form-input" id="prog-label-size" value="${ev.programmeLabelSize||''}" min="8" max="20" placeholder="11" style="width:90px"></div>
-      <div class="form-row" style="max-width:160px"><label class="form-label">Taille description (px)</label><input type="number" class="form-input" id="prog-desc-size" value="${ev.programmeDescSize||''}" min="7" max="16" placeholder="9" style="width:90px"></div>
-      <div class="form-row" style="max-width:160px"><label class="form-label">Taille heure (px)</label><input type="number" class="form-input" id="prog-time-size" value="${ev.programmeTimeSize||''}" min="7" max="16" placeholder="10" style="width:90px"></div>
+      <div class="form-row" style="max-width:240px"><label class="form-label">Espace au-dessus du bloc (px)</label><input type="number" class="form-input" id="prog-mt" value="${ev.programmeMarginTop!=null?ev.programmeMarginTop:''}" min="0" max="120" placeholder="0" style="width:100px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Évite que le bloc soit collé au bloc précédent.</div></div>
+      <div class="form-row" style="max-width:240px"><label class="form-label">Badge de statut</label><label class="form-label" style="font-weight:400;font-size:12px;display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="prog-hide-status" ${ev.programmeHideStatus?'checked':''}> Masquer le badge « À venir / En cours / Terminé »</label></div>
     </div>
     <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="saveProgrammeAppearance()">💾 Enregistrer l'apparence</button></div>
-    <div style="font-size:9px;color:var(--text3);margin-top:4px">Champs vides = tailles par défaut.</div>
+    <div style="font-size:9px;color:var(--text3);margin-top:4px">Les tailles et couleurs (titre, intitulé, description, heure) se règlent dans « ⚙️ Paramétrage &amp; apparence de ce module » ci-dessous.</div>
   </div>
 
   <div class="admin-card"><h3>📅 Jours — ordre d'affichage</h3>
@@ -3342,7 +3345,7 @@ function renderProgramme(el){
         const sl=st==='past'?'Terminé':st==='active'?'En cours':'À venir';
         const cls=st==='past'?'ended':st==='active'?'live':'upcoming';
         const timeDisplay=p.time?`<div class="list-item-time">${p.time}</div>`:'';
-        h+=`<div class="list-item">${timeDisplay}<div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<span class="status-badge ${cls}" style="margin-top:4px;display:inline-block">${sl}</span></div><div class="list-item-actions" style="display:flex;gap:3px;align-items:center">
+        h+=`<div class="list-item">${timeDisplay}<div class="list-item-content"><div class="list-item-text"><strong>${p.label}</strong></div>${p.desc?`<div class="list-item-meta">${p.desc}</div>`:''}<div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap"><span class="status-badge ${cls}" style="display:inline-block">${sl}</span>${(function(){var ph=getPhases().find(x=>x.id===p.phase);return ph?`<span style="font-size:9px;color:var(--acc);background:rgba(232,132,44,.1);padding:2px 8px;border-radius:4px">🔀 ${ph.name}</span>`:'';})()}</div></div><div class="list-item-actions" style="display:flex;gap:3px;align-items:center">
           <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}',-1)" ${i===0?'disabled':''}>▲</button>
           <button class="btn btn-ghost btn-xs" onclick="moveProgInDay('${p.id}',1)" ${i===items.length-1?'disabled':''}>▼</button>
           <button class="btn btn-ghost btn-xs" onclick="editProgramme('${p.id}')">✏️</button>
@@ -3352,7 +3355,9 @@ function renderProgramme(el){
       h+=`</div>`;
     });
   }
-  h+=`</div>`; el.innerHTML=h;
+  h+=`</div>`;
+  h += moduleConfigBlock('programme');
+  el.innerHTML=h;
 }
 
 function getDayOrder(){
@@ -3497,12 +3502,10 @@ async function saveProgrammeTitle(){
 async function saveProgrammeAppearance(){
   saving(true);
   var _ni=function(id){var e=document.getElementById(id);if(!e||e.value==='')return '';var v=parseInt(e.value,10);return isNaN(v)?'':v;};
+  var _chk=function(id){var e=document.getElementById(id);return e?e.checked:false;};
   var ud={
     programmeMarginTop:_ni('prog-mt'),
-    programmeTitleSize:_ni('prog-title-size'),
-    programmeLabelSize:_ni('prog-label-size'),
-    programmeDescSize:_ni('prog-desc-size'),
-    programmeTimeSize:_ni('prog-time-size')
+    programmeHideStatus:_chk('prog-hide-status')
   };
   try{
     await evRef().update(ud);
@@ -6292,6 +6295,10 @@ function renderSponsors(el){
       <div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="sp-title" value="${(ev.sponsorsTitle||'').replace(/"/g,'&quot;')}" placeholder="Soutien & Partenaires"></div>
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="sp-sub" value="${(ev.sponsorsSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Cette couverture est réalisée avec le soutien de…"></div>
     </div>
+    <div class="form-row-inline" style="margin-top:6px">
+      <div class="form-row" style="max-width:200px"><label class="form-label">Taille des logos (px)</label><input type="number" class="form-input" id="sp-logo-size" value="${ev.sponsorsLogoSize||''}" min="16" max="120" placeholder="${(ev.mode==='expedition')?36:30}" style="width:90px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Vide = taille par défaut.</div></div>
+      <div class="form-row" style="max-width:260px"><label class="form-label">Affichage</label><label class="form-label" style="font-weight:400;font-size:12px;display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="sp-logo-color" ${ev.sponsorsLogoColor?'checked':''}> Logos en couleur (désactive le noir &amp; blanc)</label></div>
+    </div>
   </div>
   <div class="admin-card"><h3>Logos partenaires</h3>
   <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="addSponsor()">＋ Ajouter un partenaire</button></div>`;
@@ -6354,7 +6361,10 @@ async function removeSponsor(idx){
 }
 async function saveSponsorsConfig(){
   saving(true);
-  try{ await evRef().update({sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim()}); toast('Configuration enregistrée'); }
+  var _sz=document.getElementById('sp-logo-size');
+  var _szVal=(_sz&&_sz.value!=='')?(parseInt(_sz.value,10)||''):'';
+  var _col=document.getElementById('sp-logo-color');
+  try{ await evRef().update({sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim(),sponsorsLogoSize:_szVal,sponsorsLogoColor:_col?_col.checked:false}); toast('Configuration enregistrée'); }
   catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
