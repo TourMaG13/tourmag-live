@@ -394,7 +394,7 @@ img{display:block}a{text-decoration:none}
 .jr-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .jr-hd .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FEF3C7;color:#92400E}
 .jr-hd .ci svg{width:16px;height:16px}
-.jr-hd .ct{font-family:'Josefin Sans';font-size:var(--jr-title-size,14px);font-weight:700}
+.jr-hd .ct{font-family:'Josefin Sans';font-size:var(--jr-title-size,14px)!important;font-weight:700}
 .jr-card{padding:14px;border-bottom:1px solid var(--border)}.jr-card:last-child{border-bottom:none}
 .jr-top{display:flex;align-items:center;gap:12px;margin-bottom:5px}
 .jr-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
@@ -621,6 +621,18 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-reporter-role{font-size:var(--jr-rs,12.5px);color:var(--exp-grey);margin-top:3px;line-height:1.4}
 .exp-card p{font-size:var(--jr-rs,13.5px);line-height:1.6;color:#333}
 .exp-card .sig{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-ink);margin-top:12px;font-size:14.5px}
+.exp-prog-list{display:flex;flex-direction:column;gap:6px}
+.exp-prog-day{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--exp-grey);margin:10px 0 2px;padding-bottom:4px;border-bottom:1px solid var(--exp-line)}
+.exp-prog-item{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--exp-line)}
+.exp-prog-item:last-child{border-bottom:none}
+.exp-prog-item.exp-prog-active{background:rgba(255,108,0,.05);margin:0 -10px;padding-left:10px;padding-right:10px}
+.exp-prog-time{font-family:'IBM Plex Mono',monospace;font-size:var(--prog-time-size,11px);font-weight:600;color:var(--exp-accent);flex-shrink:0;width:42px}
+.exp-prog-body{flex:1;min-width:0}
+.exp-prog-label{font-size:var(--prog-label-size,13px);font-weight:600;color:var(--exp-ink);line-height:1.35}
+.exp-prog-desc{font-size:var(--prog-desc-size,11px);color:var(--exp-grey);margin-top:2px;line-height:1.4}
+.exp-prog-status{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;flex-shrink:0;white-space:nowrap;border:1px solid var(--exp-line);color:var(--exp-grey)}
+.exp-prog-status.active{background:var(--exp-accent);color:#fff;border-color:var(--exp-accent)}
+.exp-prog-status.past{opacity:.5}
 .exp-card-socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .exp-card-socials a{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--exp-grey);text-decoration:none;padding:4px 10px;border:1px solid var(--exp-line);border-radius:4px;transition:all .15s}
 .exp-card-socials a:hover{border-color:var(--exp-accent);color:var(--exp-accent)}
@@ -1132,7 +1144,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     reporters: {
       title: '.jr-name,.exp-reporter-name',
       text:  '.jr-bio,.exp-card p',
-      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
+      ui:    '.jr-role,.exp-reporter-role,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
       title: '.exp-route-name,.exp-map-panel-name',
@@ -1890,8 +1902,11 @@ function render(data){
   // ===== SPONSORS =====
   function mkSponsors(){
     if(mod.sponsors===false || !event.sponsors || !event.sponsors.length) return '';
+    let _sp = event.sponsors.slice();
+    if(activePhase && phases.length) _sp = _sp.filter(s => !s.phase || s.phase === activePhase);
+    if(!_sp.length) return '';
     let o = `<div class="sponsors-block fi"><h3>${event.sponsorsTitle||'Soutien & Partenaires'}</h3><p>${event.sponsorsSubtitle||'Cette couverture est réalisée avec le soutien de nos partenaires'}</p><div class="sponsors-logos">`;
-    event.sponsors.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(s => {
+    _sp.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(s => {
       if(s.logo_url){
         const link = s.url ? ` onclick="window.open('${s.url}','_blank')" style="cursor:pointer"` : '';
         o += `<img src="${s.logo_url}" alt="${s.name||''}"${link} onerror="this.remove()">`;
@@ -2473,6 +2488,31 @@ function renderExpedition(data){
     return o;
   };
 
+  _b.programme = function(){
+    if(mod.programme===false || !programme || !programme.length) return '';
+    const storedOrder=event.programmeDayOrder||[];
+    const grouped={};const seenDays=new Set();const allDays=[];
+    programme.forEach(p=>{const d=p.day||'';if(!grouped[d])grouped[d]=[];grouped[d].push(p);if(d&&!seenDays.has(d)){seenDays.add(d);allDays.push(d);}});
+    const dayOrder=[...storedOrder.filter(d=>seenDays.has(d))];
+    allDays.forEach(d=>{if(!dayOrder.includes(d))dayOrder.push(d);});
+    if(grouped[''])dayOrder.push('');
+    Object.values(grouped).forEach(items=>items.sort((a,b)=>(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||'')));
+    const hasMultipleDays=dayOrder.filter(d=>d).length>0;
+    let o = `<div class="exp-card exp-prog"><div class="exp-card-label">${event.programmeTitle||'Programme'}</div><div class="exp-prog-list">`;
+    dayOrder.forEach(day=>{
+      if(!grouped[day]||!grouped[day].length)return;
+      if(hasMultipleDays && day) o += `<div class="exp-prog-day">${day}</div>`;
+      grouped[day].forEach(p=>{
+        const st=autoStatus(p.time,day);
+        const sl=st==='past'?'Terminé':st==='active'?'● En cours':'À venir';
+        const hasTime=p.time&&p.time.trim();
+        o += `<div class="exp-prog-item${st==='active'?' exp-prog-active':''}">${hasTime?`<div class="exp-prog-time">${p.time}</div>`:''}<div class="exp-prog-body"><div class="exp-prog-label">${p.label}</div>${p.desc?`<div class="exp-prog-desc">${p.desc}</div>`:''}</div><span class="exp-prog-status ${st}">${sl}</span></div>`;
+      });
+    });
+    o += `</div></div>`;
+    return o;
+  };
+
   _b.citations = function(){
     if(mod.citations===false || !pubCitations.length) return '';
     const CIT_VIS = event.citVisibleCount || 6;
@@ -2628,7 +2668,9 @@ function renderExpedition(data){
   };
 
   _b.sponsors = function(){
-    const sp=(event.sponsors||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+    let sp=(event.sponsors||[]).slice();
+    if(activePhase && phases.length) sp = sp.filter(s => !s.phase || s.phase === activePhase);
+    sp.sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
     let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p><div class="exp-sponsors-grid">`;
     sp.forEach(s=>{ if(s.logo_url){const cl=s.url?` onclick="window.open('${s.url}','_blank')"`:'';o+=`<img src="${s.logo_url}" alt="${s.name||''}"${cl} onerror="this.remove()">`;}else if(s.name)o+=`<span>${s.name}</span>`; });
@@ -2671,8 +2713,8 @@ function renderExpedition(data){
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
-  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
-  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
+  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   // Auto-inject new blocks for legacy events
