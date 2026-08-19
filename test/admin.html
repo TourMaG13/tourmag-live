@@ -437,7 +437,7 @@ function applyTabVisibility(){
   const isExpedition = ev?.mode === 'expedition';
 
   // Expedition mode: tabs to hide and rename map
-  const expHiddenTabs = ['programme','flash','rubriques'];
+  const expHiddenTabs = ['flash','rubriques'];
   const expRenameMap = {
     essentiel: {label:'À retenir', icon:'🧠'},
     live: {label:'Fil de route', icon:'🗺️'},
@@ -449,7 +449,7 @@ function applyTabVisibility(){
     decor: {label:'Décor', icon:'🎨'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live', icon:'📡'},
     citations: {label:'Citations', icon:'💬'},
@@ -966,8 +966,8 @@ async function newEvent(){
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
     modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
-    expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
-    expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
+    expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
+    expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
     expSidebarAnchor:'live',
     blockZones:{hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full'},
     created_at:firebase.firestore.FieldValue.serverTimestamp()
@@ -1232,7 +1232,7 @@ function _fontOpts(selected){
     reporters: {
       title: '.jr-name,.exp-reporter-name',
       text:  '.jr-bio,.exp-card p',
-      ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
+      ui:    '.jr-role,.exp-reporter-role,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
       title: '.exp-route-name,.exp-map-panel-name',
@@ -1616,7 +1616,7 @@ function moduleSettingsPanel(type, ev){
     return s;
   }
   if(type==='reporters'){
-    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:140px"><label class="form-label">Taille nom (px)</label><input type="number" class="form-input" id="app-jr-nsize" value="'+(ev.journalistsNameSize||13)+'" min="10" max="24" style="width:70px"></div><div class="form-row" style="max-width:140px"><label class="form-label">Taille poste (px)</label><input type="number" class="form-input" id="app-jr-rsize" value="'+(ev.journalistsRoleSize||10)+'" min="8" max="16" style="width:70px"></div></div>';
+    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div style="font-size:9px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
   }
   return '';
 }
@@ -2103,7 +2103,6 @@ async function _collectModuleSettings(type){
   } else if(type==='reporters'){
     ud.journalistsTitle=_v('app-st-jr-title');
     ud.journalistsTitleSize=_n('app-jr-tsize',14);
-    ud.journalistsNameSize=_n('app-jr-nsize',13);ud.journalistsRoleSize=_n('app-jr-rsize',10);
   }
   await evRef().update(ud);
 }
@@ -2344,7 +2343,7 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','contact','decor','brandnews'];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews'];
   const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
   const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
@@ -2396,6 +2395,7 @@ function renderModules(el){
       {key:'reporters',icon:'🎤',label:'Reporters',zones:['side','main']},
       {key:'itinerary',icon:'🧭',label:'Itinéraire',zones:['side','main']},
       {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
+      {key:'programme',icon:'🗓',label:'Programme',zones:['side','main','full']},
       {key:'citations',icon:'💬',label:'Verbatims',zones:['full','main']},
       {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
       {key:'videos',icon:'🎬',label:'Vidéos',zones:['full','main']},
@@ -2404,13 +2404,13 @@ function renderModules(el){
       {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
       {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
     ];
-    const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
-    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
+    const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     // Auto-inject new blocks for legacy events
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)){
-      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'){
+      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'||b.key==='programme'){
         const li=expOrder.indexOf('live'); expOrder.splice(li>=0?li+1:expOrder.length,0,b.key);
       } else if(b.key==='phaseTabs'){
         expOrder.unshift(b.key);
@@ -3432,6 +3432,7 @@ function editProgramme(id){
     <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="m-prog-day-select"><option value="">—</option>${dayOpts}</select><input class="form-input" id="m-prog-day-new" placeholder="Nouveau jour" value="${(!p.day||dayOrder.includes(p.day))?'':p.day}"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Heure (optionnel)</label><input class="form-input" id="m-prog-time" type="time" value="${p.time||''}"></div><div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" id="m-prog-label" value="${(p.label||'').replace(/"/g,'&quot;')}"></div></div>
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="m-prog-desc" value="${(p.desc||'').replace(/"/g,'&quot;')}"></div>
+    ${mkPhaseSelect('m-prog-phase',p.phase||'')}
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveProgrammeEdit('${id}')">💾 Enregistrer</button></div>`);
 }
 async function saveProgrammeEdit(id){
@@ -3443,6 +3444,7 @@ async function saveProgrammeEdit(id){
     time:document.getElementById('m-prog-time').value||'',
     label:document.getElementById('m-prog-label').value.trim(),
     desc:document.getElementById('m-prog-desc').value,
+    phase:document.getElementById('m-prog-phase')?.value||'',
     day
   });
   if(day){const order=getDayOrder();if(!order.includes(day)){order.push(day);await evRef().update({programmeDayOrder:order});}}
@@ -4702,11 +4704,13 @@ function renderJournalistes(el){
 // --- GLOBAL JOURNALIST CRUD ---
 async function saveJrSettings(){
   saving(true);
-  await evRef().update({
-    journalistsTitle:document.getElementById('jr-s-title').value.trim()||'Vos reporters',
-    journalistsNameSize:parseInt(document.getElementById('jr-s-nsize').value)||13,
-    journalistsRoleSize:parseInt(document.getElementById('jr-s-rsize').value)||10
-  });
+  var _g=function(id){var e=document.getElementById(id);return e?e.value.trim():undefined;};
+  var _n=function(id,d){var e=document.getElementById(id);return e?(parseInt(e.value)||d):undefined;};
+  var ud={};
+  var t=_g('jr-s-title'); if(t!==undefined) ud.journalistsTitle=t||'Vos reporters';
+  var ns=_n('jr-s-nsize',13); if(ns!==undefined) ud.journalistsNameSize=ns;
+  var rs=_n('jr-s-rsize',10); if(rs!==undefined) ud.journalistsRoleSize=rs;
+  if(Object.keys(ud).length) await evRef().update(ud);
   toast('Réglages journalistes enregistrés');
 }
 async function addGlobalJournalist(){
@@ -6298,6 +6302,7 @@ function renderSponsors(el){
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:13px">${s.name||'Sans nom'}</div>
         ${s.url?`<div style="font-size:10px;color:var(--text3)">${s.url}</div>`:''}
+        ${(function(){var ph=getPhases().find(p=>p.id===s.phase);return ph?`<div style="font-size:9px;color:var(--text3);margin-top:2px">🔀 ${ph.name}</div>`:'';})()}
       </div>
       <div class="list-item-actions">
         <button class="btn btn-ghost btn-xs" onclick="editSponsor(${i})">✏️</button>
@@ -6314,6 +6319,7 @@ function addSponsor(){
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
+    ${mkPhaseSelect('m-sp-phase','',{})}
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${((eventsData.find(e=>e.id===currentEventId)?.sponsors||[]).length+1)*10}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor()">💾 Ajouter</button></div>`);
 }
@@ -6324,13 +6330,14 @@ function editSponsor(idx){
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
     <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
+    ${mkPhaseSelect('m-sp-phase',s.phase||'',{})}
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${s.order||0}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor(${idx})">💾 Enregistrer</button></div>`);
 }
 async function saveSponsor(editIdx){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sponsors=[...(ev.sponsors||[])];
-  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),order:parseInt(document.getElementById('m-sp-order').value)||0};
+  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),phase:document.getElementById('m-sp-phase')?.value||'',order:parseInt(document.getElementById('m-sp-order').value)||0};
   if(editIdx!==undefined&&editIdx!==null) sponsors[editIdx]=data;
   else sponsors.push(data);
   saving(true);
