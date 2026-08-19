@@ -98,15 +98,15 @@ img{display:block}a{text-decoration:none}
 @media(max-width:860px){.hero-split{grid-template-columns:1fr;min-height:auto}.hero-split-text{padding:28px 16px 22px}.hero-title{font-size:26px}.hero-subtitle-text{font-size:13px}.hero-split-image{height:220px}}
 
 /* HERO TIMELINE */
-.hero-tl{background:linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2));padding:16px 28px 20px}
+.hero-tl{background:linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2));padding:var(--tl-pad-y,16px) 28px var(--tl-pad-b,20px)}
 .hero-tl-inner{max-width:1200px;margin:0 auto;position:relative}
 .hero-tl-track{display:grid;grid-template-columns:repeat(var(--tl-cols,5),1fr);gap:0;position:relative}
 .hero-tl-track::before{content:'';position:absolute;top:14px;left:0;right:0;height:2px;background:rgba(255,255,255,.1)}
 .hero-tl-item{display:flex;flex-direction:column;align-items:center;padding:0 4px;cursor:pointer;transition:opacity .15s}
 .hero-tl-item:hover{opacity:.8}
 .hero-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--acc);border:2.5px solid var(--hero-bg1);box-shadow:0 0 0 1.5px var(--acc);z-index:1;margin-bottom:8px}
-.hero-tl-date{font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);font-weight:600;margin-bottom:3px}
-.hero-tl-ev{font-size:10px;color:rgba(255,255,255,.5);text-align:center;line-height:1.4}
+.hero-tl-date{font-family:'IBM Plex Mono';font-size:var(--tl-date-size,9px);color:var(--acc);font-weight:600;margin-bottom:3px}
+.hero-tl-ev{font-size:var(--tl-ev-size,10px);color:var(--tl-ev-color,rgba(255,255,255,.5));text-align:center;line-height:1.4}
 .hero-tl-ia{font-family:'IBM Plex Mono';font-size:8px;color:rgba(255,255,255,.2);text-align:right;margin-top:8px;letter-spacing:.5px}
 @media(max-width:768px){.hero-tl{padding:14px 12px 18px}.hero-tl-track{grid-template-columns:1fr;gap:8px}.hero-tl-track::before{display:none}.hero-tl-item{flex-direction:row;gap:10px;align-items:flex-start}.hero-tl-dot{margin-bottom:0;margin-top:4px;flex-shrink:0}.hero-tl-ev{text-align:left}}
 
@@ -322,19 +322,19 @@ img{display:block}a{text-decoration:none}
 .cd .cc{font-size:9px;font-weight:700;color:#fff;padding:2px 8px;border-radius:20px;margin-left:auto;background:var(--pri)}
 
 /* ==================== PROGRAMME ==================== */
-.prog-card{background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FDE68A 100%);border:1.5px solid #F59E0B40;border-radius:var(--rl);overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,.08);margin-bottom:14px}
+.prog-card{background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FDE68A 100%);border:1.5px solid #F59E0B40;border-radius:var(--rl);overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,.08);margin-top:var(--prog-mt,0px);margin-bottom:14px}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #F59E0B25}
 .prog-card .ci{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
 .prog-card .ci svg{width:16px;height:16px}
-.prog-card .ct{font-family:'Josefin Sans';font-size:14px;font-weight:700;color:#78350F}
+.prog-card .ct{font-family:'Josefin Sans';font-size:var(--prog-title-size,14px);font-weight:700;color:#78350F}
 .prog-list{padding:8px 12px}
 .prog-item{display:flex;gap:8px;padding:7px 10px;margin-bottom:4px;border:1px solid #F59E0B20;border-radius:8px;background:rgba(255,255,255,.5);align-items:center;transition:background .15s}
 .prog-item:hover{background:rgba(255,255,255,.8)}.prog-item:last-child{margin-bottom:0}
 .prog-item.prog-active{background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15)}
-.prog-time{font-family:'IBM Plex Mono';font-size:10px;font-weight:600;color:#B45309;flex-shrink:0;width:38px;padding-top:1px}
+.prog-time{font-family:'IBM Plex Mono';font-size:var(--prog-time-size,10px);font-weight:600;color:#B45309;flex-shrink:0;width:38px;padding-top:1px}
 .prog-body{flex:1}
-.prog-label{font-size:11px;font-weight:600;color:#1C1917;line-height:1.35}
-.prog-desc{font-size:9px;color:#57534E;margin-top:1px;line-height:1.4}
+.prog-label{font-size:var(--prog-label-size,11px);font-weight:600;color:#1C1917;line-height:1.35}
+.prog-desc{font-size:var(--prog-desc-size,9px);color:#57534E;margin-top:1px;line-height:1.4}
 .prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
 .prog-status.past{background:#E7E5E4;color:#78716C}
 .prog-status.active{background:#DC2626;color:#fff;animation:livepulse 1.5s infinite}
@@ -394,7 +394,7 @@ img{display:block}a{text-decoration:none}
 .jr-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .jr-hd .ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FEF3C7;color:#92400E}
 .jr-hd .ci svg{width:16px;height:16px}
-.jr-hd .ct{font-family:'Josefin Sans';font-size:14px;font-weight:700}
+.jr-hd .ct{font-family:'Josefin Sans';font-size:var(--jr-title-size,14px);font-weight:700}
 .jr-card{padding:14px;border-bottom:1px solid var(--border)}.jr-card:last-child{border-bottom:none}
 .jr-top{display:flex;align-items:center;gap:12px;margin-bottom:5px}
 .jr-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
@@ -1348,6 +1348,20 @@ function render(data){
   // Journalist name/role size
   document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 13) + 'px');
   document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 10) + 'px');
+  // Titre du bloc "Vos reporters"
+  if(event.journalistsTitleSize) document.documentElement.style.setProperty('--jr-title-size', event.journalistsTitleSize + 'px');
+  // Timeline (bandeau classique)
+  if(event.timelinePadY!=null && event.timelinePadY!=='') document.documentElement.style.setProperty('--tl-pad-y', event.timelinePadY + 'px');
+  if(event.timelinePadB!=null && event.timelinePadB!=='') document.documentElement.style.setProperty('--tl-pad-b', event.timelinePadB + 'px');
+  if(event.timelineDateSize) document.documentElement.style.setProperty('--tl-date-size', event.timelineDateSize + 'px');
+  if(event.timelineEvSize)   document.documentElement.style.setProperty('--tl-ev-size', event.timelineEvSize + 'px');
+  if(event.timelineEvColor)  document.documentElement.style.setProperty('--tl-ev-color', event.timelineEvColor);
+  // Programme
+  if(event.programmeMarginTop!=null && event.programmeMarginTop!=='') document.documentElement.style.setProperty('--prog-mt', event.programmeMarginTop + 'px');
+  if(event.programmeTitleSize) document.documentElement.style.setProperty('--prog-title-size', event.programmeTitleSize + 'px');
+  if(event.programmeLabelSize) document.documentElement.style.setProperty('--prog-label-size', event.programmeLabelSize + 'px');
+  if(event.programmeDescSize)  document.documentElement.style.setProperty('--prog-desc-size', event.programmeDescSize + 'px');
+  if(event.programmeTimeSize)  document.documentElement.style.setProperty('--prog-time-size', event.programmeTimeSize + 'px');
   // Gallery height
   document.documentElement.style.setProperty('--gal-h', (event.galleryHeight || 260) + 'px');
 
@@ -1490,11 +1504,12 @@ function render(data){
       const tlCount = Math.min(timeline.length, 6);
       const tlBg = event.timelineBgColor || '';
       const tlDot = event.timelineDotColor || 'var(--acc)';
+      const tlDateC = event.timelineDateColor || tlDot;
       const tlStyle = tlBg ? `style="background:${tlBg}"` : '';
       o += `<div class="hero-tl" ${tlStyle}><div class="hero-tl-inner"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
       timeline.slice(0,6).forEach(t => {
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer"` : '';
-        o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDot}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
+        o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDateC}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
       o += `</div></div></div>`;
     } else {
