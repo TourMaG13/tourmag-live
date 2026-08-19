@@ -83,7 +83,7 @@ img{display:block}a{text-decoration:none}
 .bdg-live{display:inline-flex;align-items:center;gap:6px;font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:var(--live);padding:5px 14px;border-radius:6px}
 .bdg-live::before{content:'';width:8px;height:8px;border-radius:50%;background:#fff;animation:livepulse 1.5s infinite}
 .bdg-event{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);padding:5px 14px;border-radius:6px}
-.hero-logo{max-height:56px;max-width:120px;object-fit:contain;border-radius:8px;margin-bottom:12px}
+.hero-logo{height:var(--logo-h,56px);width:auto;max-width:100%;object-fit:contain;border-radius:8px;margin-bottom:12px}
 .hero-title{font-family:'Josefin Sans';font-size:38px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:10px}
 .hero-subtitle-text{font-family:'Playfair Display';font-style:italic;font-size:15px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:18px;padding-left:14px;border-left:3px solid var(--acc)}
 .hero-meta-row{display:flex;gap:16px;flex-wrap:wrap}
@@ -455,7 +455,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 @keyframes exp-pulse{0%,100%{box-shadow:0 0 0 0 var(--exp-accent)}50%{box-shadow:0 0 0 8px transparent}}
 
 /* Hero */
-.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:420px;overflow:hidden;background:var(--exp-ink)}
+.exp-hero{display:grid;grid-template-columns:38fr 62fr;min-height:420px;overflow:hidden;background:var(--exp-hero-bg,var(--exp-ink))}
 .exp-hero[data-h]{min-height:0;height:var(--exp-hero-h)}
 .exp-hero.no-image{grid-template-columns:1fr}
 .exp-hero-text{display:flex;flex-direction:column;justify-content:center;padding:48px 44px 40px;position:relative;color:#fff}
@@ -464,7 +464,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-badge-live::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:livepulse 1.5s infinite}
 .exp-hero-badge-label{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:5px 14px}
 .exp-hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--exp-accent);margin-bottom:14px}
-.exp-hero-logo{max-height:var(--logo-h,48px);max-width:280px;width:auto;object-fit:contain;margin-bottom:18px}
+.exp-hero-logo{height:var(--logo-h,48px);width:auto;max-width:100%;object-fit:contain;margin-bottom:18px}
 .exp-hero h1{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:clamp(36px,5.5vw,68px);line-height:.98;letter-spacing:-.01em;margin-bottom:12px}
 .exp-hero-tagline{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:clamp(15px,1.8vw,20px);line-height:1.55;color:#EDEBE7;padding-left:16px;border-left:3px solid var(--exp-accent);margin-bottom:14px}
 .exp-hero-subtitle{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.06em;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px}
@@ -1392,6 +1392,8 @@ function render(data){
   // Couleurs de fond personnalisables (interviews / contact) + trait de titre
   if(event.interviewsBgColor) document.documentElement.style.setProperty('--itw-bg', event.interviewsBgColor);
   if(event.sectionRuleColor)  document.documentElement.style.setProperty('--sec-rule', event.sectionRuleColor);
+  // Taille du logo hero (mode classique)
+  document.documentElement.style.setProperty('--logo-h', (event.logoSize||56)+'px');
   // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
@@ -2138,6 +2140,8 @@ function renderExpedition(data){
   document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
   document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
+  // Couleur de fond du bandeau hero (mode expédition)
+  if(event.heroBgColor) document.documentElement.style.setProperty('--exp-hero-bg', event.heroBgColor);
   // Couleurs de fond personnalisables (interviews / contact) + trait de titre
   if(event.interviewsBgColor) document.documentElement.style.setProperty('--exp-itw-bg', event.interviewsBgColor);
   if(event.sectionRuleColor)  document.documentElement.style.setProperty('--exp-rule', event.sectionRuleColor);
