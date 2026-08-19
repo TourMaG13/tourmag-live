@@ -2122,7 +2122,7 @@ window._switchPhase = function(e, phaseId){
 var _expMapInstance = null;
 
 function renderExpedition(data){
-  const {event,essential:_rawEss,live:_rawLive,articles:_rawArt,journalists,etapes,citations:_rawCit,videos:_rawVid,interviews:_rawItw} = data;
+  const {event,essential:_rawEss,live:_rawLive,articles:_rawArt,journalists,etapes,citations:_rawCit,videos:_rawVid,interviews:_rawItw,programme:_rawProg} = data;
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
@@ -2162,6 +2162,7 @@ function renderExpedition(data){
   const videos = _pf(_rawVid);
   const interviews = _pf(_rawItw);
   const essential = _pf(_rawEss);
+  const programme = _pf(_rawProg);
 
   // Apply expedition mode to body
   document.body.classList.add('mode-expedition');
