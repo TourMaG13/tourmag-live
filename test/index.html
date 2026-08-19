@@ -126,7 +126,7 @@ img{display:block}a{text-decoration:none}
 .sec-title{text-align:center;padding:48px 0 28px}
 .sec-title-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;margin-bottom:8px}
 .sec-title h2{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
-.sec-title-line{width:60px;height:3px;background:var(--pri);margin:8px auto;border-radius:2px}
+.sec-title-line{width:60px;height:3px;background:var(--sec-rule,var(--pri));margin:8px auto;border-radius:2px}
 .sec-title p{font-family:'Playfair Display';font-style:italic;font-size:13px;color:var(--text3)}
 @media(max-width:768px){.sec-title{padding:36px 0 20px}.sec-title h2{font-size:18px;letter-spacing:1px}}
 
@@ -241,11 +241,11 @@ img{display:block}a{text-decoration:none}
 .side-col .art-card-cta{display:none}
 
 /* ==================== INTERVIEWS (full-width bandeau) ==================== */
-.itw-section{background:linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2));padding:40px 0}
+.itw-section{background:var(--itw-bg,linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2)));padding:40px 0}
 .itw-inner{max-width:1200px;margin:0 auto;padding:0 28px}
 .itw-section-hd{text-align:center;margin-bottom:28px}
 .itw-section-hd h2{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px}
-.itw-section-hd .itw-line{width:60px;height:3px;background:var(--acc);margin:8px auto;border-radius:2px}
+.itw-section-hd .itw-line{width:60px;height:3px;background:var(--sec-rule,var(--acc));margin:8px auto;border-radius:2px}
 .itw-section-hd p{font-family:'Playfair Display';font-style:italic;font-size:13px;color:rgba(255,255,255,.4)}
 .itw-card{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:26px 28px;display:flex;align-items:center;gap:24px;margin-bottom:14px;transition:background .15s}
 .itw-card:hover{background:rgba(255,255,255,.09)}.itw-card:last-child{margin-bottom:0}
@@ -500,7 +500,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-mapsec{max-width:1200px;margin:0 auto;padding:64px 32px 48px}
 .exp-section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
 .exp-section-head h2{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:34px;white-space:nowrap}
-.exp-section-head .rule{flex:1;height:1px;background:var(--exp-ink)}
+.exp-section-head .rule{flex:1;height:1px;background:var(--exp-rule,var(--exp-ink))}
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
 .exp-map-wrap{position:relative;overflow:hidden}
 #exp-routemap{height:520px;border:1px solid var(--exp-ink)}
@@ -743,9 +743,9 @@ body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
 /* Interviews */
-.exp-interviews{max-width:none;margin:0 auto;padding:48px 32px 64px;margin-bottom:48px;background:rgba(255,108,0,.05)}
+.exp-interviews{max-width:none;margin:0 auto;padding:48px 32px 64px;margin-bottom:48px;background:var(--exp-itw-bg,rgba(255,108,0,.05))}
 .exp-interviews .exp-section-head,.exp-interviews .exp-section-sub{max-width:1200px;margin-left:auto;margin-right:auto}
-.exp-interviews .exp-section-head .rule{background:var(--exp-accent)}
+.exp-interviews .exp-section-head .rule{background:var(--exp-rule,var(--exp-accent))}
 .exp-itw-grid{display:flex;flex-direction:column;gap:16px;margin-top:38px;max-width:1200px;margin-left:auto;margin-right:auto}
 .exp-itw-card{display:flex;align-items:center;gap:28px;padding:28px 32px;border:1px solid var(--exp-line);border-left:4px solid var(--exp-accent);background:var(--exp-paper);transition:transform .2s,box-shadow .2s}
 .exp-itw-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.06)}
@@ -1389,6 +1389,9 @@ function render(data){
   // Reset colors to event defaults before applying phase overrides
   document.documentElement.style.setProperty('--acc', event.accentColor || '#E8842C');
   document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
+  // Couleurs de fond personnalisables (interviews / contact) + trait de titre
+  if(event.interviewsBgColor) document.documentElement.style.setProperty('--itw-bg', event.interviewsBgColor);
+  if(event.sectionRuleColor)  document.documentElement.style.setProperty('--sec-rule', event.sectionRuleColor);
   // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
@@ -2135,6 +2138,9 @@ function renderExpedition(data){
   document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
   document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
+  // Couleurs de fond personnalisables (interviews / contact) + trait de titre
+  if(event.interviewsBgColor) document.documentElement.style.setProperty('--exp-itw-bg', event.interviewsBgColor);
+  if(event.sectionRuleColor)  document.documentElement.style.setProperty('--exp-rule', event.sectionRuleColor);
   // Expedition reporter sizes — override classic defaults with larger expedition defaults
   document.documentElement.style.setProperty('--jr-ns', (event.journalistsNameSize || 21) + 'px');
   document.documentElement.style.setProperty('--jr-rs', (event.journalistsRoleSize || 12) + 'px');
