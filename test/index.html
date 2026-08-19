@@ -970,7 +970,9 @@ function _mkPhaseTitle(event, activePhase, phases){
   // Titre : réglage par-mode (typography[mode].phaseTitle) sinon repli global (event.phaseTitle)
   const pt = modeTypo.phaseTitle || event.phaseTitle || {};
   const ps = modeTypo.phaseSubtitle || {};
-  let out = '';
+  // Décalage vertical du bloc titre/sous-titre (espace avec les onglets au-dessus)
+  const topGap = (pt.topGap!=null && pt.topGap!=='') ? pt.topGap : 14;
+  let out = `<div class="phase-active-head" style="margin-top:${topGap}px">`;
   if(pt.show){
     const color = pt.usePhaseColor ? (phase.color || '#6366F1') : (pt.color || '#1E293B');
     const size = pt.size || 28;
@@ -989,9 +991,11 @@ function _mkPhaseTitle(event, activePhase, phases){
     const sfont = ps.font ? `font-family:'${ps.font}',sans-serif;` : '';
     const sstyl = ps.italic ? 'font-style:italic;' : '';
     const slh = ps.lineHeight || 1.4;
-    out += `<div class="phase-active-subtitle" style="text-align:center;font-size:${ssize}px;font-weight:${sweight};color:${scolor};line-height:${slh};padding:0 0 6px;${sfont}${sstyl}">${subText}</div>`;
+    // Largeur max : contrôle le retour à la ligne du sous-titre (0/vide = pleine largeur)
+    const smw = (ps.maxWidth!=null && ps.maxWidth!=='' && +ps.maxWidth>0) ? `max-width:${ps.maxWidth}px;margin-left:auto;margin-right:auto;` : '';
+    out += `<div class="phase-active-subtitle" style="text-align:center;font-size:${ssize}px;font-weight:${sweight};color:${scolor};line-height:${slh};padding:0 0 6px;${smw}${sfont}${sstyl}">${subText}</div>`;
   }
-  return out;
+  return out + '</div>';
 }
 
 </script>
@@ -1118,7 +1122,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     },
     kpis: {
       zone:'body',
-      title:'',
+      title:'.kpi-num,.exp-counter-num',
       text:'',
       ui:'.kpi-label,.exp-counter-label'
     }
@@ -1131,9 +1135,9 @@ function _mkPhaseTitle(event, activePhase, phases){
       ui:    '.jr-role,.exp-reporter-role,.jr-hd .ct,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
-      title: '.exp-route-name',
-      text:  '.exp-route-detail',
-      ui:    '.exp-card-label-itin,.exp-route-acc-btn'
+      title: '.exp-route-name,.exp-map-panel-name',
+      text:  '.exp-route-detail,.exp-map-panel-desc',
+      ui:    '.exp-card-label-itin,.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
     }
   };
 
@@ -1237,7 +1241,9 @@ function _mkPhaseTitle(event, activePhase, phases){
     var mods = modeTypo.modules || {};
     Object.keys(mods).forEach(function(mkey){
       var mo = mods[mkey]; if(!mo || mo.enabled===false) return;
-      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:true }); }); }
+      // Le module « kpis » cible volontairement les compteurs -> ne pas les exclure.
+      var _strip = (mkey!=='kpis');
+      var map = MODULE_SEL[mkey]; if(map){ ROLES.forEach(function(r){ css += _emit(map[r], _blockOf(mo,r), { stripCounters:_strip }); }); }
       // Titre/sous-titre de section propres au module (surcharge le global)
       var sec = SECTION_SEL[mkey];
       if(sec){
