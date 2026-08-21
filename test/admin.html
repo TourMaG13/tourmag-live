@@ -2529,9 +2529,9 @@ function editPhase(idx){
           <option value="own" ${p.bannerMode==='own'?'selected':''}>Utiliser une image bandeau propre à cette phase</option>
           <option value="off" ${p.bannerMode==='off'?'selected':''}>Aucun bandeau sur cette phase (héro 2 colonnes)</option>
         </select>
+        <div class="form-row" style="max-width:240px;margin-top:10px"><label class="form-label">Hauteur du héro (px) — cette phase</label><input type="number" class="form-input" id="m-phase-banner-height" value="${p.bannerHeight||''}" min="120" max="900" placeholder="${ev.hero_height||(ev.mode==='expedition'?420:460)}" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:2px">S'applique à cette phase quel que soit le mode ci-dessus (bandeau ou héro 2 colonnes). Vide = hauteur par défaut de l'événement (${ev.hero_height||(ev.mode==='expedition'?420:460)} px).</div></div>
         <div id="m-phase-banner-own" style="margin-top:8px;${p.bannerMode==='own'?'':'display:none'}">
           <div class="form-row"><label class="form-label">Image bandeau de la phase</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-banner-image" value="${(p.heroBannerImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image bandeau" style="flex:1">${mkMediaPickerBtn('m-phase-banner-image')}${mkUploadBtn('m-phase-banner-image')}</div></div>
-          <div class="form-row" style="max-width:220px"><label class="form-label">Hauteur du bandeau (px)</label><input type="number" class="form-input" id="m-phase-banner-height" value="${p.bannerHeight||''}" min="120" max="900" placeholder="${ev.hero_height||(ev.mode==='expedition'?420:460)}" style="width:120px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Vide = hauteur par défaut de l'événement (${ev.hero_height||(ev.mode==='expedition'?420:460)} px).</div></div>
           <label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="m-phase-banner-text" ${p.heroBannerText?'checked':''}> Afficher le titre/sous-titre par-dessus l'image</label>
         </div>
       </div>
@@ -2584,7 +2584,7 @@ async function savePhaseEdit(idx){
     bannerMode:(document.getElementById('m-phase-banner-mode')||{}).value||'inherit',
     heroBannerImage:(document.getElementById('m-phase-banner-mode')||{}).value==='own'?(document.getElementById('m-phase-banner-image').value.trim()):'',
     heroBannerText:(document.getElementById('m-phase-banner-mode')||{}).value==='own'?document.getElementById('m-phase-banner-text').checked:false,
-    bannerHeight:(document.getElementById('m-phase-banner-mode')||{}).value==='own'?(parseInt((document.getElementById('m-phase-banner-height')||{}).value,10)||''):'',
+    bannerHeight:(parseInt((document.getElementById('m-phase-banner-height')||{}).value,10)||''),
     mapTitle:document.getElementById('m-phase-map-title').value.trim(),
     mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
     mapNote:document.getElementById('m-phase-map-note').value.trim()
