@@ -1468,7 +1468,7 @@ function render(data){
   if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
   else if(_pbMode==='off'){ _heroBannerImage=''; }
   else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
-  const _bannerH = (_pbMode==='own' && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||'');
+  const _bannerH = (_ph && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||''); // hauteur propre à la phase (tous modes)
   console.log('[TourMaG Live] Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates}, eventFallbacks:{title:event.title,subtitle:event.subtitle,hero_image:event.hero_image,logo_url:event.logo_url,location:event.location,dates:event.dates}});
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
@@ -1519,7 +1519,7 @@ function render(data){
   function mkHero(){
     const useBanner = !!_heroBannerImage;
     const hasImage = !!_heroImage;
-    const hh = event.hero_height;
+    const hh = _bannerH || event.hero_height;
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
     let o = '';
     if(useBanner){
@@ -2213,7 +2213,7 @@ function renderExpedition(data){
   if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
   else if(_pbMode==='off'){ _heroBannerImage=''; }
   else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
-  const _bannerH = (_pbMode==='own' && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||'');
+  const _bannerH = (_ph && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||''); // hauteur propre à la phase (tous modes)
   console.log('[TourMaG Live] EXP Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates,_heroEyebrow,_heroPhotoCredit}});
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
@@ -2234,7 +2234,7 @@ function renderExpedition(data){
   document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
   document.documentElement.style.setProperty('--logo-align', ({left:'flex-start',center:'center',right:'flex-end'})[event.logoAlign]||'flex-start');
-  document.documentElement.style.setProperty('--exp-hero-h', (event.hero_height||420)+'px');
+  document.documentElement.style.setProperty('--exp-hero-h', ((_bannerH||event.hero_height)||420)+'px');
   // Couleur de fond du bandeau hero (mode expédition)
   if(event.heroBgColor) document.documentElement.style.setProperty('--exp-hero-bg', event.heroBgColor);
   // Couleurs de fond personnalisables (interviews / contact) + trait de titre
@@ -2300,7 +2300,7 @@ function renderExpedition(data){
   // ===== HERO =====
   const _expUseBanner = !!_heroBannerImage;
   const hasHeroImage = !!_heroImage;
-  const _expHeroH = event.hero_height;
+  const _expHeroH = _bannerH || event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
   if(_expUseBanner){
     const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
