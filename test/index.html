@@ -1468,6 +1468,7 @@ function render(data){
   if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
   else if(_pbMode==='off'){ _heroBannerImage=''; }
   else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
+  const _bannerH = (_pbMode==='own' && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||'');
   console.log('[TourMaG Live] Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates}, eventFallbacks:{title:event.title,subtitle:event.subtitle,hero_image:event.hero_image,logo_url:event.logo_url,location:event.location,dates:event.dates}});
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
@@ -1522,8 +1523,9 @@ function render(data){
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
     let o = '';
     if(useBanner){
-      // Image bandeau pleine largeur (remplace les 2 colonnes)
-      o += `<div class="hero-banner fi" ${heroStyle}><img class="hero-banner-img" src="${_heroBannerImage}" alt="">`;
+      // Image bandeau pleine largeur (remplace les 2 colonnes) — hauteur propre possible
+      const _bStyle = _bannerH ? `style="--hero-h:${_bannerH}px"` : (hh?`style="--hero-h:${hh}px"`:'');
+      o += `<div class="hero-banner fi" ${_bStyle}><img class="hero-banner-img" src="${_heroBannerImage}" alt="">`;
       if(_heroBannerText){
         o += `<div class="hero-banner-overlay"><div class="hero-banner-inner">`;
         o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">${event.heroBadgeLabel||'Dossier spécial TourMaG'}</span></div>`;
@@ -2211,6 +2213,7 @@ function renderExpedition(data){
   if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
   else if(_pbMode==='off'){ _heroBannerImage=''; }
   else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
+  const _bannerH = (_pbMode==='own' && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||'');
   console.log('[TourMaG Live] EXP Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates,_heroEyebrow,_heroPhotoCredit}});
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
@@ -2300,7 +2303,8 @@ function renderExpedition(data){
   const _expHeroH = event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
   if(_expUseBanner){
-    h += `<section class="exp-hero-banner"${_expHeroAttr}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
+    const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
+    h += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
     if(_heroBannerText){
       h += `<div class="exp-hero-banner-overlay"><div class="exp-hero-banner-inner">`;
       if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
