@@ -26,14 +26,39 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .topbar-hamburger:hover{background:rgba(255,255,255,.1)}
 .topbar-logo{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff;white-space:nowrap}
 .topbar-logo span{color:var(--acc)}
-.topbar-event-select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:11px;color:#fff;font-family:'Poppins';cursor:pointer;max-width:220px;min-width:0}
-.topbar-event-select option{background:var(--pri);color:#fff}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .topbar-user{font-size:10px;color:rgba(255,255,255,.5)}
 .topbar-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite;margin-right:4px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .topbar-btn{padding:6px 16px;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:'Poppins';transition:all .15s}
 .topbar-btn.ghost{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}.topbar-btn.ghost:hover{background:rgba(255,255,255,.15)}
+
+/* Sélecteur d'événement (topbar) */
+.topbar-divider{width:1px;height:24px;background:rgba(255,255,255,.15);flex-shrink:0}
+.evpick{position:relative;flex-shrink:1;min-width:0}
+.evpick-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 12px;color:#fff;cursor:pointer;font-family:'Poppins';transition:background .15s;min-width:200px;max-width:280px}
+.evpick-btn:hover{background:rgba(255,255,255,.14)}
+.evpick-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(5,150,105,.22);flex-shrink:0}
+.evpick-txt{flex:1;text-align:left;min-width:0;line-height:1.15}
+.evpick-l1{display:block;font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.evpick-l2{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evpick-chev{color:rgba(255,255,255,.6);font-size:11px;transition:transform .2s;flex-shrink:0}
+.evpick.open .evpick-chev{transform:rotate(180deg)}
+.evpick-menu{position:absolute;top:calc(100% + 8px);left:0;width:320px;max-width:90vw;background:#fff;border-radius:12px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:8px;display:none;z-index:200;max-height:70vh;overflow-y:auto}
+.evpick.open .evpick-menu{display:block}
+.evpick-mh{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;padding:6px 10px 4px}
+.evpick-ev{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .12s;color:var(--text)}
+.evpick-ev:hover{background:var(--bg)}
+.evpick-ev.cur{background:var(--acc-soft)}
+.evpick-ev .evi{color:var(--acc2);display:flex;flex-shrink:0}
+.evpick-ev .evn{flex:1;min-width:0}
+.evpick-ev .evn .n{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evpick-ev .evn .m{font-size:10.5px;color:var(--text3)}
+.evpick-ev .evbadge{font-size:8.5px;font-weight:700;color:var(--green);background:#DCFCE7;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.evpick-sep{height:1px;background:var(--border);margin:6px 4px}
+.evpick-manage{display:flex;align-items:center;gap:9px;padding:10px;border-radius:8px;color:var(--text2);font-size:12.5px;font-weight:500;width:100%;background:none;border:none;text-align:left;cursor:pointer;font-family:'Poppins'}
+.evpick-manage:hover{background:var(--bg);color:var(--text)}
+.evpick-manage svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 48px)}
 .mobile-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:149}
@@ -44,7 +69,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .1s;border-left:3px solid transparent}
 .sidebar-item:hover{background:#F1F5F9;color:var(--text)}
 .sidebar-item.active{background:#FFF7ED;color:var(--acc);border-left-color:var(--acc);font-weight:600}
-.sidebar-item .icon{width:20px;text-align:center;font-size:14px}
+.sidebar-item .icon{width:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tab-ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-item .badge{margin-left:auto;font-size:9px;font-weight:700;color:#fff;background:var(--acc);padding:1px 7px;border-radius:10px}
 
 /* Groupes repliables de la sidebar */
@@ -63,7 +89,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
   .topbar{padding:10px 12px;gap:8px}
   .topbar-hamburger{display:block}
   .topbar-logo{font-size:13px}
-  .topbar-event-select{max-width:120px;font-size:10px;padding:4px 6px}
+  .topbar-divider{display:none}
+  .evpick-btn{min-width:0;max-width:160px;padding:5px 9px;gap:7px}
+  .evpick-l1{display:none}
   .topbar-right{gap:6px}
   .topbar-user{display:none}
   .topbar-btn{padding:5px 10px;font-size:10px}
@@ -139,6 +167,7 @@ select.form-input{cursor:pointer}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
 .toggle-label{font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px}
+.toggle-label .icon{display:inline-flex;align-items:center;justify-content:center;width:18px}
 .toggle{position:relative;width:40px;height:22px;cursor:pointer}
 .toggle input{opacity:0;position:absolute;width:0;height:0;pointer-events:none}
 .toggle-track{position:absolute;inset:0;background:#D1D5DB;border-radius:11px;transition:background .2s}
@@ -265,6 +294,36 @@ select.form-input{cursor:pointer}
 </head>
 <body>
 
+<!-- Sprite d'icônes (style Lucide, trait fin) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="ti-events"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></g>
+<g id="ti-phases"><polygon points="12 2 22 8.5 12 15 2 8.5 12 2"/><polyline points="2 15.5 12 22 22 15.5"/></g>
+<g id="ti-live"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 16.2a6 6 0 0 0 0-8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 19.1a10 10 0 0 0 0-14.2"/></g>
+<g id="ti-map"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></g>
+<g id="ti-citations"><path d="M7 7H4v4h3l-1.5 4H8L10 9V7H7zM17 7h-3v4h3l-1.5 4H18L20 9V7h-3z"/></g>
+<g id="ti-interviews"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></g>
+<g id="ti-videos"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></g>
+<g id="ti-gallery"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 18 5-5 4 3 3-3 4 4"/></g>
+<g id="ti-articles"><path d="M4 5h13v14H5a2 2 0 0 1-2-2V6"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><line x1="7" y1="9" x2="13" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/></g>
+<g id="ti-sponsors"><path d="m8 12 2.5 2.5a1.5 1.5 0 0 0 2.1 0L18 9"/><path d="M2 11l4-4 5 4M22 11l-4-4-3 2.5"/><path d="M6 7v8M18 7v8"/></g>
+<g id="ti-contact"><path d="M5 4h3l1.5 4-2 1.5a12 12 0 0 0 5 5l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></g>
+<g id="ti-programme"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="6"/><line x1="16" y1="3" x2="16" y2="6"/><line x1="7" y1="13" x2="13" y2="13"/></g>
+<g id="ti-flash"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></g>
+<g id="ti-essentiel"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.3 1 2.5h6c0-1.2.2-1.7 1-2.5A6 6 0 0 0 12 3Z"/></g>
+<g id="ti-kpis"><path d="M12 14 15 9"/><path d="M4 18a8 8 0 1 1 16 0"/><circle cx="12" cy="18" r="1"/></g>
+<g id="ti-reporters"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></g>
+<g id="ti-etapes"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></g>
+<g id="ti-apparence"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-1.5-1.5-1.5-1.5-3 0-1 .8-1.5 2-1.5h1.5A4 4 0 0 0 20 10c0-4-3.6-7-8-7Z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="10" r="1"/></g>
+<g id="ti-decor"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z"/></g>
+<g id="ti-modules"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></g>
+<g id="ti-media"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 18 5-5 4 3 3-3 4 4"/></g>
+<g id="ti-tags"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9Z"/><circle cx="7.5" cy="7.5" r="1.2"/></g>
+<g id="ti-rubriques"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></g>
+<g id="ti-widget"><path d="M12 3 21 8v8l-9 5-9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/></g>
+<g id="ti-access"><circle cx="9" cy="8" r="3.5"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M16 5.5a3.5 3.5 0 0 1 0 6.9M21 21a6 6 0 0 0-5-5.9"/></g>
+<g id="ti-guide"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 19a2 2 0 0 0 2 2h13"/></g>
+</defs></svg>
+
 <!-- AUTH SCREEN -->
 <div class="auth-screen" id="auth-screen">
   <div class="auth-box">
@@ -282,7 +341,15 @@ select.form-input{cursor:pointer}
   <div class="topbar">
     <button class="topbar-hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
     <div class="topbar-logo">TourMaG <span>Live</span></div>
-    <select class="topbar-event-select" id="topbar-event-select" onchange="switchEvent(this.value)"></select>
+    <div class="topbar-divider"></div>
+    <div class="evpick" id="evpick">
+      <button class="evpick-btn" id="evpick-btn" onclick="toggleEvPick(event)">
+        <span class="evpick-dot"></span>
+        <span class="evpick-txt"><span class="evpick-l1">Événement</span><span class="evpick-l2" id="evpick-current">—</span></span>
+        <span class="evpick-chev">▾</span>
+      </button>
+      <div class="evpick-menu" id="evpick-menu"></div>
+    </div>
     <div class="topbar-right">
       <span class="topbar-user"><span class="topbar-dot"></span><span id="topbar-user-email"></span></span>
       <button class="topbar-btn ghost" onclick="doLogout()">Déconnexion</button>
@@ -293,53 +360,53 @@ select.form-input{cursor:pointer}
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
       <!-- Point d'entrée toujours visible -->
-      <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
+      <div class="sidebar-item active" data-tab="events"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-events"/></svg></span>Mes événements</div>
 
       <div class="sb-group" data-group="contenu">
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
-          <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
-          <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Verbatims<span class="badge" id="badge-cit">0</span></div>
-          <div class="sidebar-item" data-tab="interviews"><span class="icon">🎙️</span>Interviews</div>
-          <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
-          <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
-          <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
-          <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
-          <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
-          <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
-          <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
-          <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
-          <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Compteurs</div>
-          <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
-          <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
+          <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
+          <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Verbatims<span class="badge" id="badge-cit">0</span></div>
+          <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
+          <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
+          <div class="sidebar-item" data-tab="gallery"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg></span>Galerie photos</div>
+          <div class="sidebar-item" data-tab="articles"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-articles"/></svg></span>Articles liés</div>
+          <div class="sidebar-item" data-tab="sponsors"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-sponsors"/></svg></span>Partenaires</div>
+          <div class="sidebar-item" data-tab="contact"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg></span>Contact</div>
+          <div class="sidebar-item" data-tab="programme"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-programme"/></svg></span>Programme</div>
+          <div class="sidebar-item" data-tab="flash"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-flash"/></svg></span>Flash info</div>
+          <div class="sidebar-item" data-tab="essentiel"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-essentiel"/></svg></span>L'essentiel</div>
+          <div class="sidebar-item" data-tab="kpis"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg></span>Compteurs</div>
+          <div class="sidebar-item" data-tab="journalistes"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-reporters"/></svg></span>Reporters</div>
+          <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-etapes"/></svg></span>Étapes</div>
         </div>
       </div>
 
       <div class="sb-group" data-group="apparence">
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Apparence & mise en page</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
-          <div class="sidebar-item" data-tab="apparence"><span class="icon">🎨</span>Apparence</div>
-          <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
-          <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
+          <div class="sidebar-item" data-tab="apparence"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg></span>Apparence</div>
+          <div class="sidebar-item" data-tab="decor"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-decor"/></svg></span>Décor</div>
+          <div class="sidebar-item" data-tab="modules"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg></span>Modules</div>
         </div>
       </div>
 
       <div class="sb-group" data-group="outils">
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Outils & diffusion</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
-          <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
-          <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
-          <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
-          <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
+          <div class="sidebar-item" data-tab="media"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-media"/></svg></span>Médiathèque</div>
+          <div class="sidebar-item" data-tab="tags"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg></span>Tags live</div>
+          <div class="sidebar-item" data-tab="rubriques"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-rubriques"/></svg></span>Rubriques</div>
+          <div class="sidebar-item" data-tab="widget"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg></span>Widget homepage</div>
         </div>
       </div>
 
       <div class="sb-group" data-group="reglages">
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Réglages</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
-          <div class="sidebar-item" data-tab="phases"><span class="icon">🔀</span>Phases / Temps forts</div>
-          <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
-          <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
+          <div class="sidebar-item" data-tab="phases"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg></span>Phases / Temps forts</div>
+          <div class="sidebar-item" data-tab="access"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></span>Accès</div>
+          <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-guide"/></svg></span>Guide d'utilisation</div>
         </div>
       </div>
     </div>
@@ -472,31 +539,49 @@ function isSuperAdmin(){
   return superAdmins.some(e=>(e||'').toLowerCase()===email);
 }
 
+// Icône SVG d'un onglet (source unique pour sidebar + renommages).
+// `variant` permet une icône différente selon le mode (ex: live → carte en expédition)
+function tabIconId(tab, variant){
+  const map={
+    events:'ti-events', phases:'ti-phases', live:'ti-live', citations:'ti-citations',
+    interviews:'ti-interviews', videos:'ti-videos', gallery:'ti-gallery', articles:'ti-articles',
+    sponsors:'ti-sponsors', contact:'ti-contact', programme:'ti-programme', flash:'ti-flash',
+    essentiel:'ti-essentiel', kpis:'ti-kpis', journalistes:'ti-reporters', etapes:'ti-etapes',
+    apparence:'ti-apparence', decor:'ti-decor', modules:'ti-modules', media:'ti-media',
+    tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide'
+  };
+  if(tab==='live' && variant==='expedition') return 'ti-map';
+  return map[tab]||'ti-modules';
+}
+function tabIcon(tab, variant){
+  return `<svg class="tab-ic" viewBox="0 0 24 24"><use href="#${tabIconId(tab,variant)}"/></svg>`;
+}
+
 function applyTabVisibility(){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const hiddenTabs=ev?.hiddenTabs||[];
   const superAdmin=isSuperAdmin();
   const isExpedition = ev?.mode === 'expedition';
 
-  // Expedition mode: tabs to hide and rename map
+  // Expedition mode: tabs to hide and rename map (icônes gérées par tabIcon)
   const expHiddenTabs = ['flash','rubriques'];
   const expRenameMap = {
-    essentiel: {label:'À retenir', icon:'🧠'},
-    live: {label:'Fil de route', icon:'🗺️'},
-    citations: {label:'Verbatims', icon:'💬'},
-    journalistes: {label:'Reporters', icon:'👤'},
-    kpis: {label:'Compteurs', icon:'📊'},
-    sponsors: {label:'Partenaires', icon:'🤝'},
-    contact: {label:'Contact', icon:'📞'},
-    decor: {label:'Décor', icon:'🎨'}
+    essentiel: {label:'À retenir'},
+    live: {label:'Fil de route'},
+    citations: {label:'Verbatims'},
+    journalistes: {label:'Reporters'},
+    kpis: {label:'Compteurs'},
+    sponsors: {label:'Partenaires'},
+    contact: {label:'Contact'},
+    decor: {label:'Décor'}
   };
   // Expedition sidebar order (matches front-end rendering order)
   const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
-    live: {label:'Fil live', icon:'📡'},
-    citations: {label:'Citations', icon:'💬'},
-    journalistes: {label:'Journalistes', icon:'👤'},
-    kpis: {label:'Chiffres clés', icon:'📊'}
+    live: {label:'Fil live'},
+    citations: {label:'Citations'},
+    journalistes: {label:'Journalistes'},
+    kpis: {label:'Chiffres clés'}
   };
 
   document.querySelectorAll('.sidebar-item').forEach(item=>{
@@ -534,18 +619,12 @@ function applyTabVisibility(){
     // In expedition mode: rename certain tabs
     if(isExpedition && expRenameMap[tab]){
       const r=expRenameMap[tab];
-      const iconEl=item.querySelector('.icon');
-      const textNode=[...item.childNodes].find(n=>n.nodeType===3 && n.textContent.trim());
-      if(iconEl) iconEl.textContent=r.icon;
-      // Replace the text content (preserve badge if present)
       const badge=item.querySelector('.badge');
-      const currentText=item.textContent.replace(badge?badge.textContent:'','').trim();
-      // Rebuild inner HTML
-      item.innerHTML=`<span class="icon">${r.icon}</span>${r.label}${badge?badge.outerHTML:''}`;
+      item.innerHTML=`<span class="icon">${tabIcon(tab,'expedition')}</span>${r.label}${badge?badge.outerHTML:''}`;
     } else if(!isExpedition && defaultLabels[tab]){
       const d=defaultLabels[tab];
       const badge=item.querySelector('.badge');
-      item.innerHTML=`<span class="icon">${d.icon}</span>${d.label}${badge?badge.outerHTML:''}`;
+      item.innerHTML=`<span class="icon">${tabIcon(tab,'classic')}</span>${d.label}${badge?badge.outerHTML:''}`;
     }
 
     // For other tabs: hidden if in hiddenTabs AND user is not super admin
@@ -847,9 +926,53 @@ function switchEvent(id){
 }
 
 function updateTopbarSelect(){
-  const sel=document.getElementById('topbar-event-select');
-  sel.innerHTML=eventsData.map(e=>`<option value="${e.id}"${e.id===currentEventId?' selected':''}>${e.internalName||e.title||'Sans titre'}</option>`).join('');
+  // Libellé du bouton (événement courant)
+  const cur=eventsData.find(e=>e.id===currentEventId);
+  const lbl=document.getElementById('evpick-current');
+  if(lbl) lbl.textContent=cur?(cur.internalName||cur.title||'Sans titre'):'—';
+  // Contenu du menu déroulant
+  const menu=document.getElementById('evpick-menu');
+  if(!menu) return;
+  let h='<div class="evpick-mh">Changer d\'événement</div>';
+  if(eventsData.length){
+    eventsData.forEach(e=>{
+      const name=(e.internalName||e.title||'Sans titre');
+      const isCur=e.id===currentEventId;
+      const modeLbl=e.mode==='expedition'?'Mode expédition':'Mode classique';
+      const nbPhases=(e.phases||[]).length;
+      const meta=nbPhases?`${nbPhases} phase${nbPhases>1?'s':''} · ${modeLbl}`:modeLbl;
+      h+=`<div class="evpick-ev${isCur?' cur':''}" onclick="pickEvent('${e.id}')">
+        <span class="evi"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg></span>
+        <span class="evn"><span class="n">${name.replace(/</g,'&lt;')}</span><span class="m">${meta}</span></span>
+        ${isCur?'<span class="evbadge">Actuel</span>':''}
+      </div>`;
+    });
+  } else {
+    h+='<div style="font-size:11px;color:var(--text3);padding:10px">Aucun événement.</div>';
+  }
+  h+=`<div class="evpick-sep"></div>
+    <button class="evpick-manage" onclick="manageEvents()"><svg viewBox="0 0 24 24"><use href="#ti-events"/></svg> Gérer les événements…</button>`;
+  menu.innerHTML=h;
 }
+
+function toggleEvPick(e){
+  if(e) e.stopPropagation();
+  document.getElementById('evpick').classList.toggle('open');
+}
+function pickEvent(id){
+  document.getElementById('evpick').classList.remove('open');
+  switchEvent(id);
+}
+function manageEvents(){
+  document.getElementById('evpick').classList.remove('open');
+  const item=document.querySelector('.sidebar-item[data-tab="events"]');
+  if(item) item.click();
+}
+// Fermer le menu au clic extérieur
+document.addEventListener('click',function(ev){
+  const p=document.getElementById('evpick');
+  if(p && p.classList.contains('open') && !p.contains(ev.target)) p.classList.remove('open');
+});
 
 var subCollectionsEventId=''; // track which event's subcollections we're listening to
 var renderPending=null; // debounce handle
@@ -5127,7 +5250,7 @@ function renderAccess(el){
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Décochez les onglets que vous souhaitez masquer aux utilisateurs non super-admin. L'onglet "Accès" est toujours réservé aux super admins.</div>`;
   allTabs.forEach(t=>{
     const visible=!hiddenTabs.includes(t.key);
-    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${t.icon}</span>${t.label}</span><label class="toggle"><input type="checkbox" ${visible?'checked':''} onchange="toggleTabVisibility('${t.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" ${visible?'checked':''} onchange="toggleTabVisibility('${t.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
 
