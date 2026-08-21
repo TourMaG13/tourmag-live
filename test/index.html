@@ -77,6 +77,13 @@ img{display:block}a{text-decoration:none}
 .hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:460px;overflow:hidden;background:linear-gradient(135deg,var(--hero-bg1) 0%,var(--hero-bg2) 50%,var(--hero-bg1) 100%)}
 .hero-split[data-h]{min-height:0;height:var(--hero-h)}
 .hero-split.no-image{grid-template-columns:1fr}
+/* Héro bandeau pleine largeur */
+.hero-banner{position:relative;width:100%;min-height:var(--hero-h,320px);overflow:hidden;background:#111}
+.hero-banner-img{width:100%;height:100%;min-height:var(--hero-h,320px);object-fit:cover;display:block}
+.hero-banner-overlay{position:absolute;inset:0;display:flex;align-items:center;background:linear-gradient(90deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,.25) 55%,transparent 100%)}
+.hero-banner-inner{padding:44px 42px;max-width:640px;color:#fff}
+.hero-banner-inner .hero-title{color:#fff}
+.hero-banner-inner .hero-subtitle-text{color:rgba(255,255,255,.9)}
 .hero-split-text{display:flex;flex-direction:column;justify-content:center;padding:44px 42px 36px;position:relative}
 .hero-split-text::before{content:'';position:absolute;top:-40px;left:-40px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,132,44,.1) 0%,transparent 70%);pointer-events:none}
 .hero-badge-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
@@ -475,6 +482,13 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.06);display:inline-block;transition:border-color .2s}
 .exp-hero-tag:hover{border-color:rgba(255,255,255,.5)}
 .exp-hero-photo{position:relative;overflow:hidden}
+/* Héro bandeau pleine largeur (expédition) */
+.exp-hero-banner{position:relative;width:100%;min-height:var(--exp-hero-h,420px);overflow:hidden;background:#111}
+.exp-hero-banner-img{width:100%;height:100%;min-height:var(--exp-hero-h,420px);object-fit:cover;display:block}
+.exp-hero-banner-overlay{position:absolute;inset:0;display:flex;align-items:center;background:linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.28) 55%,transparent 100%)}
+.exp-hero-banner-inner{padding:48px 44px;max-width:660px;color:#fff}
+.exp-hero-banner-inner h1{color:#fff;margin:0 0 12px}
+.exp-hero-banner-inner .exp-hero-subtitle{color:rgba(255,255,255,.9)}
 .exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block;animation:heroImgFade .5s ease}
 .exp-hero-credit{position:absolute;bottom:12px;right:14px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.7);background:rgba(17,17,17,.5);padding:4px 8px}
 
@@ -1495,33 +1509,52 @@ function render(data){
 
   // ===== HERO =====
   function mkHero(){
+    const useBanner = !!(event.heroBannerImage && event.heroBannerEnabled);
     const hasImage = !!_heroImage;
-    console.log("[TourMaG Live] hero_height:", event.hero_height, typeof event.hero_height);
     const hh = event.hero_height;
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
-    let o = `<div class="hero-split${hasImage?'':' no-image'} fi" ${heroStyle}><div class="hero-split-text">`;
-    o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">Dossier spécial TourMaG</span></div>`;
-    if(_heroLogo) o += `<img class="hero-logo" src="${_heroLogo}" alt="" onerror="this.remove()">`;
-    if(_heroTitle) o += `<h1 class="hero-title">${_heroTitle}</h1>`;
-    if(_heroSubtitle) o += `<p class="hero-subtitle-text">${_heroSubtitle}</p>`;
-    o += `<div class="hero-meta-row">`;
-    if(_heroLocation) o += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
-    if(_heroDates) o += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
-    o += `</div>`;
+    let o = '';
+    if(useBanner){
+      // Image bandeau pleine largeur (remplace les 2 colonnes)
+      o += `<div class="hero-banner fi" ${heroStyle}><img class="hero-banner-img" src="${event.heroBannerImage}" alt="">`;
+      if(event.heroBannerText){
+        o += `<div class="hero-banner-overlay"><div class="hero-banner-inner">`;
+        o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">${event.heroBadgeLabel||'Dossier spécial TourMaG'}</span></div>`;
+        if(_heroLogo) o += `<img class="hero-logo" src="${_heroLogo}" alt="" onerror="this.remove()">`;
+        if(_heroTitle) o += `<h1 class="hero-title">${_heroTitle}</h1>`;
+        if(_heroSubtitle) o += `<p class="hero-subtitle-text">${_heroSubtitle}</p>`;
+        o += `<div class="hero-meta-row">`;
+        if(_heroLocation) o += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
+        if(_heroDates) o += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
+        o += `</div></div></div>`;
+      }
+      o += `</div>`;
+    } else {
+    let _split = `<div class="hero-split${hasImage?'':' no-image'} fi" ${heroStyle}><div class="hero-split-text">`;
+    _split += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">${event.heroBadgeLabel||'Dossier spécial TourMaG'}</span></div>`;
+    if(_heroLogo) _split += `<img class="hero-logo" src="${_heroLogo}" alt="" onerror="this.remove()">`;
+    if(_heroTitle) _split += `<h1 class="hero-title">${_heroTitle}</h1>`;
+    if(_heroSubtitle) _split += `<p class="hero-subtitle-text">${_heroSubtitle}</p>`;
+    _split += `<div class="hero-meta-row">`;
+    if(_heroLocation) _split += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
+    if(_heroDates) _split += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
+    _split += `</div>`;
     // Hero tags (separate from live feed tag colors)
     const heroTags = event.heroTags || [];
     if(heroTags.length){
-      o += `<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">`;
+      _split += `<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">`;
       heroTags.filter(t=>t&&t.name).forEach(t => {
         const c = t.color || 'rgba(255,255,255,.3)';
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c};color:#fff;background:${c}40"` : ` style="border-color:rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1)"`;
-        o += `<span class="hero-tag"${link}>${t.name}</span>`;
+        _split += `<span class="hero-tag"${link}>${t.name}</span>`;
       });
-      o += `</div>`;
+      _split += `</div>`;
     }
-    o += `</div>`;
-    if(hasImage) o += `<div class="hero-split-image"><img src="${_heroImage}" alt="" onerror="this.parentElement.remove()"></div>`;
-    o += `</div>`;
+    _split += `</div>`;
+    if(hasImage) _split += `<div class="hero-split-image"><img src="${_heroImage}" alt="" onerror="this.parentElement.remove()"></div>`;
+    _split += `</div>`;
+    o = _split;
+    }
 
     // Timeline
     console.log('[TourMaG Live] Timeline data:', timeline?.length || 0, 'items', timeline);
@@ -2248,9 +2281,27 @@ function renderExpedition(data){
   </header>`;
 
   // ===== HERO =====
+  const _expUseBanner = !!(event.heroBannerImage && event.heroBannerEnabled);
   const hasHeroImage = !!_heroImage;
   const _expHeroH = event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
+  if(_expUseBanner){
+    h += `<section class="exp-hero-banner"${_expHeroAttr}><img class="exp-hero-banner-img" src="${event.heroBannerImage}" alt="">`;
+    if(event.heroBannerText){
+      h += `<div class="exp-hero-banner-overlay"><div class="exp-hero-banner-inner">`;
+      if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
+      if(_heroLogo) h += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
+      if(_heroEyebrow) h += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
+      h += `<h1>${_heroTitle}</h1>`;
+      if(_heroSubtitle) h += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
+      const _bm=[];
+      if(_heroLocation) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
+      if(_heroDates) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
+      if(_bm.length) h += `<div class="exp-hero-meta-row">${_bm.join('')}</div>`;
+      h += `</div></div>`;
+    }
+    h += `</section>`;
+  } else {
   h += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  h += `<div class="exp-hero-text">`;
 
   // Badge row (live + label)
@@ -2294,6 +2345,7 @@ function renderExpedition(data){
   }
 
   h += `</section>`;
+  } // fin else (héro split expédition)
 
 
   // ===== BLOCK-BASED RENDERING =====
