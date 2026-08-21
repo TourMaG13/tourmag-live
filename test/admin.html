@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--pri:#1B1B2F;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--bg:#F8FAFC;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:12px;--shadow:0 2px 12px rgba(0,0,0,.06)}
+:root{--pri:#1B1B2F;--acc:#E8842C;--acc2:#D4731D;--acc-soft:#FFF3E9;--blue:#0C6CA1;--green:#059669;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--bg:#F8FAFC;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:12px;--shadow:0 2px 12px rgba(0,0,0,.06)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
@@ -116,6 +116,16 @@ select.form-input{cursor:pointer}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{background:#F1F5F9}
 .btn-sm{padding:5px 12px;font-size:10px}
 .btn-xs{padding:3px 8px;font-size:9px;border-radius:4px}
+
+/* Profils d'accès réutilisables */
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.preset-card{border:1.5px solid var(--border);border-radius:var(--rl);padding:14px 15px;position:relative;transition:border .15s,box-shadow .15s;background:var(--card)}
+.preset-card:hover{border-color:var(--acc);box-shadow:0 4px 14px rgba(232,132,44,.12)}
+.preset-card.applied{border-color:var(--acc);background:var(--acc-soft,#FFF3E9)}
+.preset-card .preset-nm{font-weight:700;font-size:13.5px;color:var(--text);padding-right:60px}
+.preset-card .preset-ds{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
+.preset-card .preset-tag{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;color:var(--acc2,#D4731D);background:#fff;border:1px solid var(--acc);padding:2px 8px;border-radius:20px}
+.preset-card .preset-actions{display:flex;gap:6px;margin-top:12px;align-items:center}
 
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
@@ -347,6 +357,7 @@ var interviewsData=[];
 var etapesData=[];     // sous-collection etapes (mode expédition)
 var journalistsGlobalData=[];  // collection globale (réutilisable entre événements)
 var adminsData=[];     // collection admins (gestion des comptes)
+var accessPresetsData=[];  // collection accessPresets (profils d'accès réutilisables, globaux)
 var tagsData=[];      // Stocké dans event doc → tags[]
 
 // Listeners unsubscribe handles
@@ -828,11 +839,37 @@ function initApp(){
     scheduleRender();
   },err=>console.error('onSnapshot error on admins',err));
   unsubs.push(u3);
+
+  // Access presets collection (profils d'accès réutilisables, globaux)
+  const u4=db.collection('accessPresets').onSnapshot(snap=>{
+    accessPresetsData=[];
+    snap.forEach(d=>accessPresetsData.push({id:d.id,...d.data()}));
+    accessPresetsData.sort((a,b)=>(a.order||0)-(b.order||0)||(a.name||'').localeCompare(b.name||''));
+    _seedDefaultPresets();
+    scheduleRender();
+  },err=>console.error('onSnapshot error on accessPresets',err));
+  unsubs.push(u4);
+}
+
+// Crée les 2 profils par défaut une seule fois si la collection est vide
+var _presetsSeeded=false;
+async function _seedDefaultPresets(){
+  if(_presetsSeeded || accessPresetsData.length) return;
+  _presetsSeeded=true; // évite les créations concurrentes
+  try{
+    const snap=await db.collection('accessPresets').limit(1).get();
+    if(!snap.empty) return; // une autre session a déjà semé
+    const DEFAULTS=[
+      {name:'Client — Rédaction', order:1, hiddenTabs:['events','programme','flash','kpis','etapes','decor','media','rubriques','tags','modules','widget','sponsors','access']},
+      {name:'Client — Autonome', order:2, hiddenTabs:['events','flash','rubriques','media','tags','modules','widget','access']}
+    ];
+    for(const p of DEFAULTS){ await db.collection('accessPresets').add(p); }
+  }catch(err){ console.error('[Admin] seed presets failed:', err); _presetsSeeded=false; }
 }
 
 function subscribeSubCollections(){
-  // Unsubscribe previous sub-collection listeners (indices 3+), keep global listeners (events=0, journalists=1, admins=2)
-  while(unsubs.length>3) unsubs.pop()();
+  // Unsubscribe previous sub-collection listeners (indices 4+), keep global listeners (events=0, journalists=1, admins=2, accessPresets=3)
+  while(unsubs.length>4) unsubs.pop()();
 
   if(!currentEventId){ subCollectionsEventId=''; return; }
   subCollectionsEventId=currentEventId;
@@ -4841,6 +4878,86 @@ async function saveJournalistPhases(){
 }
 
 // ==================== ACCÈS ====================
+function mkAccessPresetsCard(allTabs, hiddenTabs){
+  const totalTabs=allTabs.length;
+  let cards='';
+  accessPresetsData.forEach(p=>{
+    const hidden=(p.hiddenTabs||[]);
+    const visibleCount=totalTabs-hidden.filter(k=>allTabs.some(t=>t.key===k)).length;
+    // Ce preset correspond-il exactement à la config actuelle ?
+    const sameAsCurrent=hidden.length===hiddenTabs.length && hidden.every(k=>hiddenTabs.includes(k));
+    cards+=`<div class="preset-card${sameAsCurrent?' applied':''}">
+      ${sameAsCurrent?'<span class="preset-tag">Appliqué</span>':''}
+      <div class="preset-nm">${(p.name||'Sans nom').replace(/</g,'&lt;')}</div>
+      <div class="preset-ds">${visibleCount} onglet${visibleCount>1?'s':''} visible${visibleCount>1?'s':''} sur ${totalTabs}</div>
+      <div class="preset-actions">
+        <button class="btn btn-primary btn-xs" onclick="applyAccessPreset('${p.id}')">Appliquer</button>
+        <button class="btn btn-ghost btn-xs" onclick="renameAccessPreset('${p.id}')" title="Renommer">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteAccessPreset('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+  });
+  if(!accessPresetsData.length){
+    cards=`<div style="font-size:11px;color:var(--text3);padding:10px">Aucun profil pour l'instant.</div>`;
+  }
+  return `<div class="admin-card"><h3>🗂 Profils d'accès réutilisables</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Un profil = un ensemble d'onglets visibles. Créez-le une fois, appliquez-le en un clic sur n'importe quel événement. Ces profils sont <strong>partagés entre tous vos événements</strong>.</div>
+    <div class="preset-grid">${cards}</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="saveCurrentAsPreset()">💾 Enregistrer la config actuelle comme profil</button>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:8px">💡 « Appliquer » remplace la configuration d'onglets de cet événement par celle du profil.</div>
+  </div>`;
+}
+
+async function applyAccessPreset(presetId){
+  const p=accessPresetsData.find(x=>x.id===presetId); if(!p){toast('Profil introuvable','error');return;}
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const proceed=confirm(`Appliquer le profil « ${p.name} » ?\n\nCela remplacera la configuration d'onglets actuelle de cet événement (${(ev.hiddenTabs||[]).length} onglet(s) masqué(s) actuellement).`);
+  if(!proceed) return;
+  const hiddenTabs=[...(p.hiddenTabs||[])];
+  saving(true);
+  try{
+    await evRef().update({hiddenTabs});
+    if(ev) ev.hiddenTabs=hiddenTabs;
+    applyTabVisibility();
+    toast('Profil appliqué');
+    if(currentTab==='access') renderTab();
+  }catch(err){ console.error('[Admin] applyAccessPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
+}
+
+async function saveCurrentAsPreset(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const hiddenTabs=[...(ev.hiddenTabs||[])];
+  const name=prompt('Nom du profil (ex : Client — Rédaction) :', '');
+  if(name===null) return;
+  const nm=(name||'').trim(); if(!nm){toast('Nom vide','error');return;}
+  saving(true);
+  try{
+    const maxOrder=accessPresetsData.reduce((m,p)=>Math.max(m,p.order||0),0);
+    await db.collection('accessPresets').add({name:nm, hiddenTabs, order:maxOrder+1});
+    toast('Profil enregistré');
+  }catch(err){ console.error('[Admin] saveCurrentAsPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
+}
+
+async function renameAccessPreset(presetId){
+  const p=accessPresetsData.find(x=>x.id===presetId); if(!p) return;
+  const name=prompt('Renommer le profil :', p.name||'');
+  if(name===null) return;
+  const nm=(name||'').trim(); if(!nm){toast('Nom vide','error');return;}
+  saving(true);
+  try{ await db.collection('accessPresets').doc(presetId).update({name:nm}); toast('Profil renommé'); }
+  catch(err){ console.error('[Admin] renameAccessPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
+}
+
+async function deleteAccessPreset(presetId,name){
+  const proceed=confirm(`Supprimer le profil « ${name} » ?\n\nCette action est définitive. Les événements déjà configurés ne changent pas — seul le profil réutilisable disparaît.`);
+  if(!proceed) return;
+  saving(true);
+  try{ await db.collection('accessPresets').doc(presetId).delete(); toast('Profil supprimé'); }
+  catch(err){ console.error('[Admin] deleteAccessPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
+}
+
 function renderAccess(el){
   if(!isSuperAdmin()){el.innerHTML='<div class="page-title">Accès refusé</div>';return;}
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -4925,6 +5042,8 @@ function renderAccess(el){
   h+=`</div>
     <div style="display:flex;gap:8px"><input class="form-input" id="access-new-email" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addSuperAdmin()">+ Ajouter</button></div>
   </div>
+
+  ${mkAccessPresetsCard(allTabs, hiddenTabs)}
 
   <div class="admin-card"><h3>👁 Onglets visibles pour les admins</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Décochez les onglets que vous souhaitez masquer aux utilisateurs non super-admin. L'onglet "Accès" est toujours réservé aux super admins.</div>`;
