@@ -1461,11 +1461,13 @@ function render(data){
   const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
   const _heroLocation = _ph.heroLocation || event.location || '';
   const _heroDates    = _ph.heroDates    || event.dates    || '';
-  // Bandeau : priorité à la phase. Si la phase définit une image bandeau, on l'utilise ;
-  // sinon on retombe sur le bandeau de l'événement (s'il est activé).
-  const _hasPhaseBanner = !!(_ph && _ph.heroBannerImage);
-  const _heroBannerImage = _hasPhaseBanner ? _ph.heroBannerImage : (event.heroBannerEnabled ? (event.heroBannerImage||'') : '');
-  const _heroBannerText  = _hasPhaseBanner ? !!_ph.heroBannerText : !!event.heroBannerText;
+  // Bandeau : 3 modes de phase — 'own' (image propre), 'off' (désactivé), sinon hérite de l'événement
+  const _pbMode = (_ph && _ph.bannerMode) || 'inherit';
+  const _evBanner = event.heroBannerEnabled ? (event.heroBannerImage||'') : '';
+  let _heroBannerImage='', _heroBannerText=false;
+  if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
+  else if(_pbMode==='off'){ _heroBannerImage=''; }
+  else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
   console.log('[TourMaG Live] Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates}, eventFallbacks:{title:event.title,subtitle:event.subtitle,hero_image:event.hero_image,logo_url:event.logo_url,location:event.location,dates:event.dates}});
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
@@ -2202,10 +2204,13 @@ function renderExpedition(data){
   const _heroDates      = _ph.heroDates      || event.dates    || '';
   const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
   const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
-  // Bandeau : priorité à la phase, sinon bandeau événement (si activé)
-  const _hasPhaseBanner = !!(_ph && _ph.heroBannerImage);
-  const _heroBannerImage = _hasPhaseBanner ? _ph.heroBannerImage : (event.heroBannerEnabled ? (event.heroBannerImage||'') : '');
-  const _heroBannerText  = _hasPhaseBanner ? !!_ph.heroBannerText : !!event.heroBannerText;
+  // Bandeau : 3 modes de phase — 'own' / 'off' / héritage événement
+  const _pbMode = (_ph && _ph.bannerMode) || 'inherit';
+  const _evBanner = event.heroBannerEnabled ? (event.heroBannerImage||'') : '';
+  let _heroBannerImage='', _heroBannerText=false;
+  if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
+  else if(_pbMode==='off'){ _heroBannerImage=''; }
+  else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
   console.log('[TourMaG Live] EXP Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates,_heroEyebrow,_heroPhotoCredit}});
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
