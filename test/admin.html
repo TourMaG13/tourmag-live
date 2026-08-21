@@ -1918,6 +1918,17 @@ function renderApparence(el){
   // ==================== HERO ====================
   var heroInner = '';
   heroInner += '<div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="'+(ev.hero_image||'')+'" style="flex:1" placeholder="Photo affichée à droite du hero">'+mkMediaPickerBtn('app-hero-image')+mkUploadBtn('app-hero-image')+'</div></div>';
+  if(!isExp){
+    heroInner += '<div class="form-row"><label class="form-label">Label du badge</label><input class="form-input" id="app-hero-badge" value="'+((ev.heroBadgeLabel!=null?ev.heroBadgeLabel:'Dossier spécial TourMaG')).replace(/"/g,'&quot;')+'" placeholder="Dossier spécial TourMaG"><div style="font-size:9px;color:var(--text3);margin-top:2px">Petit libellé affiché en haut du hero (à côté de « EN DIRECT »).</div></div>';
+  }
+  // Image bandeau pleine largeur (remplace les 2 colonnes)
+  heroInner += '<div style="margin-top:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">'
+    +'<label class="form-label" style="display:flex;align-items:center;gap:8px;font-weight:600"><input type="checkbox" id="app-hero-banner-on" '+(ev.heroBannerEnabled?'checked':'')+'> Utiliser une image bandeau pleine largeur</label>'
+    +'<div style="font-size:9px;color:var(--text3);margin:4px 0 10px">Remplace les deux colonnes (texte + photo) par une seule image fournie, par exemple, par le client.</div>'
+    +'<div class="form-row"><label class="form-label">Image bandeau</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-banner-img" value="'+(ev.heroBannerImage||'').replace(/"/g,'&quot;')+'" style="flex:1" placeholder="URL de l\'image bandeau">'+mkMediaPickerBtn('app-hero-banner-img')+mkUploadBtn('app-hero-banner-img')+'</div></div>'
+    +'<label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="app-hero-banner-text" '+(ev.heroBannerText?'checked':'')+'> Afficher le titre/sous-titre par-dessus l\'image</label>'
+    +'<div style="font-size:9px;color:var(--text3);margin-top:2px">Décoché = image seule (le client a déjà mis le texte dans son visuel).</div>'
+    +'</div>';
   heroInner += '<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Couleur gradient</label><input type="color" class="form-input" id="app-hero-color" value="'+(ev.color||'#2D1B4E')+'" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="app-hero-height" value="'+(ev.hero_height||(isExp?420:460))+'" min="200" max="900" style="width:120px"></div><div class="form-row"><label class="form-label">Taille logo (px)</label><input type="number" class="form-input" id="app-logo-size" value="'+(ev.logoSize||(isExp?48:56))+'" min="20" max="120" style="width:100px"></div><div class="form-row"><label class="form-label">Position logo</label><select class="form-input" id="app-logo-align" style="width:120px"><option value="left"'+((ev.logoAlign||'left')==='left'?' selected':'')+'>◀ Gauche</option><option value="center"'+(ev.logoAlign==='center'?' selected':'')+'>■ Centré</option><option value="right"'+(ev.logoAlign==='right'?' selected':'')+'>Droite ▶</option></select></div></div>';
   if(isExp){
     heroInner += '<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Eyebrow</label><input class="form-input" id="app-hero-eyebrow" value="'+((ev.expedition||{}).eyebrow||'').replace(/"/g,'&quot;')+'" placeholder="Expédition éditoriale · Dossier spécial"></div><div class="form-row"><label class="form-label">Crédit photo</label><input class="form-input" id="app-hero-credit" value="'+((ev.expedition||{}).photoCredit||'').replace(/"/g,'&quot;')+'" placeholder="© Photographe"></div></div>';
@@ -2237,6 +2248,16 @@ async function saveHeroSettings(){
   const hbgEl=document.getElementById('app-hero-bg');
   const hbgOn=document.getElementById('app-hero-bg-on');
   if(hbgEl) ud.heroBgColor = (hbgOn && hbgOn.checked) ? hbgEl.value : '';
+  // Label du badge (classique)
+  const badgeEl=document.getElementById('app-hero-badge');
+  if(badgeEl) ud.heroBadgeLabel=badgeEl.value.trim();
+  // Image bandeau pleine largeur
+  const bnOn=document.getElementById('app-hero-banner-on');
+  const bnImg=document.getElementById('app-hero-banner-img');
+  const bnTxt=document.getElementById('app-hero-banner-text');
+  if(bnOn) ud.heroBannerEnabled=bnOn.checked;
+  if(bnImg) ud.heroBannerImage=bnImg.value.trim();
+  if(bnTxt) ud.heroBannerText=bnTxt.checked;
   try{
     await evRef().update(ud);
     toast('Réglages hero enregistrés');
