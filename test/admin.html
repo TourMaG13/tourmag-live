@@ -47,6 +47,15 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sidebar-item .icon{width:20px;text-align:center;font-size:14px}
 .sidebar-item .badge{margin-left:auto;font-size:9px;font-weight:700;color:#fff;background:var(--acc);padding:1px 7px;border-radius:10px}
 
+/* Groupes repliables de la sidebar */
+.sb-group{margin-top:2px}
+.sb-group-hd{display:flex;align-items:center;width:100%;border:none;background:none;cursor:pointer;font-family:'Josefin Sans';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);padding:15px 20px 8px;transition:color .12s}
+.sb-group-hd:hover{color:var(--text2)}
+.sb-group-nm{flex:1;text-align:left}
+.sb-group-chev{font-size:11px;transition:transform .2s;color:var(--text3)}
+.sb-group.collapsed .sb-group-chev{transform:rotate(-90deg)}
+.sb-group.collapsed .sb-group-items{display:none}
+
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
 
 /* ==================== RESPONSIVE MOBILE ==================== */
@@ -283,34 +292,56 @@ select.form-input{cursor:pointer}
   <div class="mobile-sidebar-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
+      <!-- Point d'entrée toujours visible -->
       <div class="sidebar-item active" data-tab="events"><span class="icon">📋</span>Mes événements</div>
-      <div class="sidebar-item" data-tab="phases"><span class="icon">🔀</span>Phases / Temps forts</div>
-      <div class="sidebar-section">Contenu</div>
-      <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
-      <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Verbatims<span class="badge" id="badge-cit">0</span></div>
-      <div class="sidebar-item" data-tab="interviews"><span class="icon">🎙️</span>Interviews</div>
-      <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
-      <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
-      <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
-      <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
-      <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
-      <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
-      <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
-      <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
-      <div class="sidebar-section">Outils</div>
-      <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
-      <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
-      <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
-      <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Compteurs</div>
-      <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
-      <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
-      <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
-      <div class="sidebar-section">Système</div>
-      <div class="sidebar-item" data-tab="apparence"><span class="icon">🎨</span>Apparence</div>
-      <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
-      <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
-      <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
-      <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
+
+      <div class="sb-group" data-group="contenu">
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu</span><span class="sb-group-chev">▾</span></button>
+        <div class="sb-group-items">
+          <div class="sidebar-item" data-tab="live"><span class="icon">📡</span>Fil live<span class="badge" id="badge-live">0</span></div>
+          <div class="sidebar-item" data-tab="citations"><span class="icon">💬</span>Verbatims<span class="badge" id="badge-cit">0</span></div>
+          <div class="sidebar-item" data-tab="interviews"><span class="icon">🎙️</span>Interviews</div>
+          <div class="sidebar-item" data-tab="videos"><span class="icon">🎬</span>Vidéos</div>
+          <div class="sidebar-item" data-tab="gallery"><span class="icon">📸</span>Galerie photos</div>
+          <div class="sidebar-item" data-tab="articles"><span class="icon">📰</span>Articles liés</div>
+          <div class="sidebar-item" data-tab="sponsors"><span class="icon">🤝</span>Partenaires</div>
+          <div class="sidebar-item" data-tab="contact"><span class="icon">📞</span>Contact</div>
+          <div class="sidebar-item" data-tab="programme"><span class="icon">🗓</span>Programme</div>
+          <div class="sidebar-item" data-tab="flash"><span class="icon">⚡</span>Flash info</div>
+          <div class="sidebar-item" data-tab="essentiel"><span class="icon">🧠</span>L'essentiel</div>
+          <div class="sidebar-item" data-tab="kpis"><span class="icon">📊</span>Compteurs</div>
+          <div class="sidebar-item" data-tab="journalistes"><span class="icon">👤</span>Reporters</div>
+          <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon">📍</span>Étapes</div>
+        </div>
+      </div>
+
+      <div class="sb-group" data-group="apparence">
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Apparence & mise en page</span><span class="sb-group-chev">▾</span></button>
+        <div class="sb-group-items">
+          <div class="sidebar-item" data-tab="apparence"><span class="icon">🎨</span>Apparence</div>
+          <div class="sidebar-item" data-tab="decor"><span class="icon">🎨</span>Décor</div>
+          <div class="sidebar-item" data-tab="modules"><span class="icon">⚙️</span>Modules</div>
+        </div>
+      </div>
+
+      <div class="sb-group" data-group="outils">
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Outils & diffusion</span><span class="sb-group-chev">▾</span></button>
+        <div class="sb-group-items">
+          <div class="sidebar-item" data-tab="media"><span class="icon">📷</span>Médiathèque</div>
+          <div class="sidebar-item" data-tab="tags"><span class="icon">🏷</span>Tags live</div>
+          <div class="sidebar-item" data-tab="rubriques"><span class="icon">📁</span>Rubriques</div>
+          <div class="sidebar-item" data-tab="widget"><span class="icon">📦</span>Widget homepage</div>
+        </div>
+      </div>
+
+      <div class="sb-group" data-group="reglages">
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Réglages</span><span class="sb-group-chev">▾</span></button>
+        <div class="sb-group-items">
+          <div class="sidebar-item" data-tab="phases"><span class="icon">🔀</span>Phases / Temps forts</div>
+          <div class="sidebar-item" data-tab="access"><span class="icon">👥</span>Accès</div>
+          <div class="sidebar-item" data-tab="guide" style="background:#FFF7ED;border-left:3px solid var(--acc)"><span class="icon">📖</span>Guide d'utilisation</div>
+        </div>
+      </div>
     </div>
     <div class="admin-main" id="admin-main"></div>
   </div>
@@ -525,7 +556,14 @@ function applyTabVisibility(){
     }
   });
 
-  // Also hide sidebar sections if all their items are hidden
+  // Masquer un groupe si tous ses onglets sont masqués (nouvelle structure en groupes)
+  document.querySelectorAll('.sb-group').forEach(grp=>{
+    const items=grp.querySelectorAll('.sidebar-item');
+    let anyVisible=false;
+    items.forEach(it=>{ if(it.style.display!=='none') anyVisible=true; });
+    grp.style.display=anyVisible?'':'none';
+  });
+  // Rétrocompat : si d'anciennes sections plates subsistent
   document.querySelectorAll('.sidebar-section').forEach(sec=>{
     let next=sec.nextElementSibling;
     let anyVisible=false;
@@ -545,6 +583,7 @@ function applyTabVisibility(){
       currentTab=firstVisible.dataset.tab;
       document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
       firstVisible.classList.add('active');
+      openGroupOfTab(currentTab);
       renderTab();
     }
   }
@@ -742,6 +781,7 @@ document.querySelectorAll('.sidebar-item').forEach(item=>{
     currentTab=tab;
     document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
+    openGroupOfTab(tab);
     closeMobileMenu();
     renderTab();
   });
@@ -752,6 +792,42 @@ function toggleMobileMenu(){
   const ov=document.getElementById('mobile-overlay');
   sb.classList.toggle('mobile-open');
   ov.classList.toggle('show');
+}
+
+// ---- Groupes repliables de la sidebar ----
+function _sbGroupState(){
+  try{ return JSON.parse(localStorage.getItem('tmlSidebarGroups')||'{}'); }catch(e){ return {}; }
+}
+function _saveSbGroupState(st){
+  try{ localStorage.setItem('tmlSidebarGroups', JSON.stringify(st)); }catch(e){}
+}
+function toggleSbGroup(btn){
+  const grp=btn.closest('.sb-group'); if(!grp) return;
+  grp.classList.toggle('collapsed');
+  const st=_sbGroupState();
+  st[grp.dataset.group]=grp.classList.contains('collapsed')?'collapsed':'open';
+  _saveSbGroupState(st);
+}
+function initSbGroups(){
+  const st=_sbGroupState();
+  const hasState=Object.keys(st).length>0;
+  document.querySelectorAll('.sb-group').forEach(grp=>{
+    const key=grp.dataset.group;
+    let collapsed;
+    if(hasState && st[key]){ collapsed = st[key]==='collapsed'; }
+    else { collapsed = (key!=='contenu'); } // défaut : seul "Contenu" ouvert
+    grp.classList.toggle('collapsed', collapsed);
+  });
+  // S'assurer que le groupe contenant l'onglet actif est ouvert
+  openGroupOfTab(currentTab);
+}
+function openGroupOfTab(tab){
+  const item=document.querySelector(`.sidebar-item[data-tab="${tab}"]`);
+  const grp=item && item.closest('.sb-group');
+  if(grp && grp.classList.contains('collapsed')){
+    grp.classList.remove('collapsed');
+    const st=_sbGroupState(); st[grp.dataset.group]='open'; _saveSbGroupState(st);
+  }
 }
 function closeMobileMenu(){
   const sb=document.getElementById('sidebar');
@@ -787,6 +863,8 @@ function scheduleRender(){
 // FIRESTORE LISTENERS
 // ============================================================
 function initApp(){
+  // Init des groupes repliables de la sidebar (état par défaut / mémorisé)
+  initSbGroups();
   // Listen to events collection
   const u1=db.collection('events').onSnapshot(snap=>{
     const allEvents=[];
