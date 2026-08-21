@@ -2518,6 +2518,11 @@ function editPhase(idx){
       <div class="form-row"><label class="form-label">Sous-titre hero</label><input class="form-input" id="m-phase-hero-subtitle" value="${(p.heroSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Vide = sous-titre global"></div>
       <div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale" style="flex:1">${mkMediaPickerBtn('m-phase-hero-image')}${mkUploadBtn('m-phase-hero-image')}</div></div>
       <div class="form-row"><label class="form-label">Logo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-logo" value="${(p.heroLogo||'').replace(/"/g,'&quot;')}" placeholder="Vide = logo global" style="flex:1">${mkMediaPickerBtn('m-phase-hero-logo')}${mkUploadBtn('m-phase-hero-logo')}</div></div>
+      <div style="margin-top:8px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <div class="form-row"><label class="form-label">Image bandeau pleine largeur (cette phase)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-banner-image" value="${(p.heroBannerImage||'').replace(/"/g,'&quot;')}" placeholder="URL — vide = pas de bandeau sur cette phase" style="flex:1">${mkMediaPickerBtn('m-phase-banner-image')}${mkUploadBtn('m-phase-banner-image')}</div></div>
+        <label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="m-phase-banner-text" ${p.heroBannerText?'checked':''}> Afficher le titre/sous-titre par-dessus l'image</label>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">Si une image est indiquée ici, cette phase affiche un bandeau pleine largeur à la place du hero en 2 colonnes. Les autres phases ne sont pas affectées.</div>
+      </div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-phase-hero-location" value="${(p.heroLocation||'').replace(/"/g,'&quot;')}" placeholder="Vide = lieu global"></div>
         <div class="form-row"><label class="form-label">Dates</label><input class="form-input" id="m-phase-hero-dates" value="${(p.heroDates||'').replace(/"/g,'&quot;')}" placeholder="Vide = dates globales"></div>
@@ -2559,6 +2564,8 @@ async function savePhaseEdit(idx){
     heroDates:document.getElementById('m-phase-hero-dates').value.trim(),
     heroEyebrow:document.getElementById('m-phase-hero-eyebrow').value.trim(),
     heroPhotoCredit:document.getElementById('m-phase-hero-credit').value.trim(),
+    heroBannerImage:document.getElementById('m-phase-banner-image').value.trim(),
+    heroBannerText:document.getElementById('m-phase-banner-text').checked,
     mapTitle:document.getElementById('m-phase-map-title').value.trim(),
     mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
     mapNote:document.getElementById('m-phase-map-note').value.trim()
