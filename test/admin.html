@@ -1917,6 +1917,9 @@ function renderApparence(el){
 
   // ==================== HERO ====================
   var heroInner = '';
+  if((ev.phases||[]).length){
+    heroInner += '<div style="margin-bottom:12px;padding:10px 12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:11px;color:#1E40AF;line-height:1.5">ℹ️ Cet événement a <strong>'+(ev.phases||[]).length+' phase(s)</strong>. Les réglages ci-dessous sont les <strong>valeurs par défaut</strong> ; chaque phase peut les remplacer dans l\'onglet <strong>Phases / Temps forts</strong>. Si une phase surcharge un réglage, c\'est la valeur de la phase qui s\'affiche pour cette phase.</div>';
+  }
   heroInner += '<div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="'+(ev.hero_image||'')+'" style="flex:1" placeholder="Photo affichée à droite du hero">'+mkMediaPickerBtn('app-hero-image')+mkUploadBtn('app-hero-image')+'</div></div>';
   if(!isExp){
     heroInner += '<div class="form-row"><label class="form-label">Label du badge</label><input class="form-input" id="app-hero-badge" value="'+((ev.heroBadgeLabel!=null?ev.heroBadgeLabel:'Dossier spécial TourMaG')).replace(/"/g,'&quot;')+'" placeholder="Dossier spécial TourMaG"><div style="font-size:9px;color:var(--text3);margin-top:2px">Petit libellé affiché en haut du hero (à côté de « EN DIRECT »).</div></div>';
@@ -2519,9 +2522,17 @@ function editPhase(idx){
       <div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-image" value="${(p.heroImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image — vide = image hero globale" style="flex:1">${mkMediaPickerBtn('m-phase-hero-image')}${mkUploadBtn('m-phase-hero-image')}</div></div>
       <div class="form-row"><label class="form-label">Logo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-hero-logo" value="${(p.heroLogo||'').replace(/"/g,'&quot;')}" placeholder="Vide = logo global" style="flex:1">${mkMediaPickerBtn('m-phase-hero-logo')}${mkUploadBtn('m-phase-hero-logo')}</div></div>
       <div style="margin-top:8px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-        <div class="form-row"><label class="form-label">Image bandeau pleine largeur (cette phase)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-banner-image" value="${(p.heroBannerImage||'').replace(/"/g,'&quot;')}" placeholder="URL — vide = pas de bandeau sur cette phase" style="flex:1">${mkMediaPickerBtn('m-phase-banner-image')}${mkUploadBtn('m-phase-banner-image')}</div></div>
-        <label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="m-phase-banner-text" ${p.heroBannerText?'checked':''}> Afficher le titre/sous-titre par-dessus l'image</label>
-        <div style="font-size:9px;color:var(--text3);margin-top:2px">Si une image est indiquée ici, cette phase affiche un bandeau pleine largeur à la place du hero en 2 colonnes. Les autres phases ne sont pas affectées.</div>
+        <label class="form-label" style="font-weight:600">Bandeau pleine largeur — cette phase</label>
+        <div style="font-size:9px;color:var(--text3);margin:2px 0 8px">Événement : <strong>${ev.heroBannerEnabled&&ev.heroBannerImage?'bandeau activé':'aucun bandeau'}</strong>.</div>
+        <select class="form-input" id="m-phase-banner-mode" onchange="_togglePhaseBannerFields()" style="max-width:340px">
+          <option value="inherit" ${(!p.bannerMode||p.bannerMode==='inherit')?'selected':''}>Hériter de l'événement (${ev.heroBannerEnabled&&ev.heroBannerImage?'affiche le bandeau événement':'pas de bandeau'})</option>
+          <option value="own" ${p.bannerMode==='own'?'selected':''}>Utiliser une image bandeau propre à cette phase</option>
+          <option value="off" ${p.bannerMode==='off'?'selected':''}>Aucun bandeau sur cette phase (héro 2 colonnes)</option>
+        </select>
+        <div id="m-phase-banner-own" style="margin-top:8px;${p.bannerMode==='own'?'':'display:none'}">
+          <div class="form-row"><label class="form-label">Image bandeau de la phase</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-phase-banner-image" value="${(p.heroBannerImage||'').replace(/"/g,'&quot;')}" placeholder="URL de l'image bandeau" style="flex:1">${mkMediaPickerBtn('m-phase-banner-image')}${mkUploadBtn('m-phase-banner-image')}</div></div>
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="m-phase-banner-text" ${p.heroBannerText?'checked':''}> Afficher le titre/sous-titre par-dessus l'image</label>
+        </div>
       </div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-phase-hero-location" value="${(p.heroLocation||'').replace(/"/g,'&quot;')}" placeholder="Vide = lieu global"></div>
@@ -2542,6 +2553,11 @@ function editPhase(idx){
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="savePhaseEdit(${idx})">💾 Enregistrer</button>
     </div>`);
+}
+function _togglePhaseBannerFields(){
+  const mode=document.getElementById('m-phase-banner-mode');
+  const own=document.getElementById('m-phase-banner-own');
+  if(mode&&own) own.style.display=(mode.value==='own')?'':'none';
 }
 async function savePhaseEdit(idx){
   const name=document.getElementById('m-phase-name').value.trim();
@@ -2564,8 +2580,9 @@ async function savePhaseEdit(idx){
     heroDates:document.getElementById('m-phase-hero-dates').value.trim(),
     heroEyebrow:document.getElementById('m-phase-hero-eyebrow').value.trim(),
     heroPhotoCredit:document.getElementById('m-phase-hero-credit').value.trim(),
-    heroBannerImage:document.getElementById('m-phase-banner-image').value.trim(),
-    heroBannerText:document.getElementById('m-phase-banner-text').checked,
+    bannerMode:(document.getElementById('m-phase-banner-mode')||{}).value||'inherit',
+    heroBannerImage:(document.getElementById('m-phase-banner-mode')||{}).value==='own'?(document.getElementById('m-phase-banner-image').value.trim()):'',
+    heroBannerText:(document.getElementById('m-phase-banner-mode')||{}).value==='own'?document.getElementById('m-phase-banner-text').checked:false,
     mapTitle:document.getElementById('m-phase-map-title').value.trim(),
     mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
     mapNote:document.getElementById('m-phase-map-note').value.trim()
