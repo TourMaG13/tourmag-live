@@ -155,14 +155,30 @@ select.form-input{cursor:pointer}
 .btn-xs{padding:3px 8px;font-size:9px;border-radius:4px}
 
 /* Profils d'accès réutilisables */
-.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
-.preset-card{border:1.5px solid var(--border);border-radius:var(--rl);padding:14px 15px;position:relative;transition:border .15s,box-shadow .15s;background:var(--card)}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.preset-card{border:1.5px solid var(--border);border-radius:var(--rl);padding:15px 16px;position:relative;transition:all .15s;background:var(--card);cursor:pointer}
 .preset-card:hover{border-color:var(--acc);box-shadow:0 4px 14px rgba(232,132,44,.12)}
-.preset-card.applied{border-color:var(--acc);background:var(--acc-soft,#FFF3E9)}
-.preset-card .preset-nm{font-weight:700;font-size:13.5px;color:var(--text);padding-right:60px}
+.preset-card.sel{border-color:var(--acc);background:var(--acc-soft,#FFF3E9);box-shadow:0 4px 14px rgba(232,132,44,.15)}
+.preset-card .preset-ic{color:var(--acc2);margin-bottom:9px;display:flex}
+.preset-card .preset-ic .tab-ic{width:22px;height:22px}
+.preset-card .preset-nm{font-weight:700;font-size:13.5px;color:var(--text);padding-right:50px}
 .preset-card .preset-ds{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
 .preset-card .preset-tag{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;color:var(--acc2,#D4731D);background:#fff;border:1px solid var(--acc);padding:2px 8px;border-radius:20px}
-.preset-card .preset-actions{display:flex;gap:6px;margin-top:12px;align-items:center}
+.preset-card .preset-mini-actions{display:flex;gap:5px;margin-top:11px;opacity:.5;transition:opacity .12s}
+.preset-card:hover .preset-mini-actions{opacity:1}
+.preset-card.sel .preset-mini-actions{opacity:1}
+.preset-mini-btn{width:26px;height:24px;border:1px solid var(--border);background:#fff;border-radius:6px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.preset-mini-btn:hover{border-color:var(--acc)}
+.preset-mini-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.preset-card.preset-new{border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--text3);min-height:110px}
+.preset-card.preset-new:hover{color:var(--acc2)}
+.preset-card.preset-new .preset-ic{color:inherit}
+.preset-card.preset-new .preset-nm{padding-right:0;font-size:12.5px}
+.preset-preview-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding:11px 14px;background:var(--acc-soft,#FFF3E9);border:1px solid var(--acc);border-radius:8px}
+.preset-preview-bar .ppb-txt{font-size:12px;color:var(--text2);flex:1;min-width:200px}
+.preset-preview-bar .ppb-actions{display:flex;gap:8px;flex-shrink:0}
+.admin-card.previewing{border:1.5px solid var(--acc);box-shadow:0 0 0 3px var(--acc-soft,#FFF3E9)}
+.toggle-row.tr-off{opacity:.5}
 
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
@@ -5079,66 +5095,120 @@ async function saveJournalistPhases(){
 }
 
 // ==================== ACCÈS ====================
+// État d'aperçu de profil (null = pas d'aperçu, affiche la config réelle de l'événement)
+var _presetPreviewId=null;
+
 function mkAccessPresetsCard(allTabs, hiddenTabs){
   const totalTabs=allTabs.length;
   let cards='';
   accessPresetsData.forEach(p=>{
     const hidden=(p.hiddenTabs||[]);
     const visibleCount=totalTabs-hidden.filter(k=>allTabs.some(t=>t.key===k)).length;
-    // Ce preset correspond-il exactement à la config actuelle ?
     const sameAsCurrent=hidden.length===hiddenTabs.length && hidden.every(k=>hiddenTabs.includes(k));
-    cards+=`<div class="preset-card${sameAsCurrent?' applied':''}">
+    const isPreviewing=_presetPreviewId===p.id;
+    cards+=`<div class="preset-card${isPreviewing?' sel':''}" onclick="previewPreset('${p.id}')">
       ${sameAsCurrent?'<span class="preset-tag">Appliqué</span>':''}
+      <div class="preset-ic"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></div>
       <div class="preset-nm">${(p.name||'Sans nom').replace(/</g,'&lt;')}</div>
       <div class="preset-ds">${visibleCount} onglet${visibleCount>1?'s':''} visible${visibleCount>1?'s':''} sur ${totalTabs}</div>
-      <div class="preset-actions">
-        <button class="btn btn-primary btn-xs" onclick="applyAccessPreset('${p.id}')">Appliquer</button>
-        <button class="btn btn-ghost btn-xs" onclick="renameAccessPreset('${p.id}')" title="Renommer">✏️</button>
-        <button class="btn btn-danger btn-xs" onclick="deleteAccessPreset('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Supprimer">✕</button>
+      <div class="preset-mini-actions">
+        <button class="preset-mini-btn" onclick="event.stopPropagation();renameAccessPreset('${p.id}')" title="Renommer">✏️</button>
+        <button class="preset-mini-btn danger" onclick="event.stopPropagation();deleteAccessPreset('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Supprimer">✕</button>
       </div>
     </div>`;
   });
-  if(!accessPresetsData.length){
-    cards=`<div style="font-size:11px;color:var(--text3);padding:10px">Aucun profil pour l'instant.</div>`;
-  }
-  return `<div class="admin-card"><h3>🗂 Profils d'accès réutilisables</h3>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Un profil = un ensemble d'onglets visibles. Créez-le une fois, appliquez-le en un clic sur n'importe quel événement. Ces profils sont <strong>partagés entre tous vos événements</strong>.</div>
-    <div class="preset-grid">${cards}</div>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="saveCurrentAsPreset()">💾 Enregistrer la config actuelle comme profil</button>
-    </div>
-    <div style="font-size:9px;color:var(--text3);margin-top:8px">💡 « Appliquer » remplace la configuration d'onglets de cet événement par celle du profil.</div>
+  // Carte "Nouveau profil"
+  cards+=`<div class="preset-card preset-new" onclick="startNewPreset()">
+    <div class="preset-ic"><svg class="tab-ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="preset-nm">Nouveau profil</div>
+    <div class="preset-ds">À partir de la config actuelle</div>
   </div>`;
+
+  // Bandeau d'aperçu (si un profil est sélectionné pour aperçu)
+  let banner='';
+  const pv=_presetPreviewId?accessPresetsData.find(x=>x.id===_presetPreviewId):null;
+  if(pv){
+    banner=`<div class="preset-preview-bar">
+      <span class="ppb-txt">👁 Aperçu du profil <strong>${(pv.name||'').replace(/</g,'&lt;')}</strong> — les onglets ci-dessous montrent ce qu'il rend visible.</span>
+      <span class="ppb-actions">
+        <button class="btn btn-primary btn-sm" onclick="applyAccessPreset('${pv.id}')">✓ Appliquer à cet événement</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelPreview()">Annuler</button>
+      </span>
+    </div>`;
+  }
+
+  // Zone de création inline (cachée par défaut)
+  const createZone=`<div id="preset-create-zone" style="display:none;margin-top:12px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+    <div style="font-size:11px;font-weight:600;margin-bottom:8px">Nom du nouveau profil</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="form-input" id="preset-new-name" placeholder="Ex : Client — Rédaction" style="max-width:280px">
+      <button class="btn btn-primary btn-sm" onclick="confirmNewPreset()">Créer le profil</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('preset-create-zone').style.display='none'">Annuler</button>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">Le profil capture les onglets actuellement cochés dans la liste ci-dessous.</div>
+  </div>`;
+
+  return `<div class="admin-card"><h3>🗂 Profils d'accès réutilisables</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Cliquez un profil pour <strong>voir</strong> les onglets qu'il rend visibles (surlignés ci-dessous), puis appliquez-le. Ces profils sont <strong>partagés entre tous vos événements</strong>.</div>
+    <div class="preset-grid">${cards}</div>
+    ${createZone}
+    ${banner}
+  </div>`;
+}
+
+function previewPreset(presetId){
+  _presetPreviewId=(_presetPreviewId===presetId)?null:presetId;
+  document.getElementById('preset-create-zone') && (document.getElementById('preset-create-zone').style.display='none');
+  if(currentTab==='access') renderTab();
+}
+function cancelPreview(){
+  _presetPreviewId=null;
+  if(currentTab==='access') renderTab();
+}
+function startNewPreset(){
+  _presetPreviewId=null;
+  if(currentTab==='access'){ renderTab(); }
+  setTimeout(()=>{
+    const z=document.getElementById('preset-create-zone');
+    if(z){ z.style.display='block'; const inp=document.getElementById('preset-new-name'); if(inp) inp.focus(); }
+  },30);
+}
+async function confirmNewPreset(){
+  const inp=document.getElementById('preset-new-name');
+  const nm=(inp?inp.value:'').trim();
+  if(!nm){toast('Donnez un nom au profil','error'); if(inp) inp.focus(); return;}
+  // Capturer l'état actuel des interrupteurs de la liste
+  const hiddenTabs=_readVisibleTogglesHidden();
+  saving(true);
+  try{
+    const maxOrder=accessPresetsData.reduce((m,p)=>Math.max(m,p.order||0),0);
+    await db.collection('accessPresets').add({name:nm, hiddenTabs, order:maxOrder+1});
+    toast('Profil créé');
+    // onSnapshot rafraîchira la liste
+  }catch(err){ console.error('[Admin] confirmNewPreset failed:',err); toast('Erreur : '+(err&&err.message||'écriture refusée — vérifiez les règles Firestore'),'error'); }
+}
+// Lit les interrupteurs affichés et renvoie la liste des onglets masqués (décochés)
+function _readVisibleTogglesHidden(){
+  const hidden=[];
+  document.querySelectorAll('[data-tabtoggle]').forEach(cb=>{
+    if(!cb.checked) hidden.push(cb.getAttribute('data-tabtoggle'));
+  });
+  return hidden;
 }
 
 async function applyAccessPreset(presetId){
   const p=accessPresetsData.find(x=>x.id===presetId); if(!p){toast('Profil introuvable','error');return;}
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const proceed=confirm(`Appliquer le profil « ${p.name} » ?\n\nCela remplacera la configuration d'onglets actuelle de cet événement (${(ev.hiddenTabs||[]).length} onglet(s) masqué(s) actuellement).`);
-  if(!proceed) return;
   const hiddenTabs=[...(p.hiddenTabs||[])];
   saving(true);
   try{
     await evRef().update({hiddenTabs});
     if(ev) ev.hiddenTabs=hiddenTabs;
+    _presetPreviewId=null;
     applyTabVisibility();
-    toast('Profil appliqué');
+    toast('Profil « '+p.name+' » appliqué');
     if(currentTab==='access') renderTab();
   }catch(err){ console.error('[Admin] applyAccessPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
-}
-
-async function saveCurrentAsPreset(){
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const hiddenTabs=[...(ev.hiddenTabs||[])];
-  const name=prompt('Nom du profil (ex : Client — Rédaction) :', '');
-  if(name===null) return;
-  const nm=(name||'').trim(); if(!nm){toast('Nom vide','error');return;}
-  saving(true);
-  try{
-    const maxOrder=accessPresetsData.reduce((m,p)=>Math.max(m,p.order||0),0);
-    await db.collection('accessPresets').add({name:nm, hiddenTabs, order:maxOrder+1});
-    toast('Profil enregistré');
-  }catch(err){ console.error('[Admin] saveCurrentAsPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
 }
 
 async function renameAccessPreset(presetId){
@@ -5244,13 +5314,22 @@ function renderAccess(el){
     <div style="display:flex;gap:8px"><input class="form-input" id="access-new-email" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addSuperAdmin()">+ Ajouter</button></div>
   </div>
 
-  ${mkAccessPresetsCard(allTabs, hiddenTabs)}
+  ${mkAccessPresetsCard(allTabs, hiddenTabs)}`;
 
-  <div class="admin-card"><h3>👁 Onglets visibles pour les admins</h3>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Décochez les onglets que vous souhaitez masquer aux utilisateurs non super-admin. L'onglet "Accès" est toujours réservé aux super admins.</div>`;
+  // Source des états : aperçu de profil si actif, sinon config réelle de l'événement
+  const _pv=_presetPreviewId?accessPresetsData.find(x=>x.id===_presetPreviewId):null;
+  const _srcHidden=_pv?(_pv.hiddenTabs||[]):hiddenTabs;
+  const _previewing=!!_pv;
+  const _hint = _previewing
+    ? 'Aperçu : vous voyez la sélection du profil. Cliquez « Appliquer » plus haut pour l’enregistrer, ou modifiez puis créez un nouveau profil.'
+    : 'Décochez les onglets à masquer aux utilisateurs non super-admin. L’onglet « Accès » est toujours réservé aux super admins.';
+  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3>👁 Onglets visibles pour les admins</h3>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">${_previewing?'<strong style="color:var(--acc2)">':''}${_hint}${_previewing?'</strong>':''}</div>`;
   allTabs.forEach(t=>{
-    const visible=!hiddenTabs.includes(t.key);
-    h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" ${visible?'checked':''} onchange="toggleTabVisibility('${t.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+    const visible=!_srcHidden.includes(t.key);
+    // En aperçu, les interrupteurs sont indicatifs (n'écrivent pas sur l'événement)
+    const handler=_previewing?'':`onchange="toggleTabVisibility('${t.key}',this.checked)"`;
+    h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-tabtoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
 
