@@ -1461,6 +1461,11 @@ function render(data){
   const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
   const _heroLocation = _ph.heroLocation || event.location || '';
   const _heroDates    = _ph.heroDates    || event.dates    || '';
+  // Bandeau : priorité à la phase. Si la phase définit une image bandeau, on l'utilise ;
+  // sinon on retombe sur le bandeau de l'événement (s'il est activé).
+  const _hasPhaseBanner = !!(_ph && _ph.heroBannerImage);
+  const _heroBannerImage = _hasPhaseBanner ? _ph.heroBannerImage : (event.heroBannerEnabled ? (event.heroBannerImage||'') : '');
+  const _heroBannerText  = _hasPhaseBanner ? !!_ph.heroBannerText : !!event.heroBannerText;
   console.log('[TourMaG Live] Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates}, eventFallbacks:{title:event.title,subtitle:event.subtitle,hero_image:event.hero_image,logo_url:event.logo_url,location:event.location,dates:event.dates}});
   // Classic-mode specific vars
   const _citStyle = event.citationStyle || 'classic';
@@ -1509,15 +1514,15 @@ function render(data){
 
   // ===== HERO =====
   function mkHero(){
-    const useBanner = !!(event.heroBannerImage && event.heroBannerEnabled);
+    const useBanner = !!_heroBannerImage;
     const hasImage = !!_heroImage;
     const hh = event.hero_height;
     const heroStyle = hh ? `style="--hero-h:${hh}px" data-h="1"` : '';
     let o = '';
     if(useBanner){
       // Image bandeau pleine largeur (remplace les 2 colonnes)
-      o += `<div class="hero-banner fi" ${heroStyle}><img class="hero-banner-img" src="${event.heroBannerImage}" alt="">`;
-      if(event.heroBannerText){
+      o += `<div class="hero-banner fi" ${heroStyle}><img class="hero-banner-img" src="${_heroBannerImage}" alt="">`;
+      if(_heroBannerText){
         o += `<div class="hero-banner-overlay"><div class="hero-banner-inner">`;
         o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">${event.heroBadgeLabel||'Dossier spécial TourMaG'}</span></div>`;
         if(_heroLogo) o += `<img class="hero-logo" src="${_heroLogo}" alt="" onerror="this.remove()">`;
@@ -2197,6 +2202,10 @@ function renderExpedition(data){
   const _heroDates      = _ph.heroDates      || event.dates    || '';
   const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
   const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
+  // Bandeau : priorité à la phase, sinon bandeau événement (si activé)
+  const _hasPhaseBanner = !!(_ph && _ph.heroBannerImage);
+  const _heroBannerImage = _hasPhaseBanner ? _ph.heroBannerImage : (event.heroBannerEnabled ? (event.heroBannerImage||'') : '');
+  const _heroBannerText  = _hasPhaseBanner ? !!_ph.heroBannerText : !!event.heroBannerText;
   console.log('[TourMaG Live] EXP Phase hero overrides:', {activePhase, phaseObj:_ph, resolved:{_heroTitle,_heroSubtitle,_heroImage,_heroLogo,_heroLocation,_heroDates,_heroEyebrow,_heroPhotoCredit}});
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
@@ -2281,13 +2290,13 @@ function renderExpedition(data){
   </header>`;
 
   // ===== HERO =====
-  const _expUseBanner = !!(event.heroBannerImage && event.heroBannerEnabled);
+  const _expUseBanner = !!_heroBannerImage;
   const hasHeroImage = !!_heroImage;
   const _expHeroH = event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
   if(_expUseBanner){
-    h += `<section class="exp-hero-banner"${_expHeroAttr}><img class="exp-hero-banner-img" src="${event.heroBannerImage}" alt="">`;
-    if(event.heroBannerText){
+    h += `<section class="exp-hero-banner"${_expHeroAttr}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
+    if(_heroBannerText){
       h += `<div class="exp-hero-banner-overlay"><div class="exp-hero-banner-inner">`;
       if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
       if(_heroLogo) h += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
