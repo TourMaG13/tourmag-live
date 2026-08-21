@@ -137,6 +137,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .page-desc{font-size:12px;color:var(--text2);margin-bottom:24px;line-height:1.6}
 .admin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow)}
 .admin-card h3{font-family:'Josefin Sans';font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.h3-ic{width:18px;height:18px;stroke:var(--acc2,#D4731D);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.modal-box h3 .h3-ic{width:19px;height:19px}
 .form-row{margin-bottom:14px}
 .form-label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
 .form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Poppins';color:var(--text);transition:border .15s;background:var(--bg)}
@@ -261,7 +263,7 @@ select.form-input{cursor:pointer}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:200;display:none;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
 .modal-box{background:var(--card);border-radius:var(--rl);padding:24px;width:90%;max-width:680px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-box h3{font-family:'Josefin Sans';font-size:16px;font-weight:700;margin-bottom:16px}
+.modal-box h3{font-family:'Josefin Sans';font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 
 .toast{position:fixed;bottom:24px;right:24px;background:var(--pri);color:#fff;padding:12px 24px;border-radius:10px;font-size:12px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s;z-index:1000;display:flex;align-items:center;gap:8px}
@@ -338,6 +340,31 @@ select.form-input{cursor:pointer}
 <g id="ti-widget"><path d="M12 3 21 8v8l-9 5-9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/></g>
 <g id="ti-access"><circle cx="9" cy="8" r="3.5"/><path d="M3 21a6 6 0 0 1 12 0"/><path d="M16 5.5a3.5 3.5 0 0 1 0 6.9M21 21a6 6 0 0 0-5-5.9"/></g>
 <g id="ti-guide"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 19a2 2 0 0 0 2 2h13"/></g>
+<g id="ti-list"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></g>
+<g id="ti-plus-c"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></g>
+<g id="ti-folder2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></g>
+<g id="ti-edit2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></g>
+<g id="ti-tv"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="8 3 12 7 16 3"/></g>
+<g id="ti-eye"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></g>
+<g id="ti-updown"><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></g>
+<g id="ti-robot"><rect x="4" y="8" width="16" height="12" rx="2"/><line x1="12" y1="4" x2="12" y2="8"/><circle cx="12" cy="4" r="1"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></g>
+<g id="ti-wrench"><path d="M14 7a4 4 0 0 0-5.5 5.2L3 18l3 3 5.8-5.5A4 4 0 0 0 17 10l-2.5 2.5L12 10l2.5-2.5A4 4 0 0 0 14 7Z"/></g>
+<g id="ti-link"><path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></g>
+<g id="ti-bolt"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></g>
+<g id="ti-puzzle"><path d="M9 4a2 2 0 0 1 4 0c0 .5.5 1 1 1h3v3c0 .5.5 1 1 1a2 2 0 0 1 0 4c-.5 0-1 .5-1 1v3h-3c-.5 0-1 .5-1 1a2 2 0 0 1-4 0c0-.5-.5-1-1-1H5v-3c0-.5-.5-1-1-1a2 2 0 0 1 0-4c.5 0 1-.5 1-1V5h3c.5 0 1-.5 1-1Z"/></g>
+<g id="ti-camera"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="12.5" r="3.5"/></g>
+<g id="ti-scroll"><path d="M6 3h11v14a3 3 0 0 1-3 3H6"/><path d="M6 20a3 3 0 0 1-3-3V6"/><line x1="9" y1="8" x2="14" y2="8"/><line x1="9" y1="12" x2="14" y2="12"/></g>
+<g id="ti-mic2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/></g>
+<g id="ti-cal2"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="6"/><line x1="16" y1="3" x2="16" y2="6"/></g>
+<g id="ti-rss"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/></g>
+<g id="ti-megaphone"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V7L6 11H4a1 1 0 0 0-1 1Z"/><path d="M14 6v12a5 5 0 0 0 0-12Z"/></g>
+<g id="ti-film"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="3" y1="12" x2="21" y2="12"/></g>
+<g id="ti-pin"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></g>
+<g id="ti-card"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="13" y2="15"/></g>
+<g id="ti-key"><circle cx="8" cy="8" r="4"/><path d="M11 11l8 8"/><path d="M17 17l2-2"/><path d="M15 15l2-2"/></g>
+<g id="ti-crown"><path d="M3 8l4 4 5-7 5 7 4-4v10H3Z"/></g>
+<g id="ti-lock"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></g>
+<g id="ti-sliders"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.2"/><circle cx="15" cy="17" r="2.2"/></g>
 </defs></svg>
 
 <!-- AUTH SCREEN -->
@@ -738,7 +765,7 @@ function openMediaPicker(targetInputId){
   _renderMediaPicker();
 }
 function _renderMediaPicker(){
-  let h=`<h3>📂 Médiathèque</h3>`;
+  let h=`<h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Médiathèque</h3>`;
   if(!mediaData.length){
     h+=`<div class="empty"><div class="text">Aucune image. Ajoutez-en dans l'onglet Médiathèque.</div></div>`;
   } else {
@@ -2431,7 +2458,7 @@ function renderPhases(el){
   const phases=ev.phases||[];
   let h=`<div class="page-title">Phases / Temps forts</div>
   <div class="page-desc">Découpez votre événement en phases (ex : "IFTM Sept.", "Convention Nov."). Chaque contenu pourra être assigné à une phase, et le front affichera des onglets pour filtrer.</div>
-  <div class="admin-card"><h3>➕ Ajouter une phase</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une phase</h3>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="phase-name" placeholder="Ex : IFTM Top Resa 2026"></div>
       <div class="form-row" style="max-width:160px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="phase-color" value="#6366F1" style="height:42px;padding:4px"></div>
@@ -2443,7 +2470,7 @@ function renderPhases(el){
     <div style="margin-top:10px"><button class="btn btn-primary" onclick="addPhase()">＋ Ajouter</button></div>
   </div>`;
   if(phases.length){
-    h+=`<div class="admin-card"><h3>📋 Phases définies (${phases.length})</h3>`;
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Phases définies (${phases.length})</h3>`;
     phases.forEach((p,i)=>{
       const dates=(p.dateStart||p.dateEnd)?`<span style="font-size:10px;color:var(--text3)">${p.dateStart||'…'} → ${p.dateEnd||'…'}</span>`:'';
       h+=`<div class="list-item" style="align-items:center">
@@ -2626,12 +2653,12 @@ window.filterLiveHistory=function(){filterByPhaseAttr('live-history-list','live-
 function renderFlash(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   let h=`<div class="page-title">Flash info</div><div class="page-desc">Bandeau rouge en haut du front. Laissez le texte vide pour le masquer.</div>
-  <div class="admin-card"><h3>⚡ Paramétrage</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> Paramétrage</h3>
     <div class="form-row"><label class="form-label">Texte du flash</label><input class="form-input" id="flash-text" value="${(ev.flash_text||'').replace(/"/g,'&quot;')}" placeholder="Ex: Ouverture officielle du salon à 9h30"></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="flash-link" value="${ev.flash_link||''}" placeholder="https://www.tourmag.com/..."></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveFlash()">💾 Enregistrer</button></div>
   </div>
-  ${ev.flash_text?`<div class="admin-card"><h3>👁 Aperçu</h3><div style="background:linear-gradient(90deg,#7F1D1D,#991B1B);border-radius:8px;padding:12px 20px;display:flex;align-items:center;gap:12px">
+  ${ev.flash_text?`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Aperçu</h3><div style="background:linear-gradient(90deg,#7F1D1D,#991B1B);border-radius:8px;padding:12px 20px;display:flex;align-items:center;gap:12px">
     <span style="font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:#DC2626;padding:4px 12px;border-radius:6px;white-space:nowrap">⚡ FLASH</span>
     <span style="font-size:14px;color:rgba(255,255,255,.9);flex:1">${ev.flash_text}</span>
     ${ev.flash_link?'<span style="color:rgba(255,255,255,.5);font-size:11px">→ lien</span>':''}
@@ -2689,7 +2716,7 @@ function renderModules(el){
   const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
 
   let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
-  <div class="admin-card"><h3>🧩 Visibilité</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-puzzle"/></svg> Visibilité</h3>`;
   mods.forEach(m=>{const checked=mod[m.key]!==false;h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${checked?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
   h+=`</div>`;
 
@@ -2731,7 +2758,7 @@ function renderModules(el){
     const expZoneBgs = {full:'#EEF2FF',main:'#FFF',side:'#FFF5EB'};
     const expZoneLabels = {full:'⬛ Pleine largeur',main:'◀ Col. principale',side:'▶ Sidebar'};
 
-    h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-updown"/></svg> Ordre et disposition des blocs</h3>
       <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
       <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
     expOrder.forEach((key,i)=>{
@@ -2771,7 +2798,7 @@ function renderModules(el){
       </div>
     </div>`;
   } else {
-  h+=`<div class="admin-card"><h3>↕️ Ordre et disposition des blocs</h3>
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-updown"/></svg> Ordre et disposition des blocs</h3>
     <div class="page-desc" style="margin-bottom:8px">Glissez les blocs pour changer leur ordre d'affichage. Pour chaque bloc, choisissez la zone : <strong>Pleine largeur</strong> (toute la largeur), <strong>Colonne principale</strong> (gauche) ou <strong>Sidebar</strong> (droite).<br>Un bloc en pleine largeur s'insère à sa position et coupe le layout 2 colonnes.</div>
     <div id="block-unified-list" style="display:flex;flex-direction:column;gap:4px;margin-top:12px">`;
 
@@ -2986,7 +3013,7 @@ function tagObj(t){ return typeof t==='string'?{name:t,color:''}:t; }
 function renderTags(el){
   const defaultColors=['#475569','#DC2626','#059669','#2563EB','#7C3AED','#D97706','#0891B2','#DB2777'];
   let h=`<div class="page-title">Tags live</div><div class="page-desc">Tags disponibles pour le fil live avec couleur personnalisable.</div>
-  <div class="admin-card"><h3>🏷 Tags personnalisés</h3><div class="chip-list">`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg> Tags personnalisés</h3><div class="chip-list">`;
   tagsData.forEach((t,i)=>{
     const n=tagName(t), c=tagColor(t)||defaultColors[i%defaultColors.length];
     h+=`<div class="chip" style="background:${c}18;color:${c};border:1.5px solid ${c}40"><span>${n}</span><span class="chip-del" onclick="editTag(${i})" title="Modifier">✏️</span><span class="chip-del" onclick="deleteTag(${i})">✕</span></div>`;
@@ -3054,7 +3081,7 @@ function renderMedia(el){
   const pageItems = filtered.slice(start, start + MEDIA_PER_PAGE);
 
   let h = `<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
-  <div class="admin-card"><h3>📷 Photos (${mediaData.length})</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Photos (${mediaData.length})</h3>
     <div class="media-toolbar">
       <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
       <select class="form-input" onchange="_mediaSort=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
@@ -3171,7 +3198,7 @@ function renderLive(el){
 
   `+moduleConfigBlock('live')+`
 
-  <div class="admin-card"><h3>✏️ Nouvelle entrée</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:11px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
     <div class="form-row"><label class="form-label">Texte</label><div class="ql-editor-wrap"><div id="live-text-editor"></div></div></div>
     <div class="form-row-inline">
@@ -3195,7 +3222,7 @@ function renderLive(el){
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="live-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()">⚡ Publier / Programmer</button></div>
   </div>
-  <div class="admin-card"><h3>📜 Historique (${liveData.length})</h3>${mkPhaseFilter('live-phase-filter','filterLiveHistory()')}<div style="max-height:600px;overflow-y:auto" id="live-history-list">`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Historique (${liveData.length})</h3>${mkPhaseFilter('live-phase-filter','filterLiveHistory()')}<div style="max-height:600px;overflow-y:auto" id="live-history-list">`;
   if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée publiée</div></div>`;
   else liveData.forEach(e=>{
     let ts='…';
@@ -3378,11 +3405,11 @@ async function deleteLive(id){if(!confirm('Supprimer cette entrée ?'))return;sa
 // ==================== RUBRIQUES ====================
 function renderRubriques(el){
   let h=`<div class="page-title">Rubriques</div><div class="page-desc">Cliquez sur une rubrique pour la modifier.</div>
-  <div class="admin-card"><h3>➕ Nouvelle</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Nouvelle</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="rub-name"></div><div class="form-row"><label class="form-label">Emoji</label><input class="form-input" id="rub-icon" placeholder="🤖" maxlength="4"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="rub-color" value="#7C3AED" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Fond</label><input type="color" class="form-input" id="rub-bg" value="#EDE9FE" style="height:42px;padding:4px"></div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addRubrique()">📁 Créer</button></div></div>
-  <div class="admin-card"><h3>📂 Existantes</h3><div class="chip-list">`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Existantes</h3><div class="chip-list">`;
   if(!rubriquesData.length) h+=`<div class="empty"><div class="text">Aucune rubrique</div></div>`;
   else rubriquesData.forEach(r=>{
     h+=`<div class="chip" style="background:${r.bg};color:${r.color}" onclick="editRubrique('${r.id}')"><span>${r.icon} ${r.name}</span><span class="chip-del" onclick="event.stopPropagation();deleteRubrique('${r.id}')">&times;</span></div>`;
@@ -3448,7 +3475,7 @@ function renderCitations(el){
 
   `+moduleConfigBlock('citations')+`
 
-  <div class="admin-card"><h3>🎤 Nouvelle</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-mic2"/></svg> Nouvelle</h3>
     <div class="form-row"><label class="form-label">Citation</label><textarea class="form-input" id="cit-text" rows="3"></textarea></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="cit-name"></div><div class="form-row"><label class="form-label">Fonction</label><input class="form-input" id="cit-role"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Rubrique</label><select class="form-input" id="cit-rub"><option value="">—</option>${rubOpts}</select></div><div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cit-avatar" style="flex:1">${mkMediaPickerBtn('cit-avatar')}${mkUploadBtn('cit-avatar')}</div></div></div>
@@ -3456,7 +3483,7 @@ function renderCitations(el){
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication (optionnel)</label><input type="datetime-local" class="form-input" id="cit-scheduled"><div style="font-size:9px;color:var(--text3);margin-top:3px">Laisser vide = publication immédiate</div></div>
     ${mkPhaseSelect('cit-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()">💬 Ajouter / Programmer</button></div></div>
-  <div class="admin-card"><h3>📋 Historique (${citationsData.length})</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Historique (${citationsData.length})</h3>`;
   if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
   else citationsData.forEach(c=>{
     const rub=rubriquesData.find(r=>r.id===c.rubrique);
@@ -3582,14 +3609,14 @@ function renderProgramme(el){
 
   let h=`<div class="page-title">Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
 
-  <div class="admin-card"><h3>🏷 Titre de l'encart</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg> Titre de l'encart</h3>
     <div class="form-row"><label class="form-label">Titre affiché sur le dashboard public</label>
       <div style="display:flex;gap:8px"><input class="form-input" id="prog-custom-title" value="${(ev.programmeTitle||'').replace(/"/g,'&quot;')}" placeholder="Programme" style="max-width:400px"><button class="btn btn-primary btn-sm" onclick="saveProgrammeTitle()">💾</button></div>
       <div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le titre par défaut « Programme » sera affiché.</div>
     </div>
   </div>
 
-  <div class="admin-card"><h3>🎨 Apparence de l'encart</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Apparence de l'encart</h3>
     <div class="form-row-inline">
       <div class="form-row" style="max-width:240px"><label class="form-label">Espace au-dessus du bloc (px)</label><input type="number" class="form-input" id="prog-mt" value="${ev.programmeMarginTop!=null?ev.programmeMarginTop:''}" min="0" max="120" placeholder="0" style="width:100px"><div style="font-size:9px;color:var(--text3);margin-top:2px">Évite que le bloc soit collé au bloc précédent.</div></div>
       <div class="form-row" style="max-width:240px"><label class="form-label">Badge de statut</label><label class="form-label" style="font-weight:400;font-size:12px;display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="prog-hide-status" ${ev.programmeHideStatus?'checked':''}> Masquer le badge « À venir / En cours / Terminé »</label></div>
@@ -3598,7 +3625,7 @@ function renderProgramme(el){
     <div style="font-size:9px;color:var(--text3);margin-top:4px">Les tailles et couleurs (titre, intitulé, description, heure) se règlent dans « ⚙️ Paramétrage &amp; apparence de ce module » ci-dessous.</div>
   </div>
 
-  <div class="admin-card"><h3>📅 Jours — ordre d'affichage</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-cal2"/></svg> Jours — ordre d'affichage</h3>
     <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
   dayOrder.forEach((day,i)=>{
     const count=programmeData.filter(p=>p.day===day).length;
@@ -3613,7 +3640,7 @@ function renderProgramme(el){
   if(!dayOrder.length) h+=`<div style="font-size:11px;color:var(--text3);padding:8px">Aucun jour créé. Ajoutez un élément avec un jour.</div>`;
   h+=`</div></div>
 
-  <div class="admin-card"><h3>➕ Ajouter</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter</h3>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Jour</label><div style="display:flex;gap:6px"><select class="form-input" id="prog-day-select" style="flex:1"><option value="">— Choisir —</option>${dayOpts}</select><input class="form-input" id="prog-day-new" placeholder="Ex: Mardi 1er juin" style="flex:1.5"></div><div style="font-size:9px;color:var(--text3);margin-top:3px">Sélectionnez un jour existant ou saisissez-en un nouveau</div></div>
       <div class="form-row"><label class="form-label">Heure (optionnel)</label><input class="form-input" id="prog-time" type="time"></div>
@@ -3622,7 +3649,7 @@ function renderProgramme(el){
     <div class="form-row"><label class="form-label">Description</label><input class="form-input" id="prog-desc"></div>
     ${mkPhaseSelect('prog-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addProgramme()">🗓 Ajouter</button></div></div>
-  <div class="admin-card"><h3>📋 Programme</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Programme</h3>`;
   if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
   else{
     // Group by day, respecting dayOrder
@@ -3832,7 +3859,7 @@ function renderArticles(el){
   `+moduleConfigBlock('articles')+`
 
   <!-- AJOUT MANUEL -->
-  <div class="admin-card"><h3>✏️ Ajout manuel</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}${mkUploadBtn('art-image')}</div></div>
@@ -3840,7 +3867,7 @@ function renderArticles(el){
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()">📰 Ajouter</button></div></div>
 
   <!-- FLUX RSS -->
-  <div class="admin-card"><h3>📡 Flux RSS</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-rss"/></svg> Flux RSS</h3>
     <div class="page-desc" style="margin-bottom:12px">Les articles importés via RSS sont ajoutés à Firestore comme les articles manuels.</div>
     <div class="chip-list" id="rss-chips">`;
   rssFeeds.forEach((f,i)=>{
@@ -3857,7 +3884,7 @@ function renderArticles(el){
   </div>
 
   <!-- BRAND NEWS -->
-  <div class="admin-card"><h3>📢 Brand News (Publicité)</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-megaphone"/></svg> Brand News (Publicité)</h3>
     <div class="page-desc" style="margin-bottom:12px">Bloc publicitaire affichant automatiquement le dernier article d'un flux RSS dédié. L'article sera affiché avec sa photo, son titre et un lien vers l'article TourMaG.</div>
     <div class="form-row"><label class="form-label">URL du flux RSS Brand News</label>
       <input class="form-input" id="bn-rss-url" value="${(ev.brandNews?.rssUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/xml/votre-flux-brandnews.rss" style="font-family:'IBM Plex Mono';font-size:11px">
@@ -3875,7 +3902,7 @@ function renderArticles(el){
   </div>
 
   <!-- HISTORIQUE -->
-  <div class="admin-card"><h3>📋 Articles (${articlesData.length})</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length})</h3>`;
   if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun article</div></div>`;
   else articlesData.forEach(a=>{
     const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
@@ -4311,16 +4338,16 @@ function renderTimelineHTML(){
   const iaTimelineEnabled=ev.iaTimeline!==false;
   let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title">📍 Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
 
-  <div class="admin-card"><h3>🤖 IA Timeline</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-robot"/></svg> IA Timeline</h3>
     <div class="toggle-row"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique de la timeline</span><label class="toggle"><input type="checkbox" ${iaTimelineEnabled?'checked':''} onchange="toggleIATimeline(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     ${iaTimelineEnabled?`<div style="font-size:9px;color:var(--text3);margin-top:6px">Le cron génère automatiquement les jalons à partir des articles liés.</div>`:`<div style="font-size:10px;color:var(--text3);margin-top:6px;padding:6px 10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;display:inline-block">⏸ IA désactivée</div>`}
   </div>
 
-  <div class="admin-card"><h3>➕ Jalon manuel</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Jalon manuel</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Date</label><input class="form-input" id="tl-date" placeholder="30 sept."></div><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="tl-link"></div></div>
     <div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="tl-text"></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addTimeline()">📍 Ajouter</button></div></div>
-  <div class="admin-card"><h3>📋 Jalons (${timelineData.length})</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Jalons (${timelineData.length})</h3>`;
   if(!timelineData.length) h+=`<div class="empty"><div class="text">Aucun jalon</div></div>`;
   else timelineData.forEach(t=>{
     const src=t.source==='ia'?'<span style="font-size:8px;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">IA</span>':'';
@@ -4483,7 +4510,7 @@ function renderIAHTML(){
 
   `+moduleConfigBlock('essentiel')+`
 
-  <div class="admin-card"><h3>🤖 Génération IA</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-robot"/></svg> Génération IA</h3>
     <div class="toggle-row" style="margin-bottom:12px;padding-bottom:12px"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique des points essentiels</span><label class="toggle"><input type="checkbox" ${iaEssentialEnabled?'checked':''} onchange="toggleIAEssential(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
     ${iaEssentialEnabled?`<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span>Dernière génération : <strong style="color:var(--text2)">${lastGen}</strong></span>
@@ -4495,13 +4522,13 @@ function renderIAHTML(){
     ${ia.length?`<div style="margin-top:10px"><button class="btn btn-danger btn-sm" onclick="clearIAPoints()">🗑 Supprimer les points IA</button></div>`:''}
   </div>
 
-  <div class="admin-card"><h3>✏️ Ajouter un point manuel</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ajouter un point manuel</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Tag</label><input class="form-input" id="ess-tag" placeholder="DISTRIBUTION"></div><div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="ess-text"></div></div>
     ${mkPhaseSelect('ess-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addEssential()">＋ Ajouter</button></div>
   </div>
 
-  <div class="admin-card"><h3>📋 Tous les points (${allPts.length})</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Tous les points (${allPts.length})</h3>
     <div class="page-desc" style="margin-bottom:10px">Utilisez les flèches pour réordonner. L'ordre affiché ici est celui de la page live.</div>`;
   if(!allPts.length) h+=`<div class="empty"><div class="text">Aucun point</div></div>`;
   else allPts.forEach((p,i)=>{
@@ -4642,7 +4669,7 @@ function renderVideos(el){
 
   `+moduleConfigBlock('videos')+`
 
-  <div class="admin-card"><h3>📂 Sections</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Sections</h3>
     <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
   sections.forEach((s,i)=>{
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
@@ -4656,7 +4683,7 @@ function renderVideos(el){
     <button class="btn btn-primary btn-sm" onclick="addVideoSection()">+ Nouvelle section</button>
   </div>
 
-  <div class="admin-card"><h3>➕ Ajouter une vidéo</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une vidéo</h3>
     <div class="form-row-inline">
       <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">Supporte : youtube.com, youtu.be, instagram.com/reel/…, instagram.com/p/…, facebook.com/…/videos/…, facebook.com/reel/…, linkedin.com/posts/…<br>⚠️ <strong>Facebook et LinkedIn</strong> : la vidéo/publication doit être <strong>publique</strong> pour s'afficher. Si l'embed échoue, un lien « Ouvrir sur… » sera affiché sous la vidéo.</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
@@ -4677,7 +4704,7 @@ function renderVideos(el){
     const orphans=sec.id==='default'?videosData.filter(v=>!v.section||!sections.find(s=>s.id===v.section)):[];
     const allVids=[...secVids,...orphans.filter(v=>!secVids.find(sv=>sv.id===v.id))];
 
-    h+=`<div class="admin-card"><h3>🎬 ${sec.title} (${allVids.length})</h3>`;
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> ${sec.title} (${allVids.length})</h3>`;
     if(!allVids.length) h+=`<div class="empty"><div class="text">Aucune vidéo</div></div>`;
     else allVids.forEach((v,i)=>{
       const platform=v.platform||'youtube';
@@ -4919,7 +4946,7 @@ function renderJournalistes(el){
 
   `+moduleConfigBlock('journalistes')+`
 
-  <div class="admin-card"><h3>📌 Assignés à cet événement (${assignedList.length})</h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-pin"/></svg> Assignés à cet événement (${assignedList.length})</h3>`;
   if(!currentEventId) h+=`<div class="empty"><div class="text">Sélectionnez un événement</div></div>`;
   else if(!assignedList.length) h+=`<div class="empty"><div class="text">Aucun journaliste assigné</div></div>`;
   else {
@@ -4957,7 +4984,7 @@ function renderJournalistes(el){
   }
   h+=`</div>
 
-  <div class="admin-card"><h3>📇 Répertoire global (${journalistsGlobalData.length})</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-card"/></svg> Répertoire global (${journalistsGlobalData.length})</h3>
   <div class="page-desc" style="margin-bottom:14px">Ces fiches sont réutilisables sur tous les événements.</div>`;
 
   // New journalist form
@@ -5195,7 +5222,7 @@ function mkAccessPresetsCard(allTabs, hiddenTabs){
     <div style="font-size:9px;color:var(--text3);margin-top:6px">Le profil capture les onglets actuellement cochés dans la liste ci-dessous.</div>
   </div>`;
 
-  return `<div class="admin-card"><h3>🗂 Profils d'accès réutilisables</h3>
+  return `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg> Profils d'accès réutilisables</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Cliquez un profil pour <strong>voir</strong> les onglets qu'il rend visibles (surlignés ci-dessous), puis appliquez-le. Ces profils sont <strong>partagés entre tous vos événements</strong>.</div>
     <div class="preset-grid">${cards}</div>
     ${createZone}
@@ -5310,7 +5337,7 @@ function renderAccess(el){
 
   let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Définissez les super admins et choisissez les onglets visibles pour les autres utilisateurs.</div>
 
-  <div class="admin-card"><h3>🔑 Comptes utilisateurs</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-key"/></svg> Comptes utilisateurs</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Gérez les comptes qui ont accès au back-office. Les comptes <strong>admin</strong> voient tous les événements. Les comptes <strong>client</strong> ne voient que les événements où ils sont dans la liste d'accès restreint.</div>
     <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
   const currentEmail=(auth.currentUser?.email||'').toLowerCase();
@@ -5346,7 +5373,7 @@ function renderAccess(el){
     </div>
   </div>
 
-  <div class="admin-card"><h3>👑 Super administrateurs</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-crown"/></svg> Super administrateurs</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Les super admins voient tous les onglets et ont accès à cette page. Si la liste est vide, tout le monde a un accès complet.</div>
     <div id="access-admins-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
   superAdmins.forEach((email,i)=>{
@@ -5370,7 +5397,7 @@ function renderAccess(el){
   const _hint = _previewing
     ? 'Aperçu : vous voyez la sélection du profil. Cliquez « Appliquer » plus haut pour l’enregistrer, ou modifiez puis créez un nouveau profil.'
     : 'Décochez les onglets à masquer aux utilisateurs non super-admin. L’onglet « Accès » est toujours réservé aux super admins.';
-  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3>👁 Onglets visibles pour les admins</h3>
+  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Onglets visibles pour les admins</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">${_previewing?'<strong style="color:var(--acc2)">':''}${_hint}${_previewing?'</strong>':''}</div>`;
   allTabs.forEach(t=>{
     const visible=!_srcHidden.includes(t.key);
@@ -5382,7 +5409,7 @@ function renderAccess(el){
 
   // ===== RESTRICTION D'ACCÈS PAR ÉVÉNEMENT =====
   const allowedUsers=ev.allowedUsers||[];
-  h+=`<div class="admin-card"><h3>🔒 Accès restreint à cet événement</h3>
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-lock"/></svg> Accès restreint à cet événement</h3>
     <div style="font-size:10px;color:var(--text3);margin-bottom:12px;line-height:1.6">Limitez l'accès à cet événement à certains utilisateurs. Si la liste est vide, tous les admins connectés voient cet événement. Les super admins ont toujours accès.</div>
     <div id="access-allowed-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
   allowedUsers.forEach((email,i)=>{
@@ -6029,7 +6056,7 @@ function renderContact(el){
     ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()">💾 Enregistrer le contact</button></div>
   </div>
-  <div class="admin-card" style="margin-top:16px"><h3>🎨 Personnalisation visuelle</h3>
+  <div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Personnalisation visuelle</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Couleur de fond</label><div style="display:flex;gap:8px"><input type="color" id="ct-bg-color" value="${ct.bg_color||'#F5F4F2'}" style="width:42px;height:34px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-bg-color-txt" value="${(ct.bg_color||'').replace(/"/g,'&quot;')}" placeholder="#F5F4F2" style="flex:1"></div></div>
       <div class="form-group"><label class="form-label">Image de fond (URL, optionnel)</label><input class="form-input" id="ct-bg-image" value="${(ct.bg_image||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>
@@ -6256,7 +6283,7 @@ function renderEtapes(el){
   let h=`<div class="page-title">📍 Étapes du parcours</div><div class="page-desc">Gérez les étapes de l'expédition. Chaque étape apparaît sur la carte et dans la sidebar itinéraire du dashboard.</div>`;
 
   // Expedition settings card
-  h+=`<div class="admin-card"><h3>🗺️ Paramètres de l'expédition</h3>
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-map"/></svg> Paramètres de l'expédition</h3>
     <details open><summary style="cursor:pointer;font-size:11px;color:var(--acc);font-weight:600;margin-bottom:12px">Paramètres généraux</summary>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Date départ (ISO)</label><input class="form-input" type="date" id="exp-date-start" value="${exp.dateStart||''}"></div>
@@ -6615,7 +6642,7 @@ function pickGalleryFromMedia(){
   _renderGalPicker();
 }
 function _renderGalPicker(){
-  let mh='<h3>📂 Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:8px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
+  let mh='<h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Choisir des photos pour la galerie</h3><p style="font-size:11px;color:var(--text2);margin-bottom:8px">Cliquez sur une image pour l\'ajouter à la galerie.</p>';
   mh+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">`;
   mh+=`<input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_gpSearch.replace(/"/g,'&quot;')}" oninput="_gpSearch=this.value;_gpPage=0;_renderGalPicker()" style="flex:1">`;
   mh+=`<select class="form-input" style="width:auto" onchange="_gpSort=this.value;_gpPage=0;_renderGalPicker()">`;
@@ -6841,7 +6868,7 @@ function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
 
   let h=`<div class="page-title">Widget homepage — Expédition</div><div class="page-desc">Configurez les deux encarts promotionnels à intégrer sur la homepage TourMaG.</div>
 
-  <div class="admin-card"><h3>🎨 Contenu des encarts</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Contenu des encarts</h3>
     <div class="form-row"><label class="form-label">Logo (par défaut celui de l'événement)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="we-logo" value="${(enc.logo||ev.logo_url||'').replace(/"/g,'&quot;')}" placeholder="Logo de l'événement" style="flex:1">${mkMediaPickerBtn('we-logo')}${mkUploadBtn('we-logo')}</div></div>
     <div class="form-row"><label class="form-label">Titre personnalisé</label><input class="form-input" id="we-title" value="${(enc.title||'').replace(/"/g,'&quot;')}" placeholder="Ex: Suivez l'expédition en direct"></div>
     <div class="form-row"><label class="form-label">Accroche</label><textarea class="form-input" id="we-subtitle" rows="2" placeholder="Ex: Carnet de route, étapes, interviews, galerie photo…" style="resize:vertical">${(enc.subtitle||'').replace(/</g,'&lt;')}</textarea></div>
@@ -6889,14 +6916,14 @@ function renderWidgetExpedition(el,ev,baseUrl,frontUrl,iframeId){
     <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetExpConfig()">💾 Enregistrer la configuration</button></div>
   </div>
 
-  <div class="admin-card"><h3>🔧 Configuration générale</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-wrench"/></svg> Configuration générale</h3>
     <div class="form-row"><label class="form-label">📷 URL du serveur d'upload d'images</label>
       <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:11px">
       <div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script d'upload. ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré</span>'}</div>
     </div>
   </div>
 
-  <div class="admin-card"><h3>📦 Encart petit format</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Encart petit format</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format sidebar / colonne étroite (max 700px). Logo + titre + accroche à gauche, captures animées à droite.</p>
     <div style="position:relative"><textarea class="form-input" rows="10" id="embed-exp-small" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;style&gt;
   #${iframeId}-es { height: auto; }
@@ -6913,7 +6940,7 @@ window.addEventListener('message',function(e){
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-small')">📋 Copier</button></div>
   </div>
 
-  <div class="admin-card"><h3>📺 Encart grand format</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Encart grand format</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Format bandeau pleine largeur (max 1200px). Mise en page élargie avec captures plus grandes.</p>
     <div style="position:relative"><textarea class="form-input" rows="10" id="embed-exp-large" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;style&gt;
   #${iframeId}-el { height: auto; }
@@ -6930,7 +6957,7 @@ window.addEventListener('message',function(e){
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-exp-large')">📋 Copier</button></div>
   </div>
 
-  <div class="admin-card"><h3>📺 Page complète (iframe)</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Page complète (iframe)</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.</p>
     <div style="position:relative"><textarea class="form-input" rows="10" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
 &lt;script&gt;
@@ -6948,7 +6975,7 @@ window.addEventListener('message',function(e){
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')">📋 Copier</button></div>
   </div>
 
-  <div class="admin-card"><h3>🔗 URLs directes</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg> URLs directes</h3>
     <div style="display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:10px;font-weight:600;color:var(--text2);width:100px">Page live :</span>
@@ -6998,7 +7025,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
   let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
 
-  <div class="admin-card"><h3>🔧 Configuration générale</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-wrench"/></svg> Configuration générale</h3>
     <div class="form-row"><label class="form-label">URL du bouton « Accéder au Live »</label><input class="form-input" id="w-cta-url" value="${(ev.widgetCtaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:9px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages par défaut.</div></div>
 
     <div class="form-row" style="margin-top:14px"><label class="form-label">📷 URL du serveur d'upload d'images</label>
@@ -7007,7 +7034,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
     </div>
   </div>
 
-  <div class="admin-card"><h3>🎛️ Paramétrage du widget compact</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-sliders"/></svg> Paramétrage du widget compact</h3>
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)"><label class="form-label" style="margin-bottom:10px;display:block">Zone personnalisable (sous la frise)</label>
       <div class="form-row"><label class="form-label">Texte (optionnel)</label><textarea class="form-input" id="w-footer-text" rows="3" placeholder="Ex: Retrouvez toute l'actualité du salon en direct sur TourMaG.com…" style="resize:vertical">${(ev.widgetFooterText||'').replace(/</g,'&lt;')}</textarea></div>
@@ -7032,7 +7059,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
     <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetConfig()">💾 Enregistrer la configuration</button></div>
   </div>
 
-  <div class="admin-card"><h3>📺 Option 1 — Page complète (iframe)</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.</p>
     <div style="position:relative"><textarea class="form-input" rows="12" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
 &lt;script&gt;
@@ -7051,7 +7078,7 @@ window.addEventListener('message',function(e){
     <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">💡 L'iframe s'étend automatiquement en pleine largeur grâce au message <code>tourmag-live-fullwidth</code>. Le redimensionnement en hauteur est automatique.</div>
   </div>
 
-  <div class="admin-card"><h3>📦 Option 2 — Widget encart compact (iframe)</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Option 2 — Widget encart compact (iframe)</h3>
     <p style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6">Encart compact pour la homepage, identique au widget du dashboard crise. Auto-resize via postMessage.</p>
     <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:10px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w"&gt;&lt;/iframe&gt;
 &lt;script&gt;
@@ -7064,7 +7091,7 @@ window.addEventListener('message',function(e){
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-widget')">📋 Copier</button></div>
   </div>
 
-  <div class="admin-card"><h3>🔗 URLs directes</h3>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg> URLs directes</h3>
     <div style="display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:10px;font-weight:600;color:var(--text2);width:80px">Page live :</span>
