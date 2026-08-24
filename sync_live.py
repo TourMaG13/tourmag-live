@@ -173,22 +173,36 @@ def generate_essential(db, event_ref, event_data, ctx):
     live_block = "\n".join(ctx["live_texts"][:30]) or "(vide)"
     articles_block = "\n".join(ctx["article_titles"][:20]) or "(vide)"
 
-    prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
-À partir des articles ci-dessous liés à l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}), génère 4 à 6 points essentiels de synthèse.
+    # Les deux sources (articles + posts du fil live) sont synthétisées ensemble.
+    has_live = bool(ctx["live_texts"])
+    has_articles = bool(ctx["article_titles"])
+    sources_desc = []
+    if has_articles:
+        sources_desc.append("les articles liés")
+    if has_live:
+        sources_desc.append("les posts publiés dans le fil live")
+    sources_line = " et ".join(sources_desc) if sources_desc else "les contenus disponibles"
 
---- ARTICLES À SYNTHÉTISER ---
+    prompt = f"""Tu es un éditeur spécialisé dans le tourisme français pour TourMaG.com.
+À partir de {sources_line} de l'événement "{ctx['title']}" ({ctx['location']}, {ctx['dates']}), génère 4 à 6 points essentiels de synthèse.
+
+Les DEUX sources ci-dessous ont la même importance : traite les posts du fil live comme une matière première au même titre que les articles. Un point de synthèse peut provenir d'un article, d'un post du fil live, ou combiner les deux.
+
+--- ARTICLES LIÉS ---
 {articles_block}
 
-{f"--- FIL LIVE (contexte complémentaire) ---{chr(10)}{live_block}" if ctx["live_texts"] else ""}
+--- POSTS DU FIL LIVE ---
+{live_block}
 
 Tags disponibles : {', '.join(tag_names)}
 
 Chaque point doit :
 - Avoir un tag parmi ceux disponibles
-- Synthétiser un fait marquant issu des articles
+- Synthétiser un fait marquant issu des articles OU des posts du fil live
 - Être bref et percutant (1-2 phrases, max 30 mots)
 - Utiliser <strong>nom propre</strong> pour les entités clés
 - Couvrir des aspects différents
+- Ne pas inventer de faits ou de chiffres absents des deux sources
 
 Réponds UNIQUEMENT en JSON, sans backticks :
 [{{"tag":"TAG","text":"Texte avec <strong>entité</strong> en gras."}}, ...]"""
@@ -474,15 +488,15 @@ def main():
         # Collecter le contexte (après import RSS pour inclure les nouveaux articles)
         ctx = collect_context(db, event_ref, event_data)
 
-        # 2. Points essentiels IA (synthèse des articles)
+        # 2. Points essentiels IA (synthèse des articles ET des posts du fil live)
         if has_ia_ess:
-            if ctx["article_titles"]:
+            if ctx["article_titles"] or ctx["live_texts"]:
                 ess_count = generate_essential(db, event_ref, event_data, ctx)
                 if ess_count:
                     time.sleep(AI_PAUSE)
                     ctx = collect_context(db, event_ref, event_data)
             else:
-                print("  ⏭ Aucun article à synthétiser", flush=True)
+                print("  ⏭ Aucun article ni post live à synthétiser", flush=True)
         else:
             print("  ⏭ IA Essentiel désactivée", flush=True)
 
