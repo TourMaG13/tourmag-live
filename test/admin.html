@@ -1925,6 +1925,13 @@ function moduleSettingsPanel(type, ev){
 // Bloc complet "Paramétrage du module" à insérer dans un onglet : réglages fins
 // + typo + un seul bouton d'enregistrement. tabKey = data-tab de l'onglet.
 function moduleConfigBlock(tabKey){
+  // Masquage de la boîte « Paramétrage & apparence » pour les non-super-admins
+  // (piloté par le profil d'accès appliqué → ev.hiddenModuleSettings).
+  if(!isSuperAdmin()){
+    var _ev=eventsData.find(e=>e.id===currentEventId)||{};
+    var _hms=_ev.hiddenModuleSettings||[];
+    if(_hms.includes(tabKey)) return '';
+  }
   var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
   var typoKey = (tabKey==='journalistes') ? 'reporters' : MODULE_TYPO_KEY[tabKey];
   var inner = '';
@@ -2499,6 +2506,36 @@ function renderPhases(el){
           ${i<phases.length-1?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},1)">▼</button>`:''}
           <button class="btn btn-ghost btn-xs" onclick="editPhase(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
           <button class="btn btn-danger btn-xs" onclick="deletePhase(${i})">✕</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+
+    // ===== Liens d'accès par phase =====
+    const _baseUrl='https://tourmag13.github.io/tourmag-live/v3';
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Liens d'accès par phase</h3>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Pour chaque phase, deux liens directs :<br>• <strong>Lien normal</strong> — ouvre la phase, le visiteur peut cliquer sur les autres onglets.<br>• <strong>Lien verrouillé</strong> — ouvre la phase et <strong>masque les onglets de phase</strong> (le visiteur reste sur cette phase uniquement).</div>`;
+    phases.forEach((p)=>{
+      const _u=_baseUrl+'/index.html?event='+encodeURIComponent(currentEventId)+'&phase='+encodeURIComponent(p.id);
+      const _ul=_u+'&lock=1';
+      h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="width:12px;height:12px;border-radius:3px;background:${p.color||'#6366F1'};flex-shrink:0"></div>
+        <div class="list-item-content" style="flex:1;min-width:180px">
+          <div class="list-item-text"><strong>${p.name}</strong></div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:10px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:1px 7px;border-radius:10px;white-space:nowrap">Normal</span>
+              <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_u}</code>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_u}');toast('Lien normal copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
+              <a class="btn btn-ghost btn-xs" href="${_u}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:10px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:1px 7px;border-radius:10px;white-space:nowrap">Verrouillé</span>
+              <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_ul}</code>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_ul}');toast('Lien verrouillé copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
+              <a class="btn btn-ghost btn-xs" href="${_ul}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
+            </div>
+          </div>
         </div>
       </div>`;
     });
@@ -5188,18 +5225,24 @@ async function saveJournalistPhases(){
 var _presetPreviewId=null;
 
 function mkAccessPresetsCard(allTabs, hiddenTabs){
+  const _ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const curHMS=_ev.hiddenModuleSettings||[];
   const totalTabs=allTabs.length;
   let cards='';
   accessPresetsData.forEach(p=>{
     const hidden=(p.hiddenTabs||[]);
+    const hms=(p.hiddenModuleSettings||[]);
     const visibleCount=totalTabs-hidden.filter(k=>allTabs.some(t=>t.key===k)).length;
-    const sameAsCurrent=hidden.length===hiddenTabs.length && hidden.every(k=>hiddenTabs.includes(k));
+    const sameTabs=hidden.length===hiddenTabs.length && hidden.every(k=>hiddenTabs.includes(k));
+    const sameHMS=hms.length===curHMS.length && hms.every(k=>curHMS.includes(k));
+    const sameAsCurrent=sameTabs && sameHMS;
     const isPreviewing=_presetPreviewId===p.id;
+    const msNote=hms.length?` · ${hms.length} boîte${hms.length>1?'s':''} de réglages masquée${hms.length>1?'s':''}`:'';
     cards+=`<div class="preset-card${isPreviewing?' sel':''}" onclick="previewPreset('${p.id}')">
       ${sameAsCurrent?'<span class="preset-tag">Appliqué</span>':''}
       <div class="preset-ic"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></div>
       <div class="preset-nm">${(p.name||'Sans nom').replace(/</g,'&lt;')}</div>
-      <div class="preset-ds">${visibleCount} onglet${visibleCount>1?'s':''} visible${visibleCount>1?'s':''} sur ${totalTabs}</div>
+      <div class="preset-ds">${visibleCount} onglet${visibleCount>1?'s':''} visible${visibleCount>1?'s':''} sur ${totalTabs}${msNote}</div>
       <div class="preset-mini-actions">
         <button class="preset-mini-btn" onclick="event.stopPropagation();renameAccessPreset('${p.id}')" title="Renommer"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
         <button class="preset-mini-btn danger" onclick="event.stopPropagation();deleteAccessPreset('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Supprimer">✕</button>
@@ -5268,10 +5311,11 @@ async function confirmNewPreset(){
   if(!nm){toast('Donnez un nom au profil','error'); if(inp) inp.focus(); return;}
   // Capturer l'état actuel des interrupteurs de la liste
   const hiddenTabs=_readVisibleTogglesHidden();
+  const hiddenModuleSettings=_readVisibleModuleSettingsHidden();
   saving(true);
   try{
     const maxOrder=accessPresetsData.reduce((m,p)=>Math.max(m,p.order||0),0);
-    await db.collection('accessPresets').add({name:nm, hiddenTabs, order:maxOrder+1});
+    await db.collection('accessPresets').add({name:nm, hiddenTabs, hiddenModuleSettings, order:maxOrder+1});
     toast('Profil créé');
     // onSnapshot rafraîchira la liste
   }catch(err){ console.error('[Admin] confirmNewPreset failed:',err); toast('Erreur : '+(err&&err.message||'écriture refusée — vérifiez les règles Firestore'),'error'); }
@@ -5284,15 +5328,24 @@ function _readVisibleTogglesHidden(){
   });
   return hidden;
 }
+// Idem pour les boîtes « Paramétrage & apparence » (décochées = masquées)
+function _readVisibleModuleSettingsHidden(){
+  const hidden=[];
+  document.querySelectorAll('[data-mstoggle]').forEach(cb=>{
+    if(!cb.checked) hidden.push(cb.getAttribute('data-mstoggle'));
+  });
+  return hidden;
+}
 
 async function applyAccessPreset(presetId){
   const p=accessPresetsData.find(x=>x.id===presetId); if(!p){toast('Profil introuvable','error');return;}
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const hiddenTabs=[...(p.hiddenTabs||[])];
+  const hiddenModuleSettings=[...(p.hiddenModuleSettings||[])];
   saving(true);
   try{
-    await evRef().update({hiddenTabs});
-    if(ev) ev.hiddenTabs=hiddenTabs;
+    await evRef().update({hiddenTabs, hiddenModuleSettings});
+    if(ev){ ev.hiddenTabs=hiddenTabs; ev.hiddenModuleSettings=hiddenModuleSettings; }
     _presetPreviewId=null;
     applyTabVisibility();
     toast('Profil « '+p.name+' » appliqué');
@@ -5422,6 +5475,36 @@ function renderAccess(el){
   });
   h+=`</div>`;
 
+  // ===== Boîtes « Paramétrage & apparence » visibles pour les admins =====
+  // Modules disposant d'une boîte de paramétrage/apparence dépliable
+  const settingsTabs=[
+    {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
+    {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
+    {key:'articles',icon:'📰',label:'Articles liés'},
+    {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L’essentiel'},
+    {key:'videos',icon:'🎬',label:'Vidéos'},
+    {key:'interviews',icon:'🎙️',label:'Interviews'},
+    {key:'journalistes',icon:'👤',label:isExp?'Reporters':'Journalistes'},
+    {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
+    {key:'programme',icon:'🗓',label:'Programme'},
+    {key:'gallery',icon:'📸',label:'Galerie photos'},
+    {key:'sponsors',icon:'🤝',label:'Partenaires'},
+    {key:'contact',icon:'📞',label:'Contact'},
+    {key:'etapes',icon:'🗺️',label:'Carte & Étapes'}
+  ];
+  const _srcHiddenMS=_pv?(_pv.hiddenModuleSettings||[]):(ev.hiddenModuleSettings||[]);
+  const _hintMS=_previewing
+    ? 'Aperçu : la boîte « ⚙️ Paramétrage & apparence » de chaque module décoché sera masquée aux utilisateurs non super-admin.'
+    : 'Décochez un module pour masquer sa boîte « ⚙️ Paramétrage & apparence de ce module » aux utilisateurs non super-admin. Le contenu du module reste éditable ; seuls les réglages fins (typo, apparence…) sont masqués.';
+  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Boîtes « Paramétrage & apparence » visibles</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${_previewing?'<strong style="color:var(--acc2)">':''}${_hintMS}${_previewing?'</strong>':''}</div>`;
+  settingsTabs.forEach(t=>{
+    const visible=!_srcHiddenMS.includes(t.key);
+    const handler=_previewing?'':`onchange="toggleModuleSettingsVisibility('${t.key}',this.checked)"`;
+    h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-mstoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+  });
+  h+=`</div>`;
+
   // ===== RESTRICTION D'ACCÈS PAR ÉVÉNEMENT =====
   const allowedUsers=ev.allowedUsers||[];
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-lock"/></svg> Accès restreint à cet événement</h3>
@@ -5489,6 +5572,20 @@ async function toggleTabVisibility(tabKey,visible){
   if(ev) ev.hiddenTabs=hiddenTabs;
   applyTabVisibility();
   toast(visible?'Onglet visible':'Onglet masqué');
+}
+
+async function toggleModuleSettingsVisibility(tabKey,visible){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let hiddenModuleSettings=[...(ev.hiddenModuleSettings||[])];
+  if(visible){
+    hiddenModuleSettings=hiddenModuleSettings.filter(t=>t!==tabKey);
+  } else {
+    if(!hiddenModuleSettings.includes(tabKey)) hiddenModuleSettings.push(tabKey);
+  }
+  saving(true);
+  await evRef().update({hiddenModuleSettings});
+  if(ev) ev.hiddenModuleSettings=hiddenModuleSettings;
+  toast(visible?'Boîte de réglages visible':'Boîte de réglages masquée');
 }
 
 async function addAllowedUser(){
@@ -6053,23 +6150,57 @@ async function saveKpis(){
 }
 
 // ==================== CONTACT ====================
+// Migre l'ancien contact unique (ev.contact = {name,role,...}) vers le nouveau format à liste (ct.people[]).
+function _normalizeContact(raw){
+  const ct=Object.assign({}, raw||{});
+  if(!Array.isArray(ct.people)){
+    // Ancien format : un seul contact stocké à plat sur l'objet
+    const hasSolo = ct.name||ct.role||ct.photo_url||ct.message||ct.email||ct.phone||ct.website;
+    ct.people = hasSolo ? [{
+      name:ct.name||'', role:ct.role||'', photo_url:ct.photo_url||'', message:ct.message||'',
+      email:ct.email||'', phone:ct.phone||'', website:ct.website||'', booking_url:ct.booking_url||''
+    }] : [];
+  }
+  return ct;
+}
+function _ctPersonRow(p, i){
+  p=p||{};
+  return `<div class="admin-card ct-person" data-ct-idx="${i}" style="margin:0 0 12px;background:var(--bg);border:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <strong style="font-size:13px">👤 Contact ${i+1}</strong>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="moveContact(${i},-1)" title="Monter">▲</button>
+        <button class="btn btn-ghost btn-xs" onclick="moveContact(${i},1)" title="Descendre">▼</button>
+        <button class="btn btn-danger btn-xs" onclick="removeContactPerson(${i})" title="Supprimer">✕</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="margin:0"><label class="form-label">Nom</label><input class="form-input" data-ctp="name" value="${(p.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Rôle / titre</label><input class="form-input" data-ctp="role" value="${(p.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-ctp="photo_url" id="ctp-photo-${i}" value="${(p.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ctp-photo-'+i)}${mkUploadBtn('ctp-photo-'+i)}</div></div>
+    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" data-ctp="message" rows="2" placeholder="Pour obtenir les photos, contactez-moi directement.">${(p.message||'').replace(/</g,'&lt;')}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="margin:0"><label class="form-label">Email</label><input class="form-input" data-ctp="email" value="${(p.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Téléphone</label><input class="form-input" data-ctp="phone" value="${(p.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="margin:0"><label class="form-label">Site web</label><input class="form-input" data-ctp="website" value="${(p.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">📅 Lien de prise de RDV</label><input class="form-input" data-ctp="booking_url" value="${(p.booking_url||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/..."></div>
+    </div>
+  </div>`;
+}
 function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const ct=ev.contact||{};
-  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un bloc contact pour que les visiteurs puissent vous joindre directement (demande de photos, informations…). Activez via le module "Contact" dans l'onglet Modules.</div>
+  const ct=_normalizeContact(ev.contact);
+  let peopleHtml=ct.people.length?ct.people.map((p,i)=>_ctPersonRow(p,i)).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';
+  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
-    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="ct-name" value="${(ct.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
-    <div class="form-group"><label class="form-label">Rôle / titre</label><input class="form-input" id="ct-role" value="${(ct.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
-    <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="ct-photo" value="${(ct.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ct-photo')}${mkUploadBtn('ct-photo')}</div></div>
-    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="ct-msg" rows="3" placeholder="Pour obtenir les photos de l'expédition, contactez-moi directement.">${ct.message||''}</textarea></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ct-email" value="${(ct.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
-      <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="ct-phone" value="${(ct.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
-    </div>
-    <div class="form-group"><label class="form-label">Site web</label><input class="form-input" id="ct-website" value="${(ct.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
-    ${ct.photo_url?`<div style="margin:12px 0"><img src="${ct.photo_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e5e5" onerror="this.remove()"></div>`:''}
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le contact</button></div>
+    <div class="form-group"><label class="form-label">📅 Lien de prise de RDV global (optionnel)</label><input class="form-input" id="ct-booking-global" value="${(ct.bookingUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/votre-equipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Bouton « Prendre rendez-vous » affiché une fois pour tout le bloc, en plus des liens propres à chaque contact.</div></div>
+    <div id="ct-people-list" style="margin-top:10px">${peopleHtml}</div>
+    <div style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addContactPerson()">＋ Ajouter un contact</button></div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les contacts</button></div>
   </div>
   <div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Personnalisation visuelle</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -6108,24 +6239,78 @@ function updateCtPreview(){
   if(im){p.style.backgroundSize='cover';p.style.backgroundPosition='center';}
   p.innerHTML=`<strong style="color:${nc}">Nom Prénom</strong> · <span style="color:${rc}">Fonction</span> · <span style="border:1px solid ${bc};padding:2px 8px;color:${bc};font-size:13px">Bouton</span>`;
 }
+// Lit les cartes de contacts affichées dans le DOM → tableau people[]
+function _readContactPeople(){
+  const rows=document.querySelectorAll('#ct-people-list .ct-person');
+  const people=[];
+  rows.forEach(row=>{
+    const g=(k)=>{const el=row.querySelector('[data-ctp="'+k+'"]');return el?el.value.trim():'';};
+    const p={name:g('name'),role:g('role'),photo_url:g('photo_url'),message:g('message'),email:g('email'),phone:g('phone'),website:g('website'),booking_url:g('booking_url')};
+    // On ignore les cartes entièrement vides
+    if(Object.values(p).some(v=>v)) people.push(p);
+  });
+  return people;
+}
+function addContactPerson(){
+  const list=document.getElementById('ct-people-list');if(!list)return;
+  // Si le placeholder « aucun contact » est présent, on le retire
+  if(list.querySelector('.ct-person')===null) list.innerHTML='';
+  const i=list.querySelectorAll('.ct-person').length;
+  const wrap=document.createElement('div');
+  wrap.innerHTML=_ctPersonRow({}, i);
+  list.appendChild(wrap.firstElementChild);
+}
+function removeContactPerson(i){
+  const rows=[...document.querySelectorAll('#ct-people-list .ct-person')];
+  if(rows[i]) rows[i].remove();
+  _reindexContactRows();
+}
+function moveContact(i,dir){
+  const list=document.getElementById('ct-people-list');if(!list)return;
+  const rows=[...list.querySelectorAll('.ct-person')];
+  const j=i+dir;
+  if(j<0||j>=rows.length) return;
+  if(dir<0) list.insertBefore(rows[i],rows[j]);
+  else list.insertBefore(rows[j],rows[i]);
+  _reindexContactRows();
+}
+// Renumérote les libellés/attributs après ajout/suppression/déplacement
+function _reindexContactRows(){
+  const rows=[...document.querySelectorAll('#ct-people-list .ct-person')];
+  if(!rows.length){document.getElementById('ct-people-list').innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';return;}
+  rows.forEach((row,idx)=>{
+    row.setAttribute('data-ct-idx',idx);
+    const title=row.querySelector('strong'); if(title) title.textContent='👤 Contact '+(idx+1);
+    const mv=row.querySelectorAll('.btn-ghost.btn-xs');
+    if(mv[0]) mv[0].setAttribute('onclick','moveContact('+idx+',-1)');
+    if(mv[1]) mv[1].setAttribute('onclick','moveContact('+idx+',1)');
+    const rm=row.querySelector('.btn-danger.btn-xs');
+    if(rm) rm.setAttribute('onclick','removeContactPerson('+idx+')');
+    const ph=row.querySelector('[data-ctp="photo_url"]'); if(ph) ph.id='ctp-photo-'+idx;
+  });
+}
 async function saveContact(){
   saving(true);
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const prev=_normalizeContact(ev.contact);
+  const people=_readContactPeople();
   const contact={
     title:document.getElementById('ct-title').value.trim()||'Contact',
-    name:document.getElementById('ct-name').value.trim(),
-    role:document.getElementById('ct-role').value.trim(),
-    photo_url:document.getElementById('ct-photo').value.trim(),
-    message:document.getElementById('ct-msg').value.trim(),
-    email:document.getElementById('ct-email').value.trim(),
-    phone:document.getElementById('ct-phone').value.trim(),
-    website:document.getElementById('ct-website').value.trim(),
+    bookingUrl:document.getElementById('ct-booking-global')?.value.trim()||'',
+    people,
     bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
     bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
     role_color:document.getElementById('ct-role-color-txt')?.value.trim()||'',
     btn_color:document.getElementById('ct-btn-color-txt')?.value.trim()||''
   };
+  // Rétrocompat : on reflète le 1er contact à plat pour tout code legacy qui lirait encore ct.name/ct.email
+  const first=people[0]||{};
+  contact.name=first.name||''; contact.role=first.role||''; contact.photo_url=first.photo_url||'';
+  contact.message=first.message||''; contact.email=first.email||''; contact.phone=first.phone||'';
+  contact.website=first.website||''; contact.booking_url=first.booking_url||'';
   await evRef().update({contact});
+  if(ev) ev.contact=contact;
   toast('Contact enregistré');
 }
 
