@@ -1331,6 +1331,7 @@ function modifyEvent(id){
         <option value="expedition"${isExp?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:10px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
     </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
+    <div class="form-row"><label class="form-label">🔗 URL publique du dashboard</label><input class="form-input" id="m-ev-public-url" value="${(ev.publicUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.monsite.fr/live/mon-evenement.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Adresse de la page où ce dashboard est intégré sur votre site. Sert à générer les liens d'accès par phase et le widget. Si vide, l'adresse GitHub Pages par défaut est utilisée.</div></div>
     <div style="margin-top:12px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0369A1">💡 Les réglages visuels du hero (image, couleur, hauteur, timeline, tags…) se configurent dans l'onglet <strong>Apparence</strong>.</div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="updateEvent('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>`);
 }
@@ -1353,7 +1354,8 @@ async function updateEvent(id){
     dates:document.getElementById('m-ev-dates').value,
     status:document.getElementById('m-ev-status').value,
     mode:document.getElementById('m-ev-mode').value,
-    logo_url:document.getElementById('m-ev-logo').value
+    logo_url:document.getElementById('m-ev-logo').value,
+    publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim()
   };
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
@@ -2512,12 +2514,34 @@ function renderPhases(el){
     h+=`</div>`;
 
     // ===== Liens d'accès par phase =====
-    const _baseUrl='https://tourmag13.github.io/tourmag-live/v3';
+    const _ghBase='https://tourmag13.github.io/tourmag-live/v3';
+    const _publicUrl=(ev.publicUrl||'').trim();
+    // Construit une URL en ajoutant proprement des paramètres (gère ? / & et les params déjà présents)
+    function _buildPhaseUrl(phaseId, lock){
+      let base, hasEvent;
+      if(_publicUrl){
+        base=_publicUrl;
+        hasEvent=/[?&]event=/.test(base);
+      } else {
+        base=_ghBase+'/index.html?event='+encodeURIComponent(currentEventId);
+        hasEvent=true;
+      }
+      const params=[];
+      if(!hasEvent) params.push('event='+encodeURIComponent(currentEventId));
+      params.push('phase='+encodeURIComponent(phaseId));
+      if(lock) params.push('lock=1');
+      const sep = base.includes('?') ? (base.endsWith('?')||base.endsWith('&')?'':'&') : '?';
+      return base+sep+params.join('&');
+    }
+    const _urlWarn = _publicUrl ? '' : '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin-bottom:12px">⚠️ Aucune <strong>URL publique</strong> définie pour cet événement : les liens ci-dessous pointent vers l\'adresse GitHub Pages par défaut. Renseignez l\'URL de votre site dans l\'onglet <a href="#" onclick="event.preventDefault();modifyEvent(currentEventId)" style="color:#92400E;font-weight:700;text-decoration:underline">réglages de l\'événement</a> pour générer des liens vers votre propre page.</div>';
     h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Liens d'accès par phase</h3>
+      ${_urlWarn}
       <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Pour chaque phase, deux liens directs :<br>• <strong>Lien normal</strong> — ouvre la phase, le visiteur peut cliquer sur les autres onglets.<br>• <strong>Lien verrouillé</strong> — ouvre la phase et <strong>masque les onglets de phase</strong> (le visiteur reste sur cette phase uniquement).</div>`;
     phases.forEach((p)=>{
-      const _u=_baseUrl+'/index.html?event='+encodeURIComponent(currentEventId)+'&phase='+encodeURIComponent(p.id);
-      const _ul=_u+'&lock=1';
+      const _u=_buildPhaseUrl(p.id,false);
+      const _ul=_buildPhaseUrl(p.id,true);
+      const _uJs=_u.replace(/'/g,"\\'");
+      const _ulJs=_ul.replace(/'/g,"\\'");
       h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
         <div style="width:12px;height:12px;border-radius:3px;background:${p.color||'#6366F1'};flex-shrink:0"></div>
         <div class="list-item-content" style="flex:1;min-width:180px">
@@ -2526,13 +2550,13 @@ function renderPhases(el){
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <span style="font-size:10px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:1px 7px;border-radius:10px;white-space:nowrap">Normal</span>
               <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_u}</code>
-              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_u}');toast('Lien normal copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_uJs}');toast('Lien normal copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
               <a class="btn btn-ghost btn-xs" href="${_u}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
             </div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <span style="font-size:10px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:1px 7px;border-radius:10px;white-space:nowrap">Verrouillé</span>
               <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_ul}</code>
-              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_ul}');toast('Lien verrouillé copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_ulJs}');toast('Lien verrouillé copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
               <a class="btn btn-ghost btn-xs" href="${_ul}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
             </div>
           </div>
@@ -7159,9 +7183,18 @@ window.addEventListener('message',function(e){
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Page complète (iframe)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.</p>
-    <div style="position:relative"><textarea class="form-input" rows="10" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
+    <div style="position:relative"><textarea class="form-input" rows="14" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block"&gt;&lt;/iframe&gt;
 &lt;script&gt;
+(function(){
+  var base="${frontUrl}";
+  // Recopie phase / lock (et event si absent) depuis l'URL de CETTE page vers l'iframe
+  var here=new URLSearchParams(window.location.search);
+  var u=new URL(base, window.location.href);
+  ['phase','lock'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
+  if(!u.searchParams.get('event') && here.get('event')) u.searchParams.set('event', here.get('event'));
+  document.getElementById('${iframeId}').src=u.toString();
+})();
 window.addEventListener('message',function(e){
   if(!e.data) return;
   if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
@@ -7261,9 +7294,17 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.</p>
-    <div style="position:relative"><textarea class="form-input" rows="12" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${frontUrl}" style="width:100%;border:none;min-height:800px;display:block" id="${iframeId}"&gt;&lt;/iframe&gt;
+    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
+    <div style="position:relative"><textarea class="form-input" rows="16" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block"&gt;&lt;/iframe&gt;
 &lt;script&gt;
+(function(){
+  var base="${frontUrl}";
+  var here=new URLSearchParams(window.location.search);
+  var u=new URL(base, window.location.href);
+  ['phase','lock'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
+  if(!u.searchParams.get('event') && here.get('event')) u.searchParams.set('event', here.get('event'));
+  document.getElementById('${iframeId}').src=u.toString();
+})();
 window.addEventListener('message',function(e){
   if(!e.data) return;
   if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
