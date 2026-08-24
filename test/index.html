@@ -187,6 +187,17 @@ img{display:block}a{text-decoration:none}
 .live-timestamp{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3)}
 .live-journalist{font-size:9px;color:var(--acc);font-weight:600}
 .live-text{font-size:12.5px;line-height:1.6;color:var(--text)}
+/* ===== Boutons Like (#5) ===== */
+.live-actions,.exp-entry-actions{margin-top:10px;display:flex;align-items:center;gap:10px}
+.exp-entry-actions{margin-top:14px}
+.like-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1.5px solid var(--border,#e5e5e5);color:var(--text3,#888);padding:5px 12px;border-radius:100px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .18s;-webkit-tap-highlight-color:transparent}
+.like-btn:hover{border-color:#EF4444;color:#EF4444}
+.like-btn .like-ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .18s}
+.like-btn.liked{border-color:#EF4444;color:#EF4444;background:rgba(239,68,68,.07)}
+.like-btn.liked .like-ic{fill:#EF4444;stroke:#EF4444}
+.like-btn .like-count{font-weight:600;font-variant-numeric:tabular-nums;min-width:8px}
+.like-btn.like-bounce .like-ic{animation:likePop .3s ease}
+@keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .live-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);line-height:1.25;margin-bottom:4px}
 .live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
@@ -877,9 +888,22 @@ body.mode-expedition .social-float{display:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script>
 firebase.initializeApp({apiKey:"AIzaSyDtKWuGcF2MFI3Er9mRuL1qtzhbqsQP3PY",authDomain:"tourmag-live.firebaseapp.com",projectId:"tourmag-live"});
 const db = firebase.firestore();
+
+// ===== Likes : authentification anonyme (invisible pour l'internaute) =====
+// Attribue un identifiant unique par appareil, sans compte ni action de l'utilisateur.
+// Sert à comptabiliser 1 like par personne par post et à sécuriser les règles Firestore.
+var _likeUid = null;
+var _likeAuthReady = (function(){
+  try{
+    return firebase.auth().signInAnonymously()
+      .then(function(cred){ _likeUid = cred.user.uid; return _likeUid; })
+      .catch(function(e){ console.warn('Auth anonyme indisponible (les likes seront désactivés) :', e.message); return null; });
+  }catch(e){ console.warn('Module Auth absent :', e.message); return Promise.resolve(null); }
+})();
 
 // Detect embed mode
 if(window.self !== window.top) document.body.classList.add('is-embed');
@@ -1658,7 +1682,7 @@ function render(data){
     const avatarHtml = jrPhoto
       ? `<img class="live-avatar${isFirst?' live-avatar-first':''}" src="${jrPhoto}" alt="" onerror="this.className='live-dot'">`
       : `<div class="live-dot"></div>`;
-    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}</div></div>`;
+    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}</div></div></div>`;
   }
 
   function mkLive(){
@@ -3463,6 +3487,8 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
 
   if(etape && etape.km) o += `<div class="exp-entry-km">${etape.km}</div>`;
 
+  o += `<div class="exp-entry-actions">${mkLikeButton(entry.id, entry.likeCount)}</div>`;
+
   o += `</div>`;
   return o;
 }
@@ -3488,11 +3514,76 @@ function initExpClamps(){
 }
 
 // ============================================================
-// INIT
+// LIKES ENGINE (#5)
 // ============================================================
+// Etat : quels posts CET appareil a déjà likés (rempli après auth).
+window._likedSet = new Set();
+window._eventIdForLikes = null;
+// Charge les likes de l'utilisateur anonyme pour l'événement courant
+async function _loadUserLikes(eventId){
+  window._eventIdForLikes = eventId;
+  const uid = await _likeAuthReady;
+  if(!uid) return; // auth indisponible → likes en lecture seule
+  try{
+    const snap = await db.collection('events').doc(eventId).collection('userLikes').doc(uid).get();
+    if(snap.exists){
+      const liked = snap.data().liked || {};
+      Object.keys(liked).forEach(k=>{ if(liked[k]) window._likedSet.add(k); });
+    }
+  }catch(e){ console.warn('Lecture des likes impossible :', e.message); }
+  // Rafraîchit l'affichage des cœurs déjà actifs
+  _refreshLikeButtons();
+}
+function _refreshLikeButtons(){
+  document.querySelectorAll('[data-like-entry]').forEach(btn=>{
+    const id = btn.getAttribute('data-like-entry');
+    if(window._likedSet.has(id)) btn.classList.add('liked');
+    else btn.classList.remove('liked');
+  });
+}
+// Bouton HTML réutilisable (classique + expédition)
+function mkLikeButton(entryId, count){
+  const liked = window._likedSet.has(entryId);
+  const n = count||0;
+  return `<button class="like-btn${liked?' liked':''}" data-like-entry="${entryId}" onclick="window._toggleLike('${entryId}',this)" aria-label="J'aime">
+    <svg viewBox="0 0 24 24" class="like-ic"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="like-count" data-like-count="${entryId}">${n>0?n:''}</span>
+  </button>`;
+}
+// Like / unlike optimiste avec transaction
+window._toggleLike = async function(entryId, btnEl){
+  const eventId = window._eventIdForLikes;
+  const uid = await _likeAuthReady;
+  if(!eventId || !uid){ return; }
+  const wasLiked = window._likedSet.has(entryId);
+  const delta = wasLiked ? -1 : 1;
+  // MAJ optimiste immédiate de l'UI
+  if(wasLiked) window._likedSet.delete(entryId); else window._likedSet.add(entryId);
+  if(btnEl){ btnEl.classList.toggle('liked', !wasLiked); btnEl.classList.add('like-bounce'); setTimeout(()=>btnEl.classList.remove('like-bounce'),300); }
+  const cEl = document.querySelector('[data-like-count="'+entryId+'"]');
+  if(cEl){ const cur=parseInt(cEl.textContent||'0')||0; const nv=Math.max(0,cur+delta); cEl.textContent=nv>0?nv:''; }
+  // Ecriture Firestore
+  const entryRef = db.collection('events').doc(eventId).collection('live').doc(entryId);
+  const userRef = db.collection('events').doc(eventId).collection('userLikes').doc(uid);
+  try{
+    const batch = db.batch();
+    batch.set(entryRef, {likeCount: firebase.firestore.FieldValue.increment(delta)}, {merge:true});
+    batch.set(userRef, {liked: {[entryId]: wasLiked ? firebase.firestore.FieldValue.delete() : true}}, {merge:true});
+    await batch.commit();
+  }catch(e){
+    console.warn('Like non enregistré :', e.message);
+    // Rollback UI si échec
+    if(wasLiked) window._likedSet.add(entryId); else window._likedSet.delete(entryId);
+    if(btnEl) btnEl.classList.toggle('liked', wasLiked);
+    if(cEl){ const cur=parseInt(cEl.textContent||'0')||0; const nv=Math.max(0,cur-delta); cEl.textContent=nv>0?nv:''; }
+  }
+};
+
+
 async function init(){
   const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
+  _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
   const ec=db.collection('events').doc(eventId);
   const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS] = await Promise.all([
     ec.get(),
@@ -3532,7 +3623,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); }
 
   ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
   ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
