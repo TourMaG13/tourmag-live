@@ -198,6 +198,30 @@ img{display:block}a{text-decoration:none}
 .like-btn .like-count{font-weight:600;font-variant-numeric:tabular-nums;min-width:8px}
 .like-btn.like-bounce .like-ic{animation:likePop .3s ease}
 @keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+/* ===== Bloc Questions du public (Q&A) ===== */
+.qa-block{max-width:820px;margin:40px auto;padding:0 20px}
+.qa-form{background:var(--card,#fff);border:1.5px solid var(--border,#e5e5e5);border-radius:14px;padding:16px 18px;margin-top:8px}
+.qa-input{width:100%;border:1.5px solid var(--border,#e5e5e5);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;background:var(--bg,#fafafa);color:var(--text,#1a1a1a)}
+.qa-input:focus{outline:none;border-color:#6366F1}
+.qa-form-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.qa-name-input{flex:1;min-width:180px;border:1.5px solid var(--border,#e5e5e5);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;box-sizing:border-box;background:var(--bg,#fafafa);color:var(--text,#1a1a1a)}
+.qa-name-input:focus{outline:none;border-color:#6366F1}
+.qa-submit{background:#6366F1;color:#fff;border:none;border-radius:100px;padding:9px 26px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .18s;white-space:nowrap}
+.qa-submit:hover{opacity:.88}
+.qa-submit:disabled{opacity:.5;cursor:default}
+.qa-note{font-size:11.5px;color:var(--text3,#888);margin-top:10px}
+.qa-note.qa-ok{color:#059669}
+.qa-note.qa-err{color:#DC2626}
+.qa-list{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.qa-item{background:var(--card,#fff);border:1.5px solid var(--border,#e5e5e5);border-radius:12px;padding:14px 16px}
+.qa-q{font-size:14.5px;font-weight:600;color:var(--text,#1a1a1a);line-height:1.5}
+.qa-meta{font-size:11px;color:var(--text3,#888);margin-top:5px}
+.qa-name{font-weight:600;color:#6366F1}
+.qa-name.qa-anon{font-weight:500;color:var(--text3,#888);font-style:italic}
+.qa-answer{margin-top:10px;padding:10px 14px;background:rgba(99,102,241,.06);border-left:3px solid #6366F1;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.6;color:var(--text2,#444)}
+.qa-answer-label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#6366F1;margin-bottom:3px}
+.qa-exp .qa-form{background:var(--exp-stone,#f5f3f0)}
+@media(max-width:640px){.qa-form-row{flex-direction:column}.qa-submit{width:100%}}
 .live-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);line-height:1.25;margin-bottom:4px}
 .live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
@@ -1378,7 +1402,7 @@ function _mkPhaseTitle(event, activePhase, phases){
 </script>
 <script>
 function render(data){
-  const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes} = data;
+  const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes,questions:_rawQuestions} = data;
 
   // ===== SHARED CSS VARIABLES (applied for ALL modes) =====
 
@@ -2078,6 +2102,16 @@ function render(data){
     return o;
   }
 
+  // ===== QUESTIONS DU PUBLIC (Q&A) =====
+  function mkQuestions(){
+    if(mod.questions===false) return '';
+    return mkQuestionsBlock(_rawQuestions, {
+      title: event.questionsTitle || 'Questions en direct',
+      sub: event.questionsSubtitle || 'Une question ? Posez-la, la rédaction vous répond.',
+      exp: false
+    });
+  }
+
   // ===== BRAND NEWS =====
   function mkBrandNews(){
     if(mod.brandnews===false) return '';
@@ -2118,10 +2152,10 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact};
-  const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full'};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions};
+  const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
-  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors','contact'];
+  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors','contact'];
 
   const fullBlockOrder = event.blockOrder || defaultOrder;
   const orderedKeys = [...fullBlockOrder];
@@ -2292,7 +2326,7 @@ window._switchPhase = function(e, phaseId){
 var _expMapInstance = null;
 
 function renderExpedition(data){
-  const {event,essential:_rawEss,live:_rawLive,articles:_rawArt,journalists,etapes,citations:_rawCit,videos:_rawVid,interviews:_rawItw,programme:_rawProg} = data;
+  const {event,essential:_rawEss,live:_rawLive,articles:_rawArt,journalists,etapes,citations:_rawCit,videos:_rawVid,interviews:_rawItw,programme:_rawProg,questions:_rawQuestions} = data;
   window._lastExpEvent = event;
   const exp = event.expedition || {};
   const brand = exp.branding || {};
@@ -2942,10 +2976,19 @@ function renderExpedition(data){
     return o;
   };
 
+  _b.questions = function(){
+    if(mod.questions===false) return '';
+    return mkQuestionsBlock(_rawQuestions, {
+      title: event.questionsTitle || 'Questions en direct',
+      sub: event.questionsSubtitle || 'Une question ? Posez-la, la rédaction vous répond.',
+      exp: true
+    });
+  };
+
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
-  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
-  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
+  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','questions','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side',questions:'full'};
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   // Auto-inject new blocks for legacy events
@@ -3579,13 +3622,83 @@ window._toggleLike = async function(entryId, btnEl){
   }
 };
 
+// ============================================================
+// QUESTIONS DU PUBLIC (Q&A modéré)
+// ============================================================
+window._eventIdForQuestions = null;
+// Bloc HTML complet : formulaire + liste des questions validées. Réutilisé classique + expédition.
+function mkQuestionsBlock(questions, opts){
+  opts = opts || {};
+  const cls = opts.exp ? 'qa-block qa-exp' : 'qa-block';
+  const title = opts.title || 'Questions en direct';
+  const sub = opts.sub || 'Une question ? Posez-la, nous y répondons.';
+  let list = '';
+  const approved = (questions||[]).filter(q=>q.status==='approved');
+  if(approved.length){
+    approved.forEach(q=>{
+      const who = q.name ? `<span class="qa-name">${_qEsc(q.name)}</span>` : '<span class="qa-name qa-anon">Anonyme</span>';
+      const ans = q.answer ? `<div class="qa-answer"><span class="qa-answer-label">Réponse</span>${_qEsc(q.answer)}</div>` : '';
+      list += `<div class="qa-item"><div class="qa-q">${_qEsc(q.text)}</div><div class="qa-meta">${who}</div>${ans}</div>`;
+    });
+  }
+  return `<div id="section-questions" class="${cls} fi">
+    <div class="${opts.exp?'exp-section-head exp-sec-questions':'sec-title sec-title-questions'}">${opts.exp?`<h2>${title}</h2><div class="rule"></div>`:`<div class="sec-title-icon" style="background:rgba(99,102,241,.08);color:#6366F1">${ICO.msgCircle||''}</div><h2>${title}</h2><div class="sec-title-line"></div><p>${sub}</p>`}</div>
+    <div class="qa-form">
+      <textarea class="qa-input" id="qa-text" rows="2" maxlength="500" placeholder="Votre question…"></textarea>
+      <div class="qa-form-row">
+        <input class="qa-name-input" id="qa-name" maxlength="60" placeholder="Votre prénom / nom (facultatif)">
+        <button class="qa-submit" onclick="window._submitQuestion()">Envoyer</button>
+      </div>
+      <div class="qa-note" id="qa-note">Votre question sera publiée après validation par la rédaction.</div>
+    </div>
+    ${approved.length?`<div class="qa-list">${list}</div>`:''}
+  </div>`;
+}
+function _qEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+window._submitQuestion = async function(){
+  const eventId = window._eventIdForQuestions;
+  const txtEl = document.getElementById('qa-text');
+  const nameEl = document.getElementById('qa-name');
+  const note = document.getElementById('qa-note');
+  if(!eventId || !txtEl) return;
+  const text = txtEl.value.trim();
+  const name = (nameEl?.value||'').trim();
+  if(text.length < 3){ if(note){ note.textContent='Merci d\'écrire une question un peu plus longue.'; note.className='qa-note qa-err'; } return; }
+  // Anti-spam léger : 1 envoi / 30s par navigateur
+  try{
+    const last = parseInt(localStorage.getItem('tmg_q_last_'+eventId)||'0');
+    if(Date.now()-last < 30000){ if(note){ note.textContent='Merci de patienter quelques instants avant de reposer une question.'; note.className='qa-note qa-err'; } return; }
+  }catch(e){}
+  const uid = await _likeAuthReady; // réutilise l'auth anonyme des likes
+  const btn = document.querySelector('.qa-submit');
+  if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
+  try{
+    await db.collection('events').doc(eventId).collection('questions').add({
+      text: text.slice(0,500),
+      name: name.slice(0,60),
+      status: 'pending',
+      uid: uid || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    try{ localStorage.setItem('tmg_q_last_'+eventId, String(Date.now())); }catch(e){}
+    txtEl.value=''; if(nameEl) nameEl.value='';
+    if(note){ note.textContent='✓ Merci ! Votre question a été transmise et sera publiée après validation.'; note.className='qa-note qa-ok'; }
+  }catch(e){
+    if(note){ note.textContent='Une erreur est survenue. Réessayez dans un instant.'; note.className='qa-note qa-err'; }
+    console.warn('Question non envoyée :', e.message);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Envoyer'; }
+  }
+};
 
 async function init(){
   const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
   _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
+  window._eventIdForQuestions = eventId; // Q&A — cible des soumissions
   const ec=db.collection('events').doc(eventId);
-  const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS] = await Promise.all([
+  const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS,qS] = await Promise.all([
     ec.get(),
     ec.collection('essential').get(),
     ec.collection('live').get(),
@@ -3596,7 +3709,8 @@ async function init(){
     ec.collection('timeline').get(),
     ec.collection('videos').get(),
     ec.collection('interviews').get(),
-    ec.collection('etapes').get()
+    ec.collection('etapes').get(),
+    ec.collection('questions').where('status','==','approved').get()
   ]);
   var jrS=null;
   try{ jrS=await db.collection('journalists').get(); }catch(e){ console.warn('[TourMaG Live] Cannot read journalists:',e.message); }
@@ -3618,10 +3732,11 @@ async function init(){
   const vi=toArr(viS).sort((a,b)=>(a.order||0)-(b.order||0));
   const iw=toArr(iwS).sort((a,b)=>(a.order||0)-(b.order||0));
   const et=toArr(etS).sort((a,b)=>(a.order||0)-(b.order||0));
+  const qu=toArr(qS).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));
   const jr=resolveJournalists(ev,_allGlobalJournalists);
-  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et});
+  render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu});
 
-  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et};
+  var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); }
 
@@ -3635,6 +3750,7 @@ async function init(){
   ec.collection('videos').onSnapshot(snap=>{rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('interviews').onSnapshot(snap=>{rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('etapes').onSnapshot(snap=>{rtState.etapes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
+  ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
   ec.onSnapshot(snap=>{if(snap.exists){rtState.event=snap.data();rtRender();}});
   try{
     db.collection('journalists').onSnapshot(snap=>{_allGlobalJournalists=toArr(snap);rtRender();},err=>console.warn('[TourMaG Live] journalists error:',err.message));
