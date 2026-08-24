@@ -2738,7 +2738,7 @@ function renderModules(el){
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full'};
+  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full',contact:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
@@ -2755,7 +2755,8 @@ function renderModules(el){
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'journalists',icon:'👤',label:'Journalistes'},
     {key:'brandnews',icon:'📢',label:'Brand News'},
-    {key:'sponsors',icon:'🤝',label:'Partenaires'}
+    {key:'sponsors',icon:'🤝',label:'Partenaires'},
+    {key:'contact',icon:'📞',label:'Contact'}
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
   const orderedKeys=[...blockOrder];
