@@ -499,6 +499,7 @@ const auth=firebase.auth();
 var currentEventId='';
 var currentTab='events';
 var currentUserRole='admin'; // 'admin' (full access) or 'client' (restricted to allowedUsers events)
+var currentUserPresetId=null; // #1 : profil d'accès affecté au compte connecté (logique "Remplace")
 var eventsData=[];    // [{id, ...data}]
 var liveData=[];
 var citationsData=[];
@@ -554,6 +555,7 @@ auth.onAuthStateChanged(user=>{
     db.collection('admins').doc(user.uid).get().then(snap=>{
       if(snap.exists){
         currentUserRole=(snap.data().role||'admin').toLowerCase();
+        currentUserPresetId=snap.data().presetId||null;
         document.getElementById('auth-screen').style.display='none';
         document.getElementById('app-shell').style.display='block';
         document.getElementById('topbar-user-email').textContent=user.email;
@@ -597,6 +599,24 @@ function isSuperAdmin(){
   return superAdmins.some(e=>(e||'').toLowerCase()===email);
 }
 
+// #1 — Profil d'accès par client (logique "Remplace") :
+// si le compte connecté a un presetId, ses onglets/boîtes masqués viennent du profil,
+// sinon on retombe sur les réglages de l'événement.
+function _currentPreset(){
+  if(!currentUserPresetId) return null;
+  return accessPresetsData.find(p=>p.id===currentUserPresetId)||null;
+}
+function _effectiveHidden(ev){
+  const p=_currentPreset();
+  if(p) return p.hiddenTabs||[];
+  return ev?.hiddenTabs||[];
+}
+function _effectiveHiddenMS(ev){
+  const p=_currentPreset();
+  if(p) return p.hiddenModuleSettings||[];
+  return ev?.hiddenModuleSettings||[];
+}
+
 // Icône SVG d'un onglet (source unique pour sidebar + renommages).
 // `variant` permet une icône différente selon le mode (ex: live → carte en expédition)
 function tabIconId(tab, variant){
@@ -617,7 +637,7 @@ function tabIcon(tab, variant){
 
 function applyTabVisibility(){
   const ev=eventsData.find(e=>e.id===currentEventId);
-  const hiddenTabs=ev?.hiddenTabs||[];
+  const hiddenTabs=_effectiveHidden(ev);
   const superAdmin=isSuperAdmin();
   const isExpedition = ev?.mode === 'expedition';
 
@@ -1931,7 +1951,7 @@ function moduleConfigBlock(tabKey){
   // (piloté par le profil d'accès appliqué → ev.hiddenModuleSettings).
   if(!isSuperAdmin()){
     var _ev=eventsData.find(e=>e.id===currentEventId)||{};
-    var _hms=_ev.hiddenModuleSettings||[];
+    var _hms=_effectiveHiddenMS(_ev);
     if(_hms.includes(tabKey)) return '';
   }
   var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
@@ -2514,7 +2534,8 @@ function renderPhases(el){
     h+=`</div>`;
 
     // ===== Liens d'accès par phase =====
-    const _ghBase='https://tourmag13.github.io/tourmag-live/v3';
+    // Base GitHub déduite de l'emplacement réel de l'admin (fallback si pas d'URL publique).
+    const _ghBase = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html?event=' + encodeURIComponent(currentEventId);
     const _publicUrl=(ev.publicUrl||'').trim();
     // Construit une URL en ajoutant proprement des paramètres (gère ? / & et les params déjà présents)
     function _buildPhaseUrl(phaseId, lock){
@@ -2523,7 +2544,7 @@ function renderPhases(el){
         base=_publicUrl;
         hasEvent=/[?&]event=/.test(base);
       } else {
-        base=_ghBase+'/index.html?event='+encodeURIComponent(currentEventId);
+        base=_ghBase;
         hasEvent=true;
       }
       const params=[];
@@ -5442,9 +5463,18 @@ function renderAccess(el){
       const roleBadge=role==='client'
         ?'<span style="font-size:10px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:2px 8px;border-radius:10px">client</span>'
         :'<span style="font-size:10px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:2px 8px;border-radius:10px">admin</span>';
-      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-        <span style="font-size:13px;font-family:'IBM Plex Mono';flex:1">${a.email||'<span style=color:var(--text3)>'+a.id+'</span>'}</span>
+      // #1 — Sélecteur de profil d'accès (comptes client uniquement)
+      let presetSel='';
+      if(role==='client'){
+        const cur=a.presetId||'';
+        let opts='<option value="">— Réglages de l\'événement —</option>';
+        accessPresetsData.forEach(p=>{ opts+=`<option value="${p.id}"${p.id===cur?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
+        presetSel=`<select class="form-input" style="width:190px;font-size:11px;height:30px;padding:2px 8px" onchange="setAccountPreset('${a.id}',this.value)" title="Profil d'accès appliqué à ce client">${opts}</select>`;
+      }
+      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-family:'IBM Plex Mono';flex:1;min-width:160px">${a.email||'<span style=color:var(--text3)>'+a.id+'</span>'}</span>
         ${roleBadge}
+        ${presetSel}
         ${isMe?'<span style="font-size:8px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:3px">vous</span>':''}
         ${!isMe?`<button class="btn btn-ghost btn-xs" onclick="toggleAccountRole('${a.id}','${role}')" title="Changer le rôle">${role==='client'?'⬆️ → admin':'⬇️ → client'}</button>
         <button class="btn btn-danger btn-xs" onclick="confirmRemoveAccount('${a.id}','${(a.email||a.id).replace(/'/g,"\\'")}')" title="Désactiver">✕</button>`:''}
@@ -5676,6 +5706,20 @@ async function toggleAccountRole(uid,currentRole){
   saving(true);
   await db.collection('admins').doc(uid).update({role:newRole});
   toast('Rôle modifié → '+newRole);
+}
+
+// #1 — Affecte (ou retire) un profil d'accès à un compte client
+async function setAccountPreset(uid,presetId){
+  saving(true);
+  try{
+    await db.collection('admins').doc(uid).update({presetId:presetId||firebase.firestore.FieldValue.delete()});
+    // Reflet local immédiat
+    const a=adminsData.find(x=>x.id===uid); if(a){ if(presetId) a.presetId=presetId; else delete a.presetId; }
+    // Si c'est le compte courant, ré-appliquer sa vue tout de suite
+    if(uid===auth.currentUser?.uid){ currentUserPresetId=presetId||null; applyTabVisibility(); }
+    const pName=presetId?(accessPresetsData.find(p=>p.id===presetId)?.name||'profil'):null;
+    toast(presetId?('Profil « '+pName+' » affecté'):'Profil retiré (réglages de l\'événement)');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
 function confirmRemoveAccount(uid,email){
@@ -7070,7 +7114,9 @@ async function saveSponsorsConfig(){
 function renderWidget(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const isExp = ev.mode === 'expedition';
-  const baseUrl='https://tourmag13.github.io/tourmag-live/v3';
+  // Base déduite automatiquement de l'emplacement réel de l'admin
+  // (ex: .../tourmag-live/test/admin.html → .../tourmag-live/test), pour éviter tout décalage /v3 vs /test.
+  const baseUrl = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '');
   const frontUrl=baseUrl+'/index.html?event='+currentEventId;
   const widgetUrl=baseUrl+'/widget.html?event='+currentEventId;
   const iframeId='tmg-live-'+currentEventId.slice(0,8);
@@ -7204,6 +7250,9 @@ window.addEventListener('message',function(e){
     var f=document.getElementById('${iframeId}');
     if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
   }
+  if(e.data.type==='tourmag-live-nooverflow'){
+    document.documentElement.style.overflowX='hidden';
+  }
 });
 &lt;/script&gt;</textarea>
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button></div>
@@ -7313,6 +7362,9 @@ window.addEventListener('message',function(e){
   if(e.data.type==='tourmag-live-fullwidth'){
     var f=document.getElementById('${iframeId}');
     if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
+  }
+  if(e.data.type==='tourmag-live-nooverflow'){
+    document.documentElement.style.overflowX='hidden';
   }
 });
 &lt;/script&gt;</textarea>
