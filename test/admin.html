@@ -322,6 +322,7 @@ select.form-input{cursor:pointer}
 <g id="ti-live"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 16.2a6 6 0 0 0 0-8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 19.1a10 10 0 0 0 0-14.2"/></g>
 <g id="ti-map"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></g>
 <g id="ti-citations"><path d="M7 7H4v4h3l-1.5 4H8L10 9V7H7zM17 7h-3v4h3l-1.5 4H18L20 9V7h-3z"/></g>
+<g id="ti-qa"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></g>
 <g id="ti-interviews"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></g>
 <g id="ti-videos"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></g>
 <g id="ti-gallery"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 18 5-5 4 3 3-3 4 4"/></g>
@@ -425,6 +426,7 @@ select.form-input{cursor:pointer}
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Verbatims<span class="badge" id="badge-cit">0</span></div>
+          <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
           <div class="sidebar-item" data-tab="gallery"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg></span>Galerie photos</div>
@@ -505,6 +507,7 @@ var liveData=[];
 var citationsData=[];
 var rubriquesData=[];
 var essentialData=[];
+var questionsData=[]; // #Q&A — questions du public (modération)
 var articlesData=[];
 var programmeData=[];
 var timelineData=[];
@@ -625,6 +628,7 @@ function tabIconId(tab, variant){
     interviews:'ti-interviews', videos:'ti-videos', gallery:'ti-gallery', articles:'ti-articles',
     sponsors:'ti-sponsors', contact:'ti-contact', programme:'ti-programme', flash:'ti-flash',
     essentiel:'ti-essentiel', kpis:'ti-kpis', journalistes:'ti-reporters', etapes:'ti-etapes',
+    questions:'ti-qa',
     apparence:'ti-apparence', decor:'ti-decor', modules:'ti-modules', media:'ti-media',
     tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide'
   };
@@ -654,7 +658,7 @@ function applyTabVisibility(){
     decor: {label:'Décor'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','questions','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live'},
     citations: {label:'Citations'},
@@ -1165,7 +1169,8 @@ function subscribeSubCollections(){
     {col:'media',target:'mediaData'},
     {col:'videos',target:'videosData'},
     {col:'interviews',target:'interviewsData'},
-    {col:'etapes',target:'etapesData'}
+    {col:'etapes',target:'etapesData'},
+    {col:'questions',target:'questionsData'}
   ];
 
   subs.forEach(s=>{
@@ -1182,6 +1187,7 @@ function subscribeSubCollections(){
       if(s.col==='videos') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       if(s.col==='interviews') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       if(s.col==='etapes') arr.sort((a,b)=>(a.order||0)-(b.order||0));
+      if(s.col==='questions') arr.sort((a,b)=>{ const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0); const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0); return tb-ta; });
       window[s.target]=arr;
       updateBadges();
       scheduleRender();
@@ -1197,6 +1203,8 @@ function updateBadges(){
   const bc=document.getElementById('badge-cit');
   if(bl) bl.textContent=liveData.length;
   if(bc) bc.textContent=citationsData.length;
+  const bq=document.getElementById('badge-qa');
+  if(bq){ const pending=questionsData.filter(q=>(q.status||'pending')==='pending').length; bq.textContent=pending; bq.style.display=pending>0?'':'none'; }
 }
 
 // ============================================================
@@ -1229,6 +1237,7 @@ function renderTab(){
     case 'decor':renderDecor(main);break;
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
+    case 'questions':renderQuestions(main);break;
     case 'widget':renderWidget(main);break;
     case 'access':renderAccess(main);break;
     case 'guide':renderGuide(main);break;
@@ -1280,7 +1289,7 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
+    modules:{flash:true,essential:true,live:true,citations:true,questions:false,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
     expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
     expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
@@ -1318,7 +1327,7 @@ async function executeRemoveEvent(id,title){
   closeModal();
   saving(true);
   // Supprimer les sous-collections connues
-  const subs=['live','citations','rubriques','essential','articles','programme','timeline','media','videos','interviews'];
+  const subs=['live','citations','rubriques','essential','articles','programme','timeline','media','videos','interviews','questions'];
   for(const sub of subs){
     const snap=await db.collection('events').doc(id).collection(sub).get();
     const batch=db.batch();
@@ -2776,8 +2785,8 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'questions',icon:'💬',label:'Questions du public'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
   const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -4421,6 +4430,114 @@ async function fetchOgImage(articleUrl){
 }
 
 // ==================== L'ESSENTIEL (Points essentiels + Timeline) ====================
+// ==================== QUESTIONS DU PUBLIC (Q&A modéré) ====================
+function _qFmtDate(ts){
+  try{ const d=ts?.toDate?ts.toDate():new Date(ts); if(isNaN(d))return''; return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; }
+}
+function renderQuestions(el){
+  const pending=questionsData.filter(q=>(q.status||'pending')==='pending');
+  const approved=questionsData.filter(q=>q.status==='approved');
+  const rejected=questionsData.filter(q=>q.status==='rejected');
+
+  let h=`<div class="page-title">💬 Questions du public</div><div class="page-desc">Les internautes posent des questions depuis le dashboard. Elles arrivent ici en attente : validez-les pour les afficher publiquement, avec une réponse facultative.</div>`;
+  h+=moduleConfigBlock('questions');
+
+  // ── File d'attente ──
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg> En attente de modération (${pending.length})</h3>`;
+  if(!pending.length){
+    h+=`<div class="empty"><div class="text">Aucune question en attente</div></div>`;
+  } else {
+    pending.forEach(q=>{
+      h+=`<div class="list-item" style="align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div class="list-item-content" style="flex:1;min-width:200px">
+          <div class="list-item-text">${(q.text||'').replace(/</g,'&lt;')}</div>
+          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}</div>
+        </div>
+        <div class="list-item-actions" style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-xs" onclick="approveQuestion('${q.id}')" title="Valider">✓ Valider</button>
+          <button class="btn btn-ghost btn-xs" onclick="rejectQuestion('${q.id}')" title="Rejeter">✕ Rejeter</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuestion('${q.id}')" title="Supprimer">🗑</button>
+        </div>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // ── Questions validées (affichées publiquement) ──
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Validées — affichées en ligne (${approved.length})</h3>`;
+  if(!approved.length){
+    h+=`<div class="empty"><div class="text">Aucune question validée</div></div>`;
+  } else {
+    approved.forEach(q=>{
+      const ans=q.answer?`<div style="margin-top:8px;padding:8px 12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;font-size:12.5px"><strong style="color:#059669">Réponse :</strong> ${(q.answer||'').replace(/</g,'&lt;')}</div>`:'';
+      h+=`<div class="list-item" style="align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div class="list-item-content" style="flex:1;min-width:200px">
+          <div class="list-item-text">${(q.text||'').replace(/</g,'&lt;')}</div>
+          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}</div>
+          ${ans}
+        </div>
+        <div class="list-item-actions" style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="answerQuestion('${q.id}')" title="Répondre / modifier la réponse"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> ${q.answer?'Modifier':'Répondre'}</button>
+          <button class="btn btn-ghost btn-xs" onclick="rejectQuestion('${q.id}')" title="Retirer de l'affichage">✕ Retirer</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuestion('${q.id}')" title="Supprimer">🗑</button>
+        </div>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // ── Rejetées ──
+  if(rejected.length){
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg> Rejetées (${rejected.length})</h3>`;
+    rejected.forEach(q=>{
+      h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px;opacity:.6">
+        <div class="list-item-content" style="flex:1;min-width:200px"><div class="list-item-text" style="text-decoration:line-through">${(q.text||'').replace(/</g,'&lt;')}</div></div>
+        <div class="list-item-actions" style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="approveQuestion('${q.id}')" title="Finalement valider">✓ Valider</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuestion('${q.id}')" title="Supprimer">🗑</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
+  el.innerHTML=h;
+}
+async function approveQuestion(id){
+  saving(true);
+  try{ await subCol('questions').doc(id).update({status:'approved',approvedAt:firebase.firestore.FieldValue.serverTimestamp()}); toast('Question validée'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function rejectQuestion(id){
+  saving(true);
+  try{ await subCol('questions').doc(id).update({status:'rejected'}); toast('Question retirée'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function deleteQuestion(id){
+  if(!confirm('Supprimer définitivement cette question ?'))return;
+  saving(true);
+  try{ await subCol('questions').doc(id).delete(); toast('Question supprimée'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+function answerQuestion(id){
+  const q=questionsData.find(x=>x.id===id);if(!q)return;
+  openModal(`<h3>Répondre à la question</h3>
+    <div style="font-size:13px;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">${(q.text||'').replace(/</g,'&lt;')}</div>
+    <div class="form-row"><label class="form-label">Votre réponse (laisser vide pour aucune réponse)</label><textarea class="form-input" id="m-q-answer" rows="4">${(q.answer||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveQuestionAnswer('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button>
+    </div>`);
+}
+async function saveQuestionAnswer(id){
+  const ans=document.getElementById('m-q-answer').value.trim();
+  saving(true);
+  try{
+    await subCol('questions').doc(id).update({answer:ans, answeredAt: ans?firebase.firestore.FieldValue.serverTimestamp():firebase.firestore.FieldValue.delete()});
+    closeModal(); toast(ans?'Réponse enregistrée':'Réponse retirée');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
 function renderEssentiel(el){
   let h='';
   // ── Points essentiels ──
