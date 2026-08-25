@@ -2792,7 +2792,7 @@ function renderModules(el){
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors'];
   const blockOrder=ev?.blockOrder||defaultOrder;
-  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full',contact:'full'};
+  const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full',contact:'full',questions:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
     {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
@@ -2802,6 +2802,7 @@ function renderModules(el){
     {key:'essential',icon:'🧠',label:'Points essentiels (IA)'},
     {key:'live',icon:'📡',label:'Fil live'},
     {key:'citations',icon:'💬',label:'Citations'},
+    {key:'questions',icon:'💬',label:'Questions du public'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'interviews',icon:'🎙️',label:'Interviews'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
@@ -2840,6 +2841,7 @@ function renderModules(el){
       {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
       {key:'programme',icon:'🗓',label:'Programme',zones:['side','main','full']},
       {key:'citations',icon:'💬',label:'Verbatims',zones:['full','main']},
+      {key:'questions',icon:'💬',label:'Questions du public',zones:['full','main']},
       {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
       {key:'videos',icon:'🎬',label:'Vidéos',zones:['full','main']},
       {key:'gallery',icon:'📸',label:'Galerie photos',zones:['full','main']},
@@ -2847,13 +2849,13 @@ function renderModules(el){
       {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
       {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
     ];
-    const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
-    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
+    const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','questions','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
+    const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',questions:'full',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
     const savedExpOrder = ev?.expBlockOrder || expDefaultOrder;
     const expOrder = savedExpOrder.filter(k=>expBlocks.find(b=>b.key===k));
     // Auto-inject new blocks for legacy events
     expBlocks.forEach(b=>{ if(!expOrder.includes(b.key)){
-      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'||b.key==='programme'){
+      if(b.key==='reporters'||b.key==='itinerary'||b.key==='brandnews'||b.key==='programme'||b.key==='questions'){
         const li=expOrder.indexOf('live'); expOrder.splice(li>=0?li+1:expOrder.length,0,b.key);
       } else if(b.key==='phaseTabs'){
         expOrder.unshift(b.key);
