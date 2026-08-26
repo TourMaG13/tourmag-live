@@ -168,6 +168,10 @@ select.form-input{cursor:pointer}
 .preset-card.sel{border-color:var(--acc);background:var(--acc-soft,#FFF3E9);box-shadow:0 4px 14px rgba(232,132,44,.15)}
 .preset-card.editing{border-color:#6366F1;background:#EEF2FF;box-shadow:0 4px 14px rgba(99,102,241,.18)}
 .admin-card.editing{border-color:#C7D2FE;box-shadow:0 0 0 2px rgba(99,102,241,.12)}
+.toggle-row.tr-locked{opacity:.7}
+.toggle-row.tr-locked .toggle{cursor:not-allowed}
+.toggle-row.tr-locked .toggle input{cursor:not-allowed}
+.toggle-row.tr-locked .toggle-track,.toggle-row.tr-locked .toggle-knob{cursor:not-allowed}
 .preset-card .preset-ic{color:var(--acc2);margin-bottom:9px;display:flex}
 .preset-card .preset-ic .tab-ic{width:22px;height:22px}
 .preset-card .preset-nm{font-weight:700;font-size:13.5px;color:var(--text);padding-right:50px}
@@ -5762,16 +5766,17 @@ function renderAccess(el){
   const _hint = _editing
     ? '✏️ Édition du profil : cochez les onglets que ce profil rend VISIBLES, décochez ceux à masquer. Cliquez « Enregistrer ce profil » dans le bandeau bleu ci-dessus.'
     : _previewing
-    ? 'Aperçu : vous voyez la sélection du profil. Cliquez « Appliquer » plus haut pour l’enregistrer.'
+    ? 'Aperçu (lecture seule) : voici les onglets que ce profil rend visibles. Pour changer, cliquez « Modifier » sur le profil ; pour l’appliquer tel quel à cet événement, cliquez « Appliquer » ci-dessus.'
     : 'Décochez les onglets à masquer aux utilisateurs non super-admin. L’onglet « Accès » est toujours réservé aux super admins.';
   h+=`<div class="admin-card${_previewing?' previewing':''}${_editing?' editing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Onglets visibles pour les admins</h3>
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${(_previewing||_editing)?'<strong style="color:var(--acc2)">':''}${_hint}${(_previewing||_editing)?'</strong>':''}</div>`;
   allTabs.forEach(t=>{
     const visible=!_srcHidden.includes(t.key);
     // En édition : cases cliquables sans écrire sur l'événement (lues à l'enregistrement).
-    // En aperçu seul : indicatives. Sinon : pilotent l'événement.
+    // En aperçu seul : DÉSACTIVÉES (non manipulables) pour ne pas induire en erreur. Sinon : pilotent l'événement.
     const handler=(_previewing||_editing)?'':`onchange="toggleTabVisibility('${t.key}',this.checked)"`;
-    h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-tabtoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+    const disabled=_previewing?'disabled':'';
+    h+=`<div class="toggle-row${visible?'':' tr-off'}${_previewing?' tr-locked':''}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-tabtoggle="${t.key}" ${visible?'checked':''} ${disabled} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
 
@@ -5803,7 +5808,8 @@ function renderAccess(el){
   settingsTabs.forEach(t=>{
     const visible=!_srcHiddenMS.includes(t.key);
     const handler=(_previewing||_editing)?'':`onchange="toggleModuleSettingsVisibility('${t.key}',this.checked)"`;
-    h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-mstoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
+    const disabled=_previewing?'disabled':'';
+    h+=`<div class="toggle-row${visible?'':' tr-off'}${_previewing?' tr-locked':''}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-mstoggle="${t.key}" ${visible?'checked':''} ${disabled} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
 
