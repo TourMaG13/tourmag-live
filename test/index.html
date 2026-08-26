@@ -2105,9 +2105,16 @@ function render(data){
   // ===== QUESTIONS DU PUBLIC (Q&A) =====
   function mkQuestions(){
     if(mod.questions===false) return '';
+    // Ouverture par phase : le bloc n'apparaît que si la phase active a qaEnabled.
+    // (Si l'événement n'a pas de phases, activePhase est vide → tchat toujours ouvert.)
+    if(activePhase){
+      const ph = phases.find(p=>p.id===activePhase);
+      if(!ph || !ph.qaEnabled) return '';
+    }
     return mkQuestionsBlock(_rawQuestions, {
       title: event.questionsTitle || 'Questions en direct',
       sub: event.questionsSubtitle || 'Une question ? Posez-la, la rédaction vous répond.',
+      activePhase: activePhase,
       exp: false
     });
   }
@@ -2978,9 +2985,14 @@ function renderExpedition(data){
 
   _b.questions = function(){
     if(mod.questions===false) return '';
+    if(activePhase){
+      const ph = phases.find(p=>p.id===activePhase);
+      if(!ph || !ph.qaEnabled) return '';
+    }
     return mkQuestionsBlock(_rawQuestions, {
       title: event.questionsTitle || 'Questions en direct',
       sub: event.questionsSubtitle || 'Une question ? Posez-la, la rédaction vous répond.',
+      activePhase: activePhase,
       exp: true
     });
   };
@@ -3632,15 +3644,30 @@ function mkQuestionsBlock(questions, opts){
   const cls = opts.exp ? 'qa-block qa-exp' : 'qa-block';
   const title = opts.title || 'Questions en direct';
   const sub = opts.sub || 'Une question ? Posez-la, nous y répondons.';
-  let list = '';
-  const approved = (questions||[]).filter(q=>q.status==='approved');
-  if(approved.length){
-    approved.forEach(q=>{
-      const who = q.name ? `<span class="qa-name">${_qEsc(q.name)}</span>` : '<span class="qa-name qa-anon">Anonyme</span>';
-      const ans = q.answer ? `<div class="qa-answer"><span class="qa-answer-label">Réponse</span>${_qEsc(q.answer)}</div>` : '';
-      list += `<div class="qa-item"><div class="qa-q">${_qEsc(q.text)}</div><div class="qa-meta">${who}</div>${ans}</div>`;
-    });
+  const activePhase = opts.activePhase || '';
+  const QA_LIMIT = 10;
+  // Filtrage : questions de la phase active + questions générales (sans phase).
+  // Si pas de phase active du tout (événement sans phases), on montre tout.
+  let approved = (questions||[]).filter(q=>q.status==='approved');
+  if(activePhase){
+    approved = approved.filter(q => !q.phase || q.phase === activePhase);
   }
+  // Chronologique (createdAt croissant) — déjà trié en amont, on sécurise ici.
+  approved = approved.slice();
+  let list = '';
+  const shown = approved.slice(0, QA_LIMIT);
+  const rest = approved.slice(QA_LIMIT);
+  function itemHTML(q){
+    const who = q.name ? `<span class="qa-name">${_qEsc(q.name)}</span>` : '<span class="qa-name qa-anon">Anonyme</span>';
+    const ans = q.answer ? `<div class="qa-answer"><span class="qa-answer-label">Réponse</span>${_qEsc(q.answer)}</div>` : '';
+    return `<div class="qa-item"><div class="qa-q">${_qEsc(q.text)}</div><div class="qa-meta">${who}</div>${ans}</div>`;
+  }
+  shown.forEach(q=>{ list += itemHTML(q); });
+  let hiddenList = '';
+  rest.forEach(q=>{ hiddenList += itemHTML(q); });
+  const moreBtn = rest.length ? `<div class="qa-more-wrap"><button class="qa-more" onclick="window._qaShowMore(this)">Voir ${rest.length} question${rest.length>1?'s':''} de plus</button></div>` : '';
+  const hiddenBlock = rest.length ? `<div class="qa-list qa-hidden" style="display:none">${hiddenList}</div>` : '';
+
   return `<div id="section-questions" class="${cls} fi">
     <div class="${opts.exp?'exp-section-head exp-sec-questions':'sec-title sec-title-questions'}">${opts.exp?`<h2>${title}</h2><div class="rule"></div>`:`<div class="sec-title-icon" style="background:rgba(99,102,241,.08);color:#6366F1">${ICO.msgCircle||''}</div><h2>${title}</h2><div class="sec-title-line"></div><p>${sub}</p>`}</div>
     <div class="qa-form">
@@ -3651,9 +3678,18 @@ function mkQuestionsBlock(questions, opts){
       </div>
       <div class="qa-note" id="qa-note">Votre question sera publiée après validation par la rédaction.</div>
     </div>
-    ${approved.length?`<div class="qa-list">${list}</div>`:''}
+    ${shown.length?`<div class="qa-list">${list}</div>`:''}
+    ${hiddenBlock}
+    ${moreBtn}
   </div>`;
 }
+window._qaShowMore = function(btn){
+  const wrap = btn.closest('.qa-block');
+  if(!wrap) return;
+  const hidden = wrap.querySelector('.qa-hidden');
+  if(hidden){ hidden.style.display=''; }
+  const w = btn.closest('.qa-more-wrap'); if(w) w.remove();
+};
 function _qEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 window._submitQuestion = async function(){
@@ -3678,6 +3714,7 @@ window._submitQuestion = async function(){
       text: text.slice(0,500),
       name: name.slice(0,60),
       status: 'pending',
+      phase: window._activePhase || '',
       uid: uid || null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
