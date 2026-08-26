@@ -2530,7 +2530,7 @@ function renderPhases(el){
         <div style="width:12px;height:12px;border-radius:3px;background:${p.color||'#6366F1'};flex-shrink:0"></div>
         <div class="list-item-content" style="flex:1">
           <div class="list-item-text"><strong>${p.name}</strong> ${dates}</div>
-          <div class="list-item-meta"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">slug: ${p.id}</span>${p.heroImage?'<span style="font-size:10px;color:var(--text3);margin-left:8px" title="Hero personnalisé">🖼️ hero</span>':''}</div>
+          <div class="list-item-meta"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">slug: ${p.id}</span>${p.heroImage?'<span style="font-size:10px;color:var(--text3);margin-left:8px" title="Hero personnalisé">🖼️ hero</span>':''}${p.qaEnabled?'<span style="font-size:10px;font-weight:600;color:#6366F1;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);padding:1px 6px;border-radius:8px;margin-left:8px" title="Questions du public ouvertes">💬 Questions</span>':''}</div>
         </div>
         <div class="list-item-actions" style="display:flex;gap:4px">
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},-1)">▲</button>`:''}
@@ -2683,6 +2683,14 @@ function editPhase(idx){
       <div class="form-row"><label class="form-label">Sous-titre de la carte</label><input class="form-input" id="m-phase-map-sub" value="${(p.mapSubtitle||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide = sous-titre global"></div>
       <div class="form-row"><label class="form-label">Note carte (bas)</label><input class="form-input" id="m-phase-map-note" value="${(p.mapNote||'').replace(/"/g,'&quot;')}" placeholder="Laisser vide = note globale"></div>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Questions du public</div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="m-phase-qa" ${p.qaEnabled?'checked':''} style="width:18px;height:18px;cursor:pointer">
+        <span>Ouvrir le tchat / les questions du public sur cette phase</span>
+      </label>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">Si activé, le formulaire de questions et la liste apparaissent quand cette phase est affichée. Nécessite aussi que le module « Questions du public » soit activé globalement (onglet Modules). Désactivé par défaut.</div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="savePhaseEdit(${idx})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button>
@@ -2720,7 +2728,8 @@ async function savePhaseEdit(idx){
     bannerHeight:(parseInt((document.getElementById('m-phase-banner-height')||{}).value,10)||''),
     mapTitle:document.getElementById('m-phase-map-title').value.trim(),
     mapSubtitle:document.getElementById('m-phase-map-sub').value.trim(),
-    mapNote:document.getElementById('m-phase-map-note').value.trim()
+    mapNote:document.getElementById('m-phase-map-note').value.trim(),
+    qaEnabled:!!(document.getElementById('m-phase-qa')||{}).checked
   };
   closeModal();saving(true);
   await db.collection('events').doc(currentEventId).update({phases});
@@ -4436,6 +4445,15 @@ async function fetchOgImage(articleUrl){
 function _qFmtDate(ts){
   try{ const d=ts?.toDate?ts.toDate():new Date(ts); if(isNaN(d))return''; return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; }
 }
+function _qPhaseBadge(q){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const phases=ev.phases||[];
+  if(!q.phase) return phases.length?'<span style="font-size:9px;font-weight:600;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:8px;margin-left:6px">Général</span>':'';
+  const p=phases.find(x=>x.id===q.phase);
+  if(!p) return `<span style="font-size:9px;font-weight:600;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:8px;margin-left:6px">${q.phase}</span>`;
+  const c=p.color||'#6366F1';
+  return `<span style="font-size:9px;font-weight:600;color:${c};background:${c}15;border:1px solid ${c}44;padding:1px 6px;border-radius:8px;margin-left:6px">${(p.name||q.phase).replace(/</g,'&lt;')}</span>`;
+}
 function renderQuestions(el){
   const pending=questionsData.filter(q=>(q.status||'pending')==='pending');
   const approved=questionsData.filter(q=>q.status==='approved');
@@ -4453,7 +4471,7 @@ function renderQuestions(el){
       h+=`<div class="list-item" style="align-items:flex-start;flex-wrap:wrap;gap:8px">
         <div class="list-item-content" style="flex:1;min-width:200px">
           <div class="list-item-text">${(q.text||'').replace(/</g,'&lt;')}</div>
-          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}</div>
+          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}${_qPhaseBadge(q)}</div>
         </div>
         <div class="list-item-actions" style="display:flex;gap:4px">
           <button class="btn btn-primary btn-xs" onclick="approveQuestion('${q.id}')" title="Valider">✓ Valider</button>
@@ -4475,7 +4493,7 @@ function renderQuestions(el){
       h+=`<div class="list-item" style="align-items:flex-start;flex-wrap:wrap;gap:8px">
         <div class="list-item-content" style="flex:1;min-width:200px">
           <div class="list-item-text">${(q.text||'').replace(/</g,'&lt;')}</div>
-          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}</div>
+          <div class="list-item-meta" style="font-size:11px;color:var(--text3);margin-top:4px">${q.name?('— '+q.name.replace(/</g,'&lt;')+' · '):''}${_qFmtDate(q.createdAt)}${_qPhaseBadge(q)}</div>
           ${ans}
         </div>
         <div class="list-item-actions" style="display:flex;gap:4px">
