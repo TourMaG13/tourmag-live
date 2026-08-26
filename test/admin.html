@@ -72,6 +72,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sidebar-item .icon{width:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .tab-ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-item .badge{margin-left:auto;font-size:10px;font-weight:700;color:#fff;background:var(--acc);padding:1px 7px;border-radius:10px}
+#badge-qa.qa-pulse{background:#6366F1;animation:qaPulse 1.4s ease-in-out infinite}
+@keyframes qaPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.55);transform:scale(1)}50%{box-shadow:0 0 0 6px rgba(99,102,241,0);transform:scale(1.12)}}
 
 /* Groupes repliables de la sidebar */
 .sb-group{margin-top:2px}
@@ -945,6 +947,7 @@ document.querySelectorAll('.sidebar-item').forEach(item=>{
     openGroupOfTab(tab);
     closeMobileMenu();
     renderTab();
+    if(typeof updateBadges==='function') updateBadges();
   });
 });
 
@@ -1204,7 +1207,16 @@ function updateBadges(){
   if(bl) bl.textContent=liveData.length;
   if(bc) bc.textContent=citationsData.length;
   const bq=document.getElementById('badge-qa');
-  if(bq){ const pending=questionsData.filter(q=>(q.status||'pending')==='pending').length; bq.textContent=pending; bq.style.display=pending>0?'':'none'; }
+  if(bq){
+    const pending=questionsData.filter(q=>(q.status||'pending')==='pending').length;
+    bq.textContent=pending;
+    bq.style.display=pending>0?'':'none';
+    // Pastille pulsante tant qu'il y a des questions en attente non consultées.
+    // On coupe la pulsation si l'onglet Questions est actuellement ouvert.
+    const onQaTab = document.querySelector('.sidebar-item[data-tab="questions"].active');
+    if(pending>0 && !onQaTab) bq.classList.add('qa-pulse');
+    else bq.classList.remove('qa-pulse');
+  }
 }
 
 // ============================================================
@@ -1779,7 +1791,7 @@ function _typoRolesFor(idPrefix, src, selMap){
   return h;
 }
 // Correspondance onglet (data-tab) -> clé de module typo dans le moteur
-var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis', programme:'programme' };
+var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis', programme:'programme', questions:'questions' };
 // Modules override vs blocs autonomes
 function _isAutoModule(key){ return key==='reporters' || key==='itinerary'; }
 
@@ -1826,7 +1838,7 @@ async function saveModule(tabKey){
   var ev = eventsData.find(function(e){return e.id===currentEventId;}) || {};
   var mk = _T.modeKey(ev);
   // 1) Réglages fins existants (titre/sous-titre/options) — réutilise la logique existante
-  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions'})[tabKey];
   // 2) Typo du module
   var existing = ev.typography || {};
   var root = {};
@@ -1951,6 +1963,14 @@ function moduleSettingsPanel(type, ev){
   if(type==='reporters'){
     return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
   }
+  if(type==='questions'){
+    var s=_tss('app-st-qa', ev.questionsTitle, ev.questionsSubtitle, ev.questionsShowTitle, 'Questions en direct', 'Une question ? Posez-la, la rédaction vous répond.');
+    s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Affichage & couleurs</div>';
+    s+='<div class="form-row-inline"><div class="form-row" style="max-width:220px"><label class="form-label">Questions visibles avant « voir plus »</label><input type="number" class="form-input" id="app-qa-count" value="'+(ev.questionsVisibleCount||10)+'" min="1" max="100" style="width:80px"></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Couleur d\'accent</label><input type="color" id="app-qa-accent" value="'+(ev.questionsAccent||'#6366F1')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond des questions</label><input type="color" id="app-qa-item-bg" value="'+(ev.questionsItemBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Couleur du texte</label><input type="color" id="app-qa-text" value="'+(ev.questionsTextColor||'#1a1a1a')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond du formulaire</label><input type="color" id="app-qa-form-bg" value="'+(ev.questionsFormBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>';
+    s+='<div style="font-size:10px;color:var(--text3);margin-top:6px">Les polices et tailles (question, réponse, nom…) se règlent dans la partie « Typographie du contenu » ci-dessous.</div></div>';
+    return s;
+  }
   return '';
 }
 // Bloc complet "Paramétrage du module" à insérer dans un onglet : réglages fins
@@ -1963,7 +1983,7 @@ function moduleConfigBlock(tabKey){
     var _hms=_effectiveHiddenMS(_ev);
     if(_hms.includes(tabKey)) return '';
   }
-  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters'})[tabKey];
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions'})[tabKey];
   var typoKey = (tabKey==='journalistes') ? 'reporters' : MODULE_TYPO_KEY[tabKey];
   var inner = '';
   if(settingsType) inner += moduleSettingsPanel(settingsType);
@@ -2469,6 +2489,13 @@ async function _collectModuleSettings(type){
   } else if(type==='reporters'){
     ud.journalistsTitle=_v('app-st-jr-title');
     ud.journalistsTitleSize=_n('app-jr-tsize',14);
+  } else if(type==='questions'){
+    ud.questionsTitle=_v('app-st-qa-title');ud.questionsSubtitle=_v('app-st-qa-sub');ud.questionsShowTitle=_c('app-st-qa-show');
+    ud.questionsVisibleCount=_n('app-qa-count',10);
+    ud.questionsAccent=document.getElementById('app-qa-accent')?.value||'#6366F1';
+    ud.questionsItemBg=document.getElementById('app-qa-item-bg')?.value||'#ffffff';
+    ud.questionsTextColor=document.getElementById('app-qa-text')?.value||'#1a1a1a';
+    ud.questionsFormBg=document.getElementById('app-qa-form-bg')?.value||'#ffffff';
   }
   await evRef().update(ud);
 }
