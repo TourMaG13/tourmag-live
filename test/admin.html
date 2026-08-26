@@ -331,6 +331,7 @@ select.form-input{cursor:pointer}
 <g id="ti-map"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></g>
 <g id="ti-citations"><path d="M7 7H4v4h3l-1.5 4H8L10 9V7H7zM17 7h-3v4h3l-1.5 4H18L20 9V7h-3z"/></g>
 <g id="ti-qa"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></g>
+<g id="ti-quiz"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></g>
 <g id="ti-interviews"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></g>
 <g id="ti-videos"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></g>
 <g id="ti-gallery"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 18 5-5 4 3 3-3 4 4"/></g>
@@ -435,6 +436,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Verbatims<span class="badge" id="badge-cit">0</span></div>
           <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
+          <div class="sidebar-item" data-tab="quiz"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg></span>Quiz / Sondage</div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
           <div class="sidebar-item" data-tab="gallery"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg></span>Galerie photos</div>
@@ -656,7 +658,7 @@ function tabIconId(tab, variant){
     interviews:'ti-interviews', videos:'ti-videos', gallery:'ti-gallery', articles:'ti-articles',
     sponsors:'ti-sponsors', contact:'ti-contact', programme:'ti-programme', flash:'ti-flash',
     essentiel:'ti-essentiel', kpis:'ti-kpis', journalistes:'ti-reporters', etapes:'ti-etapes',
-    questions:'ti-qa',
+    questions:'ti-qa', quiz:'ti-quiz',
     apparence:'ti-apparence', decor:'ti-decor', modules:'ti-modules', media:'ti-media',
     tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide'
   };
@@ -686,7 +688,7 @@ function applyTabVisibility(){
     decor: {label:'Décor'}
   };
   // Expedition sidebar order (matches front-end rendering order)
-  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','questions','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
+  const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','questions','quiz','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
     live: {label:'Fil live'},
     citations: {label:'Citations'},
@@ -1273,6 +1275,7 @@ function renderTab(){
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'questions':renderQuestions(main);break;
+    case 'quiz':renderQuiz(main);break;
     case 'widget':renderWidget(main);break;
     case 'access':renderAccess(main);break;
     case 'guide':renderGuide(main);break;
@@ -1324,7 +1327,7 @@ async function newEvent(){
     internalName:'Nouvel événement',title:'',subtitle:'',location:'',dates:'',status:'upcoming',
     color:'#2D1B4E',logo_url:'',flash_text:'',
     tags:['GÉNÉRAL','TECH','DESTINATIONS','ÉCONOMIE','POLITIQUE','AÉRIEN','HÔTELLERIE','CROISIÈRE'],
-    modules:{flash:true,essential:true,live:true,citations:true,questions:false,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
+    modules:{flash:true,essential:true,live:true,citations:true,questions:false,quiz:false,articles:true,programme:true,timeline:true,videos:true,journalists:true,interviews:true,kpis:true,gallery:false,sponsors:false,contact:false,decor:true},
     blockOrder:['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','sponsors'],
     expBlockOrder:['kpis','essential','etapes','live','reporters','itinerary','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'],
     expBlockZones:{kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'},
@@ -2844,8 +2847,8 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'questions',icon:'💬',label:'Questions du public'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
+  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'questions',icon:'💬',label:'Questions du public'},{key:'quiz',icon:'📊',label:'Quiz / Sondage'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
   const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -4504,6 +4507,169 @@ function _qPhaseBadge(q){
   const c=p.color||'#6366F1';
   return `<span style="font-size:9px;font-weight:600;color:${c};background:${c}15;border:1px solid ${c}44;padding:1px 6px;border-radius:8px;margin-left:6px">${(p.name||q.phase).replace(/</g,'&lt;')}</span>`;
 }
+// ==================== QUIZ / SONDAGE ====================
+function _quizData(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const q=ev.quiz||{};
+  return { title:q.title||'', questions:Array.isArray(q.questions)?q.questions:[] };
+}
+function renderQuiz(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const quiz=_quizData();
+  const active=ev.quizActive===true;
+
+  let h=`<div class="page-title">📊 Quiz / Sondage</div><div class="page-desc">Créez un quiz (avec bonne réponse) ou un sondage (sans). Activez-le pour l'afficher sur le dashboard. Les visiteurs votent et voient les résultats en temps réel. Activez d'abord le module « Quiz / Sondage » dans l'onglet Modules.</div>`;
+  h+=moduleConfigBlock('quiz');
+
+  // Interrupteur d'activation
+  h+=`<div class="admin-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:2px">${active?'🟢 Quiz/sondage EN LIGNE':'⚪ Quiz/sondage hors ligne'}</div>
+        <div style="font-size:11px;color:var(--text3)">${active?'Les visiteurs le voient et peuvent voter en ce moment.':'Activez pour l\'afficher sur le dashboard.'}</div>
+      </div>
+      <button class="btn ${active?'btn-danger':'btn-primary'}" onclick="toggleQuizActive(${!active})">${active?'Mettre hors ligne':'Mettre en ligne'}</button>
+    </div>
+  </div>`;
+
+  // Titre du bloc
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg> Configuration</h3>
+    <div class="form-row"><label class="form-label">Titre du bloc (facultatif)</label><input class="form-input" id="quiz-title" value="${(quiz.title||'').replace(/"/g,'&quot;')}" placeholder="À vous de jouer !" onchange="saveQuizTitle(this.value)"></div>
+  </div>`;
+
+  // Liste des questions
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Questions (${quiz.questions.length})</h3>`;
+  if(!quiz.questions.length){
+    h+=`<div class="empty"><div class="text">Aucune question. Ajoutez-en une ci-dessous.</div></div>`;
+  }
+  quiz.questions.forEach((q,qi)=>{
+    const isQuiz=q.type==='quiz';
+    const isMulti=q.mode==='multi';
+    h+=`<div class="admin-card" style="margin:0 0 12px;background:var(--bg)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <strong style="font-size:13px">Question ${qi+1}</strong>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},-1)" title="Monter">▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},1)" title="Descendre">▼</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuizQuestion(${qi})" title="Supprimer">🗑</button>
+        </div>
+      </div>
+      <div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" data-qq="${qi}" data-qf="text" value="${(q.text||'').replace(/"/g,'&quot;')}" placeholder="Votre question…"></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Type</label>
+          <select class="form-input" data-qq="${qi}" data-qf="type" onchange="renderTab()">
+            <option value="quiz"${isQuiz?' selected':''}>Quiz (bonne réponse)</option>
+            <option value="poll"${!isQuiz?' selected':''}>Sondage (sans bonne réponse)</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Réponses</label>
+          <select class="form-input" data-qq="${qi}" data-qf="mode">
+            <option value="single"${!isMulti?' selected':''}>Choix unique</option>
+            <option value="multi"${isMulti?' selected':''}>Choix multiple</option>
+          </select>
+        </div>
+      </div>
+      <label class="form-label">Options${isQuiz?' <span style="font-weight:400;color:var(--text3)">(cochez la/les bonne(s) réponse(s))</span>':''}</label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">`;
+    (q.options||[]).forEach((opt,oi)=>{
+      h+=`<div style="display:flex;align-items:center;gap:8px">
+        ${isQuiz?`<input type="checkbox" data-qq="${qi}" data-qopt="${oi}" data-qf="correct" ${opt.correct?'checked':''} title="Bonne réponse" style="width:16px;height:16px;cursor:pointer">`:''}
+        <input class="form-input" data-qq="${qi}" data-qopt="${oi}" data-qf="opttext" value="${(opt.text||'').replace(/"/g,'&quot;')}" placeholder="Option ${oi+1}" style="flex:1">
+        <button class="btn btn-danger btn-xs" onclick="deleteQuizOption(${qi},${oi})">✕</button>
+      </div>`;
+    });
+    h+=`</div>
+      <button class="btn btn-ghost btn-sm" onclick="addQuizOption(${qi})">＋ Ajouter une option</button>
+    </div>`;
+  });
+  h+=`<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="addQuizQuestion()">＋ Ajouter une question</button></div>`;
+  h+=`<div style="margin-top:14px"><button class="btn btn-primary" onclick="saveQuiz()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le quiz</button>
+    <span style="font-size:10px;color:var(--text3);margin-left:8px">Pensez à enregistrer après vos modifications.</span></div>`;
+  h+=`</div>`;
+
+  // Réinitialiser les votes
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg> Résultats</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Réinitialiser efface tous les votes reçus (utile pour tester ou repartir de zéro).</div>
+    <button class="btn btn-danger btn-sm" onclick="resetQuizVotes()">Réinitialiser tous les votes</button>
+  </div>`;
+
+  el.innerHTML=h;
+}
+
+function _collectQuizFromDOM(){
+  const questions=[];
+  document.querySelectorAll('[data-qq][data-qf="text"]').forEach(txtEl=>{
+    const qi=txtEl.getAttribute('data-qq');
+    const type=document.querySelector('[data-qq="'+qi+'"][data-qf="type"]')?.value||'quiz';
+    const mode=document.querySelector('[data-qq="'+qi+'"][data-qf="mode"]')?.value||'single';
+    const opts=[];
+    document.querySelectorAll('[data-qq="'+qi+'"][data-qf="opttext"]').forEach(oEl=>{
+      const oi=oEl.getAttribute('data-qopt');
+      const correctEl=document.querySelector('[data-qq="'+qi+'"][data-qopt="'+oi+'"][data-qf="correct"]');
+      const text=oEl.value.trim();
+      if(text) opts.push({ id:'o'+oi, text, correct:correctEl?correctEl.checked:false });
+    });
+    const text=txtEl.value.trim();
+    if(text && opts.length) questions.push({ id:'q'+qi+'_'+Date.now().toString(36), type, mode, text, options:opts });
+  });
+  return questions;
+}
+async function saveQuiz(){
+  const title=document.getElementById('quiz-title')?.value.trim()||'';
+  const questions=_collectQuizFromDOM();
+  // Réattribue des ids stables et courts
+  questions.forEach((q,i)=>{ q.id='q'+(i+1); q.options.forEach((o,oi)=>o.id='o'+(oi+1)); });
+  saving(true);
+  try{
+    await evRef().update({quiz:{title, questions}});
+    const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quiz={title, questions};
+    renderTab();
+    toast('Quiz enregistré');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function saveQuizTitle(v){
+  const q=_quizData(); q.title=v.trim();
+  saving(true);
+  try{ await evRef().update({quiz:q}); const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quiz=q; }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function toggleQuizActive(on){
+  saving(true);
+  try{
+    await evRef().update({quizActive:on});
+    const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quizActive=on;
+    renderTab();
+    toast(on?'Quiz mis en ligne':'Quiz hors ligne');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+// Manipulations locales (nécessitent Enregistrer ensuite)
+function _mutateQuiz(fn){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const q=_quizData();
+  // Récupère d'abord les saisies en cours du DOM pour ne pas les perdre
+  const domQ=_collectQuizFromDOM();
+  q.questions=domQ.length?domQ:q.questions;
+  q.title=document.getElementById('quiz-title')?.value.trim()||q.title;
+  fn(q);
+  if(ev) ev.quiz=q;
+  renderTab();
+}
+function addQuizQuestion(){ _mutateQuiz(q=>{ q.questions.push({id:'q'+(q.questions.length+1),type:'quiz',mode:'single',text:'',options:[{id:'o1',text:'',correct:false},{id:'o2',text:'',correct:false}]}); }); }
+function deleteQuizQuestion(qi){ if(!confirm('Supprimer cette question ?'))return; _mutateQuiz(q=>{ q.questions.splice(qi,1); }); }
+function moveQuizQuestion(qi,dir){ _mutateQuiz(q=>{ const j=qi+dir; if(j<0||j>=q.questions.length)return; const t=q.questions[qi]; q.questions[qi]=q.questions[j]; q.questions[j]=t; }); }
+function addQuizOption(qi){ _mutateQuiz(q=>{ if(q.questions[qi]){ q.questions[qi].options=q.questions[qi].options||[]; q.questions[qi].options.push({id:'o'+(q.questions[qi].options.length+1),text:'',correct:false}); } }); }
+function deleteQuizOption(qi,oi){ _mutateQuiz(q=>{ if(q.questions[qi]&&q.questions[qi].options){ q.questions[qi].options.splice(oi,1); } }); }
+async function resetQuizVotes(){
+  if(!confirm('Effacer TOUS les votes de ce quiz ? Cette action est irréversible.'))return;
+  saving(true);
+  try{
+    const snap=await subCol('quizVotes').get();
+    const batch=db.batch();
+    snap.forEach(d=>batch.delete(d.reference));
+    await batch.commit();
+    toast('Votes réinitialisés');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
 function renderQuestions(el){
   const pending=questionsData.filter(q=>(q.status||'pending')==='pending');
   const approved=questionsData.filter(q=>q.status==='approved');
@@ -5653,12 +5819,14 @@ function renderAccess(el){
 
   const allTabs=[
     {key:'events',icon:'📋',label:'Mes événements'},
+    {key:'phases',icon:'📌',label:'Phases / Temps forts'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
     {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L\'essentiel'},
     {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
     {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
     {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
+    {key:'quiz',icon:'📊',label:'Quiz / Sondage'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'interviews',icon:'🎙️',label:'Interviews'},
