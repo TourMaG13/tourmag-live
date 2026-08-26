@@ -166,6 +166,8 @@ select.form-input{cursor:pointer}
 .preset-card{border:1.5px solid var(--border);border-radius:var(--rl);padding:15px 16px;position:relative;transition:all .15s;background:var(--card);cursor:pointer}
 .preset-card:hover{border-color:var(--acc);box-shadow:0 4px 14px rgba(232,132,44,.12)}
 .preset-card.sel{border-color:var(--acc);background:var(--acc-soft,#FFF3E9);box-shadow:0 4px 14px rgba(232,132,44,.15)}
+.preset-card.editing{border-color:#6366F1;background:#EEF2FF;box-shadow:0 4px 14px rgba(99,102,241,.18)}
+.admin-card.editing{border-color:#C7D2FE;box-shadow:0 0 0 2px rgba(99,102,241,.12)}
 .preset-card .preset-ic{color:var(--acc2);margin-bottom:9px;display:flex}
 .preset-card .preset-ic .tab-ic{width:22px;height:22px}
 .preset-card .preset-nm{font-weight:700;font-size:13.5px;color:var(--text);padding-right:50px}
@@ -5450,6 +5452,7 @@ async function saveJournalistPhases(){
 // ==================== ACCÈS ====================
 // État d'aperçu de profil (null = pas d'aperçu, affiche la config réelle de l'événement)
 var _presetPreviewId=null;
+var _presetEditId=null; // profil en cours d'édition (cases modifiables + bouton enregistrer)
 
 function mkAccessPresetsCard(allTabs, hiddenTabs){
   const _ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -5464,13 +5467,16 @@ function mkAccessPresetsCard(allTabs, hiddenTabs){
     const sameHMS=hms.length===curHMS.length && hms.every(k=>curHMS.includes(k));
     const sameAsCurrent=sameTabs && sameHMS;
     const isPreviewing=_presetPreviewId===p.id;
+    const isEditing=_presetEditId===p.id;
     const msNote=hms.length?` · ${hms.length} boîte${hms.length>1?'s':''} de réglages masquée${hms.length>1?'s':''}`:'';
-    cards+=`<div class="preset-card${isPreviewing?' sel':''}" onclick="previewPreset('${p.id}')">
+    cards+=`<div class="preset-card${isPreviewing?' sel':''}${isEditing?' editing':''}" onclick="previewPreset('${p.id}')">
       ${sameAsCurrent?'<span class="preset-tag">Appliqué</span>':''}
+      ${isEditing?'<span class="preset-tag" style="background:#6366F1">✏️ En édition</span>':''}
       <div class="preset-ic"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></div>
       <div class="preset-nm">${(p.name||'Sans nom').replace(/</g,'&lt;')}</div>
       <div class="preset-ds">${visibleCount} onglet${visibleCount>1?'s':''} visible${visibleCount>1?'s':''} sur ${totalTabs}${msNote}</div>
       <div class="preset-mini-actions">
+        <button class="preset-mini-btn" onclick="event.stopPropagation();editAccessPreset('${p.id}')" title="Modifier les onglets de ce profil"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg></button>
         <button class="preset-mini-btn" onclick="event.stopPropagation();renameAccessPreset('${p.id}')" title="Renommer"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
         <button class="preset-mini-btn danger" onclick="event.stopPropagation();deleteAccessPreset('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Supprimer">✕</button>
       </div>
@@ -5483,10 +5489,19 @@ function mkAccessPresetsCard(allTabs, hiddenTabs){
     <div class="preset-ds">À partir de la config actuelle</div>
   </div>`;
 
-  // Bandeau d'aperçu (si un profil est sélectionné pour aperçu)
+  // Bandeau d'aperçu / édition
   let banner='';
+  const ed=_presetEditId?accessPresetsData.find(x=>x.id===_presetEditId):null;
   const pv=_presetPreviewId?accessPresetsData.find(x=>x.id===_presetPreviewId):null;
-  if(pv){
+  if(ed){
+    banner=`<div class="preset-preview-bar" style="background:#EEF2FF;border-color:#C7D2FE">
+      <span class="ppb-txt">✏️ Vous modifiez le profil <strong>${(ed.name||'').replace(/</g,'&lt;')}</strong> — cochez/décochez les onglets et boîtes ci-dessous, puis enregistrez.</span>
+      <span class="ppb-actions">
+        <button class="btn btn-primary btn-sm" onclick="savePresetEdits()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer ce profil</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelPresetEdit()">Annuler</button>
+      </span>
+    </div>`;
+  } else if(pv){
     banner=`<div class="preset-preview-bar">
       <span class="ppb-txt">👁 Aperçu du profil <strong>${(pv.name||'').replace(/</g,'&lt;')}</strong> — les onglets ci-dessous montrent ce qu'il rend visible.</span>
       <span class="ppb-actions">
@@ -5516,6 +5531,7 @@ function mkAccessPresetsCard(allTabs, hiddenTabs){
 }
 
 function previewPreset(presetId){
+  if(_presetEditId) return; // en édition, le clic sur carte ne fait rien (utiliser Annuler/Enregistrer)
   _presetPreviewId=(_presetPreviewId===presetId)?null:presetId;
   document.getElementById('preset-create-zone') && (document.getElementById('preset-create-zone').style.display='none');
   if(currentTab==='access') renderTab();
@@ -5546,6 +5562,33 @@ async function confirmNewPreset(){
     toast('Profil créé');
     // onSnapshot rafraîchira la liste
   }catch(err){ console.error('[Admin] confirmNewPreset failed:',err); toast('Erreur : '+(err&&err.message||'écriture refusée — vérifiez les règles Firestore'),'error'); }
+}
+// ── Édition d'un profil existant ──
+function editAccessPreset(presetId){
+  _presetEditId=presetId;
+  _presetPreviewId=presetId; // pour que les toggles affichent l'état du profil
+  if(currentTab==='access') renderTab();
+  setTimeout(()=>{ const el=document.querySelector('[data-tabtoggle]'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },60);
+}
+function cancelPresetEdit(){
+  _presetEditId=null;
+  _presetPreviewId=null;
+  if(currentTab==='access') renderTab();
+}
+async function savePresetEdits(){
+  if(!_presetEditId){ return; }
+  const hiddenTabs=_readVisibleTogglesHidden();
+  const hiddenModuleSettings=_readVisibleModuleSettingsHidden();
+  saving(true);
+  try{
+    await db.collection('accessPresets').doc(_presetEditId).update({hiddenTabs, hiddenModuleSettings});
+    const p=accessPresetsData.find(x=>x.id===_presetEditId);
+    if(p){ p.hiddenTabs=hiddenTabs; p.hiddenModuleSettings=hiddenModuleSettings; }
+    const savedName=p?.name||'profil';
+    _presetEditId=null; _presetPreviewId=null;
+    if(currentTab==='access') renderTab();
+    toast('Profil « '+savedName+' » enregistré');
+  }catch(err){ console.error('[Admin] savePresetEdits failed:',err); toast('Erreur : '+(err&&err.message||'écriture refusée — vérifiez les règles Firestore'),'error'); }
 }
 // Lit les interrupteurs affichés et renvoie la liste des onglets masqués (décochés)
 function _readVisibleTogglesHidden(){
@@ -5711,19 +5754,23 @@ function renderAccess(el){
 
   ${mkAccessPresetsCard(allTabs, hiddenTabs)}`;
 
-  // Source des états : aperçu de profil si actif, sinon config réelle de l'événement
-  const _pv=_presetPreviewId?accessPresetsData.find(x=>x.id===_presetPreviewId):null;
+  // Source des états : édition/aperçu de profil si actif, sinon config réelle de l'événement
+  const _editing=!!_presetEditId;
+  const _pv=(_presetEditId||_presetPreviewId)?accessPresetsData.find(x=>x.id===(_presetEditId||_presetPreviewId)):null;
   const _srcHidden=_pv?(_pv.hiddenTabs||[]):hiddenTabs;
-  const _previewing=!!_pv;
-  const _hint = _previewing
-    ? 'Aperçu : vous voyez la sélection du profil. Cliquez « Appliquer » plus haut pour l’enregistrer, ou modifiez puis créez un nouveau profil.'
+  const _previewing=!!_pv && !_editing;
+  const _hint = _editing
+    ? '✏️ Édition du profil : cochez les onglets que ce profil rend VISIBLES, décochez ceux à masquer. Cliquez « Enregistrer ce profil » dans le bandeau bleu ci-dessus.'
+    : _previewing
+    ? 'Aperçu : vous voyez la sélection du profil. Cliquez « Appliquer » plus haut pour l’enregistrer.'
     : 'Décochez les onglets à masquer aux utilisateurs non super-admin. L’onglet « Accès » est toujours réservé aux super admins.';
-  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Onglets visibles pour les admins</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${_previewing?'<strong style="color:var(--acc2)">':''}${_hint}${_previewing?'</strong>':''}</div>`;
+  h+=`<div class="admin-card${_previewing?' previewing':''}${_editing?' editing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Onglets visibles pour les admins</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${(_previewing||_editing)?'<strong style="color:var(--acc2)">':''}${_hint}${(_previewing||_editing)?'</strong>':''}</div>`;
   allTabs.forEach(t=>{
     const visible=!_srcHidden.includes(t.key);
-    // En aperçu, les interrupteurs sont indicatifs (n'écrivent pas sur l'événement)
-    const handler=_previewing?'':`onchange="toggleTabVisibility('${t.key}',this.checked)"`;
+    // En édition : cases cliquables sans écrire sur l'événement (lues à l'enregistrement).
+    // En aperçu seul : indicatives. Sinon : pilotent l'événement.
+    const handler=(_previewing||_editing)?'':`onchange="toggleTabVisibility('${t.key}',this.checked)"`;
     h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-tabtoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
@@ -5746,14 +5793,16 @@ function renderAccess(el){
     {key:'etapes',icon:'🗺️',label:'Carte & Étapes'}
   ];
   const _srcHiddenMS=_pv?(_pv.hiddenModuleSettings||[]):(ev.hiddenModuleSettings||[]);
-  const _hintMS=_previewing
-    ? 'Aperçu : la boîte « ⚙️ Paramétrage & apparence » de chaque module décoché sera masquée aux utilisateurs non super-admin.'
+  const _hintMS=_editing
+    ? '✏️ Édition : cochez les boîtes de réglages VISIBLES pour ce profil, décochez celles à masquer.'
+    : _previewing
+    ? 'Aperçu : la boîte « ⚙️ Paramétrage & apparence » de chaque module décoché sera masquée.'
     : 'Décochez un module pour masquer sa boîte « ⚙️ Paramétrage & apparence de ce module » aux utilisateurs non super-admin. Le contenu du module reste éditable ; seuls les réglages fins (typo, apparence…) sont masqués.';
-  h+=`<div class="admin-card${_previewing?' previewing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Boîtes « Paramétrage & apparence » visibles</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${_previewing?'<strong style="color:var(--acc2)">':''}${_hintMS}${_previewing?'</strong>':''}</div>`;
+  h+=`<div class="admin-card${_previewing?' previewing':''}${_editing?' editing':''}"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Boîtes « Paramétrage & apparence » visibles</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">${(_previewing||_editing)?'<strong style="color:var(--acc2)">':''}${_hintMS}${(_previewing||_editing)?'</strong>':''}</div>`;
   settingsTabs.forEach(t=>{
     const visible=!_srcHiddenMS.includes(t.key);
-    const handler=_previewing?'':`onchange="toggleModuleSettingsVisibility('${t.key}',this.checked)"`;
+    const handler=(_previewing||_editing)?'':`onchange="toggleModuleSettingsVisibility('${t.key}',this.checked)"`;
     h+=`<div class="toggle-row${visible?'':' tr-off'}"><span class="toggle-label"><span class="icon">${tabIcon(t.key, isExp?'expedition':'classic')}</span>${t.label}</span><label class="toggle"><input type="checkbox" data-mstoggle="${t.key}" ${visible?'checked':''} ${handler}><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;
   });
   h+=`</div>`;
@@ -5797,9 +5846,13 @@ function renderAccess(el){
 function _mkEventCheckboxes(a){
   const email=(a.email||'').toLowerCase();
   if(!email){
-    return '<div style="font-size:11px;color:var(--text3)">Ce compte n\'a pas encore d\'email enregistré. Il pourra choisir ses événements une fois connecté, ou donnez-lui un nom et il apparaîtra ici après sa première connexion.</div>';
+    return `<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;line-height:1.6">
+      ⚠️ Impossible de cocher des événements : l'adresse email de ce compte n'est pas encore connue du système.<br>
+      <strong>Que faire :</strong> demandez à cette personne de se connecter une fois au back-office. Son email sera alors enregistré automatiquement et vous pourrez cocher ses événements ici. (C'est le cas des comptes créés directement dans Firebase, qui n'affichent qu'un identifiant technique tant qu'ils ne se sont pas connectés.)
+    </div>`;
   }
   let out='<div style="display:flex;flex-direction:column;gap:4px">';
+  if(!eventsData.length) out+='<div style="font-size:11px;color:var(--text3)">Aucun événement disponible.</div>';
   eventsData.forEach(ev=>{
     const allowed=(ev.allowedUsers||[]).some(e=>(e||'').toLowerCase()===email);
     const label=(ev.internalName||ev.title||ev.id).replace(/</g,'&lt;');
