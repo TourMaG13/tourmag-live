@@ -557,10 +557,17 @@ function doLogout(){
 auth.onAuthStateChanged(user=>{
   if(user){
     // Verify admin
-    db.collection('admins').doc(user.uid).get().then(snap=>{
+    db.collection('admins').doc(user.uid).get().then(async snap=>{
       if(snap.exists){
-        currentUserRole=(snap.data().role||'admin').toLowerCase();
-        currentUserPresetId=snap.data().presetId||null;
+        const data=snap.data();
+        currentUserRole=(data.role||'admin').toLowerCase();
+        currentUserPresetId=(data.accessProfile&&data.accessProfile.startsWith('preset:'))?data.accessProfile.slice(7):null;
+        // Enregistre automatiquement l'email s'il manque (résout les UID illisibles)
+        if(user.email && data.email!==user.email){
+          try{ await db.collection('admins').doc(user.uid).update({email:user.email}); }catch(e){}
+        }
+        // Pré-charge mon compte dans adminsData pour que le filtrage des événements connaisse mon profil
+        adminsData=[{id:user.uid, ...data, email:user.email||data.email}];
         document.getElementById('auth-screen').style.display='none';
         document.getElementById('app-shell').style.display='block';
         document.getElementById('topbar-user-email').textContent=user.email;
@@ -592,24 +599,37 @@ function openModal(html){document.getElementById('modal-box').innerHTML=html;doc
 function closeModal(){document.getElementById('modal').classList.remove('show');}
 
 // ==================== ROLES & TAB VISIBILITY ====================
-function isClient(){ return currentUserRole==='client'; }
-
-function isSuperAdmin(){
-  if(isClient()) return false;
-  const ev=eventsData.find(e=>e.id===currentEventId);
-  const superAdmins=ev?.superAdmins||[];
-  // If no super admins defined, everyone is super admin (retrocompat)
-  if(!superAdmins.length) return true;
-  const email=(auth.currentUser?.email||'').toLowerCase();
-  return superAdmins.some(e=>(e||'').toLowerCase()===email);
+// Compte Firestore de l'utilisateur connecté
+function _myAccount(){
+  const uid=auth.currentUser?.uid;
+  if(!uid) return null;
+  return adminsData.find(a=>a.id===uid)||null;
+}
+// Un compte sans accessProfile n'est "pas encore configuré" → accès complet par défaut (transition douce)
+function isClient(){
+  const a=_myAccount();
+  if(!a) return false;
+  if(!a.accessProfile) return false;      // non configuré → complet
+  return a.accessProfile!=='full';        // tout ce qui n'est pas "full" = restreint
 }
 
-// #1 — Profil d'accès par client (logique "Remplace") :
-// si le compte connecté a un presetId, ses onglets/boîtes masqués viennent du profil,
-// sinon on retombe sur les réglages de l'événement.
+function isSuperAdmin(){
+  // "Accès complet" = super admin. Non configuré = complet par défaut (transition).
+  const a=_myAccount();
+  if(!a) return true;                      // pas de doc compte → complet (retrocompat)
+  if(!a.accessProfile) return true;        // pas encore configuré → complet
+  return a.accessProfile==='full';
+}
+
+// Profil d'accès appliqué au compte connecté (null = accès complet, pas de restriction)
 function _currentPreset(){
-  if(!currentUserPresetId) return null;
-  return accessPresetsData.find(p=>p.id===currentUserPresetId)||null;
+  const a=_myAccount();
+  if(!a || !a.accessProfile || a.accessProfile==='full') return null;
+  if(a.accessProfile.startsWith('preset:')){
+    const pid=a.accessProfile.slice(7);
+    return accessPresetsData.find(p=>p.id===pid)||null;
+  }
+  return null;
 }
 function _effectiveHidden(ev){
   const p=_currentPreset();
@@ -1077,21 +1097,18 @@ function initApp(){
   const u1=db.collection('events').onSnapshot(snap=>{
     const allEvents=[];
     snap.forEach(d=>allEvents.push({id:d.id,...d.data()}));
-    // Filter events based on user access
+    // Filtrage selon le nouveau modèle d'accès :
+    // - accès complet (ou compte non configuré) → voit tous les événements
+    // - sinon, si "voit tous les événements" → tous
+    // - sinon → uniquement les événements où son email est dans allowedUsers
     const userEmail=(auth.currentUser?.email||'').toLowerCase();
+    const myAcc=adminsData.find(a=>a.id===auth.currentUser?.uid)||null;
+    const fullAccess = !myAcc || !myAcc.accessProfile || myAcc.accessProfile==='full';
+    const seesAll = fullAccess || myAcc.seesAllEvents===true;
     eventsData=allEvents.filter(ev=>{
+      if(seesAll) return true;
       const allowed=ev.allowedUsers||[];
-      // No restriction defined: admins see it, clients don't (clients need explicit access)
-      if(!allowed.length) return !isClient();
-      // User is in allowedUsers list
-      if(allowed.some(e=>(e||'').toLowerCase()===userEmail)) return true;
-      // User is a superAdmin of this event
-      const superAdmins=ev.superAdmins||[];
-      if(superAdmins.some(e=>(e||'').toLowerCase()===userEmail)) return true;
-      // If no superAdmins defined, treat everyone as super admin (retrocompat)
-      // Client-role users are restricted: they only see events where they're in allowedUsers
-      if(!superAdmins.length && !isClient()) return true;
-      return false;
+      return allowed.some(e=>(e||'').toLowerCase()===userEmail);
     });
     if(!currentEventId && eventsData.length) currentEventId=eventsData[0].id;
     // If current event is no longer visible, switch to first available
@@ -5584,7 +5601,6 @@ async function deleteAccessPreset(presetId,name){
 function renderAccess(el){
   if(!isSuperAdmin()){el.innerHTML='<div class="page-title">Accès refusé</div>';return;}
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const superAdmins=ev.superAdmins||[];
   const hiddenTabs=ev.hiddenTabs||[];
   const isExp=ev.mode==='expedition';
 
@@ -5613,35 +5629,68 @@ function renderAccess(el){
     {key:'guide',icon:'📖',label:'Guide d\'utilisation'}
   ];
 
-  let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Définissez les super admins et choisissez les onglets visibles pour les autres utilisateurs.</div>
+  let h=`<div class="page-title">Gestion des accès</div><div class="page-desc">Pour chaque compte : son profil d'accès (ce qu'il voit) et les événements auxquels il a droit.</div>`;
 
-  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-key"/></svg> Comptes utilisateurs</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">Gérez les comptes qui ont accès au back-office. Les comptes <strong>admin</strong> voient tous les événements. Les comptes <strong>client</strong> ne voient que les événements où ils sont dans la liste d'accès restreint.</div>
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+  // Bandeau : comptes pas encore configurés (ni "accès complet" ni profil assigné)
+  const _unconfigured = adminsData.filter(a=>{
+    const email=(a.email||a.id).toLowerCase();
+    if(email===(auth.currentUser?.email||'').toLowerCase()) return false;
+    return !a.accessProfile; // aucun profil défini = pas encore configuré
+  });
+  if(_unconfigured.length){
+    h+=`<div class="admin-card" style="border-color:#FDE68A;background:#FEF3C7">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:18px">⚙️</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:4px">${_unconfigured.length} compte${_unconfigured.length>1?'s':''} à configurer</div>
+          <div style="font-size:11.5px;color:#92400E;line-height:1.6">Ces comptes ont pour l'instant un accès complet par défaut. Attribuez-leur un profil d'accès et leurs événements ci-dessous : ${_unconfigured.map(a=>'<strong>'+((a.name||a.email||a.id)).replace(/</g,'&lt;')+'</strong>').join(', ')}.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-key"/></svg> Comptes utilisateurs</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Chaque compte a un <strong>profil d'accès</strong> (« Accès complet » = tous les droits, y compris cette page) et une liste d'<strong>événements autorisés</strong>. Un compte en accès complet voit tout ; sinon il ne voit que les événements cochés.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">`;
   const currentEmail=(auth.currentUser?.email||'').toLowerCase();
   if(adminsData.length){
     adminsData.forEach(a=>{
       const email=(a.email||a.id).toLowerCase();
-      const role=(a.role||'admin');
       const isMe=email===currentEmail;
-      const roleBadge=role==='client'
-        ?'<span style="font-size:10px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:2px 8px;border-radius:10px">client</span>'
-        :'<span style="font-size:10px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:2px 8px;border-radius:10px">admin</span>';
-      // #1 — Sélecteur de profil d'accès (comptes client uniquement)
-      let presetSel='';
-      if(role==='client'){
-        const cur=a.presetId||'';
-        let opts='<option value="">— Réglages de l\'événement —</option>';
-        accessPresetsData.forEach(p=>{ opts+=`<option value="${p.id}"${p.id===cur?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
-        presetSel=`<select class="form-input" style="width:190px;font-size:11px;height:30px;padding:2px 8px" onchange="setAccountPreset('${a.id}',this.value)" title="Profil d'accès appliqué à ce client">${opts}</select>`;
-      }
-      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
-        <span style="font-size:13px;font-family:'IBM Plex Mono';flex:1;min-width:160px">${a.email||'<span style=color:var(--text3)>'+a.id+'</span>'}</span>
-        ${roleBadge}
-        ${presetSel}
-        ${isMe?'<span style="font-size:8px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:3px">vous</span>':''}
-        ${!isMe?`<button class="btn btn-ghost btn-xs" onclick="toggleAccountRole('${a.id}','${role}')" title="Changer le rôle">${role==='client'?'⬆️ → admin':'⬇️ → client'}</button>
-        <button class="btn btn-danger btn-xs" onclick="confirmRemoveAccount('${a.id}','${(a.email||a.id).replace(/'/g,"\\'")}')" title="Désactiver">✕</button>`:''}
+      const displayName=a.name||a.email||'';
+      const hasName=!!displayName;
+      const initials=(displayName||a.id).split(/[\s@.]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+      const isFull=a.accessProfile==='full';
+      const seesAll=isFull||a.seesAllEvents===true;
+
+      // Menu profil : "full" + presets
+      let profOpts=`<option value="full"${isFull?' selected':''}>Accès complet</option>`;
+      accessPresetsData.forEach(p=>{ profOpts+=`<option value="preset:${p.id}"${a.accessProfile==='preset:'+p.id?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
+      if(!a.accessProfile) profOpts=`<option value="" selected>— À configurer —</option>`+profOpts;
+
+      h+=`<div style="border:1px solid var(--border);border-radius:10px;background:var(--bg);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;flex-wrap:wrap">
+          <div style="width:34px;height:34px;border-radius:50%;background:${isFull?'#EEF2FF':'var(--card)'};border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${isFull?'#6366F1':'var(--text3)'};flex-shrink:0">${initials}</div>
+          <div style="flex:1;min-width:150px">
+            ${hasName
+              ? `<div style="font-size:13px;font-weight:600">${displayName.replace(/</g,'&lt;')}</div>${a.email?`<div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono'">${a.email}</div>`:''}`
+              : `<div style="font-size:13px;font-weight:600;color:var(--text3)">Sans nom</div><div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${a.id}</div>`}
+            <button class="btn btn-ghost btn-xs" style="margin-top:3px;font-size:10px" onclick="renameAccount('${a.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> ${hasName?'Renommer':'Donner un nom'}</button>
+          </div>
+          <select class="form-input" style="width:180px;font-size:12px;height:32px;padding:2px 8px" onchange="setAccountProfile('${a.id}',this.value)" title="Profil d'accès">${profOpts}</select>
+          ${isMe?'<span style="font-size:8px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:2px 6px;border-radius:3px">vous</span>'
+            :`<button class="btn btn-danger btn-xs" onclick="confirmRemoveAccount('${a.id}','${(a.email||a.id).replace(/'/g,"\\'")}')" title="Supprimer">✕</button>`}
+        </div>
+        <div style="padding:0 12px 10px 56px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;${isFull?'opacity:.5;pointer-events:none':''}">
+            <input type="checkbox" ${seesAll?'checked':''} ${isFull?'disabled':''} onchange="setAccountSeesAll('${a.id}',this.checked)" style="width:16px;height:16px;cursor:pointer">
+            <span>Voit tous les événements${isFull?' (inclus dans l’accès complet)':''}</span>
+          </label>
+          ${(!isFull && !seesAll)?`<div style="margin-top:8px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px">Événements autorisés</div>
+            ${_mkEventCheckboxes(a)}
+          </div>`:''}
+        </div>
       </div>`;
     });
   } else {
@@ -5651,28 +5700,13 @@ function renderAccess(el){
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
       <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">➕ Créer un nouveau compte</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-        <div><label style="font-size:10px;color:var(--text3)">Email</label><input class="form-input" id="acc-new-email" placeholder="client@exemple.com" style="width:220px"></div>
-        <div><label style="font-size:10px;color:var(--text3)">Mot de passe</label><input class="form-input" id="acc-new-pass" type="text" placeholder="••••••••" style="width:160px"></div>
-        <div><label style="font-size:10px;color:var(--text3)">Rôle</label><select class="form-input" id="acc-new-role" style="width:100px"><option value="client">Client</option><option value="admin">Admin</option></select></div>
+        <div><label style="font-size:10px;color:var(--text3)">Nom (facultatif)</label><input class="form-input" id="acc-new-name" placeholder="Agence Durand" style="width:170px"></div>
+        <div><label style="font-size:10px;color:var(--text3)">Email</label><input class="form-input" id="acc-new-email" placeholder="client@exemple.com" style="width:200px"></div>
+        <div><label style="font-size:10px;color:var(--text3)">Mot de passe</label><input class="form-input" id="acc-new-pass" type="text" placeholder="••••••••" style="width:140px"></div>
         <button class="btn btn-primary btn-sm" onclick="createAccount()" style="height:34px">Créer</button>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:6px">💡 Le compte sera immédiatement utilisable. Pensez à ajouter l'email dans la section « Accès restreint » de l'événement concerné pour les comptes client.</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">💡 Le compte est créé avec un profil « à configurer ». Choisissez ensuite son profil d'accès et ses événements ci-dessus.</div>
     </div>
-  </div>
-
-  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-crown"/></svg> Super administrateurs</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">Les super admins voient tous les onglets et ont accès à cette page. Si la liste est vide, tout le monde a un accès complet.</div>
-    <div id="access-admins-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
-  superAdmins.forEach((email,i)=>{
-    h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-      <span style="font-size:13px">👑</span>
-      <span style="font-size:13px;font-family:'IBM Plex Mono';flex:1">${email}</span>
-      <button class="btn btn-danger btn-xs" onclick="removeSuperAdmin(${i})">✕</button>
-    </div>`;
-  });
-  if(!superAdmins.length) h+=`<div style="font-size:12px;color:var(--text3);padding:8px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px">⚠️ Aucun super admin défini — tous les utilisateurs ont un accès complet.</div>`;
-  h+=`</div>
-    <div style="display:flex;gap:8px"><input class="form-input" id="access-new-email" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addSuperAdmin()">+ Ajouter</button></div>
   </div>
 
   ${mkAccessPresetsCard(allTabs, hiddenTabs)}`;
@@ -5724,58 +5758,110 @@ function renderAccess(el){
   });
   h+=`</div>`;
 
-  // ===== RESTRICTION D'ACCÈS PAR ÉVÉNEMENT =====
+  // ===== VUE : qui a accès à cet événement (récap lecture) =====
   const allowedUsers=ev.allowedUsers||[];
-  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-lock"/></svg> Accès restreint à cet événement</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">Limitez l'accès à cet événement à certains utilisateurs. Si la liste est vide, tous les admins connectés voient cet événement. Les super admins ont toujours accès.</div>
-    <div id="access-allowed-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
-  allowedUsers.forEach((email,i)=>{
-    const isSA=superAdmins.some(e=>(e||'').toLowerCase()===email.toLowerCase());
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-lock"/></svg> Qui a accès à cet événement</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">Récapitulatif en lecture seule. Pour donner ou retirer l'accès à un compte, utilisez les cases « Événements autorisés » de chaque compte, plus haut.</div>
+    <div style="display:flex;flex-direction:column;gap:4px">`;
+  const _fullAccounts=adminsData.filter(a=>a.accessProfile==='full'||!a.accessProfile);
+  const _seesAllAccounts=adminsData.filter(a=>a.accessProfile&&a.accessProfile!=='full'&&a.seesAllEvents===true);
+  const _explicit=allowedUsers.slice();
+  _fullAccounts.forEach(a=>{
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-      <span style="font-size:13px">${isSA?'👑':'👤'}</span>
-      <span style="font-size:13px;font-family:'IBM Plex Mono';flex:1">${email}</span>
-      ${isSA?'<span style="font-size:8px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:3px">super admin</span>':''}
-      <button class="btn btn-danger btn-xs" onclick="removeAllowedUser(${i})">✕</button>
+      <span style="font-size:13px">🔑</span><span style="font-size:12px;flex:1">${(a.name||a.email||a.id).replace(/</g,'&lt;')}</span>
+      <span style="font-size:9px;color:#6366F1;background:#EEF2FF;border:1px solid #C7D2FE;padding:1px 7px;border-radius:8px">accès complet</span>
     </div>`;
   });
-  if(!allowedUsers.length) h+=`<div style="font-size:12px;color:var(--text3);padding:8px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px">🌐 Aucune restriction — tous les admins voient cet événement.</div>`;
-  h+=`</div>
-    <div style="display:flex;gap:8px"><input class="form-input" id="access-new-allowed" placeholder="email@exemple.com" style="max-width:300px"><button class="btn btn-primary btn-sm" onclick="addAllowedUser()">+ Ajouter</button></div>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px">💡 Dès qu'un utilisateur est ajouté, seuls les utilisateurs listés (+ les super admins) pourront voir cet événement.</div>
-  </div>`;
+  _seesAllAccounts.forEach(a=>{
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:13px">🌐</span><span style="font-size:12px;flex:1">${(a.name||a.email||a.id).replace(/</g,'&lt;')}</span>
+      <span style="font-size:9px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:1px 7px;border-radius:8px">tous événements</span>
+    </div>`;
+  });
+  _explicit.forEach(email=>{
+    const acc=adminsData.find(a=>(a.email||'').toLowerCase()===email.toLowerCase());
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:13px">👤</span><span style="font-size:12px;flex:1">${(acc?.name||email).replace(/</g,'&lt;')}</span>
+      <span style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono'">${email}</span>
+    </div>`;
+  });
+  if(!_fullAccounts.length && !_seesAllAccounts.length && !_explicit.length){
+    h+=`<div style="font-size:12px;color:var(--text3);padding:8px">Aucun compte n'a encore accès à cet événement.</div>`;
+  }
+  h+=`</div></div>`;
 
   el.innerHTML=h;
 }
 
-async function addSuperAdmin(){
-  const email=document.getElementById('access-new-email').value.trim().toLowerCase();
-  if(!email||!email.includes('@')){toast('Email invalide','error');return;}
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const superAdmins=[...(ev.superAdmins||[])];
-  if(superAdmins.includes(email)){toast('Déjà super admin','error');return;}
-  superAdmins.push(email);
-  saving(true);
-  await evRef().update({superAdmins});
-  if(ev) ev.superAdmins=superAdmins;
-  document.getElementById('access-new-email').value='';
-  renderTab();
-  toast('Super admin ajouté');
+// ── Cases à cocher des événements pour un compte (pilote allowedUsers de chaque événement) ──
+function _mkEventCheckboxes(a){
+  const email=(a.email||'').toLowerCase();
+  if(!email){
+    return '<div style="font-size:11px;color:var(--text3)">Ce compte n\'a pas encore d\'email enregistré. Il pourra choisir ses événements une fois connecté, ou donnez-lui un nom et il apparaîtra ici après sa première connexion.</div>';
+  }
+  let out='<div style="display:flex;flex-direction:column;gap:4px">';
+  eventsData.forEach(ev=>{
+    const allowed=(ev.allowedUsers||[]).some(e=>(e||'').toLowerCase()===email);
+    const label=(ev.internalName||ev.title||ev.id).replace(/</g,'&lt;');
+    out+=`<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:2px 0">
+      <input type="checkbox" ${allowed?'checked':''} onchange="toggleAccountEvent('${a.id}','${ev.id}',this.checked)" style="width:15px;height:15px;cursor:pointer">
+      <span>${label}</span>
+    </label>`;
+  });
+  out+='</div>';
+  return out;
 }
 
-async function removeSuperAdmin(idx){
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const superAdmins=[...(ev.superAdmins||[])];
-  const removed=superAdmins.splice(idx,1);
-  // Prevent removing yourself if you're the last one
-  if(!superAdmins.length){
-    if(!confirm('Vous allez supprimer le dernier super admin. Tous les utilisateurs auront un accès complet. Continuer ?'))return;
-  }
+// Coche/décoche un événement pour un compte → écrit dans allowedUsers de l'événement (option A)
+async function toggleAccountEvent(uid, eventId, checked){
+  const acc=adminsData.find(a=>a.id===uid);
+  const email=(acc?.email||'').toLowerCase();
+  if(!email){ toast('Ce compte n\'a pas d\'email enregistré','error'); return; }
+  const ev=eventsData.find(e=>e.id===eventId); if(!ev) return;
+  let allowed=[...(ev.allowedUsers||[])];
+  if(checked){ if(!allowed.some(e=>(e||'').toLowerCase()===email)) allowed.push(email); }
+  else { allowed=allowed.filter(e=>(e||'').toLowerCase()!==email); }
   saving(true);
-  await evRef().update({superAdmins});
-  if(ev) ev.superAdmins=superAdmins;
-  applyTabVisibility();
-  renderTab();
-  toast('Super admin retiré');
+  try{ await db.collection('events').doc(eventId).update({allowedUsers:allowed}); if(ev) ev.allowedUsers=allowed; }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
+// Change le profil d'accès d'un compte ('full' ou 'preset:<id>')
+async function setAccountProfile(uid, value){
+  saving(true);
+  const upd={accessProfile:value};
+  if(value==='full') upd.seesAllEvents=true; // accès complet = voit tout
+  try{
+    await db.collection('admins').doc(uid).update(upd);
+    const a=adminsData.find(x=>x.id===uid); if(a){ a.accessProfile=value; if(value==='full') a.seesAllEvents=true; }
+    if(uid===auth.currentUser?.uid){ currentUserPresetId = value.startsWith('preset:')?value.slice(7):null; }
+    renderTab();
+    toast('Profil mis à jour');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
+async function setAccountSeesAll(uid, checked){
+  saving(true);
+  try{
+    await db.collection('admins').doc(uid).update({seesAllEvents:checked});
+    const a=adminsData.find(x=>x.id===uid); if(a) a.seesAllEvents=checked;
+    renderTab();
+    toast(checked?'Voit tous les événements':'Restreint aux événements cochés');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+
+async function renameAccount(uid){
+  const a=adminsData.find(x=>x.id===uid)||{};
+  const cur=a.name||'';
+  const nom=prompt('Nom lisible pour ce compte (ex : « Agence Durand », « Mélanie – rédaction ») :', cur);
+  if(nom===null) return;
+  saving(true);
+  try{
+    await db.collection('admins').doc(uid).update({name:nom.trim()});
+    if(a) a.name=nom.trim();
+    renderTab();
+    toast('Nom enregistré');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
 async function toggleTabVisibility(tabKey,visible){
@@ -5807,83 +5893,34 @@ async function toggleModuleSettingsVisibility(tabKey,visible){
   toast(visible?'Boîte de réglages visible':'Boîte de réglages masquée');
 }
 
-async function addAllowedUser(){
-  const email=document.getElementById('access-new-allowed').value.trim().toLowerCase();
-  if(!email||!email.includes('@')){toast('Email invalide','error');return;}
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const allowedUsers=[...(ev.allowedUsers||[])];
-  if(allowedUsers.some(e=>(e||'').toLowerCase()===email)){toast('Déjà dans la liste','error');return;}
-  allowedUsers.push(email);
-  saving(true);
-  await evRef().update({allowedUsers});
-  if(ev) ev.allowedUsers=allowedUsers;
-  document.getElementById('access-new-allowed').value='';
-  renderTab();
-  toast('Utilisateur ajouté');
-}
-
-async function removeAllowedUser(idx){
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const allowedUsers=[...(ev.allowedUsers||[])];
-  allowedUsers.splice(idx,1);
-  saving(true);
-  await evRef().update({allowedUsers});
-  if(ev) ev.allowedUsers=allowedUsers;
-  renderTab();
-  toast('Utilisateur retiré');
-}
-
 // ==================== ACCOUNT MANAGEMENT ====================
 async function createAccount(){
+  const name=document.getElementById('acc-new-name')?.value.trim()||'';
   const email=document.getElementById('acc-new-email').value.trim().toLowerCase();
   const pass=document.getElementById('acc-new-pass').value;
-  const role=document.getElementById('acc-new-role').value;
   if(!email||!email.includes('@')){toast('Email invalide','error');return;}
   if(!pass||pass.length<6){toast('Mot de passe trop court (min. 6 caractères)','error');return;}
-  // Check if email already exists in admins
   if(adminsData.some(a=>(a.email||'').toLowerCase()===email)){toast('Ce compte existe déjà','error');return;}
   saving(true);
   try{
-    // Use a secondary Firebase app to avoid signing out the current user
     let secondaryApp;
     try{ secondaryApp=firebase.app('AccountCreator'); }catch(e){ secondaryApp=firebase.initializeApp(firebase.app().options,'AccountCreator'); }
     const secondaryAuth=secondaryApp.auth();
     const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-    await db.collection('admins').doc(cred.user.uid).set({
-      email:email,
-      role:role,
-      created_at:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Nouveau compte : profil "à configurer" (accessProfile absent) → le bandeau invitera à le régler
+    const doc={ email:email, created_at:firebase.firestore.FieldValue.serverTimestamp() };
+    if(name) doc.name=name;
+    await db.collection('admins').doc(cred.user.uid).set(doc);
     await secondaryAuth.signOut();
     document.getElementById('acc-new-email').value='';
     document.getElementById('acc-new-pass').value='';
-    toast('Compte créé — '+email+' ('+role+')');
+    if(document.getElementById('acc-new-name')) document.getElementById('acc-new-name').value='';
+    toast('Compte créé — '+email);
     renderTab();
   }catch(e){
     if(e.code==='auth/email-already-in-use') toast('Cet email est déjà utilisé dans Firebase Auth','error');
     else toast('Erreur : '+e.message,'error');
   }
-}
-
-async function toggleAccountRole(uid,currentRole){
-  const newRole=currentRole==='client'?'admin':'client';
-  saving(true);
-  await db.collection('admins').doc(uid).update({role:newRole});
-  toast('Rôle modifié → '+newRole);
-}
-
-// #1 — Affecte (ou retire) un profil d'accès à un compte client
-async function setAccountPreset(uid,presetId){
-  saving(true);
-  try{
-    await db.collection('admins').doc(uid).update({presetId:presetId||firebase.firestore.FieldValue.delete()});
-    // Reflet local immédiat
-    const a=adminsData.find(x=>x.id===uid); if(a){ if(presetId) a.presetId=presetId; else delete a.presetId; }
-    // Si c'est le compte courant, ré-appliquer sa vue tout de suite
-    if(uid===auth.currentUser?.uid){ currentUserPresetId=presetId||null; applyTabVisibility(); }
-    const pName=presetId?(accessPresetsData.find(p=>p.id===presetId)?.name||'profil'):null;
-    toast(presetId?('Profil « '+pName+' » affecté'):'Profil retiré (réglages de l\'événement)');
-  }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
 function confirmRemoveAccount(uid,email){
