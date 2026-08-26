@@ -518,6 +518,7 @@ var citationsData=[];
 var rubriquesData=[];
 var essentialData=[];
 var questionsData=[]; // #Q&A — questions du public (modération)
+var quizzesData=[]; // Quiz/sondages (liste)
 var articlesData=[];
 var programmeData=[];
 var timelineData=[];
@@ -1198,7 +1199,8 @@ function subscribeSubCollections(){
     {col:'videos',target:'videosData'},
     {col:'interviews',target:'interviewsData'},
     {col:'etapes',target:'etapesData'},
-    {col:'questions',target:'questionsData'}
+    {col:'questions',target:'questionsData'},
+    {col:'quizzes',target:'quizzesData'}
   ];
 
   subs.forEach(s=>{
@@ -1216,6 +1218,7 @@ function subscribeSubCollections(){
       if(s.col==='interviews') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       if(s.col==='etapes') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       if(s.col==='questions') arr.sort((a,b)=>{ const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0); const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0); return tb-ta; });
+      if(s.col==='quizzes') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       window[s.target]=arr;
       updateBadges();
       scheduleRender();
@@ -1526,7 +1529,9 @@ function _fontOpts(selected){
     gallery:    { title:'.sec-title-gallery h2,.exp-sec-gallery h2',       sub:'.sec-title-gallery p,.exp-sec-gallery + .exp-section-sub' },
     interviews: { title:'.itw-section-hd h2,.exp-sec-interviews h2',       sub:'.itw-section-hd p,.exp-sec-interviews + .exp-section-sub' },
     sponsors:   { title:'.sponsors-block h3,.exp-sec-sponsors h2',         sub:'.sponsors-block p,.exp-sec-sponsors + .exp-section-sub' },
-    contact:    { title:'.exp-sec-contact h2',                             sub:'.exp-sec-contact + .exp-section-sub' }
+    contact:    { title:'.exp-sec-contact h2',                             sub:'.exp-sec-contact + .exp-section-sub' },
+    questions:  { title:'.sec-title-questions h2,.exp-sec-questions h2',    sub:'.sec-title-questions p,.exp-sec-questions + .exp-section-sub' },
+    quiz:       { title:'.sec-title-quiz h2,.exp-sec-quiz h2',              sub:'.sec-title-quiz p,.exp-sec-quiz + .exp-section-sub' }
   };
   var COUNTER_SEL = ['.kpi-num','.exp-counter-num'];
 
@@ -1596,6 +1601,18 @@ function _fontOpts(selected){
       title:'.prog-card .ct,.exp-prog .exp-card-label',
       text:'.prog-label,.exp-prog-label',
       ui:'.prog-time,.prog-desc,.prog-status,.exp-prog-time,.exp-prog-desc,.exp-prog-status,.exp-prog-day'
+    },
+    questions: {
+      zone:'body',
+      title:'.qa-q',
+      text:'.qa-answer',
+      ui:'.qa-name,.qa-meta,.qa-submit,.qa-more,.qa-note'
+    },
+    quiz: {
+      zone:'body',
+      title:'.quiz-q-text',
+      text:'.quiz-opt-txt',
+      ui:'.quiz-q-badge,.quiz-hint,.quiz-submit,.quiz-change,.quiz-total,.quiz-pct'
     }
   };
 
@@ -1817,7 +1834,7 @@ function _typoRolesFor(idPrefix, src, selMap){
   return h;
 }
 // Correspondance onglet (data-tab) -> clé de module typo dans le moteur
-var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis', programme:'programme', questions:'questions' };
+var MODULE_TYPO_KEY = { live:'live', citations:'citations', articles:'articles', essentiel:'essential', videos:'videos', interviews:'interviews', gallery:'gallery', etapes:'itinerary', sponsors:'sponsors', contact:'contact', kpis:'kpis', programme:'programme', questions:'questions', quiz:'quiz' };
 // Modules override vs blocs autonomes
 function _isAutoModule(key){ return key==='reporters' || key==='itinerary'; }
 
@@ -1864,7 +1881,7 @@ async function saveModule(tabKey){
   var ev = eventsData.find(function(e){return e.id===currentEventId;}) || {};
   var mk = _T.modeKey(ev);
   // 1) Réglages fins existants (titre/sous-titre/options) — réutilise la logique existante
-  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions'})[tabKey];
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions',quiz:'quiz'})[tabKey];
   // 2) Typo du module
   var existing = ev.typography || {};
   var root = {};
@@ -1989,8 +2006,14 @@ function moduleSettingsPanel(type, ev){
   if(type==='reporters'){
     return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
   }
-  if(type==='questions'){
-    var s=_tss('app-st-qa', ev.questionsTitle, ev.questionsSubtitle, ev.questionsShowTitle, 'Questions en direct', 'Une question ? Posez-la, la rédaction vous répond.');
+  if(type==='quiz'){
+    var s=_tss('app-st-quiz', ev.quizSubtitleTitle, ev.quizSubtitle, ev.quizShowTitle, 'Quiz / Sondage', 'Participez en direct');
+    s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Couleurs</div>';
+    s+='<div class="form-row-inline"><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-quiz-accent" value="'+(ev.quizAccent||'#10B981')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond des cartes</label><input type="color" id="app-quiz-card-bg" value="'+(ev.quizCardBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>';
+    s+='<div style="font-size:10px;color:var(--text3);margin-top:6px">Le titre de chaque quiz se règle dans l\'onglet Quiz / Sondage. Les polices et tailles se règlent dans « Typographie du contenu » ci-dessous.</div></div>';
+    return s;
+  }
+  if(type==='questions'){    var s=_tss('app-st-qa', ev.questionsTitle, ev.questionsSubtitle, ev.questionsShowTitle, 'Questions en direct', 'Une question ? Posez-la, la rédaction vous répond.');
     s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Affichage & couleurs</div>';
     s+='<div class="form-row-inline"><div class="form-row" style="max-width:220px"><label class="form-label">Questions visibles avant « voir plus »</label><input type="number" class="form-input" id="app-qa-count" value="'+(ev.questionsVisibleCount||10)+'" min="1" max="100" style="width:80px"></div></div>';
     s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Couleur d\'accent</label><input type="color" id="app-qa-accent" value="'+(ev.questionsAccent||'#6366F1')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond des questions</label><input type="color" id="app-qa-item-bg" value="'+(ev.questionsItemBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Couleur du texte</label><input type="color" id="app-qa-text" value="'+(ev.questionsTextColor||'#1a1a1a')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond du formulaire</label><input type="color" id="app-qa-form-bg" value="'+(ev.questionsFormBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>';
@@ -2009,7 +2032,7 @@ function moduleConfigBlock(tabKey){
     var _hms=_effectiveHiddenMS(_ev);
     if(_hms.includes(tabKey)) return '';
   }
-  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions'})[tabKey];
+  var settingsType = ({live:'live',citations:'citations',articles:'articles',essentiel:'essential',videos:'videos',interviews:'interviews',gallery:'gallery',journalistes:'reporters',questions:'questions',quiz:'quiz'})[tabKey];
   var typoKey = (tabKey==='journalistes') ? 'reporters' : MODULE_TYPO_KEY[tabKey];
   var inner = '';
   if(settingsType) inner += moduleSettingsPanel(settingsType);
@@ -2515,6 +2538,10 @@ async function _collectModuleSettings(type){
   } else if(type==='reporters'){
     ud.journalistsTitle=_v('app-st-jr-title');
     ud.journalistsTitleSize=_n('app-jr-tsize',14);
+  } else if(type==='quiz'){
+    ud.quizSubtitleTitle=_v('app-st-quiz-title');ud.quizSubtitle=_v('app-st-quiz-sub');ud.quizShowTitle=_c('app-st-quiz-show');
+    ud.quizAccent=document.getElementById('app-quiz-accent')?.value||'#10B981';
+    ud.quizCardBg=document.getElementById('app-quiz-card-bg')?.value||'#ffffff';
   } else if(type==='questions'){
     ud.questionsTitle=_v('app-st-qa-title');ud.questionsSubtitle=_v('app-st-qa-sub');ud.questionsShowTitle=_c('app-st-qa-show');
     ud.questionsVisibleCount=_n('app-qa-count',10);
@@ -4507,57 +4534,97 @@ function _qPhaseBadge(q){
   const c=p.color||'#6366F1';
   return `<span style="font-size:9px;font-weight:600;color:${c};background:${c}15;border:1px solid ${c}44;padding:1px 6px;border-radius:8px;margin-left:6px">${(p.name||q.phase).replace(/</g,'&lt;')}</span>`;
 }
-// ==================== QUIZ / SONDAGE ====================
-function _quizData(){
+// ==================== QUIZ / SONDAGE (liste) ====================
+// Migration douce : si un ancien ev.quiz existe et que la collection quizzes est vide, on le proposera à la conversion.
+function _quizPhaseName(phaseId){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const q=ev.quiz||{};
-  return { title:q.title||'', questions:Array.isArray(q.questions)?q.questions:[] };
+  const p=(ev.phases||[]).find(x=>x.id===phaseId);
+  return p?(p.name||phaseId):'';
 }
 function renderQuiz(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const quiz=_quizData();
-  const active=ev.quizActive===true;
+  const phases=ev.phases||[];
+  const list=quizzesData.slice();
 
-  let h=`<div class="page-title">📊 Quiz / Sondage</div><div class="page-desc">Créez un quiz (avec bonne réponse) ou un sondage (sans). Activez-le pour l'afficher sur le dashboard. Les visiteurs votent et voient les résultats en temps réel. Activez d'abord le module « Quiz / Sondage » dans l'onglet Modules.</div>`;
+  let h=`<div class="page-title">📊 Quiz / Sondage</div><div class="page-desc">Créez plusieurs quiz (avec bonne réponse) ou sondages (sans). Activez chacun indépendamment et, si vous le souhaitez, rattachez-le à une phase. Activez d'abord le module « Quiz / Sondage » dans l'onglet Modules.</div>`;
   h+=moduleConfigBlock('quiz');
 
-  // Interrupteur d'activation
-  h+=`<div class="admin-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:2px">${active?'🟢 Quiz/sondage EN LIGNE':'⚪ Quiz/sondage hors ligne'}</div>
-        <div style="font-size:11px;color:var(--text3)">${active?'Les visiteurs le voient et peuvent voter en ce moment.':'Activez pour l\'afficher sur le dashboard.'}</div>
-      </div>
-      <button class="btn ${active?'btn-danger':'btn-primary'}" onclick="toggleQuizActive(${!active})">${active?'Mettre hors ligne':'Mettre en ligne'}</button>
-    </div>
-  </div>`;
-
-  // Titre du bloc
-  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg> Configuration</h3>
-    <div class="form-row"><label class="form-label">Titre du bloc (facultatif)</label><input class="form-input" id="quiz-title" value="${(quiz.title||'').replace(/"/g,'&quot;')}" placeholder="À vous de jouer !" onchange="saveQuizTitle(this.value)"></div>
-  </div>`;
-
-  // Liste des questions
-  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Questions (${quiz.questions.length})</h3>`;
-  if(!quiz.questions.length){
-    h+=`<div class="empty"><div class="text">Aucune question. Ajoutez-en une ci-dessous.</div></div>`;
+  // Migration de l'ancien quiz unique
+  if(ev.quiz && Array.isArray(ev.quiz.questions) && ev.quiz.questions.length && !list.length){
+    h+=`<div class="admin-card" style="border-color:#FDE68A;background:#FEF3C7">
+      <div style="font-size:13px;color:#92400E;line-height:1.6">Un ancien quiz unique a été détecté. <button class="btn btn-primary btn-xs" onclick="migrateOldQuiz()">Le convertir en quiz de la liste</button></div>
+    </div>`;
   }
-  quiz.questions.forEach((q,qi)=>{
+
+  // Liste des quiz/sondages
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg> Vos quiz / sondages (${list.length})</h3>`;
+  if(!list.length){
+    h+=`<div class="empty"><div class="text">Aucun quiz pour le moment.</div></div>`;
+  } else {
+    list.forEach(qz=>{
+      const active=qz.active===true;
+      const nbQ=(qz.questions||[]).length;
+      const phaseLabel = qz.phase ? _quizPhaseName(qz.phase) : 'Toutes les phases';
+      h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${active?'#10B981':'#CBD5E1'};flex-shrink:0"></div>
+        <div class="list-item-content" style="flex:1;min-width:180px">
+          <div class="list-item-text"><strong>${(qz.title||'Sans titre').replace(/</g,'&lt;')}</strong></div>
+          <div class="list-item-meta" style="font-size:11px;color:var(--text3)">${nbQ} question${nbQ>1?'s':''} · ${phaseLabel} · ${active?'🟢 en ligne':'⚪ hors ligne'}</div>
+        </div>
+        <div class="list-item-actions" style="display:flex;gap:4px">
+          <button class="btn ${active?'btn-ghost':'btn-primary'} btn-xs" onclick="toggleQuizActive('${qz.id}',${!active})">${active?'Mettre hors ligne':'Mettre en ligne'}</button>
+          <button class="btn btn-ghost btn-xs" onclick="editQuiz('${qz.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Éditer</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuiz('${qz.id}')">🗑</button>
+        </div>
+      </div>`;
+    });
+  }
+  h+=`<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="createQuiz()">＋ Nouveau quiz / sondage</button></div>`;
+  h+=`</div>`;
+
+  // Éditeur du quiz en cours d'édition
+  if(_quizEditId){
+    const qz=quizzesData.find(x=>x.id===_quizEditId);
+    if(qz) h+=_renderQuizEditor(qz, phases);
+  }
+
+  el.innerHTML=h;
+}
+
+var _quizEditId=null;
+function editQuiz(id){ _quizEditId=id; renderTab(); setTimeout(()=>{ const e=document.getElementById('quiz-editor'); if(e) e.scrollIntoView({behavior:'smooth',block:'start'}); },60); }
+function _renderQuizEditor(qz, phases){
+  const questions=qz.questions||[];
+  let phaseOpts='<option value="">Toutes les phases</option>';
+  phases.forEach(p=>{ phaseOpts+=`<option value="${p.id}"${qz.phase===p.id?' selected':''}>${(p.name||p.id).replace(/</g,'&lt;')}</option>`; });
+
+  let h=`<div class="admin-card" id="quiz-editor" style="border-color:#C7D2FE;box-shadow:0 0 0 2px rgba(99,102,241,.1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin:0"><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Édition du quiz</h3>
+      <button class="btn btn-ghost btn-xs" onclick="_quizEditId=null;renderTab()">Fermer</button>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="quiz-ed-title" value="${(qz.title||'').replace(/"/g,'&quot;')}" placeholder="À vous de jouer !"></div>
+      <div class="form-row"><label class="form-label">Phase (facultatif)</label><select class="form-input" id="quiz-ed-phase">${phaseOpts}</select></div>
+    </div>
+    <label class="form-label" style="margin-top:8px">Questions (${questions.length})</label>`;
+  if(!questions.length) h+=`<div class="empty"><div class="text">Aucune question. Ajoutez-en une.</div></div>`;
+  questions.forEach((q,qi)=>{
     const isQuiz=q.type==='quiz';
     const isMulti=q.mode==='multi';
     h+=`<div class="admin-card" style="margin:0 0 12px;background:var(--bg)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
         <strong style="font-size:13px">Question ${qi+1}</strong>
         <div style="display:flex;gap:4px">
-          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},-1)" title="Monter">▲</button>
-          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},1)" title="Descendre">▼</button>
-          <button class="btn btn-danger btn-xs" onclick="deleteQuizQuestion(${qi})" title="Supprimer">🗑</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},-1)">▲</button>
+          <button class="btn btn-ghost btn-xs" onclick="moveQuizQuestion(${qi},1)">▼</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuizQuestion(${qi})">🗑</button>
         </div>
       </div>
       <div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" data-qq="${qi}" data-qf="text" value="${(q.text||'').replace(/"/g,'&quot;')}" placeholder="Votre question…"></div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Type</label>
-          <select class="form-input" data-qq="${qi}" data-qf="type" onchange="renderTab()">
+          <select class="form-input" data-qq="${qi}" data-qf="type" onchange="_onQuizTypeChange(${qi},this.value)">
             <option value="quiz"${isQuiz?' selected':''}>Quiz (bonne réponse)</option>
             <option value="poll"${!isQuiz?' selected':''}>Sondage (sans bonne réponse)</option>
           </select>
@@ -4578,25 +4645,18 @@ function renderQuiz(el){
         <button class="btn btn-danger btn-xs" onclick="deleteQuizOption(${qi},${oi})">✕</button>
       </div>`;
     });
-    h+=`</div>
-      <button class="btn btn-ghost btn-sm" onclick="addQuizOption(${qi})">＋ Ajouter une option</button>
-    </div>`;
+    h+=`</div><button class="btn btn-ghost btn-sm" onclick="addQuizOption(${qi})">＋ Ajouter une option</button></div>`;
   });
   h+=`<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="addQuizQuestion()">＋ Ajouter une question</button></div>`;
-  h+=`<div style="margin-top:14px"><button class="btn btn-primary" onclick="saveQuiz()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le quiz</button>
-    <span style="font-size:10px;color:var(--text3);margin-left:8px">Pensez à enregistrer après vos modifications.</span></div>`;
-  h+=`</div>`;
-
-  // Réinitialiser les votes
-  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg> Résultats</h3>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Réinitialiser efface tous les votes reçus (utile pour tester ou repartir de zéro).</div>
-    <button class="btn btn-danger btn-sm" onclick="resetQuizVotes()">Réinitialiser tous les votes</button>
+  h+=`<div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-primary" onclick="saveQuiz()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer ce quiz</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetQuizVotes('${qz.id}')">Réinitialiser les votes</button>
   </div>`;
-
-  el.innerHTML=h;
+  h+=`</div>`;
+  return h;
 }
 
-function _collectQuizFromDOM(){
+function _collectQuizQuestionsFromDOM(){
   const questions=[];
   document.querySelectorAll('[data-qq][data-qf="text"]').forEach(txtEl=>{
     const qi=txtEl.getAttribute('data-qq');
@@ -4610,63 +4670,84 @@ function _collectQuizFromDOM(){
       if(text) opts.push({ id:'o'+oi, text, correct:correctEl?correctEl.checked:false });
     });
     const text=txtEl.value.trim();
-    if(text && opts.length) questions.push({ id:'q'+qi+'_'+Date.now().toString(36), type, mode, text, options:opts });
+    if(text && opts.length) questions.push({ type, mode, text, options:opts });
   });
   return questions;
 }
+async function createQuiz(){
+  saving(true);
+  try{
+    const maxOrder=quizzesData.reduce((m,q)=>Math.max(m,q.order||0),0);
+    const ref=await subCol('quizzes').add({title:'Nouveau quiz', questions:[], active:false, phase:'', order:maxOrder+1, created_at:firebase.firestore.FieldValue.serverTimestamp()});
+    _quizEditId=ref.id;
+    toast('Quiz créé — ajoutez vos questions');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
 async function saveQuiz(){
-  const title=document.getElementById('quiz-title')?.value.trim()||'';
-  const questions=_collectQuizFromDOM();
-  // Réattribue des ids stables et courts
+  if(!_quizEditId){ return; }
+  const title=document.getElementById('quiz-ed-title')?.value.trim()||'Sans titre';
+  const phase=document.getElementById('quiz-ed-phase')?.value||'';
+  const questions=_collectQuizQuestionsFromDOM();
   questions.forEach((q,i)=>{ q.id='q'+(i+1); q.options.forEach((o,oi)=>o.id='o'+(oi+1)); });
   saving(true);
   try{
-    await evRef().update({quiz:{title, questions}});
-    const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quiz={title, questions};
-    renderTab();
+    await subCol('quizzes').doc(_quizEditId).update({title, phase, questions});
+    const qz=quizzesData.find(x=>x.id===_quizEditId); if(qz){ qz.title=title; qz.phase=phase; qz.questions=questions; }
     toast('Quiz enregistré');
+    renderTab();
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
-async function saveQuizTitle(v){
-  const q=_quizData(); q.title=v.trim();
+async function toggleQuizActive(id,on){
   saving(true);
-  try{ await evRef().update({quiz:q}); const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quiz=q; }catch(e){ toast('Erreur : '+e.message,'error'); }
+  try{ await subCol('quizzes').doc(id).update({active:on}); const qz=quizzesData.find(x=>x.id===id); if(qz) qz.active=on; renderTab(); toast(on?'Quiz en ligne':'Quiz hors ligne'); }
+  catch(e){ toast('Erreur : '+e.message,'error'); }
 }
-async function toggleQuizActive(on){
+async function deleteQuiz(id){
+  if(!confirm('Supprimer ce quiz et tous ses votes ?'))return;
   saving(true);
   try{
-    await evRef().update({quizActive:on});
-    const ev=eventsData.find(e=>e.id===currentEventId); if(ev) ev.quizActive=on;
-    renderTab();
-    toast(on?'Quiz mis en ligne':'Quiz hors ligne');
+    await subCol('quizzes').doc(id).delete();
+    // supprime aussi ses votes
+    const snap=await subCol('quizVotes').where('quizId','==',id).get();
+    const batch=db.batch(); snap.forEach(d=>batch.delete(d.reference)); await batch.commit();
+    if(_quizEditId===id) _quizEditId=null;
+    renderTab(); toast('Quiz supprimé');
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
-// Manipulations locales (nécessitent Enregistrer ensuite)
+// Mutations locales de l'éditeur (capturent le DOM avant re-render)
 function _mutateQuiz(fn){
-  const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const q=_quizData();
-  // Récupère d'abord les saisies en cours du DOM pour ne pas les perdre
-  const domQ=_collectQuizFromDOM();
-  q.questions=domQ.length?domQ:q.questions;
-  q.title=document.getElementById('quiz-title')?.value.trim()||q.title;
-  fn(q);
-  if(ev) ev.quiz=q;
+  const qz=quizzesData.find(x=>x.id===_quizEditId); if(!qz) return;
+  qz.questions=_collectQuizQuestionsFromDOM();
+  const t=document.getElementById('quiz-ed-title'); if(t) qz.title=t.value;
+  const p=document.getElementById('quiz-ed-phase'); if(p) qz.phase=p.value;
+  fn(qz);
   renderTab();
 }
-function addQuizQuestion(){ _mutateQuiz(q=>{ q.questions.push({id:'q'+(q.questions.length+1),type:'quiz',mode:'single',text:'',options:[{id:'o1',text:'',correct:false},{id:'o2',text:'',correct:false}]}); }); }
-function deleteQuizQuestion(qi){ if(!confirm('Supprimer cette question ?'))return; _mutateQuiz(q=>{ q.questions.splice(qi,1); }); }
-function moveQuizQuestion(qi,dir){ _mutateQuiz(q=>{ const j=qi+dir; if(j<0||j>=q.questions.length)return; const t=q.questions[qi]; q.questions[qi]=q.questions[j]; q.questions[j]=t; }); }
-function addQuizOption(qi){ _mutateQuiz(q=>{ if(q.questions[qi]){ q.questions[qi].options=q.questions[qi].options||[]; q.questions[qi].options.push({id:'o'+(q.questions[qi].options.length+1),text:'',correct:false}); } }); }
-function deleteQuizOption(qi,oi){ _mutateQuiz(q=>{ if(q.questions[qi]&&q.questions[qi].options){ q.questions[qi].options.splice(oi,1); } }); }
-async function resetQuizVotes(){
-  if(!confirm('Effacer TOUS les votes de ce quiz ? Cette action est irréversible.'))return;
+function _onQuizTypeChange(qi,newType){ _mutateQuiz(qz=>{ if(qz.questions[qi]) qz.questions[qi].type=newType; }); }
+function addQuizQuestion(){ _mutateQuiz(qz=>{ qz.questions.push({type:'quiz',mode:'single',text:'',options:[{text:'',correct:false},{text:'',correct:false}]}); }); }
+function deleteQuizQuestion(qi){ if(!confirm('Supprimer cette question ?'))return; _mutateQuiz(qz=>{ qz.questions.splice(qi,1); }); }
+function moveQuizQuestion(qi,dir){ _mutateQuiz(qz=>{ const j=qi+dir; if(j<0||j>=qz.questions.length)return; const t=qz.questions[qi]; qz.questions[qi]=qz.questions[j]; qz.questions[j]=t; }); }
+function addQuizOption(qi){ _mutateQuiz(qz=>{ if(qz.questions[qi]){ qz.questions[qi].options=qz.questions[qi].options||[]; qz.questions[qi].options.push({text:'',correct:false}); } }); }
+function deleteQuizOption(qi,oi){ _mutateQuiz(qz=>{ if(qz.questions[qi]&&qz.questions[qi].options) qz.questions[qi].options.splice(oi,1); }); }
+async function resetQuizVotes(id){
+  if(!confirm('Effacer tous les votes de ce quiz ?'))return;
   saving(true);
   try{
-    const snap=await subCol('quizVotes').get();
-    const batch=db.batch();
-    snap.forEach(d=>batch.delete(d.reference));
-    await batch.commit();
+    const snap=await subCol('quizVotes').where('quizId','==',id).get();
+    const batch=db.batch(); snap.forEach(d=>batch.delete(d.reference)); await batch.commit();
     toast('Votes réinitialisés');
+  }catch(e){ toast('Erreur : '+e.message,'error'); }
+}
+async function migrateOldQuiz(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  if(!ev.quiz||!ev.quiz.questions) return;
+  saving(true);
+  try{
+    await subCol('quizzes').add({title:ev.quiz.title||'Quiz', questions:ev.quiz.questions, active:ev.quizActive===true, phase:'', order:1, created_at:firebase.firestore.FieldValue.serverTimestamp()});
+    await evRef().update({quiz:firebase.firestore.FieldValue.delete(), quizActive:firebase.firestore.FieldValue.delete()});
+    if(ev){ delete ev.quiz; delete ev.quizActive; }
+    toast('Ancien quiz converti');
+    renderTab();
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
