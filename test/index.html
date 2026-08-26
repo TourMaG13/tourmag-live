@@ -461,7 +461,8 @@ img{display:block}a{text-decoration:none}
 .sponsors-logos{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
 .sponsors-logos img{height:var(--sp-logo-h,30px);opacity:var(--sp-logo-opacity,.4);filter:var(--sp-logo-filter,grayscale(100%));transition:all .2s}
 /* ===== Bloc Contact (mode classique) ===== */
-.contact-block{max-width:100%;margin:40px auto;padding:0}
+.contact-block{max-width:1200px;margin:40px auto;padding:0 28px;box-sizing:border-box;width:100%}
+@media(max-width:768px){.contact-block{padding:0 12px}}
 .contact-block .sec-title{margin-bottom:20px}
 .contact-cards{display:flex;flex-direction:column;gap:16px}
 .contact-card{display:flex;align-items:center;gap:22px;padding:24px 26px;background:var(--_ct-bg,var(--card));background-size:cover;background-position:center;border:1.5px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
