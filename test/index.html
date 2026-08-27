@@ -267,6 +267,53 @@ img{display:block}a{text-decoration:none}
 .quiz-total{font-size:11.5px;color:var(--text3,#888);font-weight:600}
 .quiz-exp .quiz-q{background:var(--quiz-card-bg,var(--exp-stone,#f5f3f0))}
 @media(max-width:640px){.quiz-block{padding:18px 12px}}
+
+/* ===== Mode EXPÉDITION — quiz & questions dans l'esprit "carnet de route" ===== */
+/* Questions */
+.qa-exp{max-width:none;margin:0;padding:0;background:none}
+.qa-exp .qa-form{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;padding:20px 22px;margin:0 0 26px 0;position:relative}
+.qa-exp .qa-input,.qa-exp .qa-name-input{background:#fff;border:1px solid var(--exp-line);border-radius:0;color:var(--exp-ink);font-family:'Archivo',sans-serif}
+.qa-exp .qa-input:focus,.qa-exp .qa-name-input:focus{border-color:var(--exp-accent)}
+.qa-exp .qa-input{font-size:14.5px}
+.qa-exp .qa-submit{background:var(--exp-ink);color:#fff;border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:11px 24px}
+.qa-exp .qa-submit:hover{background:var(--exp-accent)}
+.qa-exp .qa-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:var(--exp-grey)}
+.qa-exp .qa-note.qa-ok{color:var(--exp-accent)}
+.qa-exp .qa-list{gap:0}
+.qa-exp .qa-item{background:transparent;border:none;border-bottom:1px solid var(--exp-line);border-radius:0;padding:20px 0}
+.qa-exp .qa-item:last-child{border-bottom:none}
+.qa-exp .qa-q{font-family:'Libre Caslon Text',serif;font-size:17px;font-weight:400;line-height:1.5;color:var(--exp-ink)}
+.qa-exp .qa-q::before{content:"“";font-family:'Libre Caslon Display',serif;color:var(--exp-accent);font-size:22px;margin-right:4px;line-height:0}
+.qa-exp .qa-meta{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--exp-grey);margin-top:8px}
+.qa-exp .qa-name{color:var(--exp-accent);font-weight:600}
+.qa-exp .qa-name.qa-anon{color:var(--exp-grey)}
+.qa-exp .qa-answer{background:#fff;border-left:2px solid var(--exp-accent);border-radius:0;font-family:'Archivo',sans-serif;font-size:13.5px;color:var(--exp-ink);margin-top:12px;padding:12px 16px}
+.qa-exp .qa-answer-label{font-family:'IBM Plex Mono',monospace;color:var(--exp-accent);letter-spacing:.1em}
+.qa-exp .qa-more{border:1px solid var(--exp-ink);color:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+.qa-exp .qa-more:hover{background:var(--exp-ink);color:#fff}
+
+/* Quiz / Sondage */
+.quiz-exp{max-width:none;margin:0;padding:0;background:none;border-radius:0}
+.quiz-exp::before{display:none}
+.quiz-exp .quiz-q{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;box-shadow:none;padding:24px 26px;margin-bottom:22px;position:relative;overflow:hidden}
+.quiz-exp .quiz-q::after{content:attr(data-qnum);position:absolute;top:-14px;right:14px;font-family:'Libre Caslon Display',serif;font-size:82px;color:var(--exp-accent);opacity:.06;line-height:1;pointer-events:none}
+.quiz-exp .quiz-q-head{gap:12px}
+.quiz-exp .quiz-q-badge{background:transparent;color:var(--exp-accent);box-shadow:none;border:1px solid var(--exp-accent);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;padding:3px 9px}
+.quiz-exp .quiz-q-text{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:21px;line-height:1.25;color:var(--exp-ink)}
+.quiz-exp .quiz-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--exp-grey);font-style:normal;margin:8px 0 16px}
+.quiz-exp .quiz-opt{background:#fff;border:1px solid var(--exp-line);border-radius:0;font-family:'Archivo',sans-serif;font-size:14px;color:var(--exp-ink);padding:13px 16px;transition:border-color .15s,background .15s}
+.quiz-exp .quiz-opt:hover{border-color:var(--exp-accent);transform:none;background:var(--exp-stone)}
+.quiz-exp .quiz-opt.selected{border-color:var(--exp-accent);border-left-width:3px;background:#fff;box-shadow:none}
+.quiz-exp .quiz-bar{background:rgba(255,108,0,.10)}
+.quiz-exp .quiz-opt.my-pick{border-color:var(--exp-accent);border-left-width:3px;box-shadow:none;font-weight:600}
+.quiz-exp .quiz-opt.my-pick .quiz-opt-txt::before{content:"→ ";color:var(--exp-accent)}
+.quiz-exp .quiz-pct{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:18px;color:var(--exp-accent)}
+.quiz-exp .quiz-correct-badge{background:transparent;border:1px solid var(--exp-accent);color:var(--exp-accent);border-radius:0;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em}
+.quiz-exp .quiz-submit{background:var(--exp-ink);color:#fff;border-radius:0;box-shadow:none;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:11px 26px}
+.quiz-exp .quiz-submit:hover{background:var(--exp-accent);transform:none;box-shadow:none}
+.quiz-exp .quiz-change{border:1px solid var(--exp-ink);color:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.quiz-exp .quiz-change:hover{background:var(--exp-ink);color:#fff}
+.quiz-exp .quiz-total{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:var(--exp-grey);font-weight:400}
 .live-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);line-height:1.25;margin-bottom:4px}
 .live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
@@ -2373,11 +2420,12 @@ function render(data){
     };
   });
 
-  // Fade-in observer
-  const obs = new IntersectionObserver(es=>{
-    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
+  // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers -> latence scroll)
+  if(window._fadeObsC) window._fadeObsC.disconnect();
+  window._fadeObsC = new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');window._fadeObsC.unobserve(e.target);}});
   },{threshold:.06});
-  document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+  document.querySelectorAll('.fi').forEach(el=>window._fadeObsC.observe(el));
 
   // Process Instagram embeds
   if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
@@ -3506,11 +3554,12 @@ function renderExpedition(data){
     }catch(e){console.error('[TourMaG Live] Decor error:',e);}
   }, 600);
 
-  // Fade-in observer
-  const obs = new IntersectionObserver(es=>{
-    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
+  // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers)
+  if(window._fadeObsE) window._fadeObsE.disconnect();
+  window._fadeObsE = new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');window._fadeObsE.unobserve(e.target);}});
   },{threshold:.06});
-  document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+  document.querySelectorAll('.fi').forEach(el=>window._fadeObsE.observe(el));
 
   // Instagram embeds
   if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
@@ -3943,7 +3992,9 @@ function mkQuizBlock(opts){
     const cls=opts.exp?'quiz-block quiz-exp':'quiz-block';
     const title=qz.title||'Quiz / Sondage';
     let inner='';
+    let _qnum=0;
     (qz.questions||[]).forEach(q=>{
+      _qnum++;
       const isQuiz=q.type==='quiz';
       const isMulti=q.mode==='multi';
       const reveal=qz.revealAnswer!==false;
@@ -3957,7 +4008,7 @@ function mkQuizBlock(opts){
           <span class="quiz-opt-right"><span class="quiz-pct"></span>${correctMark}</span>
         </button>`;
       });
-      inner+=`<div class="quiz-q" data-quiz-q="${key}">
+      inner+=`<div class="quiz-q" data-quiz-q="${key}" data-qnum="${String(_qnum).padStart(2,'0')}">
         <div class="quiz-q-head"><span class="quiz-q-badge">${isQuiz?'QUIZ':'SONDAGE'}</span><span class="quiz-q-text">${_qEsc(q.text)}</span></div>
         <div class="quiz-hint">${isMulti?'Plusieurs réponses possibles':'Une seule réponse'}</div>
         <div class="quiz-opts">${optsHtml}</div>
@@ -3980,11 +4031,18 @@ function mkQuizBlock(opts){
 }
 
 async function init(){
-  const eventId = new URLSearchParams(window.location.search).get('event');
+  const _qs = new URLSearchParams(window.location.search);
+  const eventId = _qs.get('event');
+  // Interrupteurs de diagnostic (à retirer une fois la cause trouvée) :
+  window._DIAG = {
+    noquiz: _qs.has('noquiz'),          // coupe le listener temps réel des votes de quiz
+    noresize: _qs.has('noresize'),      // coupe l'observer de hauteur / hooks resize
+    norealtime: _qs.has('norealtime')   // coupe toutes les mises à jour temps réel
+  };
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
   _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
   window._eventIdForQuestions = eventId; // Q&A — cible des soumissions
-  _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
+  if(!window._DIAG.noquiz) _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
   const ec=db.collection('events').doc(eventId);
   const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS,qS,qzS] = await Promise.all([
     ec.get(),
@@ -4030,6 +4088,7 @@ async function init(){
   window._rtState = rtState;
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); }
 
+  if(!window._DIAG.norealtime){
   ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
   ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('articles').onSnapshot(snap=>{rtState.articles=toArr(snap).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));rtRender();});
@@ -4041,11 +4100,12 @@ async function init(){
   ec.collection('interviews').onSnapshot(snap=>{rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('etapes').onSnapshot(snap=>{rtState.etapes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
-  ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
+  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
   ec.onSnapshot(snap=>{if(snap.exists){rtState.event=snap.data();rtRender();}});
   try{
     db.collection('journalists').onSnapshot(snap=>{_allGlobalJournalists=toArr(snap);rtRender();},err=>console.warn('[TourMaG Live] journalists error:',err.message));
   }catch(e){console.warn('[TourMaG Live] Cannot subscribe to journalists:',e.message);}
+  }
 
   // Scheduling check every 30s
   var _lastScheduleCheck=Date.now();
@@ -4089,17 +4149,14 @@ window.addEventListener('load',()=>{
   sendHeight();
   requestFullWidth();
   [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
-  // On observe seulement l'ajout/suppression de blocs (structure), PAS les attributs/styles.
-  // Les animations (barres de quiz) ne déclenchent donc plus de recalcul.
+  if(window._DIAG && window._DIAG.noresize){ return; } // diagnostic : pas d'observer de hauteur
   new MutationObserver(scheduleHeight).observe(document.body,{childList:true,subtree:true});
-  // ResizeObserver volontairement NON utilisé sur body : il se déclenche à chaque frame
-  // d'animation interne et provoquait le blocage du scroll après un vote.
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ _lastSentH=0; scheduleHeight(); } });
   window.addEventListener('pageshow',()=>{ _lastSentH=0; scheduleHeight(); });
-  window.addEventListener('resize',scheduleHeight); // vrai redimensionnement de la fenêtre
+  window.addEventListener('resize',scheduleHeight);
 });
-// Recalcul forcé après un rendu (changement de phase, temps réel). Mesure unique différée.
-window._tmgResize=function(){ _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
+// Recalcul forcé après un rendu. Neutralisé en mode diagnostic noresize.
+window._tmgResize=function(){ if(window._DIAG && window._DIAG.noresize) return; _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
 </script>
 </body>
 </html>
