@@ -3245,7 +3245,9 @@ function renderExpedition(data){
     const _mapStyle = event.expMapStyle || 'osm';
     const _bm = BASEMAPS[_mapStyle] || BASEMAPS.osm;
     // Filtre noir & blanc « carnet » : réglage indépendant, applicable à n'importe quel fond.
-    document.getElementById('exp-routemap').classList.toggle('map-grayscale', event.expMapGrayscale === true);
+    const _mapGray = event.expMapGrayscale === true || event.expMapGrayscale === 'true';
+    document.getElementById('exp-routemap').classList.toggle('map-grayscale', _mapGray);
+    console.log('[TourMaG Live] Carte — fond:', _mapStyle, '| N&B:', _mapGray, '(valeur brute expMapGrayscale =', JSON.stringify(event.expMapGrayscale)+')');
     L.tileLayer(_bm.url, _bm.opts).addTo(map);
 
     // Build ordered waypoint chain (handles both stop & route étapes)
