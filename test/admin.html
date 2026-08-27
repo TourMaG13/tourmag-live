@@ -7109,8 +7109,9 @@ function renderEtapes(el){
     </div>
     <div class="form-row"><label class="form-label">Note sous la carte <span style="font-weight:400;color:var(--text3);font-size:12px">(petite note affichée sous la carte)</span></label><textarea class="form-input" id="exp-map-note" rows="2" placeholder="Ex : Tracé indicatif — positions actualisées chaque jour">${(exp.mapNote||'').replace(/</g,'&lt;')}</textarea></div>
     <div class="form-row"><label class="form-label">Fond de carte</label><select class="form-input" id="exp-map-style" style="max-width:320px">
-      ${[['osm','OpenStreetMap (coloré, détaillé)'],['positron','Carto Positron (clair épuré)'],['voyager','Carto Voyager (clair, routes colorées)'],['dark','Carto Dark Matter (sombre)'],['satellite','Esri — Satellite'],['terrain','Esri — Relief'],['topo','OpenTopoMap (topographique)'],['watercolor','Stamen Watercolor (aquarelle)'],['toner','Stamen Toner Lite (noir & blanc)']].map(o=>`<option value="${o[0]}"${(ev.expMapStyle||'osm')===o[0]?' selected':''}>${o[1]}</option>`).join('')}
-    </select><div style="font-size:10px;color:var(--text3);margin-top:3px">OpenTopoMap peut être lent ; Stamen (aquarelle/toner) peuvent afficher un filigrane à fort trafic. Les plus fiables sans compte : Carto et Esri.</div></div>
+      ${[['osm','OpenStreetMap (standard)'],['osmfr','OpenStreetMap France (labels FR)'],['humanitarian','Humanitarian (clair, épuré)'],['cyclosm','CyclOSM (détaillé, cyclable)'],['topo','OpenTopoMap (topographique)']].map(o=>`<option value="${o[0]}"${(ev.expMapStyle||'osm')===o[0]?' selected':''}>${o[1]}</option>`).join('')}
+    </select><div style="font-size:10px;color:var(--text3);margin-top:3px">Fonds gratuits sans clé API. Serveurs communautaires OSM : adaptés à un trafic léger/modéré (recommandé pour TourMaG).</div></div>
+    <div class="form-row"><label class="form-label"><input type="checkbox" id="exp-map-grayscale" ${ev.expMapGrayscale===true?'checked':''} style="margin-right:6px">Fond de carte en noir & blanc <span style="font-weight:400;color:var(--text3);font-size:12px">(look « carnet de route »)</span></label></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Label live pill</label><input class="form-input" id="exp-live-label" value="${(exp.liveLabel||'').replace(/"/g,'&quot;')}" placeholder="En direct"></div>
       <div class="form-row"><label class="form-label">Crédits footer</label><input class="form-input" id="exp-footer-credits" value="${(exp.footerCredits||'').replace(/"/g,'&quot;')}"></div>
@@ -7230,7 +7231,8 @@ async function saveExpeditionSettings(){
     'expedition.mapNote': document.getElementById('exp-map-note').value.trim(),
     'expedition.liveLabel': document.getElementById('exp-live-label').value.trim(),
     'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim(),
-    expMapStyle: document.getElementById('exp-map-style')?.value||'osm'
+    expMapStyle: document.getElementById('exp-map-style')?.value||'osm',
+    expMapGrayscale: document.getElementById('exp-map-grayscale')?.checked===true
   });
   toast('Paramètres expédition enregistrés');
 }
