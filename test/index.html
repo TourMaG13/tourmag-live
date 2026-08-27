@@ -270,7 +270,7 @@ img{display:block}a{text-decoration:none}
 
 /* ===== Mode EXPÉDITION — quiz & questions dans l'esprit "carnet de route" ===== */
 /* Questions */
-.qa-exp{max-width:none;margin:0;padding:0;background:none}
+.qa-exp{max-width:1200px;margin:0 auto;padding:0 32px 48px;background:none}
 .qa-exp .qa-form{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;padding:20px 22px;margin:0 0 26px 0;position:relative}
 .qa-exp .qa-input,.qa-exp .qa-name-input{background:#fff;border:1px solid var(--exp-line);border-radius:0;color:var(--exp-ink);font-family:'Archivo',sans-serif}
 .qa-exp .qa-input:focus,.qa-exp .qa-name-input:focus{border-color:var(--exp-accent)}
@@ -293,7 +293,7 @@ img{display:block}a{text-decoration:none}
 .qa-exp .qa-more:hover{background:var(--exp-ink);color:#fff}
 
 /* Quiz / Sondage */
-.quiz-exp{max-width:none;margin:0;padding:0;background:none;border-radius:0}
+.quiz-exp{max-width:1200px;margin:0 auto;padding:0 32px 48px;background:none;border-radius:0}
 .quiz-exp::before{display:none}
 .quiz-exp .quiz-q{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;box-shadow:none;padding:24px 26px;margin-bottom:22px;position:relative;overflow:hidden}
 .quiz-exp .quiz-q::after{content:attr(data-qnum);position:absolute;top:-14px;right:14px;font-family:'Libre Caslon Display',serif;font-size:82px;color:var(--exp-accent);opacity:.06;line-height:1;pointer-events:none}
@@ -314,6 +314,7 @@ img{display:block}a{text-decoration:none}
 .quiz-exp .quiz-change{border:1px solid var(--exp-ink);color:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
 .quiz-exp .quiz-change:hover{background:var(--exp-ink);color:#fff}
 .quiz-exp .quiz-total{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:var(--exp-grey);font-weight:400}
+@media(max-width:768px){.qa-exp,.quiz-exp{padding:0 20px 40px}}
 .live-title{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);line-height:1.25;margin-bottom:4px}
 .live-text p{margin-bottom:4px}.live-text p:last-child{margin-bottom:0}
 .live-text strong{font-weight:600}
@@ -665,7 +666,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
 .exp-map-wrap{position:relative;overflow:hidden}
 #exp-routemap{height:520px;border:1px solid var(--exp-ink)}
-#exp-routemap .leaflet-tile-pane{filter:grayscale(1) contrast(1.04)}
+#exp-routemap .leaflet-tile-pane{filter:grayscale(1) contrast(.9) brightness(1.08)}
 .exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;line-height:1.4;min-width:170px}
 .exp-map-legend b{font-family:'Archivo',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--exp-line)}
 .exp-lg-row{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -3221,8 +3222,8 @@ function renderExpedition(data){
 
     const map = L.map('exp-routemap', {scrollWheelZoom:false});
     _expMapInstance = map;
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution:'© OpenStreetMap © CARTO', maxZoom:12
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap', maxZoom:19
     }).addTo(map);
 
     // Build ordered waypoint chain (handles both stop & route étapes)
