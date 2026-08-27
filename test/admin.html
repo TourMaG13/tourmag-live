@@ -1989,7 +1989,7 @@ function moduleSettingsPanel(type, ev){
     // Fond des boîtes de citation (style classique / expédition) + titre de rubrique (taille & police).
     var _citCardBgSet = !!ev.citationCardBg;
     s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:240px"><label class="form-label">Fond des boîtes de citation</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="app-cit-card-bg-on" '+(_citCardBgSet?'checked':'')+' onchange="document.getElementById(\'app-cit-card-bg\').disabled=!this.checked"><input type="color" id="app-cit-card-bg" value="'+(ev.citationCardBg||'#0F2B3C')+'" '+(_citCardBgSet?'':'disabled')+' style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = fond par défaut du thème.</div></div></div>';
-    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:160px"><label class="form-label">Taille titre rubrique (px)</label><input type="number" class="form-input" id="app-cit-title-size" value="'+(ev.citationTitleSize||'')+'" min="12" max="48" placeholder="défaut" style="width:90px"></div><div class="form-row"><label class="form-label">Police titre rubrique</label><select class="form-input" id="app-cit-title-font" style="width:200px">'+_fontOpts(ev.citationTitleFont||'')+'</select></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = suit la typographie globale (onglet Design).</div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:160px"><label class="form-label">Taille nom de rubrique (px)</label><input type="number" class="form-input" id="app-cit-title-size" value="'+(ev.citationTitleSize||'')+'" min="10" max="48" placeholder="défaut" style="width:90px"></div><div class="form-row"><label class="form-label">Police nom de rubrique</label><select class="form-input" id="app-cit-title-font" style="width:200px">'+_fontOpts(ev.citationTitleFont||'')+'</select></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Nom affiché au-dessus d\'un groupe de citations classées par rubrique. Vide = suit la typographie globale (onglet Design).</div></div>';
     return s;
   }
   if(type==='articles'){
@@ -7108,6 +7108,9 @@ function renderEtapes(el){
       <div class="form-row"><label class="form-label">Sous-titre carte</label><input class="form-input" id="exp-map-sub" value="${(exp.mapSubtitle||'').replace(/"/g,'&quot;')}"></div>
     </div>
     <div class="form-row"><label class="form-label">Note sous la carte <span style="font-weight:400;color:var(--text3);font-size:12px">(petite note affichée sous la carte)</span></label><textarea class="form-input" id="exp-map-note" rows="2" placeholder="Ex : Tracé indicatif — positions actualisées chaque jour">${(exp.mapNote||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="form-row"><label class="form-label">Fond de carte</label><select class="form-input" id="exp-map-style" style="max-width:320px">
+      ${[['osm','OpenStreetMap (coloré, détaillé)'],['positron','Carto Positron (clair épuré)'],['voyager','Carto Voyager (clair, routes colorées)'],['dark','Carto Dark Matter (sombre)'],['satellite','Esri — Satellite'],['terrain','Esri — Relief'],['topo','OpenTopoMap (topographique)'],['watercolor','Stamen Watercolor (aquarelle)'],['toner','Stamen Toner Lite (noir & blanc)']].map(o=>`<option value="${o[0]}"${(ev.expMapStyle||'osm')===o[0]?' selected':''}>${o[1]}</option>`).join('')}
+    </select><div style="font-size:10px;color:var(--text3);margin-top:3px">OpenTopoMap peut être lent ; Stamen (aquarelle/toner) peuvent afficher un filigrane à fort trafic. Les plus fiables sans compte : Carto et Esri.</div></div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Label live pill</label><input class="form-input" id="exp-live-label" value="${(exp.liveLabel||'').replace(/"/g,'&quot;')}" placeholder="En direct"></div>
       <div class="form-row"><label class="form-label">Crédits footer</label><input class="form-input" id="exp-footer-credits" value="${(exp.footerCredits||'').replace(/"/g,'&quot;')}"></div>
@@ -7226,7 +7229,8 @@ async function saveExpeditionSettings(){
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
     'expedition.mapNote': document.getElementById('exp-map-note').value.trim(),
     'expedition.liveLabel': document.getElementById('exp-live-label').value.trim(),
-    'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim()
+    'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim(),
+    expMapStyle: document.getElementById('exp-map-style')?.value||'osm'
   });
   toast('Paramètres expédition enregistrés');
 }
