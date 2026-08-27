@@ -2911,8 +2911,10 @@ function renderModules(el){
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
   const orderedKeys=[...blockOrder];
-  const migIdx=orderedKeys.indexOf('essential');
-  if(migIdx>=0){orderedKeys.splice(migIdx,1);const ti=orderedKeys.indexOf('timeline');if(ti>=0)orderedKeys.splice(ti,1);if(!orderedKeys.includes('hero'))orderedKeys.unshift('hero');}
+  // Nettoyage : on retire l'ancien bloc 'timeline' (supprimé) et on garantit la présence de 'hero'.
+  // NB : on ne touche PAS à 'essential' — il doit conserver sa position sauvegardée (sinon il "saute" en bas à chaque rendu).
+  const ti=orderedKeys.indexOf('timeline');if(ti>=0)orderedKeys.splice(ti,1);
+  if(!orderedKeys.includes('hero'))orderedKeys.unshift('hero');
   allBlocks.forEach(b=>{if(!orderedKeys.includes(b.key))orderedKeys.push(b.key);});
   const validKeys=orderedKeys.filter(k=>blockMap[k]);
 
