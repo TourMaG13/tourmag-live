@@ -10,11 +10,16 @@
   <script>
   window.addEventListener('message',function(e){
     if(!e.data) return;
+    var f=document.getElementById('tourmag-live-v2-w');
     if(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight'){
-      document.getElementById('tourmag-live-v2-w').style.height=e.data.height+'px';
+      // Applique la hauteur EXACTE reçue (y compris plus petite) pour éviter les zones blanches
+      if(f) f.style.height=e.data.height+'px';
+    }
+    if(e.data.type==='tourmag-live-scrolltop'){
+      // L'utilisateur a changé de phase : on remonte en haut de l'iframe si on était plus bas
+      if(f){ var top=f.getBoundingClientRect().top+window.pageYOffset-20; if(window.pageYOffset>top) window.scrollTo({top:top,behavior:'smooth'}); }
     }
     if(e.data.type==='tourmag-live-fullwidth'){
-      var f=document.getElementById('tourmag-live-v2-w');
       if(f){f.style.width='100vw';f.style.maxWidth='none';f.style.position='relative';f.style.left='50%';f.style.transform='translateX(-50%)';}
     }
     if(e.data.type==='tourmag-live-nooverflow'){
@@ -2393,6 +2398,10 @@ window._switchPhase = function(e, phaseId){
   window.history.replaceState({}, '', url.toString());
   // Re-render with current data
   if(window._rtState) render(window._rtState);
+  // Recalcule la hauteur de l'iframe (la nouvelle phase peut être plus courte → évite la zone blanche)
+  if(typeof window._tmgResize==='function'){ window._tmgResize(); requestAnimationFrame(window._tmgResize); setTimeout(window._tmgResize,150); }
+  // Remonte le parent en haut du bloc si besoin (au cas où on était scrollé bas)
+  window.parent.postMessage({type:'tourmag-live-scrolltop'},'*');
 };
 
 // ============================================================
@@ -4019,7 +4028,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); }
 
   ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
   ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
@@ -4054,10 +4063,25 @@ async function init(){
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
 
 // IFRAME RESIZE + FULL-WIDTH
+var _lastSentH=0, _hScheduled=false;
+function _computeH(){
+  // Hauteur réelle du contenu. On lit UNIQUEMENT scrollHeight du body pour éviter
+  // qu'une valeur transitoirement gonflée (animation, ancien contenu) reste figée.
+  return Math.max(document.body.scrollHeight, document.body.offsetHeight);
+}
 function sendHeight(){
-  const h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,document.documentElement.offsetHeight);
+  const h=_computeH();
+  // N'émet que si la hauteur a réellement changé (>2px) → évite le flood de postMessage
+  if(Math.abs(h-_lastSentH)<=2) return;
+  _lastSentH=h;
   window.parent.postMessage({type:'tourmag-live-resize',height:h},'*');
   window.parent.postMessage({type:'setHeight',height:h},'*');
+}
+// Throttle : au plus une mesure par frame d'affichage
+function scheduleHeight(){
+  if(_hScheduled) return;
+  _hScheduled=true;
+  requestAnimationFrame(()=>{ _hScheduled=false; sendHeight(); });
 }
 function requestFullWidth(){
   window.parent.postMessage({type:'tourmag-live-fullwidth'},'*');
@@ -4067,11 +4091,18 @@ window.addEventListener('load',()=>{
   document.documentElement.style.overflowY='visible';document.documentElement.style.overflowX='hidden';document.body.style.overflowY='visible';document.body.style.overflowX='hidden';
   sendHeight();
   requestFullWidth();
-  [100,300,600,1000,2000,4000].forEach(d=>setTimeout(()=>{sendHeight();requestFullWidth();},d));
-  new MutationObserver(()=>{sendHeight();setTimeout(sendHeight,100);}).observe(document.body,{childList:true,subtree:true,attributes:true});
-  new ResizeObserver(sendHeight).observe(document.body);
-  setInterval(sendHeight,1500);
+  // Quelques mesures échelonnées le temps que polices/images se chargent
+  [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
+  // Changements de structure (ajout/suppression de blocs, changement de phase) → throttlé
+  new MutationObserver(scheduleHeight).observe(document.body,{childList:true,subtree:true});
+  // Redimensionnement réel du body → throttlé
+  if(window.ResizeObserver){ new ResizeObserver(scheduleHeight).observe(document.body); }
+  // Recalcul quand on revient sur l'onglet (corrige la latence au retour)
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ _lastSentH=0; scheduleHeight(); } });
+  window.addEventListener('pageshow',()=>{ _lastSentH=0; scheduleHeight(); });
 });
+// Recalcul forcé après chaque rendu temps réel (exposé pour rtRender)
+window._tmgResize=function(){ _lastSentH=0; scheduleHeight(); };
 </script>
 </body>
 </html>
