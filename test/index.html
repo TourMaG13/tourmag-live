@@ -3396,7 +3396,16 @@ function renderExpedition(data){
       fg.on('click', function(){ openExpMapPanel(et); });
     }
 
-    if(allCoords.length) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+    if(allCoords.length){
+      const b=L.latLngBounds(allCoords);
+      if(allCoords.length===1){
+        // Un seul point : vue régionale, pas de zoom maximal
+        map.setView(allCoords[0], 9);
+      } else {
+        // Plusieurs points : on cadre avec de la marge et on plafonne le zoom
+        map.fitBounds(b.pad(0.25), {maxZoom:10, padding:[40,40]});
+      }
+    }
 
     // ===== ANIMATED DIRECTION ARROW =====
     // Build continuous path from chain (skip zero-length hops)
@@ -3886,7 +3895,11 @@ window._quizPick = {};       // { quizId__qId : Set(optId) } sélection avant en
 async function _loadQuizVotes(eventId){
   window._eventIdForQuiz = eventId;
   const uid = await _likeAuthReady;
-  db.collection('events').doc(eventId).collection('quizVotes').onSnapshot(snap=>{
+  var _lastTallyJSON = '';
+  db.collection('events').doc(eventId).collection('quizVotes').onSnapshot({includeMetadataChanges:false}, snap=>{
+    // Ignore les événements "locaux" (écriture optimiste pas encore confirmée) et de métadonnées :
+    // ils ne changent pas les compteurs et provoquaient des recalculs en rafale après un vote.
+    if(snap.metadata.hasPendingWrites) return;
     const tally={}, totals={}, mine={};
     snap.forEach(d=>{
       const data=d.data()||{};
@@ -3902,6 +3915,10 @@ async function _loadQuizVotes(eventId){
       if(uid && d.id===uid+'_'+quizId){ mine[quizId]=answers; }
     });
     window._quizTally=tally; window._quizTotals=totals; window._quizMyVote=mine;
+    // N'actualise l'affichage que si les résultats ont réellement changé
+    const j=JSON.stringify({tally,totals,mine});
+    if(j===_lastTallyJSON) return;
+    _lastTallyJSON=j;
     _refreshQuizResults();
   }, err=>console.warn('[TourMaG Live] quiz votes error:', err.message));
 }
