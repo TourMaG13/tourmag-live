@@ -3234,22 +3234,18 @@ function renderExpedition(data){
 
     const map = L.map('exp-routemap', {scrollWheelZoom:false});
     _expMapInstance = map;
-    // Fonds de carte disponibles (tuiles gratuites, sans clé API). Défaut = OpenStreetMap.
+    // Fonds de carte disponibles — serveurs communautaires OSM, sans clé API (usage léger/modéré).
     const BASEMAPS = {
-      osm:        {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap', maxZoom:19}},
-      positron:   {url:'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
-      voyager:    {url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
-      dark:       {url:'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
-      satellite:  {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'© Esri, Maxar, Earthstar Geographics', maxZoom:19}},
-      terrain:    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'© Esri', maxZoom:13}},
-      topo:       {url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap, SRTM © OpenTopoMap', subdomains:'abc', maxZoom:17}},
-      watercolor: {url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:16}},
-      toner:      {url:'https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:20}}
+      osm:          {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap', maxZoom:19}},
+      osmfr:        {url:'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap France', subdomains:'abc', maxZoom:20}},
+      humanitarian: {url:'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap, Humanitarian OSM Team', subdomains:'abc', maxZoom:20}},
+      cyclosm:      {url:'https://{s}.tile.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', opts:{attribution:'© CyclOSM, © OpenStreetMap', subdomains:'abc', maxZoom:20}},
+      topo:         {url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap, SRTM © OpenTopoMap', subdomains:'abc', maxZoom:17}}
     };
     const _mapStyle = event.expMapStyle || 'osm';
     const _bm = BASEMAPS[_mapStyle] || BASEMAPS.osm;
-    // Le filtre niveaux de gris (look carnet) ne s'applique qu'au fond OSM par défaut.
-    document.getElementById('exp-routemap').classList.toggle('map-grayscale', _mapStyle === 'osm');
+    // Filtre noir & blanc « carnet » : réglage indépendant, applicable à n'importe quel fond.
+    document.getElementById('exp-routemap').classList.toggle('map-grayscale', event.expMapGrayscale === true);
     L.tileLayer(_bm.url, _bm.opts).addTo(map);
 
     // Build ordered waypoint chain (handles both stop & route étapes)
