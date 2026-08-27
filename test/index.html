@@ -3980,18 +3980,11 @@ function mkQuizBlock(opts){
 }
 
 async function init(){
-  const _qs = new URLSearchParams(window.location.search);
-  const eventId = _qs.get('event');
-  // Interrupteurs de diagnostic (à retirer une fois la cause trouvée) :
-  window._DIAG = {
-    noquiz: _qs.has('noquiz'),          // coupe le listener temps réel des votes de quiz
-    noresize: _qs.has('noresize'),      // coupe l'observer de hauteur / hooks resize
-    norealtime: _qs.has('norealtime')   // coupe toutes les mises à jour temps réel
-  };
+  const eventId = new URLSearchParams(window.location.search).get('event');
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
   _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
   window._eventIdForQuestions = eventId; // Q&A — cible des soumissions
-  if(!window._DIAG.noquiz) _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
+  _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
   const ec=db.collection('events').doc(eventId);
   const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS,qS,qzS] = await Promise.all([
     ec.get(),
@@ -4037,7 +4030,6 @@ async function init(){
   window._rtState = rtState;
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); }
 
-  if(!window._DIAG.norealtime){
   ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
   ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('articles').onSnapshot(snap=>{rtState.articles=toArr(snap).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));rtRender();});
@@ -4049,12 +4041,11 @@ async function init(){
   ec.collection('interviews').onSnapshot(snap=>{rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('etapes').onSnapshot(snap=>{rtState.etapes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
-  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
+  ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
   ec.onSnapshot(snap=>{if(snap.exists){rtState.event=snap.data();rtRender();}});
   try{
     db.collection('journalists').onSnapshot(snap=>{_allGlobalJournalists=toArr(snap);rtRender();},err=>console.warn('[TourMaG Live] journalists error:',err.message));
   }catch(e){console.warn('[TourMaG Live] Cannot subscribe to journalists:',e.message);}
-  }
 
   // Scheduling check every 30s
   var _lastScheduleCheck=Date.now();
@@ -4098,14 +4089,17 @@ window.addEventListener('load',()=>{
   sendHeight();
   requestFullWidth();
   [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
-  if(window._DIAG && window._DIAG.noresize){ return; } // diagnostic : pas d'observer de hauteur
+  // On observe seulement l'ajout/suppression de blocs (structure), PAS les attributs/styles.
+  // Les animations (barres de quiz) ne déclenchent donc plus de recalcul.
   new MutationObserver(scheduleHeight).observe(document.body,{childList:true,subtree:true});
+  // ResizeObserver volontairement NON utilisé sur body : il se déclenche à chaque frame
+  // d'animation interne et provoquait le blocage du scroll après un vote.
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ _lastSentH=0; scheduleHeight(); } });
   window.addEventListener('pageshow',()=>{ _lastSentH=0; scheduleHeight(); });
-  window.addEventListener('resize',scheduleHeight);
+  window.addEventListener('resize',scheduleHeight); // vrai redimensionnement de la fenêtre
 });
-// Recalcul forcé après un rendu. Neutralisé en mode diagnostic noresize.
-window._tmgResize=function(){ if(window._DIAG && window._DIAG.noresize) return; _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
+// Recalcul forcé après un rendu (changement de phase, temps réel). Mesure unique différée.
+window._tmgResize=function(){ _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
 </script>
 </body>
 </html>
