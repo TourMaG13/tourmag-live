@@ -414,7 +414,9 @@ img{display:block}a{text-decoration:none}
 
 .citation-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media(max-width:768px){.citation-grid{grid-template-columns:1fr}}
-.citation-card{background:var(--pri);border-radius:14px;padding:20px 18px;position:relative;overflow:hidden;border-left:3px solid var(--acc)}
+.citation-card{background:var(--cit-card-bg,var(--pri));border-radius:14px;padding:20px 18px;position:relative;overflow:hidden;border-left:3px solid var(--acc)}
+/* Override direct (onglet Apparence) du titre de rubrique des citations. Vide => revient au réglage typo/défaut. */
+.sec-title-citations h2,.exp-sec-citations h2{font-size:var(--cit-title-size,revert);font-family:var(--cit-title-font,revert)}
 .citation-card::before{content:'\201C';position:absolute;top:6px;left:12px;font-family:'Playfair Display',Georgia,serif;font-size:80px;color:rgba(232,132,44,.08);line-height:1;pointer-events:none}
 .citation-card::after{content:'\201D';position:absolute;bottom:-16px;right:16px;font-family:'Playfair Display',Georgia,serif;font-size:80px;color:rgba(232,132,44,.05);line-height:1;pointer-events:none}
 .citation-text{font-size:12px;line-height:1.7;color:rgba(255,255,255,.8);font-style:italic;position:relative;z-index:1;margin-bottom:12px;padding-left:10px}
@@ -853,7 +855,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 /* Verbatims section */
 .exp-verbatims{max-width:1200px;margin:0 auto;padding:0 32px 48px}
 .exp-verbatim-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:38px}
-.exp-verbatim-card{border-left:var(--cit-bw,2.5px) solid var(--cit-accent,var(--exp-accent));padding:28px 26px 22px 26px;background:var(--exp-stone);position:relative;overflow:hidden}
+.exp-verbatim-card{border-left:var(--cit-bw,2.5px) solid var(--cit-accent,var(--exp-accent));padding:28px 26px 22px 26px;background:var(--cit-card-bg,var(--exp-stone));position:relative;overflow:hidden}
 .exp-verbatim-card::before{content:'\201C';position:absolute;top:-10px;left:12px;font-family:'Libre Caslon Display',serif;font-size:130px;color:var(--cit-accent,var(--exp-accent));opacity:.18;line-height:1;pointer-events:none}
 .exp-verbatim-card::after{content:'\201D';position:absolute;bottom:-50px;right:12px;font-family:'Libre Caslon Display',serif;font-size:130px;color:var(--cit-accent,var(--exp-accent));opacity:.1;line-height:1;pointer-events:none}
 .exp-verbatim-text{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:var(--cit-ts,15px);line-height:1.65;color:var(--exp-ink);margin-bottom:14px}
@@ -1521,7 +1523,7 @@ function render(data){
     const _T = window.TourMagTypo;
     const _rawTypo = _T.getModeTypoRaw(event);           // uniquement les champs réglés
     // Polices Google à charger (zones + modules + police du titre de phase)
-    const _fontsToLoad = _T.collectFonts(_rawTypo, [ (event.phaseTitle||{}).font || '' ]);
+    const _fontsToLoad = _T.collectFonts(_rawTypo, [ (event.phaseTitle||{}).font || '', event.citationTitleFont || '' ]);
     if(_fontsToLoad.length){
       const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
       let gfLink = document.getElementById('gf-typo');
@@ -1550,6 +1552,15 @@ function render(data){
   document.documentElement.style.setProperty('--cit-bw', (event.citationBorderWidth || 2.5) + 'px');
   document.documentElement.style.setProperty('--cit-ns', (event.citationNameSize || (_isExp ? 13 : 12)) + 'px');
   document.documentElement.style.setProperty('--cit-rs', (event.citationRoleSize || (_isExp ? 11 : 10)) + 'px');
+  // Fond des boîtes de citation (classique .citation-card / expédition .exp-verbatim-card).
+  // Vide => on garde le défaut du thème (var(--pri) / var(--exp-stone)).
+  if(event.citationCardBg){ document.documentElement.style.setProperty('--cit-card-bg', event.citationCardBg); }
+  else { document.documentElement.style.removeProperty('--cit-card-bg'); }
+  // Titre de la rubrique de citations : taille + police (override direct depuis l'onglet Apparence).
+  if(event.citationTitleSize){ document.documentElement.style.setProperty('--cit-title-size', event.citationTitleSize + 'px'); }
+  else { document.documentElement.style.removeProperty('--cit-title-size'); }
+  if(event.citationTitleFont){ document.documentElement.style.setProperty('--cit-title-font', "'"+event.citationTitleFont+"'"); }
+  else { document.documentElement.style.removeProperty('--cit-title-font'); }
   // Article title size
   const _artTs = event.articlesTitleSize || 14;
   document.documentElement.style.setProperty('--art-ts', _artTs + 'px');
