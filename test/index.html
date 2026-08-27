@@ -271,7 +271,7 @@ img{display:block}a{text-decoration:none}
 /* ===== Mode EXPÉDITION — quiz & questions dans l'esprit "carnet de route" ===== */
 /* Questions */
 .qa-exp{max-width:1200px;margin:0 auto;padding:0 32px 48px;background:none}
-.qa-exp .qa-form{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;padding:20px 22px;margin:0 0 26px 0;position:relative}
+.qa-exp .qa-form{background:var(--qa-form-bg,linear-gradient(180deg,#fffdf9 0%,var(--exp-stone,#f5f3f0) 100%));border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:3px;box-shadow:0 6px 22px -12px rgba(60,40,20,.35),0 1px 2px rgba(60,40,20,.06);padding:20px 22px;margin:0 0 26px 0;position:relative}
 .qa-exp .qa-input,.qa-exp .qa-name-input{background:#fff;border:1px solid var(--exp-line);border-radius:0;color:var(--exp-ink);font-family:'Archivo',sans-serif}
 .qa-exp .qa-input:focus,.qa-exp .qa-name-input:focus{border-color:var(--exp-accent)}
 .qa-exp .qa-input{font-size:14.5px}
@@ -295,7 +295,7 @@ img{display:block}a{text-decoration:none}
 /* Quiz / Sondage */
 .quiz-exp{max-width:1200px;margin:0 auto;padding:0 32px 48px;background:none;border-radius:0}
 .quiz-exp::before{display:none}
-.quiz-exp .quiz-q{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;box-shadow:none;padding:24px 26px;margin-bottom:22px;position:relative;overflow:hidden}
+.quiz-exp .quiz-q{background:var(--quiz-card-bg,linear-gradient(180deg,#fffdf9 0%,var(--exp-stone,#f5f3f0) 100%));border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:3px;box-shadow:0 6px 22px -12px rgba(60,40,20,.35),0 1px 2px rgba(60,40,20,.06);padding:24px 26px;margin-bottom:22px;position:relative;overflow:hidden}
 .quiz-exp .quiz-q::after{content:attr(data-qnum);position:absolute;top:-14px;right:14px;font-family:'Libre Caslon Display',serif;font-size:82px;color:var(--exp-accent);opacity:.06;line-height:1;pointer-events:none}
 .quiz-exp .quiz-q-head{gap:12px}
 .quiz-exp .quiz-q-badge{background:transparent;color:var(--exp-accent);box-shadow:none;border:1px solid var(--exp-accent);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;padding:3px 9px}
@@ -415,8 +415,9 @@ img{display:block}a{text-decoration:none}
 .citation-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media(max-width:768px){.citation-grid{grid-template-columns:1fr}}
 .citation-card{background:var(--cit-card-bg,var(--pri));border-radius:14px;padding:20px 18px;position:relative;overflow:hidden;border-left:3px solid var(--acc)}
-/* Override direct (onglet Apparence) du titre de rubrique des citations. Vide => revient au réglage typo/défaut. */
-.sec-title-citations h2,.exp-sec-citations h2{font-size:var(--cit-title-size,revert);font-family:var(--cit-title-font,revert)}
+/* Override direct (onglet Apparence) du NOM DE RUBRIQUE des citations (badge/en-tête de groupe).
+   Vide => revient au réglage typo/défaut. Cible : rubrique classique + badges premium/vedette. */
+.rubrique-name,.citation-card-pm .cit-pm-badge,.cit-pm-badge,.cit-hero-badge{font-size:var(--cit-title-size,revert);font-family:var(--cit-title-font,revert)}
 .citation-card::before{content:'\201C';position:absolute;top:6px;left:12px;font-family:'Playfair Display',Georgia,serif;font-size:80px;color:rgba(232,132,44,.08);line-height:1;pointer-events:none}
 .citation-card::after{content:'\201D';position:absolute;bottom:-16px;right:16px;font-family:'Playfair Display',Georgia,serif;font-size:80px;color:rgba(232,132,44,.05);line-height:1;pointer-events:none}
 .citation-text{font-size:12px;line-height:1.7;color:rgba(255,255,255,.8);font-style:italic;position:relative;z-index:1;margin-bottom:12px;padding-left:10px}
@@ -3233,9 +3234,20 @@ function renderExpedition(data){
 
     const map = L.map('exp-routemap', {scrollWheelZoom:false});
     _expMapInstance = map;
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:'© OpenStreetMap', maxZoom:19
-    }).addTo(map);
+    // Fonds de carte disponibles (tuiles gratuites, sans clé API). Défaut = OpenStreetMap.
+    const BASEMAPS = {
+      osm:        {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap', maxZoom:19}},
+      positron:   {url:'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
+      voyager:    {url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
+      dark:       {url:'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', opts:{attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:20}},
+      satellite:  {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'© Esri, Maxar, Earthstar Geographics', maxZoom:19}},
+      terrain:    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}', opts:{attribution:'© Esri', maxZoom:13}},
+      topo:       {url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', opts:{attribution:'© OpenStreetMap, SRTM © OpenTopoMap', subdomains:'abc', maxZoom:17}},
+      watercolor: {url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:16}},
+      toner:      {url:'https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:20}}
+    };
+    const _bm = BASEMAPS[event.expMapStyle] || BASEMAPS.osm;
+    L.tileLayer(_bm.url, _bm.opts).addTo(map);
 
     // Build ordered waypoint chain (handles both stop & route étapes)
     const chain = [];
