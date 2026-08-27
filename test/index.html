@@ -669,7 +669,7 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-section-sub{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey);font-size:15.5px;margin-bottom:38px}
 .exp-map-wrap{position:relative;overflow:hidden}
 #exp-routemap{height:520px;border:1px solid var(--exp-ink)}
-#exp-routemap .leaflet-tile-pane{filter:grayscale(1) contrast(.9) brightness(1.08)}
+#exp-routemap.map-grayscale .leaflet-tile-pane{filter:grayscale(1) contrast(.9) brightness(1.08)}
 .exp-map-legend{position:absolute;bottom:18px;left:18px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--exp-line);padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;line-height:1.4;min-width:170px}
 .exp-map-legend b{font-family:'Archivo',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--exp-line)}
 .exp-lg-row{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -3246,7 +3246,10 @@ function renderExpedition(data){
       watercolor: {url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:16}},
       toner:      {url:'https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png', opts:{attribution:'© Stadia Maps, Stamen Design, OpenStreetMap', maxZoom:20}}
     };
-    const _bm = BASEMAPS[event.expMapStyle] || BASEMAPS.osm;
+    const _mapStyle = event.expMapStyle || 'osm';
+    const _bm = BASEMAPS[_mapStyle] || BASEMAPS.osm;
+    // Le filtre niveaux de gris (look carnet) ne s'applique qu'au fond OSM par défaut.
+    document.getElementById('exp-routemap').classList.toggle('map-grayscale', _mapStyle === 'osm');
     L.tileLayer(_bm.url, _bm.opts).addTo(map);
 
     // Build ordered waypoint chain (handles both stop & route étapes)
