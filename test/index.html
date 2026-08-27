@@ -244,7 +244,7 @@ img{display:block}a{text-decoration:none}
 .quiz-q-text{font-size:16px;font-weight:700;color:var(--text,#1a1a1a);line-height:1.35}
 .quiz-hint{font-size:11px;color:var(--text3,#888);margin:5px 0 13px;font-style:italic}
 .quiz-opts{display:flex;flex-direction:column;gap:9px}
-.quiz-opt{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--bg,#fafafa);border:1.5px solid var(--border,#e5e5e5);border-radius:12px;padding:12px 15px;font-family:inherit;font-size:14px;color:var(--text,#1a1a1a);cursor:pointer;overflow:hidden;transition:transform .12s,border-color .15s,box-shadow .15s}
+.quiz-opt{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--bg,#fafafa);border:1.5px solid var(--border,#e5e5e5);border-radius:12px;padding:12px 15px;font-family:inherit;font-size:14px;color:var(--text,#1a1a1a);cursor:pointer;overflow:hidden;contain:layout paint;transition:transform .12s,border-color .15s,box-shadow .15s}
 .quiz-opt:hover{border-color:var(--quiz-accent,#10B981);transform:translateX(3px)}
 .quiz-opt.selected{border-color:var(--quiz-accent,#10B981);background:color-mix(in srgb,var(--quiz-accent,#10B981) 8%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--quiz-accent,#10B981) 15%,transparent)}
 .quiz-bar{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,color-mix(in srgb,var(--quiz-accent,#10B981) 22%,transparent),color-mix(in srgb,var(--quiz-accent,#10B981) 9%,transparent));transition:width .6s cubic-bezier(.34,1.56,.64,1);z-index:0}
@@ -4063,25 +4063,22 @@ async function init(){
 init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div class="ld" style="color:#DC2626">Erreur — voir console</div>'});
 
 // IFRAME RESIZE + FULL-WIDTH
-var _lastSentH=0, _hScheduled=false;
+var _lastSentH=0, _hTimer=null;
 function _computeH(){
-  // Hauteur réelle du contenu. On lit UNIQUEMENT scrollHeight du body pour éviter
-  // qu'une valeur transitoirement gonflée (animation, ancien contenu) reste figée.
   return Math.max(document.body.scrollHeight, document.body.offsetHeight);
 }
 function sendHeight(){
   const h=_computeH();
-  // N'émet que si la hauteur a réellement changé (>2px) → évite le flood de postMessage
-  if(Math.abs(h-_lastSentH)<=2) return;
+  if(Math.abs(h-_lastSentH)<=2) return; // rien d'utile à envoyer
   _lastSentH=h;
   window.parent.postMessage({type:'tourmag-live-resize',height:h},'*');
   window.parent.postMessage({type:'setHeight',height:h},'*');
 }
-// Throttle : au plus une mesure par frame d'affichage
+// Debounce : on attend que ça se calme (fin des animations) avant de mesurer UNE fois.
+// Lire scrollHeight force un reflow ; en debounçant on évite de le faire à chaque frame.
 function scheduleHeight(){
-  if(_hScheduled) return;
-  _hScheduled=true;
-  requestAnimationFrame(()=>{ _hScheduled=false; sendHeight(); });
+  if(_hTimer) return; // une mesure est déjà programmée
+  _hTimer=setTimeout(()=>{ _hTimer=null; sendHeight(); }, 120);
 }
 function requestFullWidth(){
   window.parent.postMessage({type:'tourmag-live-fullwidth'},'*');
@@ -4091,18 +4088,18 @@ window.addEventListener('load',()=>{
   document.documentElement.style.overflowY='visible';document.documentElement.style.overflowX='hidden';document.body.style.overflowY='visible';document.body.style.overflowX='hidden';
   sendHeight();
   requestFullWidth();
-  // Quelques mesures échelonnées le temps que polices/images se chargent
   [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
-  // Changements de structure (ajout/suppression de blocs, changement de phase) → throttlé
+  // On observe seulement l'ajout/suppression de blocs (structure), PAS les attributs/styles.
+  // Les animations (barres de quiz) ne déclenchent donc plus de recalcul.
   new MutationObserver(scheduleHeight).observe(document.body,{childList:true,subtree:true});
-  // Redimensionnement réel du body → throttlé
-  if(window.ResizeObserver){ new ResizeObserver(scheduleHeight).observe(document.body); }
-  // Recalcul quand on revient sur l'onglet (corrige la latence au retour)
+  // ResizeObserver volontairement NON utilisé sur body : il se déclenche à chaque frame
+  // d'animation interne et provoquait le blocage du scroll après un vote.
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ _lastSentH=0; scheduleHeight(); } });
   window.addEventListener('pageshow',()=>{ _lastSentH=0; scheduleHeight(); });
+  window.addEventListener('resize',scheduleHeight); // vrai redimensionnement de la fenêtre
 });
-// Recalcul forcé après chaque rendu temps réel (exposé pour rtRender)
-window._tmgResize=function(){ _lastSentH=0; scheduleHeight(); };
+// Recalcul forcé après un rendu (changement de phase, temps réel). Mesure unique différée.
+window._tmgResize=function(){ _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
 </script>
 </body>
 </html>
