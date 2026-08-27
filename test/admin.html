@@ -1985,7 +1985,11 @@ function moduleSettingsPanel(type, ev){
     s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Style</div>';
     s+='<div class="form-row-inline"><div class="form-row"'+(isExp?' style="display:none"':'')+'><label class="form-label">Style</label><select class="form-input" id="app-cit-style" style="width:180px"><option value="classic"'+((ev.citationStyle||'classic')==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(ev.citationStyle==='premium'?' selected':'')+'>Premium</option></select></div><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-cit-accent" value="'+(ev.citationAccentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Bordure (px)</label><input type="number" class="form-input" id="app-cit-bw" value="'+(ev.citationBorderWidth||2.5)+'" min="1" max="6" step="0.5" style="width:70px"></div><div class="form-row"><label class="form-label">Guillemets</label><select class="form-input" id="app-cit-qsize" style="width:100px"><option value="small"'+(ev.citationQuoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+((ev.citationQuoteSize||'medium')==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(ev.citationQuoteSize==='large'?' selected':'')+'>Grand</option></select></div></div>';
     s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Taille texte</label><input type="number" class="form-input" id="app-cit-tsize" value="'+(ev.citationTextSize||13)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille nom</label><input type="number" class="form-input" id="app-cit-nsize" value="'+(ev.citationNameSize||12)+'" min="10" max="20" style="width:70px"></div><div class="form-row"><label class="form-label">Taille poste</label><input type="number" class="form-input" id="app-cit-rsize" value="'+(ev.citationRoleSize||10)+'" min="8" max="16" style="width:70px"></div><div class="form-row"><label class="form-label">Médaillons</label><select class="form-input" id="app-cit-avsize" style="width:120px"><option value="60"'+((ev.citationAvatarSize||80)==60?' selected':'')+'>60px</option><option value="80"'+((ev.citationAvatarSize||80)==80?' selected':'')+'>80px</option><option value="100"'+((ev.citationAvatarSize||80)==100?' selected':'')+'>100px</option><option value="120"'+((ev.citationAvatarSize||80)==120?' selected':'')+'>120px</option></select></div></div>';
-    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-cit-count" value="'+(ev.citVisibleCount||6)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="'+(ev.citationFeaturedBg||'#0F2B3C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-cit-count" value="'+(ev.citVisibleCount||6)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Fond citation vedette</label><input type="color" id="app-cit-feat-bg" value="'+(ev.citationFeaturedBg||'#0F2B3C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>';
+    // Fond des boîtes de citation (style classique / expédition) + titre de rubrique (taille & police).
+    var _citCardBgSet = !!ev.citationCardBg;
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:240px"><label class="form-label">Fond des boîtes de citation</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="app-cit-card-bg-on" '+(_citCardBgSet?'checked':'')+' onchange="document.getElementById(\'app-cit-card-bg\').disabled=!this.checked"><input type="color" id="app-cit-card-bg" value="'+(ev.citationCardBg||'#0F2B3C')+'" '+(_citCardBgSet?'':'disabled')+' style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = fond par défaut du thème.</div></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:160px"><label class="form-label">Taille titre rubrique (px)</label><input type="number" class="form-input" id="app-cit-title-size" value="'+(ev.citationTitleSize||'')+'" min="12" max="48" placeholder="défaut" style="width:90px"></div><div class="form-row"><label class="form-label">Police titre rubrique</label><select class="form-input" id="app-cit-title-font" style="width:200px">'+_fontOpts(ev.citationTitleFont||'')+'</select></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = suit la typographie globale (onglet Design).</div></div>';
     return s;
   }
   if(type==='articles'){
@@ -2494,7 +2498,10 @@ async function saveCitStyleFromApparence(){
     citationQuoteSize:document.getElementById('app-cit-qsize').value||'medium',
     citationAvatarSize:parseInt(document.getElementById('app-cit-avsize').value)||80,
     citVisibleCount:parseInt(document.getElementById('app-cit-visible').value)||6,
-    citationFeaturedBg:document.getElementById('app-cit-feat-bg').value||'#0F2B3C'
+    citationFeaturedBg:document.getElementById('app-cit-feat-bg').value||'#0F2B3C',
+    citationCardBg:document.getElementById('app-cit-card-bg-on')?.checked?(document.getElementById('app-cit-card-bg')?.value||''):'',
+    citationTitleSize:(parseInt(document.getElementById('app-cit-title-size')?.value)>0)?parseInt(document.getElementById('app-cit-title-size').value):'',
+    citationTitleFont:document.getElementById('app-cit-title-font')?.value||''
   });
   toast('Style citations enregistré');
 }
@@ -2528,6 +2535,9 @@ async function _collectModuleSettings(type){
     ud.citationTextSize=_n('app-cit-tsize',13);ud.citationNameSize=_n('app-cit-nsize',12);ud.citationRoleSize=_n('app-cit-rsize',10);
     ud.citationAvatarSize=_n('app-cit-avsize',80);ud.citVisibleCount=_n('app-acc-cit-count',6);
     ud.citationFeaturedBg=document.getElementById('app-cit-feat-bg')?.value||'#0F2B3C';
+    ud.citationCardBg=document.getElementById('app-cit-card-bg-on')?.checked?(document.getElementById('app-cit-card-bg')?.value||''):'';
+    var _cts=parseInt(document.getElementById('app-cit-title-size')?.value); ud.citationTitleSize=(_cts>0)?_cts:'';
+    ud.citationTitleFont=document.getElementById('app-cit-title-font')?.value||'';
   } else if(type==='articles'){
     ud.articlesTitle=_v('app-st-art-title');ud.articlesSubtitle=_v('app-st-art-sub');ud.articlesShowTitle=_c('app-st-art-show');
     ud.articlesVisibleCount=_n('app-acc-art-count',4);ud.articlesTitleSize=_n('app-acc-art-tsize',14);
@@ -4731,7 +4741,7 @@ async function deleteQuiz(id){
     await subCol('quizzes').doc(id).delete();
     // supprime aussi ses votes
     const snap=await subCol('quizVotes').where('quizId','==',id).get();
-    const batch=db.batch(); snap.forEach(d=>batch.delete(d.reference)); await batch.commit();
+    const batch=db.batch(); snap.forEach(d=>batch.delete(d.ref)); await batch.commit();
     if(_quizEditId===id) _quizEditId=null;
     renderTab(); toast('Quiz supprimé');
   }catch(e){ toast('Erreur : '+e.message,'error'); }
@@ -4756,7 +4766,7 @@ async function resetQuizVotes(id){
   saving(true);
   try{
     const snap=await subCol('quizVotes').where('quizId','==',id).get();
-    const batch=db.batch(); snap.forEach(d=>batch.delete(d.reference)); await batch.commit();
+    const batch=db.batch(); snap.forEach(d=>batch.delete(d.ref)); await batch.commit();
     toast('Votes réinitialisés');
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
