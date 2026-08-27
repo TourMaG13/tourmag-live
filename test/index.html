@@ -3895,32 +3895,36 @@ window._quizPick = {};       // { quizId__qId : Set(optId) } sélection avant en
 async function _loadQuizVotes(eventId){
   window._eventIdForQuiz = eventId;
   const uid = await _likeAuthReady;
-  var _lastTallyJSON = '';
-  db.collection('events').doc(eventId).collection('quizVotes').onSnapshot({includeMetadataChanges:false}, snap=>{
-    // Ignore les événements "locaux" (écriture optimiste pas encore confirmée) et de métadonnées :
-    // ils ne changent pas les compteurs et provoquaient des recalculs en rafale après un vote.
-    if(snap.metadata.hasPendingWrites) return;
-    const tally={}, totals={}, mine={};
-    snap.forEach(d=>{
-      const data=d.data()||{};
-      const quizId=data.quizId; if(!quizId) return;
-      const answers=data.answers||{};
-      tally[quizId]=tally[quizId]||{}; totals[quizId]=totals[quizId]||{};
-      Object.keys(answers).forEach(qId=>{
-        const opts=answers[qId]||[];
-        if(opts.length){ totals[quizId][qId]=(totals[quizId][qId]||0)+1; }
-        tally[quizId][qId]=tally[quizId][qId]||{};
-        opts.forEach(o=>{ tally[quizId][qId][o]=(tally[quizId][qId][o]||0)+1; });
+  window._quizUid = uid;
+  // Lecture PONCTUELLE des votes (pas d'écoute temps réel permanente : celle-ci bloquait
+  // le scroll après un vote). On agrège une fois, puis on rafraîchit à la demande / périodiquement.
+  window._loadQuizTally = async function(){
+    try{
+      const snap = await db.collection('events').doc(eventId).collection('quizVotes').get();
+      const tally={}, totals={}, mine={};
+      snap.forEach(d=>{
+        const data=d.data()||{};
+        const quizId=data.quizId; if(!quizId) return;
+        const answers=data.answers||{};
+        tally[quizId]=tally[quizId]||{}; totals[quizId]=totals[quizId]||{};
+        Object.keys(answers).forEach(qId=>{
+          const opts=answers[qId]||[];
+          if(opts.length){ totals[quizId][qId]=(totals[quizId][qId]||0)+1; }
+          tally[quizId][qId]=tally[quizId][qId]||{};
+          opts.forEach(o=>{ tally[quizId][qId][o]=(tally[quizId][qId][o]||0)+1; });
+        });
+        if(uid && d.id===uid+'_'+quizId){ mine[quizId]=answers; }
       });
-      if(uid && d.id===uid+'_'+quizId){ mine[quizId]=answers; }
-    });
-    window._quizTally=tally; window._quizTotals=totals; window._quizMyVote=mine;
-    // N'actualise l'affichage que si les résultats ont réellement changé
-    const j=JSON.stringify({tally,totals,mine});
-    if(j===_lastTallyJSON) return;
-    _lastTallyJSON=j;
-    _refreshQuizResults();
-  }, err=>console.warn('[TourMaG Live] quiz votes error:', err.message));
+      window._quizTally=tally; window._quizTotals=totals; window._quizMyVote=mine;
+      _refreshQuizResults();
+    }catch(e){ console.warn('[TourMaG Live] quiz tally error:', e.message); }
+  };
+  // Chargement initial
+  window._loadQuizTally();
+  // Rafraîchissement périodique léger (toutes les 20 s) pour voir arriver les votes des autres,
+  // sans connexion permanente. clearInterval si on recharge.
+  if(window._quizPollTimer) clearInterval(window._quizPollTimer);
+  window._quizPollTimer = setInterval(()=>{ if(!document.hidden) window._loadQuizTally(); }, 20000);
 }
 
 window._quizSelect = function(quizId, qId, optId, mode){
@@ -3943,9 +3947,14 @@ window._quizSubmit = async function(quizId, qId){
   if(!set||!set.size) return;
   const prev=(window._quizMyVote[quizId])||{};
   const answers=Object.assign({}, prev); answers[qId]=Array.from(set);
+  // Affichage optimiste immédiat : on marque mon vote localement avant même la confirmation serveur
+  window._quizMyVote[quizId]=answers;
+  _refreshQuizResults();
   try{
     await db.collection('events').doc(eventId).collection('quizVotes').doc(uid+'_'+quizId)
       .set({quizId, uid, answers}, {merge:true});
+    // Recharge une fois les compteurs à jour (pas d'écoute permanente)
+    if(window._loadQuizTally) window._loadQuizTally();
   }catch(e){ console.warn('Vote non enregistré :', e.message); }
 };
 
