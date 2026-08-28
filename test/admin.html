@@ -6407,256 +6407,168 @@ function renderGuide(el){
   const hidden=_effectiveHidden(ev)||[];
   const superAdmin=isSuperAdmin();
   const SECTIONS=[
-  {id:'g-start', tab:null, toc:'Premiers pas', html:`<h2 id="g-start">1. 🚀 Premiers pas</h2>
-  <p>TourMaG Live est un dashboard de couverture événementielle en temps réel. Il permet de créer une page live pour un événement (salon, conférence, expédition…) et d'y publier du contenu en direct : fil d'actualité, citations, programme, vidéos, galerie photo…</p>
-
-  <h3>L'interface en un coup d'œil</h3>
-  <ul>
-    <li><strong>Barre du haut</strong> — Le sélecteur d'événement (si vous en avez plusieurs) et le bouton de déconnexion.</li>
-    <li><strong>Menu à gauche</strong> — Les différents onglets pour gérer le contenu. Vous êtes ici, dans le Guide !</li>
-    <li><strong>Zone principale</strong> — C'est là que vous éditez le contenu de l'onglet sélectionné.</li>
-  </ul>
-
-  <div class="tip">💡 <strong>Astuce</strong> : Tout ce que vous modifiez est enregistré automatiquement dans le cloud. Le dashboard public se met à jour en temps réel, sans besoin de rafraîchir la page.</div>
-
-  <!-- ==================== 2. ÉVÉNEMENTS ==================== -->`},
-  {id:'g-events', tab:null, toc:'Créer et gérer un événement', html:`<h2 id="g-events">2. 📋 Créer et gérer un événement</h2>
-  <p>L'onglet <span class="key">📋 Mes événements</span> vous permet de créer, modifier et sélectionner vos événements.</p>
-  <h3>Créer un événement</h3>
-  <div class="step">
-    <span class="step-num">1</span> Cliquez sur <strong>+ Nouvel événement</strong>.<br>
-    <span class="step-num">2</span> Remplissez le titre, la date, le lieu et la couleur principale.<br>
-    <span class="step-num">3</span> Choisissez le <strong>mode</strong> : Live classique ou Expédition (voir section 3).<br>
-    <span class="step-num">4</span> Cliquez sur <strong>Créer</strong>. L'événement apparaît dans la liste.
-  </div>
-  <h3>Modifier un événement</h3>
-  <p>Cliquez sur le crayon ✏️ à côté du nom pour modifier ses informations (titre, logo, couleur, statut, mode).</p>
-  <h3>Statuts</h3>
-  <ul>
-    <li><strong>À venir</strong> — Créé mais pas encore en direct.</li>
-    <li><strong>En direct</strong> — Actif, le contenu est publié en temps réel.</li>
-    <li><strong>Terminé</strong> — Archivé. Les scripts automatiques ne le traitent plus.</li>
-  </ul>
-
-  <!-- ==================== 3. MODES ==================== -->`},
-  {id:'g-modes', tab:null, toc:'Les deux modes : Classique et Expédition', html:`<h2 id="g-modes">3. 🔀 Les deux modes : Classique et Expédition</h2>
-  <p>Chaque événement fonctionne dans l'un des deux modes. Le mode se choisit à la création ou se modifie ensuite.</p>
-  <h3>Mode Classique (Live)</h3>
-  <p>Conçu pour les événements éditoriaux : salons, conférences, forums. Layout avec <strong>trois zones</strong> (pleine largeur, colonne principale, colonne latérale) et des blocs repositionnables par glisser-déposer.</p>
-  <h3>Mode Expédition</h3>
-  <p>Conçu pour les reportages terrain et carnets de route. Fonctionnalités supplémentaires :</p>
-  <ul>
-    <li><strong>Carte interactive</strong> — Carte Leaflet avec les étapes du parcours géolocalisées.</li>
-    <li><strong>Fil de route</strong> — Fil live avec séparateurs de jour automatiques.</li>
-    <li><strong>Brand News</strong> — Bloc RSS sponsorisé configurable.</li>
-    <li><strong>Galerie photo</strong> — Carrousel avec lightbox plein écran.</li>
-    <li><strong>Décor</strong> — Éléments graphiques décoratifs (relief, silhouettes…).</li>
-    <li><strong>Zones flexibles</strong> — Blocs placés dans une colonne principale ou une sidebar.</li>
-  </ul>
-  <div class="step">
-    <span class="step-num">1</span> Pour basculer : <span class="key">📋 Mes événements</span> → crayon ✏️ → changez le <strong>Mode</strong>.<br>
-    <span class="step-num">2</span> Le changement est instantané et rétrocompatible.
-  </div>
-  <div class="tip">💡 En mode Expédition, certains onglets changent de nom (« Fil live » → « Fil de route », « Journalistes » → « Reporters »). Les fonctionnalités restent similaires.</div>
-
-  <!-- ==================== 4. PROGRAMME ==================== -->`},
-  {id:'g-programme', tab:'programme', toc:'Le programme', html:`<h2 id="g-programme">4. 🗓 Le programme</h2>
-  <p>L'onglet <span class="key">🗓 Programme</span> permet de créer l'agenda de votre événement, organisé par journée.</p>
-  <div class="step">
-    <span class="step-num">1</span> Sélectionnez le jour (Jour 1, Jour 2…).<br>
-    <span class="step-num">2</span> Remplissez le titre (obligatoire), l'heure (optionnelle) et la description.<br>
-    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>. L'entrée apparaît dans la liste du jour.
-  </div>
-  <p>Le <strong>titre de l'encart</strong> est personnalisable (ex : « Agenda », « Planning du jour »). Les entrées se réordonnent avec ▲/▼ et se suppriment avec ✕.</p>
-
-  <!-- ==================== 5. FLASH ==================== -->`},
-  {id:'g-flash', tab:'flash', toc:'Le flash info', html:`<h2 id="g-flash">5. ⚡ Le flash info</h2>
-  <p>Bandeau d'alerte en haut du dashboard avec animation pulsante pour attirer l'attention.</p>
-  <div class="step">
-    <span class="step-num">1</span> Onglet <span class="key">⚡ Flash info</span> → tapez votre message.<br>
-    <span class="step-num">2</span> <strong>Activez</strong> le toggle pour publier, <strong>désactivez</strong> pour masquer.
-  </div>
-  <div class="tip">💡 Idéal pour les breaking news : « 🔴 DIRECT — Le ministre prend la parole dans 5 minutes ».</div>
-
-  <!-- ==================== 6. ESSENTIELS ==================== -->`},
-  {id:'g-essential', tab:'essentiel', toc:'Essentiel & Timeline', html:`<h2 id="g-essential">6. 🧠 Les points essentiels / À retenir</h2>
-  <p>Informations clés de l'événement sous forme de cartes numérotées, alimentées manuellement ou par IA.</p>
-  <h3>Ajouter un point manuellement</h3>
-  <div class="step">
-    <span class="step-num">1</span> Onglet <span class="key">🧠 L'essentiel</span> (ou « À retenir » en Expédition).<br>
-    <span class="step-num">2</span> Titre, texte, et <strong>tag</strong> optionnel pour catégoriser.<br>
-    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>.
-  </div>
-  <h3>Génération automatique par IA</h3>
-  <p>Si le toggle <strong>IA Essentiels</strong> est activé, un script automatique (toutes les 4h) analyse les derniers articles et génère 6 points de synthèse. Ces points cohabitent avec vos points manuels.</p>
-  <p>En mode Expédition, chaque carte affiche un <strong>numéro en filigrane</strong>, une <strong>icône SVG</strong> selon le tag, et des couleurs personnalisées.</p>
-
-  <!-- ==================== 7. FIL LIVE ==================== -->`},
-  {id:'g-live', tab:'live', toc:'Le fil live', html:`<h2 id="g-live">7. 📡 Le fil live / Fil de route</h2>
-  <p>Le cœur du dashboard : un flux d'entrées en temps réel.</p>
-  <div class="step">
-    <span class="step-num">1</span> Sélectionnez le <strong>type</strong> : texte simple, photo, ou flash.<br>
-    <span class="step-num">2</span> Rédigez votre message, ajoutez une image si besoin.<br>
-    <span class="step-num">3</span> Cliquez sur <strong>Publier</strong>. Publication immédiate sur le dashboard.
-  </div>
-  <h3>Spécificités mode Expédition</h3>
-  <ul>
-    <li><strong>Séparateurs de jour</strong> — Insérés automatiquement quand la date change entre deux entrées.</li>
-    <li><strong>Tags live</strong> — Chaque entrée peut être taguée (« Étape », « Rencontre », « Paysage »…).</li>
-  </ul>
-
-  <!-- ==================== 8. CITATIONS ==================== -->`},
-  {id:'g-citations', tab:'citations', toc:'Les citations', html:`<h2 id="g-citations">8. 💬 Les citations / Verbatims</h2>
-  <p>Mettez en avant des déclarations marquantes d'intervenants.</p>
-  <div class="step">
-    <span class="step-num">1</span> Onglet <span class="key">💬 Citations</span> (ou « Verbatims » en Expédition).<br>
-    <span class="step-num">2</span> Texte de la citation, <strong>nom</strong> et <strong>rôle</strong> de l'intervenant, <strong>photo</strong>.<br>
-    <span class="step-num">3</span> Optionnel : <strong>horaire de scheduling</strong> pour apparition différée.
-  </div>
-  <p>Le style (avatar, couleur, bordure) se règle dans <span class="key">🎨 Apparence</span>.</p>
-
-  <!-- ==================== 9. INTERVIEWS ==================== -->`},
-  {id:'g-interviews', tab:'interviews', toc:'Les interviews', html:`<h2 id="g-interviews">9. 🎙️ Les interviews</h2>
-  <p>Questions/réponses structurées avec un intervenant identifié.</p>
-  <div class="step">
-    <span class="step-num">1</span> Onglet <span class="key">🎙️ Interviews</span> → nom, rôle, photo de l'interviewé.<br>
-    <span class="step-num">2</span> Ajoutez les paires <strong>question/réponse</strong> une par une.<br>
-    <span class="step-num">3</span> Marquez une interview « mise en avant » pour plus de visibilité.
-  </div>
-
-  <!-- ==================== 10. ARTICLES ==================== -->`},
-  {id:'g-articles', tab:'articles', toc:'Les articles liés', html:`<h2 id="g-articles">10. 📰 Les articles liés</h2>
-  <p>Importés <strong>automatiquement</strong> via RSS (toutes les 15 min). Gestion dans l'onglet <span class="key">📰 Articles liés</span> : consultation et suppression si besoin (anti-doublon par URL).</p>
-  <div class="tip">💡 Si un article ne s'importe pas, vérifiez qu'il est publié sur TourMaG et que le flux RSS est configuré.</div>
-
-  <!-- ==================== 11. VIDÉOS ==================== -->`},
-  {id:'g-videos', tab:'videos', toc:'Les vidéos', html:`<h2 id="g-videos">11. 🎬 Les vidéos</h2>
-  <p>Intégration depuis <strong>YouTube</strong>, <strong>Instagram</strong>, <strong>Facebook</strong> et <strong>LinkedIn</strong>.</p>
-  <div class="step">
-    <span class="step-num">1</span> Collez l'URL → détection automatique de la plateforme et du type.<br>
-    <span class="step-num">2</span> Ajoutez titre, description, miniature optionnelle.<br>
-    <span class="step-num">3</span> Cliquez sur <strong>Ajouter</strong>.
-  </div>
-  <div class="warn">⚠️ Facebook et LinkedIn bloquent parfois l'embed. Un lien « Ouvrir sur… » apparaît en fallback. YouTube et Instagram sont les plus fiables.</div>
-
-  <!-- ==================== 12. REPORTERS ==================== -->`},
-  {id:'g-reporters', tab:'journalistes', toc:'Journalistes', html:`<h2 id="g-reporters">12. 👤 Reporters / Journalistes</h2>
-  <p>Fiches des personnes couvrant l'événement.</p>
-  <div class="step">
-    <span class="step-num">1</span> Nom, rôle (ex : « Envoyé spécial »), biographie, photo.<br>
-    <span class="step-num">2</span> Réseaux sociaux (X, LinkedIn, Instagram) → icônes SVG sur la carte reporter.<br>
-    <span class="step-num">3</span> Le reporter sélectionné est associé aux entrées du fil live.
-  </div>
-
-  <!-- ==================== 13. GALERIE ==================== -->`},
-  {id:'g-gallery', tab:'gallery', toc:'Galerie photos', html:`<h2 id="g-gallery">13. 📸 Galerie photos</h2>
-  <p>Carrousel de photos affiché sur le dashboard.</p>
-  <div class="step">
-    <span class="step-num">1</span> Uploadez ou sélectionnez des photos via la médiathèque.<br>
-    <span class="step-num">2</span> Titre et légende optionnels par photo.<br>
-    <span class="step-num">3</span> Réordonnez par glisser-déposer.
-  </div>
-  <p>En Expédition, un clic ouvre une <strong>lightbox plein écran</strong>. En iframe, la lightbox s'adapte automatiquement via postMessage.</p>
-
-  <!-- ==================== 14. KPIS ==================== -->`},
-  {id:'g-kpis', tab:'kpis', toc:'Chiffres clés', html:`<h2 id="g-kpis">14. 📊 Compteurs / Chiffres clés</h2>
-  <p>Indicateurs visuels en haut du dashboard (km parcourus, jours restants, rencontres…).</p>
-  <div class="step">
-    <span class="step-num">1</span> Ajoutez un compteur : <strong>label</strong>, <strong>valeur</strong>, <strong>icône</strong> optionnel.<br>
-    <span class="step-num">2</span> Les compteurs s'affichent dans une barre horizontale.
-  </div>
-
-  <!-- ==================== 15. CONTACT ==================== -->`},
-  {id:'g-contact', tab:'contact', toc:'Contact', html:`<h2 id="g-contact">15. 📞 Contact</h2>
-  <p>Encadré de contact en bas du dashboard. Renseignez nom, email, téléphone, site web et logo. Les icônes (globe, réseaux sociaux) s'affichent automatiquement.</p>
-
-  <!-- ==================== 16. MÉDIATHÈQUE ==================== -->`},
-  {id:'g-media', tab:'media', toc:'La médiathèque', html:`<h2 id="g-media">16. 📷 La médiathèque</h2>
-  <p>Bibliothèque d'images partagée pour tout l'événement.</p>
-  <ul>
-    <li><strong>Upload</strong> — Glissez-déposez ou cliquez pour sélectionner.</li>
-    <li><strong>Recherche</strong> — Filtrez par nom de fichier.</li>
-    <li><strong>Sélection</strong> — Cliquez sur une image pour copier son URL.</li>
-  </ul>
-  <p>Le bouton 📷 à côté de chaque champ image ouvre le sélecteur de médiathèque.</p>
-
-  <!-- ==================== 17. RUBRIQUES ==================== -->`},
-  {id:'g-rubriques', tab:'rubriques', toc:'Rubriques et tags', html:`<h2 id="g-rubriques">17. 📁 Rubriques et 🏷 Tags</h2>
-  <p>Les <strong>rubriques</strong> catégorisent les entrées du fil live. Le visiteur peut filtrer par rubrique.</p>
-  <p>Les <strong>tags live</strong> (mode Expédition) fonctionnent de la même façon, avec en plus des icônes SVG et une palette de couleurs personnalisée par tag.</p>
-
-  <!-- ==================== 18. DÉCOR ==================== -->`},
-  {id:'g-decor', tab:'decor', toc:'Décor (mode Expédition)', html:`<h2 id="g-decor">18. 🎨 Décor (mode Expédition)</h2>
-  <p>Uniquement en mode Expédition. Ajoutez des éléments graphiques décoratifs :</p>
-  <ul>
-    <li><strong>Silhouettes de relief</strong> — Profil montagneux ou paysager en bas de page.</li>
-    <li><strong>Opacité</strong> — Réglez via le slider (de subtil à prononcé).</li>
-  </ul>
-  <div class="tip">💡 Le décor est purement cosmétique et donne une identité visuelle « terrain » au dashboard.</div>
-
-  <!-- ==================== 19. MODULES ==================== -->`},
-  {id:'g-modules', tab:'modules', toc:'Disposition des blocs', html:`<h2 id="g-modules">19. ⚙️ Disposition des blocs</h2>
-  <p>Contrôlez <strong>quels blocs sont visibles</strong> et <strong>où ils apparaissent</strong>.</p>
-  <h3>Activer/désactiver</h3>
-  <p>Les interrupteurs permettent d'activer ou désactiver chaque bloc.</p>
-  <h3>Mode Classique — Trois zones</h3>
-  <ul>
-    <li><strong>⬛ Pleine largeur</strong> — Le bloc occupe toute la largeur.</li>
-    <li><strong>◀ Colonne principale</strong> — Grande colonne de gauche.</li>
-    <li><strong>▶ Colonne latérale</strong> — Petite colonne de droite.</li>
-  </ul>
-  <h3>Mode Expédition — Zones flexibles</h3>
-  <ul>
-    <li><strong>Main</strong> — Colonne principale large.</li>
-    <li><strong>Side</strong> — Sidebar étroite.</li>
-    <li><strong>Full</strong> — Pleine largeur.</li>
-  </ul>
-  <p>Le <strong>Sidebar Anchor</strong> détermine à quel bloc principal la sidebar s'accroche.</p>
-  <div class="step">
-    <span class="step-num">1</span> <strong>Glissez-déposez</strong> les blocs entre zones.<br>
-    <span class="step-num">2</span> L'ordre dans chaque zone = ordre d'affichage.
-  </div>
-
-  <!-- ==================== 20. INTÉGRATION ==================== -->`},
-  {id:'g-widget', tab:'widget', toc:'Intégrer sur votre site', html:`<h2 id="g-widget">20. 📦 Intégrer sur votre site</h2>
-  <p>L'onglet <span class="key">📦 Widget homepage</span> fournit les codes d'intégration pour le CMS TourMaG.</p>
-  <h3>Options d'intégration</h3>
-  <ul>
-    <li><strong>Page complète (iframe)</strong> — Intègre tout le dashboard. Copiez-collez dans un module HTML du CMS.</li>
-    <li><strong>Widget compact</strong> — Encart résumé pour la homepage (mode classique).</li>
-    <li><strong>Encart petit format</strong> — Bannière promo sidebar avec carrousel de captures (mode Expédition).</li>
-    <li><strong>Encart grand format</strong> — Bannière promo pleine largeur avec carrousel (mode Expédition).</li>
-  </ul>
-  <h3>Configuration des encarts (mode Expédition)</h3>
-  <p>Le formulaire permet de personnaliser : logo, titre, accroche, URL et libellé du CTA, 3-4 captures d'écran en carrousel, couleurs (fond, titre, bouton…).</p>
-  <h3>Copier le code embed</h3>
-  <div class="step">
-    <span class="step-num">1</span> Cliquez sur <strong>📋 Copier</strong> sous l'encart souhaité.<br>
-    <span class="step-num">2</span> Collez dans un module HTML du CMS.
-  </div>
-  <div class="warn">⚠️ <strong>Ne modifiez pas le code embed</strong> : le paramètre <code>frameId</code> dans l'URL et le bloc <code>&lt;style&gt;</code> avec la media query mobile sont indispensables. Sans eux, l'encart sera trop petit sur mobile.</div>
-
-  <!-- ==================== 21. ACCÈS ==================== -->`},
-  {id:'g-access', tab:'super', toc:'Gestion des accès', html:`<h2 id="g-access">21. 👥 Gestion des accès</h2>
-  <p>L'onglet <span class="key">👥 Accès</span> contrôle qui a accès à quoi (super admins uniquement).</p>
-  <h3>Comptes utilisateurs</h3>
-  <ul>
-    <li><strong>Admin</strong> — Voit tous les événements et tous les onglets.</li>
-    <li><strong>Client</strong> — Ne voit que les événements listés dans « Accès restreint ».</li>
-  </ul>
-  <h3>Super administrateurs</h3>
-  <p>Voient tous les onglets et accèdent à la page Accès. Si la liste est vide, tout le monde a un accès complet.</p>
-  <h3>Onglets visibles</h3>
-  <p>Masquez des onglets aux non super-admins via les toggles (modules, widget, tags, guide…).</p>
-  <h3>Accès restreint par événement</h3>
-  <div class="step">
-    <span class="step-num">1</span> Section « 🔒 Accès restreint » → ajoutez les emails autorisés.<br>
-    <span class="step-num">2</span> Seuls les listés (+ super admins) verront cet événement.<br>
-    <span class="step-num">3</span> Liste vide = aucune restriction.
-  </div>
-  <div class="warn">⚠️ Vérifiez que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>`}
+  {id:'g-start', tab:null, toc:`Bienvenue`, disp:`🚀 Bienvenue`, html:`<p>TourMaG Live vous permet de créer une page web « en direct » pour couvrir un événement : un salon, une conférence, un voyage de presse, une expédition… Vos lecteurs suivent l'actualité minute par minute, sans rien installer, depuis leur ordinateur ou leur téléphone.</p>
+<p>Vous n'avez <strong>aucune compétence technique à avoir</strong>. Vous remplissez des formulaires, vous cliquez sur « Enregistrer », et la page publique se met à jour toute seule.</p>
+<h3>Comment est organisé l'écran ?</h3>
+<ul>
+  <li><strong>La barre tout en haut</strong> : à gauche, le nom de l'événement sur lequel vous travaillez (si vous en avez plusieurs, vous pouvez en changer ici). À droite, le bouton pour vous déconnecter.</li>
+  <li><strong>Le menu à gauche</strong> : la liste de tout ce que vous pouvez remplir (le programme, les photos, les citations…). Chaque ligne ouvre un écran différent. Vous êtes actuellement sur le <span class="key">📖 Guide</span>.</li>
+  <li><strong>La grande zone au centre</strong> : c'est là que vous travaillez. Son contenu change selon la ligne choisie dans le menu.</li>
+</ul>
+<div class="tip">💡 <strong>Bon à savoir</strong> : tout est enregistré dans le cloud. Dès que vous cliquez sur « Enregistrer », la page publique change instantanément pour tous les visiteurs, sans qu'ils aient à recharger.</div>
+<div class="tip">📱 Ce guide ne vous montre que les rubriques auxquelles vous avez accès. Si un collègue voit des sections différentes, c'est normal : chacun voit ce qui le concerne.</div>`},
+  {id:'g-events', tab:null, toc:`Choisir et gérer votre événement`, disp:`📋 Choisir et gérer votre événement`, html:`<p>La ligne <span class="key">📋 Mes événements</span> affiche la liste de vos événements. Celui qui est sélectionné (encadré en couleur) est celui que vous êtes en train de modifier.</p>
+<h3>Passer d'un événement à un autre</h3>
+<p>Cliquez simplement sur son nom dans la liste. Tout le reste du menu (programme, photos…) concernera alors cet événement.</p>
+<h3>Modifier les informations d'un événement</h3>
+<p>Cliquez sur le petit crayon ✏️ à côté du nom. Vous pourrez changer :</p>
+<ul>
+  <li><strong>Le titre</strong> : le nom affiché en grand sur la page publique.</li>
+  <li><strong>Les dates et le lieu</strong> : affichés sous le titre.</li>
+  <li><strong>La couleur principale</strong> : la couleur utilisée pour les boutons et les accents sur toute la page.</li>
+  <li><strong>Le logo</strong> : affiché en haut de la page.</li>
+  <li><strong>Le statut</strong> : voir juste en dessous.</li>
+</ul>
+<h3>Le statut, à quoi ça sert ?</h3>
+<ul>
+  <li><strong>À venir</strong> : l'événement est préparé mais pas encore commencé.</li>
+  <li><strong>En direct</strong> : l'événement se déroule, vous publiez en temps réel. Un badge « En direct » clignote sur la page.</li>
+  <li><strong>Terminé</strong> : l'événement est passé, la page reste consultable comme archive.</li>
+</ul>
+<div class="tip">💡 Changez le statut en « En direct » le jour J : c'est ce qui affiche le badge animé et signale à vos lecteurs que ça se passe maintenant.</div>`},
+  {id:'g-modes', tab:null, toc:`Les deux styles de page : Classique et Expédition`, disp:`🔀 Les deux styles de page : Classique et Expédition`, html:`<p>Chaque événement adopte l'un des deux styles. Le choix se fait à la création, et peut se changer ensuite via le crayon ✏️.</p>
+<h3>Le style Classique</h3>
+<p>Un tableau de bord moderne, coloré, organisé en colonnes. Idéal pour un <strong>salon ou une conférence</strong> : fil d'actu, chiffres clés, programme, citations, le tout bien dense.</p>
+<h3>Le style Expédition</h3>
+<p>Une mise en page « carnet de voyage », plus éditoriale, avec une grande carte et un itinéraire. Idéal pour un <strong>voyage de presse ou un périple</strong> qui se déplace d'étape en étape.</p>
+<div class="tip">💡 Le contenu que vous remplissez (citations, photos, programme…) fonctionne dans les deux styles. Seule la présentation change.</div>`},
+  {id:'g-programme', tab:'programme', toc:`Le programme`, disp:`🗓 Le programme`, html:`<p>La ligne <span class="key">🗓 Programme</span> permet d'afficher le déroulé de votre événement, heure par heure.</p>
+<h3>Ajouter un moment au programme</h3>
+<div class="step">
+  <span class="step-num">1</span> Cliquez sur <strong>+ Ajouter</strong>.<br>
+  <span class="step-num">2</span> Renseignez l'<strong>heure</strong> (ex. 14h30), le <strong>titre</strong> (ex. « Conférence d'ouverture ») et éventuellement une <strong>description</strong>.<br>
+  <span class="step-num">3</span> Choisissez le <strong>jour</strong> si votre événement dure plusieurs jours.<br>
+  <span class="step-num">4</span> Enregistrez. Le moment apparaît dans la liste, rangé automatiquement par heure.
+</div>
+<h3>Personnaliser le titre du bloc</h3>
+<p>En haut de l'écran, le champ <strong>« Titre affiché sur le dashboard public »</strong> vous laisse remplacer le mot « Programme » par ce que vous voulez (ex. « Au programme », « Déroulé »). Le petit champ <strong>chiffre à côté</strong> règle la <strong>taille</strong> de ce titre en pixels. Cliquez sur le bouton orange 💾 pour enregistrer.</p>
+<h3>Le badge de statut</h3>
+<p>La case <strong>« Masquer le badge »</strong> permet de retirer les mentions « À venir / En cours / Terminé » qui s'affichent automatiquement à côté de chaque moment selon l'heure.</p>
+<div class="tip">💡 Pas besoin de mettre à jour le statut à la main : le badge passe tout seul de « À venir » à « En cours » puis « Terminé » selon l'heure réelle.</div>`},
+  {id:'g-flash', tab:'flash', toc:`Le bandeau flash`, disp:`⚡ Le bandeau flash`, html:`<p>La ligne <span class="key">⚡ Flash info</span> affiche un bandeau bien visible en haut de la page, pour une information urgente ou importante.</p>
+<h3>Comment l'utiliser</h3>
+<div class="step">
+  <span class="step-num">1</span> Tapez votre message dans le champ (ex. « La keynote commence dans 10 minutes, salle A »).<br>
+  <span class="step-num">2</span> Activez-le avec l'interrupteur.<br>
+  <span class="step-num">3</span> Enregistrez. Le bandeau apparaît immédiatement sur la page.
+</div>
+<div class="tip">💡 Pensez à le désactiver quand l'information n'est plus d'actualité, pour ne pas encombrer la page.</div>`},
+  {id:'g-essential', tab:'essentiel', toc:`L'essentiel & la timeline`, disp:`🧠 L'essentiel & la timeline`, html:`<p>La ligne <span class="key">🧠 Essentiel & Timeline</span> regroupe deux choses.</p>
+<h3>Les points essentiels</h3>
+<p>De courtes phrases qui résument ce qu'il faut retenir de l'événement. Elles s'affichent en évidence, façon « points clés ». Ajoutez-les une par une avec <strong>+ Ajouter</strong>.</p>
+<h3>La timeline</h3>
+<p>Une frise chronologique des grands moments. Chaque entrée a une date/heure et une description. Utile pour raconter l'histoire de l'événement dans l'ordre.</p>
+<div class="tip">💡 Gardez les points essentiels courts (une ligne). C'est ce qui les rend percutants.</div>`},
+  {id:'g-live', tab:'live', toc:`Le fil live (le cœur du direct)`, disp:`📡 Le fil live (le cœur du direct)`, html:`<p>La ligne <span class="key">📡 Fil live</span> est la plus importante pendant l'événement : c'est le fil d'actualité qui se remplit en temps réel, comme un fil de réseau social.</p>
+<h3>Publier une entrée</h3>
+<div class="step">
+  <span class="step-num">1</span> Écrivez votre message dans la zone de texte. Vous pouvez mettre en <strong>gras</strong>, en <em>italique</em>, ajouter des liens.<br>
+  <span class="step-num">2</span> Ajoutez une <strong>photo</strong> si vous le souhaitez (bouton image).<br>
+  <span class="step-num">3</span> Cliquez sur <strong>Publier</strong>. L'entrée apparaît tout en haut du fil, horodatée.
+</div>
+<h3>Modifier ou supprimer</h3>
+<p>Chaque entrée publiée a un crayon ✏️ (pour corriger) et une croix ✕ (pour supprimer).</p>
+<h3>Le partage par vos lecteurs</h3>
+<p>Sur la page publique, chaque entrée du fil a un bouton <strong>Partager</strong>. Quand un lecteur clique dessus, des icônes (WhatsApp, X, LinkedIn, Facebook, e-mail, copier le lien) se déploient juste à côté. Chaque entrée a son propre lien direct : pratique pour partager un moment précis.</p>
+<div class="tip">💡 Publiez régulièrement, même des messages courts : c'est la fréquence des mises à jour qui donne l'impression du « direct ».</div>`},
+  {id:'g-citations', tab:'citations', toc:`Les citations`, disp:`💬 Les citations`, html:`<p>La ligne <span class="key">💬 Citations</span> met en valeur les phrases fortes prononcées pendant l'événement.</p>
+<h3>Ajouter une citation</h3>
+<div class="step">
+  <span class="step-num">1</span> Saisissez la <strong>phrase</strong> entre guillemets.<br>
+  <span class="step-num">2</span> Indiquez <strong>qui l'a dite</strong> (nom) et sa <strong>fonction</strong> (ex. « PDG de… »).<br>
+  <span class="step-num">3</span> Ajoutez éventuellement une <strong>photo</strong> de la personne.<br>
+  <span class="step-num">4</span> Enregistrez.
+</div>
+<div class="tip">💡 Une belle citation bien attribuée donne du poids à votre couverture. N'hésitez pas à en publier plusieurs.</div>`},
+  {id:'g-interviews', tab:'interviews', toc:`Les interviews`, disp:`🎙️ Les interviews`, html:`<p>La ligne <span class="key">🎙️ Interviews</span> permet de publier des entretiens plus longs : une question, une réponse développée, avec la photo et la fonction de la personne interviewée.</p>
+<h3>Ajouter une interview</h3>
+<div class="step">
+  <span class="step-num">1</span> Renseignez le <strong>nom</strong> et la <strong>fonction</strong> de la personne.<br>
+  <span class="step-num">2</span> Ajoutez sa <strong>photo</strong>.<br>
+  <span class="step-num">3</span> Saisissez le <strong>texte de l'entretien</strong> (questions/réponses).<br>
+  <span class="step-num">4</span> Enregistrez.
+</div>`},
+  {id:'g-articles', tab:'articles', toc:`Les articles liés`, disp:`📰 Les articles liés`, html:`<p>La ligne <span class="key">📰 Articles liés</span> affiche des articles (souvent ceux de TourMaG) en rapport avec l'événement, avec leur vignette et leur titre. Cliquer dessus ouvre l'article.</p>
+<div class="tip">💡 C'est un bon moyen de renvoyer vos lecteurs vers vos contenus de fond pendant qu'ils suivent le direct.</div>`},
+  {id:'g-videos', tab:'videos', toc:`Les vidéos`, disp:`🎬 Les vidéos`, html:`<p>La ligne <span class="key">🎬 Vidéos</span> permet d'intégrer des vidéos (YouTube, etc.) directement dans la page.</p>
+<h3>Ajouter une vidéo</h3>
+<div class="step">
+  <span class="step-num">1</span> Collez le <strong>lien</strong> de la vidéo.<br>
+  <span class="step-num">2</span> Ajoutez un <strong>titre</strong>.<br>
+  <span class="step-num">3</span> Enregistrez. La vidéo devient lisible directement sur la page.
+</div>`},
+  {id:'g-reporters', tab:'journalistes', toc:`Les journalistes`, disp:`👤 Les journalistes`, html:`<p>La ligne <span class="key">👤 Journalistes</span> présente les personnes qui couvrent l'événement : leur nom, leur fonction, leur photo, une courte bio et leurs réseaux.</p>
+<h3>Ajouter un journaliste</h3>
+<div class="step">
+  <span class="step-num">1</span> Renseignez le <strong>nom</strong> et la <strong>fonction</strong> (ex. « Envoyé spécial »).<br>
+  <span class="step-num">2</span> Ajoutez la <strong>photo</strong> et la <strong>bio</strong>.<br>
+  <span class="step-num">3</span> Ajoutez éventuellement les liens vers ses <strong>réseaux sociaux</strong>.<br>
+  <span class="step-num">4</span> Enregistrez.
+</div>
+<h3>Régler la taille du titre du bloc</h3>
+<p>Le champ <strong>« Taille du titre »</strong> contrôle la taille du titre du bloc (« Vos reporters »). Les tailles du nom, de la fonction et de la bio se règlent séparément dans l'onglet Apparence.</p>`},
+  {id:'g-gallery', tab:'gallery', toc:`La galerie photos`, disp:`📸 La galerie photos`, html:`<p>La ligne <span class="key">📸 Galerie</span> rassemble vos photos dans une belle grille. Les visiteurs peuvent cliquer pour les agrandir.</p>
+<h3>Ajouter des photos</h3>
+<p>Importez vos images (ou collez leur lien). Vous pouvez ajouter une légende à chacune. Réorganisez-les par glisser-déposer si besoin.</p>
+<div class="tip">💡 Des photos de bonne qualité et bien cadrées font toute la différence sur la page publique.</div>`},
+  {id:'g-kpis', tab:'kpis', toc:`Les chiffres clés`, disp:`📊 Les chiffres clés`, html:`<p>La ligne <span class="key">📊 Chiffres clés</span> affiche des nombres marquants en gros : nombre de visiteurs, d'exposants, de pays représentés…</p>
+<h3>Ajouter un chiffre</h3>
+<div class="step">
+  <span class="step-num">1</span> Saisissez le <strong>nombre</strong> (ex. « 12 000 »).<br>
+  <span class="step-num">2</span> Ajoutez un <strong>libellé</strong> qui l'explique (ex. « visiteurs »).<br>
+  <span class="step-num">3</span> Enregistrez.
+</div>`},
+  {id:'g-contact', tab:'contact', toc:`Le contact`, disp:`📞 Le contact`, html:`<p>La ligne <span class="key">📞 Contact</span> affiche un encart pour joindre l'organisateur ou la rédaction : nom, message, boutons (e-mail, téléphone, site…).</p>`},
+  {id:'g-media', tab:'media', toc:`La médiathèque`, disp:`📷 La médiathèque`, html:`<p>La ligne <span class="key">📷 Médiathèque</span> est votre bibliothèque d'images. Vous y importez vos photos une fois, puis vous les réutilisez partout (fil live, galerie, citations…) sans les réimporter.</p>
+<div class="tip">💡 Importez vos visuels récurrents (logos, photos d'équipe) une bonne fois ici, vous gagnerez du temps ensuite.</div>`},
+  {id:'g-rubriques', tab:'rubriques', toc:`Les rubriques et les tags`, disp:`📁 Les rubriques et les tags`, html:`<p>Les <strong>rubriques</strong> et les <strong>tags</strong> servent à classer et filtrer votre contenu (par thème, par jour…). C'est utile pour les événements riches où l'on veut trier les entrées du fil live.</p>`},
+  {id:'g-decor', tab:'decor', toc:`Le décor (style Expédition)`, disp:`🎨 Le décor (style Expédition)`, html:`<p>La ligne <span class="key">🎨 Décor</span> (disponible en style Expédition) permet d'ajouter des éléments graphiques décoratifs sur la page : une boussole, un avion, un palmier, des vagues… pour renforcer l'ambiance « carnet de voyage ».</p>
+<h3>Activer le décor</h3>
+<p>Cochez <strong>« Activer le décor »</strong> en haut. Vous pouvez aussi choisir une <strong>couleur de fond</strong> pour toute la page.</p>
+<h3>Ajouter un élément décoratif</h3>
+<div class="step">
+  <span class="step-num">1</span> Cliquez sur <strong>+ Ajouter</strong> (jusqu'à 12 éléments).<br>
+  <span class="step-num">2</span> Choisissez une <strong>forme</strong> dans la liste (rangées par familles : Carnet, Nature, Tourisme, Formes, Cartographie).<br>
+  <span class="step-num">3</span> Choisissez sur quel <strong>bloc</strong> le poser (ou la page entière) et à quel <strong>coin</strong>.<br>
+  <span class="step-num">4</span> Ajustez la <strong>position</strong> (décalages), la <strong>taille</strong>, la <strong>rotation</strong>, l'<strong>opacité</strong> et la <strong>couleur</strong>.<br>
+  <span class="step-num">5</span> L'aperçu à droite vous montre le rendu en direct. Enregistrez quand vous êtes satisfait.
+</div>
+<div class="tip">💡 Restez sobre : quelques éléments discrets (opacité faible) suffisent à donner du style. Trop d'éléments alourdissent la page.</div>`},
+  {id:'g-modules', tab:'modules', toc:`Organiser et masquer les blocs`, disp:`⚙️ Organiser et masquer les blocs`, html:`<p>La ligne <span class="key">⚙️ Modules</span> vous laisse décider <strong>quels blocs apparaissent</strong> sur la page et <strong>dans quel ordre</strong>.</p>
+<h3>Afficher ou masquer un bloc</h3>
+<p>Chaque bloc (programme, galerie, citations…) a un interrupteur. Éteignez-le pour le cacher de la page publique sans perdre son contenu.</p>
+<h3>Changer l'ordre</h3>
+<p>Réorganisez les blocs par glisser-déposer (ou avec les flèches) pour choisir ce qui apparaît en premier.</p>
+<div class="tip">💡 Mettez en haut ce qui compte le plus pour vos lecteurs pendant l'événement (souvent le fil live).</div>`},
+  {id:'g-widget', tab:'widget', toc:`Afficher le live sur votre site`, disp:`📦 Afficher le live sur votre site`, html:`<p>La ligne <span class="key">📦 Widget</span> vous donne un petit code à copier-coller pour intégrer votre live (ou un encart résumé) directement sur votre propre site web.</p>
+<h3>Comment faire</h3>
+<div class="step">
+  <span class="step-num">1</span> Copiez le <strong>code d'intégration</strong> affiché.<br>
+  <span class="step-num">2</span> Collez-le dans votre site à l'endroit voulu (ou transmettez-le à votre webmaster).<br>
+  <span class="step-num">3</span> L'encart se met à jour tout seul, en même temps que votre live.
+</div>
+<h3>Personnaliser l'encart</h3>
+<p>Vous pouvez choisir les blocs affichés dans l'encart, leur ordre, la couleur d'accent, la taille du texte et le nombre d'articles montrés.</p>`},
+  {id:'g-access', tab:'super', toc:`Gérer les accès (réservé aux administrateurs)`, disp:`👥 Gérer les accès (réservé aux administrateurs)`, html:`<p>La ligne <span class="key">👥 Accès</span> (visible seulement par les administrateurs) contrôle qui peut voir et modifier quoi.</p>
+<h3>Les profils de compte</h3>
+<ul>
+  <li><strong>Accès complet</strong> : voit tous les événements et toutes les rubriques, y compris cette page.</li>
+  <li><strong>Profil restreint</strong> : ne voit que les événements et les rubriques qu'on lui a autorisés. (C'est ce qui rend ce guide « dynamique » : un client ne voit ici que les sections des rubriques auxquelles il a droit.)</li>
+</ul>
+<h3>Autoriser des événements à un compte</h3>
+<p>Pour un compte restreint, dépliez la liste <strong>« Événements autorisés »</strong> (en accordéon) et cochez les événements auxquels il a droit.</p>
+<div class="warn">⚠️ Vérifiez toujours que votre propre compte garde un accès complet, sinon vous risquez de perdre l'accès à cette page.</div>`}
 ];
-  // Filtrer selon les droits : section visible si pas d'onglet lié, ou onglet non masqué ; 'super' => super-admin only
   const visible=SECTIONS.filter(s=>{
     if(s.tab===null) return true;
     if(s.tab==='super') return superAdmin;
@@ -6666,14 +6578,12 @@ function renderGuide(el){
   visible.forEach((s,i)=>{ toc+=`<a href="#${s.id}">${i+1}. ${s.toc}</a>`; });
   let body='';
   visible.forEach((s,i)=>{
-    // Renuméroter le titre h2 (retire l'ancien numéro éventuel)
-    let html=s.html.replace(/(<h2 id="[^"]+">)\s*\d+\.\s*/, `$1${i+1}. `);
-    body+=html;
+    body+=`<h2 id="${s.id}">${i+1}. ${s.disp}</h2>`+s.html;
   });
   let h=`<style>${guideCSS}</style>
   <div class="guide">
   <div class="page-title">📖 Guide d'utilisation</div>
-  <div class="page-desc">Ce guide s'adapte à vos droits d'accès : seules les sections des modules auxquels vous avez accès sont affichées.</div>
+  <div class="page-desc">Ce guide s'adapte à vos droits : vous ne voyez que les rubriques auxquelles vous avez accès. Cliquez sur une ligne du sommaire pour y aller directement.</div>
   <div class="guide-toc">
     <div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
     ${toc}
@@ -6681,7 +6591,7 @@ function renderGuide(el){
   ${body}
   <div style="margin-top:40px;padding:24px;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);border-radius:12px;text-align:center">
     <div style="font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">Besoin d'aide ?</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Contactez l'équipe technique TourMaG pour toute question.<br>Ce guide est aussi accessible à tout moment via le menu 📖 Guide d'utilisation.</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Contactez l'équipe technique TourMaG pour toute question.<br>Ce guide reste accessible à tout moment via le menu 📖 Guide d'utilisation.</div>
   </div>
   </div>`;
   el.innerHTML=h;
