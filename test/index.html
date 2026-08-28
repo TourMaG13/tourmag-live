@@ -3579,11 +3579,16 @@ function renderExpedition(data){
       // Create arrow marker
       const _arrowSvg = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M4 17 L11 5 L18 17" stroke="${accent}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const _arrowMarker = L.marker(_animPath[0], {
-        icon: L.divIcon({className:'exp-anim-arrow-wrap', html:`<div id="exp-anim-arrow" style="will-change:transform">${_arrowSvg}</div>`, iconSize:[22,22], iconAnchor:[11,11]}),
+        icon: L.divIcon({className:'exp-anim-arrow-wrap', html:`<div id="exp-anim-arrow" style="will-change:transform;transition:none">${_arrowSvg}</div>`, iconSize:[22,22], iconAnchor:[11,11]}),
         interactive: false, zIndexOffset: 900
       }).addTo(map);
-      // Empêche Leaflet d'appliquer une transition CSS sur le marqueur (source de saccade)
-      if(_arrowMarker._icon){ _arrowMarker._icon.style.transition='none'; _arrowMarker._icon.style.willChange='transform'; }
+      // Le marqueur reste fixe côté Leaflet ; on anime uniquement l'icône interne en pixels
+      // pour un mouvement fluide sans recalcul de projection à chaque frame.
+      if(_arrowMarker._icon){
+        _arrowMarker._icon.style.transition='none';
+        _arrowMarker._icon.style.willChange='transform';
+        _arrowMarker._icon.style.margin='0';
+      }
 
       // Animation loop: ~25 seconds per full circuit
       const LOOP_DURATION = 25000;
@@ -3591,15 +3596,21 @@ function renderExpedition(data){
       let _prevAngle = null;
       if(window._expAnimFrame) cancelAnimationFrame(window._expAnimFrame);
       function _shortestAngle(from, to){
-        // interpolation d'angle par le plus court chemin (évite le saut à chaque segment)
         let d = ((to - from + 540) % 360) - 180;
         return from + d;
       }
+      // Recalcule les positions écran des points du tracé (après chaque zoom/pan)
+      let _screenPts = [];
+      function _computeScreenPts(){
+        _screenPts = _animPath.map(p => map.latLngToLayerPoint(L.latLng(p[0], p[1])));
+      }
+      _computeScreenPts();
+      map.on('zoomend moveend viewreset', _computeScreenPts);
+
       function _animStep(ts){
         if(!_animStart) _animStart = ts;
         const t = ((ts - _animStart) % LOOP_DURATION) / LOOP_DURATION;
         const targetDist = t * _totalDist;
-        // Find segment
         let segIdx = 0;
         for(let i=1; i<_cumDist.length; i++){
           if(_cumDist[i] >= targetDist){ segIdx = i-1; break; }
@@ -3607,18 +3618,20 @@ function renderExpedition(data){
         }
         const segLen = _cumDist[segIdx+1] - _cumDist[segIdx];
         const frac = segLen > 0 ? (targetDist - _cumDist[segIdx]) / segLen : 0;
-        const a = _animPath[segIdx], b = _animPath[segIdx+1];
-        const lat = a[0] + (b[0]-a[0]) * frac;
-        const lng = a[1] + (b[1]-a[1]) * frac;
-        _arrowMarker.setLatLng([lat, lng]);
-        if(_arrowMarker._icon) _arrowMarker._icon.style.transition='none';
-        // Rotation lissée par le plus court chemin
-        const angle = _bearing(a, b);
-        _prevAngle = (_prevAngle===null) ? angle : _shortestAngle(_prevAngle, angle);
-        // rapprochement progressif pour un virage doux
-        _prevAngle = _prevAngle + (_shortestAngle(_prevAngle, angle) - _prevAngle) * 0.18;
-        const el = document.getElementById('exp-anim-arrow');
-        if(el) el.style.transform = 'rotate('+(_prevAngle)+'deg)';
+        // Position en pixels (interpolation dans l'espace écran = déplacement parfaitement régulier)
+        const pa = _screenPts[segIdx], pb = _screenPts[segIdx+1];
+        if(pa && pb){
+          const px = pa.x + (pb.x - pa.x) * frac;
+          const py = pa.y + (pb.y - pa.y) * frac;
+          // Angle calculé dans l'espace écran (cohérent avec le mouvement visible)
+          const angle = Math.atan2(pb.y - pa.y, pb.x - pa.x) * 180 / Math.PI + 90;
+          _prevAngle = (_prevAngle===null) ? angle : (_prevAngle + (_shortestAngle(_prevAngle, angle) - _prevAngle) * 0.2);
+          const el = _arrowMarker._icon;
+          if(el){
+            el.style.transform = 'translate3d('+(px-11)+'px,'+(py-11)+'px,0) rotate('+_prevAngle+'deg)';
+            el.style.transition='none';
+          }
+        }
         window._expAnimFrame = requestAnimationFrame(_animStep);
       }
       window._expAnimFrame = requestAnimationFrame(_animStep);
