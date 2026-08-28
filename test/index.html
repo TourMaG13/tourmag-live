@@ -203,6 +203,12 @@ img{display:block}a{text-decoration:none}
 .like-btn .like-count{font-weight:600;font-variant-numeric:tabular-nums;min-width:8px}
 .like-btn.like-bounce .like-ic{animation:likePop .3s ease}
 @keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.share-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1.5px solid var(--border,#e5e5e5);color:var(--text3,#888);padding:5px 12px;border-radius:100px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .18s;-webkit-tap-highlight-color:transparent}
+.share-btn:hover{border-color:var(--acc,#E8842C);color:var(--acc,#E8842C)}
+.share-btn .share-ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.share-btn.copied{border-color:#16A34A;color:#16A34A}
+.exp-entry-actions .share-btn{border-radius:0;border-color:var(--exp-ink);color:var(--exp-ink);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.exp-entry-actions .share-btn:hover{background:var(--exp-ink);color:#fff}
 /* ===== Bloc Questions du public (Q&A) ===== */
 .qa-block{max-width:820px;margin:40px auto;padding:0 20px}
 .qa-form{background:var(--qa-form-bg,var(--card,#fff));border:1.5px solid var(--border,#e5e5e5);border-radius:14px;padding:16px 18px;margin-top:8px}
@@ -1609,6 +1615,7 @@ function render(data){
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
+  window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1828,7 +1835,7 @@ function render(data){
     const avatarHtml = jrPhoto
       ? `<img class="live-avatar${isFirst?' live-avatar-first':''}" src="${jrPhoto}" alt="" onerror="this.className='live-dot'">`
       : `<div class="live-dot"></div>`;
-    return `<div class="live-entry"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}</div></div></div>`;
+    return `<div class="live-entry" id="live-${e.id||''}"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}${mkShareButton(e)}</div></div></div>`;
   }
 
   function mkLive(){
@@ -2483,6 +2490,7 @@ function renderExpedition(data){
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
+  window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
   // Apply global custom colors then per-phase overrides
   document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
@@ -3676,7 +3684,7 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
   const isNow = etape && etape.status === 'now';
   const clampId = 'exp-clamp-'+entry.id;
 
-  let o = `<div class="exp-entry${isNow?' now':''}${isLatest?' exp-entry-latest':''}">`;
+  let o = `<div class="exp-entry${isNow?' now':''}${isLatest?' exp-entry-latest':''}" id="live-${entry.id||''}">`;
   o += `<div class="exp-entry-meta">`;
   o += `<span>${fmtTime(entry.time)}</span>`;
   if(entry.tag) o += `<span class="tag">${entry.tag}</span>`;
@@ -3712,7 +3720,7 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
 
   if(etape && etape.km) o += `<div class="exp-entry-km">${etape.km}</div>`;
 
-  o += `<div class="exp-entry-actions">${mkLikeButton(entry.id, entry.likeCount)}</div>`;
+  o += `<div class="exp-entry-actions">${mkLikeButton(entry.id, entry.likeCount)}${mkShareButton(entry)}</div>`;
 
   o += `</div>`;
   return o;
@@ -3775,6 +3783,43 @@ function mkLikeButton(entryId, count){
     <span class="like-count" data-like-count="${entryId}">${n>0?n:''}</span>
   </button>`;
 }
+
+// Bouton de partage d'une entrée du fil live (menu natif via Web Share API, fallback copie du lien)
+function mkShareButton(entry){
+  const id=entry.id||'';
+  const title=(entry.title||entry.text||'').replace(/<[^>]+>/g,'').slice(0,120).replace(/"/g,'&quot;');
+  return `<button class="share-btn" data-share-id="${id}" data-share-title="${title}" onclick="window._shareEntry(this)" aria-label="Partager">
+    <svg viewBox="0 0 24 24" class="share-ic"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
+    <span class="share-label">Partager</span>
+  </button>`;
+}
+
+window._shareEntry = async function(btn){
+  const id=btn.getAttribute('data-share-id')||'';
+  const title=btn.getAttribute('data-share-title')||'';
+  // Lien vers l'entrée : URL courante + ancre #live-<id>
+  const base=window.location.href.split('#')[0];
+  const url=id?(base+'#live-'+id):base;
+  const evTitle=(window._eventTitleForShare||document.title||'Live TourMaG');
+  const shareData={title:evTitle, text:title||evTitle, url};
+  try{
+    if(navigator.share){
+      await navigator.share(shareData);
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  // Fallback : copie du lien dans le presse-papier
+  try{
+    await navigator.clipboard.writeText(url);
+    const lbl=btn.querySelector('.share-label');
+    const old=lbl?lbl.textContent:'';
+    btn.classList.add('copied');
+    if(lbl) lbl.textContent='Lien copié !';
+    setTimeout(()=>{ btn.classList.remove('copied'); if(lbl) lbl.textContent=old||'Partager'; },1800);
+  }catch(e){
+    prompt('Copiez ce lien :', url);
+  }
+};
 // Like / unlike optimiste avec transaction
 window._toggleLike = async function(entryId, btnEl){
   const eventId = window._eventIdForLikes;
@@ -4206,6 +4251,17 @@ function requestFullWidth(){
 }
 window.addEventListener('load',()=>{
   document.documentElement.style.overflowY='visible';document.documentElement.style.overflowX='hidden';document.body.style.overflowY='visible';document.body.style.overflowX='hidden';
+  // Si on arrive avec une ancre #live-<id> (lien partagé), on scrolle vers l'entrée une fois rendue.
+  (function(){
+    const hash=window.location.hash;
+    if(!hash || hash.indexOf('#live-')!==0) return;
+    let tries=0;
+    const iv=setInterval(()=>{
+      const el=document.getElementById(hash.slice(1));
+      if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.transition='background .4s'; clearInterval(iv); }
+      if(++tries>20) clearInterval(iv);
+    },400);
+  })();
   sendHeight();
   requestFullWidth();
   [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
