@@ -7908,6 +7908,44 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-sliders"/></svg> Paramétrage du widget compact</h3>
 
+    ${(function(){
+      const cfg=ev.widgetConfig||{};
+      const LABELS={header:'En-tête (logo, titre, bouton Live)',flash:'Dernière info (flash)',mid:'Essentiel + Citations',live:'Fil en direct (3 dernières)',articles:'Derniers articles (3)',timeline:'Frise / Timeline',footer:'Zone personnalisable (bas)'};
+      const DEF=['header','flash','mid','live','articles','timeline','footer'];
+      let order=(cfg.order&&cfg.order.length)?cfg.order.slice():DEF.slice();
+      DEF.forEach(k=>{ if(!order.includes(k)) order.push(k); });
+      const off=cfg.off||[];
+      const accent=cfg.accent||'#E8842C';
+      const bg=cfg.bg||'';
+      const textColor=cfg.textColor||'';
+      const textSize=cfg.textSize||'medium';
+      let rows='';
+      order.forEach((k,i)=>{
+        const on=!off.includes(k);
+        rows+=`<div class="wcfg-row" data-key="${k}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--card)">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <button class="btn btn-ghost btn-xs" onclick="wcfgMove('${k}',-1)" ${i===0?'disabled':''} style="padding:1px 6px;line-height:1">▲</button>
+            <button class="btn btn-ghost btn-xs" onclick="wcfgMove('${k}',1)" ${i===order.length-1?'disabled':''} style="padding:1px 6px;line-height:1">▼</button>
+          </div>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" class="wcfg-on" data-key="${k}" ${on?'checked':''}> ${LABELS[k]||k}</label>
+        </div>`;
+      });
+      return `<input type="hidden" id="w-cfg-order" value="${order.join(',')}">
+      <div style="margin-bottom:16px">
+        <label class="form-label" style="margin-bottom:8px;display:block">🎨 Apparence</label>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div class="form-row" style="max-width:150px"><label class="form-label">Couleur d'accent</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="w-cfg-accent" value="${accent}" style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div></div>
+          <div class="form-row" style="max-width:170px"><label class="form-label">Fond de l'encart</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="w-cfg-bg-on" ${bg?'checked':''} onchange="document.getElementById('w-cfg-bg').disabled=!this.checked"><input type="color" id="w-cfg-bg" value="${bg||'#1B1B2F'}" ${bg?'':'disabled'} style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = dégradé par défaut</div></div>
+          <div class="form-row" style="max-width:170px"><label class="form-label">Couleur du texte</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="w-cfg-text-on" ${textColor?'checked':''} onchange="document.getElementById('w-cfg-text').disabled=!this.checked"><input type="color" id="w-cfg-text" value="${textColor||'#ffffff'}" ${textColor?'':'disabled'} style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = blanc par défaut</div></div>
+          <div class="form-row" style="max-width:150px"><label class="form-label">Taille du texte</label><select class="form-input" id="w-cfg-textsize"><option value="small"${textSize==='small'?' selected':''}>Petit</option><option value="medium"${textSize==='medium'?' selected':''}>Moyen</option><option value="large"${textSize==='large'?' selected':''}>Grand</option></select></div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px"><label class="form-label" style="margin-bottom:8px;display:block">🧩 Modules (glisser l'ordre avec ▲▼, cocher pour afficher)</label>
+        <div id="w-cfg-modules">${rows}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">L'encart garde toujours un lien vers le live, même si l'en-tête est masqué.</div>
+      </div>`;
+    })()}
+
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)"><label class="form-label" style="margin-bottom:10px;display:block">Zone personnalisable (sous la frise)</label>
       <div class="form-row"><label class="form-label">Texte (optionnel)</label><textarea class="form-input" id="w-footer-text" rows="3" placeholder="Ex: Retrouvez toute l'actualité du salon en direct sur TourMaG.com…" style="resize:vertical">${(ev.widgetFooterText||'').replace(/</g,'&lt;')}</textarea></div>
       <div class="form-row-inline">
@@ -7998,7 +8036,22 @@ window.addEventListener('message',function(e){
 }
 async function saveWidgetConfig(){
   saving(true);
-  await evRef().update({
+  // Collecte de la config modules/apparence de l'encart
+  const modWrap=document.getElementById('w-cfg-modules');
+  let widgetConfig=null;
+  if(modWrap){
+    const rows=[...modWrap.querySelectorAll('.wcfg-row')];
+    const order=rows.map(r=>r.getAttribute('data-key'));
+    const off=rows.filter(r=>!r.querySelector('.wcfg-on').checked).map(r=>r.getAttribute('data-key'));
+    widgetConfig={
+      order, off,
+      accent:document.getElementById('w-cfg-accent')?.value||'#E8842C',
+      bg:document.getElementById('w-cfg-bg-on')?.checked?(document.getElementById('w-cfg-bg')?.value||''):'',
+      textColor:document.getElementById('w-cfg-text-on')?.checked?(document.getElementById('w-cfg-text')?.value||''):'',
+      textSize:document.getElementById('w-cfg-textsize')?.value||'medium'
+    };
+  }
+  const upd={
     widgetCtaUrl:document.getElementById('w-cta-url').value.trim(),
     uploadUrl:document.getElementById('w-upload-url').value.trim(),
     widgetFooterText:document.getElementById('w-footer-text').value.trim(),
@@ -8006,12 +8059,33 @@ async function saveWidgetConfig(){
     widgetFooterBtnUrl:document.getElementById('w-footer-btn-url').value.trim(),
     widgetFooterColor:document.getElementById('w-footer-color').value,
     widgetFooterLayout:document.getElementById('w-footer-layout').value
-  });
+  };
+  if(widgetConfig) upd.widgetConfig=widgetConfig;
+  await evRef().update(upd);
   toast('Configuration enregistrée');
   setTimeout(function(){
     const w=document.getElementById('prev-wc');
     if(w){ const base=w.src.split('&_ap=')[0].split('?_ap=')[0]; w.src=base+(base.indexOf('?')>=0?'&':'?')+'_ap='+Date.now(); }
   }, 900);
+}
+
+// Réordonne un module de l'encart (déplace le nœud DOM, préserve l'état des cases)
+function wcfgMove(key,dir){
+  const wrap=document.getElementById('w-cfg-modules'); if(!wrap) return;
+  const rows=[...wrap.querySelectorAll('.wcfg-row')];
+  const idx=rows.findIndex(r=>r.getAttribute('data-key')===key);
+  if(idx<0) return;
+  const ni=idx+dir;
+  if(ni<0||ni>=rows.length) return;
+  if(dir<0) wrap.insertBefore(rows[idx],rows[ni]);
+  else wrap.insertBefore(rows[ni],rows[idx]);
+  // Réactive/désactive les flèches aux extrémités
+  const nr=[...wrap.querySelectorAll('.wcfg-row')];
+  nr.forEach((r,i)=>{
+    const ups=r.querySelectorAll('button');
+    if(ups[0]) ups[0].disabled=(i===0);
+    if(ups[1]) ups[1].disabled=(i===nr.length-1);
+  });
 }
 function copyEmbed(id){
   const el=document.getElementById(id);
