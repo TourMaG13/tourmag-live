@@ -7838,9 +7838,18 @@ function _initEncartPreviewResize(){
   if(window._encartPreviewResizeInit) return;
   window._encartPreviewResizeInit=true;
   window.addEventListener('message',function(e){
-    if(e.data && e.data.type==='tmg-encart-resize' && typeof e.data.id==='string' && e.data.id.indexOf('prev-')===0){
+    if(!e.data) return;
+    const t=e.data.type;
+    // Encarts expédition : message ciblé par id (prev-es / prev-el).
+    if(t==='tmg-encart-resize' && typeof e.data.id==='string' && e.data.id.indexOf('prev-')===0){
       const f=document.getElementById(e.data.id);
-      if(f) f.style.height=e.data.height+'px';
+      if(f && e.data.height) f.style.height=e.data.height+'px';
+      return;
+    }
+    // Widget compact classique : message non ciblé -> on redimensionne l'aperçu prev-wc s'il existe.
+    if(t==='tourmag-live-resize' || t==='setHeight'){
+      const f=document.getElementById('prev-wc');
+      if(f && e.data.height) f.style.height=e.data.height+'px';
     }
   });
 }
@@ -7954,6 +7963,8 @@ window.addEventListener('message',function(e){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Option 2 — Widget encart compact (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Encart compact pour la homepage, identique au widget du dashboard crise. Auto-resize via postMessage.</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px"><label class="form-label" style="margin:0">👁 Aperçu <span style="font-weight:400;color:var(--text3);font-size:11px">(reflète la dernière configuration enregistrée)</span></label><button class="btn btn-ghost btn-xs" onclick="refreshEncartPreview('prev-wc','${widgetUrl}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-refresh"/></svg> Rafraîchir</button></div>
+    <div style="background:#f1f5f9;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden"><iframe src="${widgetUrl}" id="prev-wc" style="width:100%;border:none;min-height:280px;border-radius:10px;overflow:hidden;display:block"></iframe></div>
     <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
@@ -7980,6 +7991,7 @@ window.addEventListener('message',function(e){
     </div>
   </div>`;
   el.innerHTML=h;
+  _initEncartPreviewResize();
   // Live update color label
   const cInput=document.getElementById('w-footer-color');
   if(cInput) cInput.addEventListener('input',()=>{document.getElementById('w-footer-color-val').textContent=cInput.value;});
@@ -7996,6 +8008,10 @@ async function saveWidgetConfig(){
     widgetFooterLayout:document.getElementById('w-footer-layout').value
   });
   toast('Configuration enregistrée');
+  setTimeout(function(){
+    const w=document.getElementById('prev-wc');
+    if(w){ const base=w.src.split('&_ap=')[0].split('?_ap=')[0]; w.src=base+(base.indexOf('?')>=0?'&':'?')+'_ap='+Date.now(); }
+  }, 900);
 }
 function copyEmbed(id){
   const el=document.getElementById(id);
