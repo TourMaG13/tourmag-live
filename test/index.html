@@ -478,7 +478,8 @@ img{display:block}a{text-decoration:none}
 .prog-card .hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #F59E0B25}
 .prog-card .ci{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#F59E0B20;color:#92400E}
 .prog-card .ci svg{width:16px;height:16px}
-.prog-card .ct{font-family:'Josefin Sans';font-size:var(--prog-title-size,14px);font-weight:700;color:#78350F}
+.prog-card .ct{font-family:'Josefin Sans';font-size:var(--prog-title-size,14px)!important;font-weight:700;color:#78350F}
+.exp-prog > .exp-card-label{font-size:var(--prog-title-size,10px)!important}
 .prog-list{padding:8px 12px}
 .prog-item{display:flex;gap:8px;padding:7px 10px;margin-bottom:4px;border:1px solid #F59E0B20;border-radius:8px;background:rgba(255,255,255,.5);align-items:center;transition:background .15s}
 .prog-item:hover{background:rgba(255,255,255,.8)}.prog-item:last-child{margin-bottom:0}
@@ -1409,7 +1410,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     },
     programme: {
       zone:'body',
-      title:'.prog-card .ct,.exp-prog .exp-card-label',
+      title:'',
       text:'.prog-label,.exp-prog-label',
       ui:'.prog-time,.prog-desc,.prog-status,.exp-prog-time,.exp-prog-desc,.exp-prog-status,.exp-prog-day'
     },
@@ -1436,7 +1437,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     itinerary: {
       title: '.exp-route-name,.exp-map-panel-name',
       text:  '.exp-route-detail,.exp-map-panel-desc',
-      ui:    '.exp-card-label-itin,.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
+      ui:    '.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
     }
   };
 
@@ -2573,8 +2574,11 @@ function renderExpedition(data){
   const brand = exp.branding || {};
   let accent = event.accentColor || brand.accentColor || '#FF6C00';
   const mod = event.modules || {};
-
-  // ===== PHASE FILTERING =====
+  // Tailles de titres/labels configurables (aussi en mode expédition)
+  if(event.programmeTitleSize) document.documentElement.style.setProperty('--prog-title-size', event.programmeTitleSize + 'px');
+  else document.documentElement.style.removeProperty('--prog-title-size');
+  if(event.journalistsTitleSize) document.documentElement.style.setProperty('--jr-title-size', event.journalistsTitleSize + 'px');
+  else document.documentElement.style.removeProperty('--jr-title-size');
   const phases = event.phases || [];
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
@@ -2971,7 +2975,7 @@ function renderExpedition(data){
       const det = []; if(et.dateLabel) det.push(et.dateLabel); if(et.km) det.push(et.km);
       return `<li class="${et.status||'next'}${isRoute?' is-route':''}"><div class="exp-route-name">${nm}</div>${det.length?`<div class="exp-route-detail">${det.map(d=>`<span>${d}</span>`).join('')}</div>`:''}</li>`;
     }
-    o += `<div class="exp-card"><div class="exp-card-label exp-card-label-itin">Itinéraire</div><ul class="exp-route">`;
+    o += `<div class="exp-card"><div class="exp-card-label exp-card-label-itin"${(exp.itinLabelSize?` style="font-size:${exp.itinLabelSize}px"`:'')}>${exp.itinLabel||'Itinéraire'}</div><ul class="exp-route">`;
     if(before.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-before-list','exp-itin-before-btn',${before.length})"><span id="exp-itin-before-btn">▴ ${before.length} étape${before.length>1?'s':''} précédente${before.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-before-list">${before.map(mkEtapeLi).join('')}</ul></li>`;
     visible.forEach(et => { o += mkEtapeLi(et); });
     if(after.length) o += `<li class="exp-route-acc"><button class="exp-route-acc-btn" onclick="toggleExpExpand('exp-itin-after-list','exp-itin-after-btn',${after.length})"><span id="exp-itin-after-btn">▾ ${after.length} étape${after.length>1?'s':''} suivante${after.length>1?'s':''}</span></button><ul class="exp-route exp-expand" id="exp-itin-after-list">${after.map(mkEtapeLi).join('')}</ul></li>`;
