@@ -843,6 +843,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 /* CTA card */
 .exp-card-cta{background:var(--exp-ink);color:#fff;border:none}
 .exp-card-cta .exp-card-label{color:var(--exp-accent)}
+.exp-card-label-reporters{font-size:var(--jr-title-size,10px)}
 .exp-card-cta p{color:#D8D5D0}
 .exp-card-cta .exp-btn{display:inline-block;margin-top:16px;background:var(--exp-accent);color:#111;font-weight:700;font-size:13px;letter-spacing:.04em;padding:12px 22px;border-radius:3px;text-decoration:none;transition:opacity .2s}
 .exp-card-cta .exp-btn:hover{opacity:.85}
@@ -1024,11 +1025,70 @@ body.mode-expedition .social-float{display:none}
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
-// ==== BIBLIOTHÈQUE DE FORMES DÉCOR (51) — viewBox 0 0 100 100, stroke=currentColor ====
-// Chaque valeur est le contenu interne d'un <svg viewBox="0 0 100 100">. 'C' = couleur (remplacée au rendu).
 window.DECOR_SHAPES = {
- // — Carnet —
- boussole:'<g transform="translate(50,50)"><circle r="45" fill="none" stroke="C" stroke-width=".6"/><circle r="35" fill="none" stroke="C" stroke-width=".3"/><circle r="2" fill="C"/><g stroke="C" stroke-width=".8"><line y1="-44" y2="-12"/><line y1="44" y2="12"/><line x1="-44" x2="-12"/><line x1="44" x2="12"/></g><g stroke="C" stroke-width=".4"><line x1="-31" y1="-31" x2="-9" y2="-9"/><line x1="31" y1="-31" x2="9" y2="-9"/><line x1="-31" y1="31" x2="-9" y2="9"/><line x1="31" y1="31" x2="9" y2="9"/></g><polygon points="0,-44 -4,-12 0,-7 4,-12" fill="C" opacity=".6"/><polygon points="0,44 -4,12 0,7 4,12" fill="C" opacity=".3"/><polygon points="-44,0 -12,-4 -7,0 -12,4" fill="C" opacity=".3"/><polygon points="44,0 12,-4 7,0 12,4" fill="C" opacity=".3"/><text font-family="Georgia,serif" font-size="7" fill="C" text-anchor="middle" y="-46">N</text><text font-family="Georgia,serif" font-size="6" fill="C" text-anchor="middle" y="52">S</text><text font-family="Georgia,serif" font-size="6" fill="C" x="-49" y="3" text-anchor="middle">W</text><text font-family="Georgia,serif" font-size="6" fill="C" x="49" y="3" text-anchor="middle">E</text></g>',tampon:'Tampon',avion:'Avion',relief:'Relief',couture:'Couture',cachet:'Cachet',trombone:'Trombone',ruban:'Ruban',
+ boussole:'<g transform="translate(50,50)"><circle r="45" fill="none" stroke="C" stroke-width=".6"/><circle r="35" fill="none" stroke="C" stroke-width=".3"/><circle r="2" fill="C"/><g stroke="C" stroke-width=".8"><line y1="-44" y2="-12"/><line y1="44" y2="12"/><line x1="-44" x2="-12"/><line x1="44" x2="12"/></g><g stroke="C" stroke-width=".4"><line x1="-31" y1="-31" x2="-9" y2="-9"/><line x1="31" y1="-31" x2="9" y2="-9"/><line x1="-31" y1="31" x2="-9" y2="9"/><line x1="31" y1="31" x2="9" y2="9"/></g><polygon points="0,-44 -4,-12 0,-7 4,-12" fill="C" opacity=".6"/><polygon points="0,44 -4,12 0,7 4,12" fill="C" opacity=".3"/><polygon points="-44,0 -12,-4 -7,0 -12,4" fill="C" opacity=".3"/><polygon points="44,0 12,-4 7,0 12,4" fill="C" opacity=".3"/><text font-family="Georgia,serif" font-size="7" fill="C" text-anchor="middle" y="-46">N</text><text font-family="Georgia,serif" font-size="6" fill="C" text-anchor="middle" y="52">S</text><text font-family="Georgia,serif" font-size="6" fill="C" x="-49" y="3" text-anchor="middle">W</text><text font-family="Georgia,serif" font-size="6" fill="C" x="49" y="3" text-anchor="middle">E</text></g>',
+ tampon:'<circle cx="50" cy="50" r="33" stroke-dasharray="3 2" stroke-width="1.2"/><circle cx="50" cy="50" r="26" stroke-width=".4"/><text x="50" y="42" font-size="7" fill="C" text-anchor="middle" stroke="none" font-family="monospace">EXPEDITION</text><text x="50" y="56" font-size="11" fill="C" text-anchor="middle" stroke="none" font-family="Georgia">2026</text><line x1="28" y1="62" x2="72" y2="62" stroke-width=".4"/>',
+ avion:'<path d="M12 52 C35 50 55 49 70 49" stroke-dasharray="4 3" stroke-width=".7"/><g transform="translate(72,49) rotate(-4)" fill="C" stroke="none"><path d="M14 0 C14 1.4 11 2.2 6 2.2 L3 2.2 L-3 14 L-5.5 14 L-2 2.2 L-8 2 L-11 5.5 L-12.5 5.5 L-11 0 L-12.5 -5.5 L-11 -5.5 L-8 -2 L-2 -2.2 L-5.5 -14 L-3 -14 L3 -2.2 L6 -2.2 C11 -2.2 14 -1.4 14 0Z"/></g>',
+ relief:'<path d="M10 70 L30 45 L42 58 L58 30 L70 52 L90 40 L90 75 L10 75Z" stroke-width="1" stroke-linejoin="round"/><path d="M52 38 L58 30 L64 40" stroke-width=".5"/>',
+ couture:'<line x1="50" y1="15" x2="50" y2="85" stroke-dasharray="5 4" stroke-width="1.4"/>',
+ cachet:'<rect x="22" y="30" width="56" height="40" rx="3" stroke-dasharray="3 2"/><text x="50" y="47" font-size="6" fill="C" text-anchor="middle" stroke="none" font-family="monospace">PAR AVION</text><text x="50" y="58" font-size="6" fill="C" text-anchor="middle" stroke="none" font-family="monospace">AIR MAIL</text>',
+ trombone:'<path d="M42 25 L42 68 A8 8 0 0 0 58 68 L58 35 A13 13 0 0 0 32 35 L32 72" stroke-width="1.6" stroke-linecap="round"/>',
+ ruban:'<path d="M35 20 L35 80 L50 68 L65 80 L65 20Z" stroke-linejoin="round"/>',
+ feuille:'<path d="M50 82 Q30 60 32 38 Q34 20 50 14 Q66 20 68 38 Q70 60 50 82Z" stroke-linejoin="round"/><line x1="50" y1="20" x2="50" y2="80" stroke-width=".6"/><path d="M50 38 L38 32 M50 48 L36 44 M50 58 L40 56 M50 38 L62 32 M50 48 L64 44 M50 58 L60 56" stroke-width=".5"/>',
+ palmier:'<path d="M48 85 Q46 60 50 40" stroke-width="1.6" fill="none" stroke-linecap="round"/><g fill="none" stroke-width="1.1" stroke-linecap="round"><path d="M50 40 Q34 34 20 40 Q30 34 34 30"/><path d="M50 40 Q36 26 24 20 Q34 24 40 24"/><path d="M50 40 Q50 22 52 12 Q54 20 58 22"/><path d="M50 40 Q66 26 78 22 Q68 26 64 30"/><path d="M50 40 Q66 34 80 42 Q70 36 66 34"/></g><circle cx="47" cy="43" r="2.5" fill="C" stroke="none"/><circle cx="53" cy="43" r="2.5" fill="C" stroke="none"/>',
+ montgolfiere:'<path d="M50 20 Q30 20 30 42 Q30 58 50 70 Q70 58 70 42 Q70 20 50 20Z"/><path d="M50 20 L50 70" stroke-width=".5"/><path d="M38 22 Q34 45 44 68" stroke-width=".5"/><path d="M62 22 Q66 45 56 68" stroke-width=".5"/><path d="M44 70 L46 78 L54 78 L56 70"/><rect x="45" y="78" width="10" height="7" rx="1"/>',
+ vagues:'<path d="M15 45 Q25 38 35 45 T55 45 T75 45 T85 45" stroke-width="1.2"/><path d="M15 55 Q25 48 35 55 T55 55 T75 55 T85 55" stroke-width="1"/><path d="M20 65 Q30 58 40 65 T60 65 T80 65" stroke-width=".8"/>',
+ soleil:'<circle cx="50" cy="55" r="16"/><g stroke-width="1"><line x1="50" y1="30" x2="50" y2="20"/><line x1="68" y1="37" x2="75" y2="30"/><line x1="32" y1="37" x2="25" y2="30"/><line x1="76" y1="55" x2="86" y2="55"/><line x1="24" y1="55" x2="14" y2="55"/></g>',
+ nuage:'<path d="M28 62 Q18 62 18 52 Q18 44 27 44 Q28 32 42 32 Q54 32 56 42 Q70 40 72 52 Q72 62 62 62Z"/>',
+ fougere:'<path d="M50 85 Q50 45 50 18"/><g stroke-width=".7"><path d="M50 30 Q40 26 34 30"/><path d="M50 30 Q60 26 66 30"/><path d="M50 40 Q38 36 30 42"/><path d="M50 40 Q62 36 70 42"/><path d="M50 52 Q37 48 28 55"/><path d="M50 52 Q63 48 72 55"/><path d="M50 65 Q39 62 32 68"/><path d="M50 65 Q61 62 68 68"/></g>',
+ etoile:'<path d="M50 22 L56 42 L77 42 L60 55 L66 76 L50 63 L34 76 L40 55 L23 42 L44 42Z" stroke-linejoin="round"/>',
+ lune:'<path d="M58 20 A32 32 0 1 0 58 80 A26 26 0 1 1 58 20Z"/>',
+ cactus:'<path d="M44 82 L44 34 Q44 26 50 26 Q56 26 56 34 L56 82" stroke-linejoin="round"/><path d="M44 58 Q30 58 30 46 L30 40 Q30 34 36 34" stroke-linejoin="round"/><path d="M56 50 Q70 50 70 40 L70 34 Q70 28 64 28" stroke-linejoin="round"/>',
+ valise:'<rect x="26" y="40" width="48" height="34" rx="3"/><path d="M40 40 L40 32 A3 3 0 0 1 43 29 L57 29 A3 3 0 0 1 60 32 L60 40" fill="none"/><line x1="40" y1="40" x2="40" y2="74" stroke-width=".6"/><line x1="60" y1="40" x2="60" y2="74" stroke-width=".6"/>',
+ appareil:'<rect x="22" y="34" width="56" height="38" rx="4"/><circle cx="50" cy="53" r="12"/><circle cx="50" cy="53" r="6" stroke-width=".7"/><path d="M36 34 L40 28 L60 28 L64 34" fill="none"/><circle cx="68" cy="42" r="2" fill="C" stroke="none"/>',
+ ticket:'<path d="M22 38 L78 38 L78 46 A4 4 0 0 0 78 54 L78 62 L22 62 L22 54 A4 4 0 0 0 22 46Z" stroke-linejoin="round"/><line x1="55" y1="38" x2="55" y2="62" stroke-dasharray="2 2" stroke-width=".7"/><path d="M40 46 L46 50 L40 54" stroke-width=".7" fill="none"/>',
+ cocktail:'<path d="M28 32 L72 32 L52 56 L52 74 M52 74 L44 78 L60 78" stroke-linejoin="round" fill="none"/><line x1="52" y1="56" x2="52" y2="74"/><circle cx="63" cy="37" r="3" stroke-width=".8"/><line x1="63" y1="37" x2="70" y2="26" stroke-width=".7"/>',
+ phare:'<path d="M42 78 L44 40 L56 40 L58 78Z"/><rect x="43" y="32" width="14" height="8"/><path d="M46 32 L44 26 L56 26 L54 32" fill="none"/><line x1="44" y1="52" x2="56" y2="52" stroke-width=".6"/><line x1="43" y1="64" x2="57" y2="64" stroke-width=".6"/><path d="M57 30 L68 26 M57 36 L68 38" stroke-width=".7"/>',
+ bateau:'<path d="M20 58 L80 58 L72 72 L28 72Z" stroke-linejoin="round"/><line x1="50" y1="58" x2="50" y2="22" stroke-width="1"/><path d="M50 26 L70 44 L50 44Z" fill="none"/><path d="M50 30 L34 46 L50 46" fill="none" stroke-width=".8"/>',
+ sacados:'<rect x="32" y="34" width="36" height="44" rx="8"/><path d="M40 34 Q40 22 50 22 Q60 22 60 34" fill="none"/><rect x="40" y="48" width="20" height="16" rx="3" stroke-width=".8"/><line x1="50" y1="34" x2="50" y2="48" stroke-width=".6"/>',
+ montagne:'<path d="M15 74 L38 34 L52 56 L64 40 L85 74Z" stroke-linejoin="round"/><path d="M32 44 L38 34 L44 44" stroke-width=".7" fill="none"/><circle cx="66" cy="30" r="6" stroke-width=".8"/>',
+ passeport:'<rect x="32" y="26" width="36" height="48" rx="3"/><circle cx="50" cy="44" r="8"/><line x1="42" y1="44" x2="58" y2="44" stroke-width=".5"/><path d="M50 36 Q46 44 50 52 Q54 44 50 36" stroke-width=".5" fill="none"/><line x1="42" y1="62" x2="58" y2="62" stroke-width=".7"/><line x1="42" y1="67" x2="58" y2="67" stroke-width=".7"/>',
+ boussole2:'<circle cx="50" cy="50" r="28"/><polygon points="50,30 45,50 50,46 55,50" fill="C" stroke="none"/><polygon points="50,70 45,50 50,54 55,50" fill="none"/>',
+ hamac:'<path d="M20 40 Q50 78 80 40" stroke-width="1.4" fill="none"/><line x1="20" y1="40" x2="20" y2="30"/><line x1="80" y1="40" x2="80" y2="30"/><path d="M28 52 Q50 70 72 52" stroke-width=".6" fill="none"/>',
+ parasol:'<path d="M22 46 Q50 20 78 46Z" stroke-linejoin="round"/><line x1="50" y1="46" x2="50" y2="78"/><path d="M22 46 Q36 40 50 46 Q64 40 78 46" stroke-width=".6" fill="none"/><line x1="50" y1="78" x2="56" y2="74" stroke-width=".8"/>',
+ blob:'<path d="M46 18 Q70 16 76 38 Q84 58 64 70 Q44 82 28 68 Q12 54 22 34 Q30 18 46 18Z" stroke-linejoin="round"/>',
+ cercle:'<circle cx="50" cy="50" r="32" stroke-width="1"/>',
+ arc:'<path d="M22 70 A32 32 0 0 1 78 70" stroke-width="1.4"/>',
+ pointilles:'<g fill="C" stroke="none"><circle cx="30" cy="30" r="2"/><circle cx="45" cy="30" r="2"/><circle cx="60" cy="30" r="2"/><circle cx="30" cy="45" r="2"/><circle cx="45" cy="45" r="2"/><circle cx="60" cy="45" r="2"/><circle cx="30" cy="60" r="2"/><circle cx="45" cy="60" r="2"/><circle cx="60" cy="60" r="2"/></g>',
+ diagonales:'<g stroke-width="1"><line x1="25" y1="70" x2="70" y2="25"/><line x1="35" y1="75" x2="75" y2="35"/><line x1="25" y1="60" x2="60" y2="25"/></g>',
+ chevrons:'<g stroke-width="1.4"><path d="M30 40 L50 30 L70 40"/><path d="M30 55 L50 45 L70 55"/><path d="M30 70 L50 60 L70 70"/></g>',
+ rayons:'<g stroke-width=".8"><line x1="50" y1="80" x2="30" y2="30"/><line x1="50" y1="80" x2="40" y2="26"/><line x1="50" y1="80" x2="50" y2="24"/><line x1="50" y1="80" x2="60" y2="26"/><line x1="50" y1="80" x2="70" y2="30"/></g>',
+ anneaux:'<circle cx="42" cy="50" r="20" stroke-width="1"/><circle cx="58" cy="50" r="20" stroke-width="1"/>',
+ triangle:'<path d="M50 22 L76 72 L24 72Z" stroke-linejoin="round"/>',
+ losange:'<path d="M50 20 L74 50 L50 80 L26 50Z" stroke-linejoin="round"/>',
+ grille:'<g stroke-width=".6"><line x1="25" y1="35" x2="75" y2="35"/><line x1="25" y1="50" x2="75" y2="50"/><line x1="25" y1="65" x2="75" y2="65"/><line x1="35" y1="25" x2="35" y2="75"/><line x1="50" y1="25" x2="50" y2="75"/><line x1="65" y1="25" x2="65" y2="75"/></g>',
+ demicercle:'<path d="M25 55 A25 25 0 0 1 75 55Z"/><g stroke-width=".6"><line x1="50" y1="55" x2="35" y2="38"/><line x1="50" y1="55" x2="50" y2="30"/><line x1="50" y1="55" x2="65" y2="38"/></g>',
+ zigzag:'<path d="M20 50 L32 40 L44 50 L56 40 L68 50 L80 40" stroke-width="1.4"/>',
+ spirale:'<path d="M50 50 Q50 42 58 42 Q68 42 68 52 Q68 66 54 66 Q36 66 36 48 Q36 28 58 28" stroke-width="1.2"/>',
+ epingle:'<path d="M50 82 C50 82 32 58 32 42 A18 18 0 1 1 68 42 C68 58 50 82 50 82Z"/><circle cx="50" cy="42" r="7"/>',
+ sextant:'<path d="M25 70 A45 45 0 0 1 70 25" stroke-width="1.2"/><line x1="25" y1="70" x2="70" y2="25" stroke-width=".6"/><line x1="25" y1="70" x2="60" y2="55"/><circle cx="25" cy="70" r="3" fill="C" stroke="none"/>',
+ fanion:'<line x1="30" y1="18" x2="30" y2="82" stroke-width="1.2"/><path d="M30 22 L70 30 L30 44Z" stroke-linejoin="round"/>',
+ route:'<path d="M20 75 Q40 25 80 25" stroke-width="1.6" stroke-dasharray="5 5"/><circle cx="20" cy="75" r="3" fill="C" stroke="none"/><path d="M74 20 L82 25 L74 30" stroke-width="1.2" fill="none"/>',
+ globe:'<circle cx="50" cy="50" r="30"/><ellipse cx="50" cy="50" rx="12" ry="30"/><line x1="20" y1="50" x2="80" y2="50" stroke-width=".7"/><path d="M26 35 Q50 42 74 35" stroke-width=".6"/><path d="M26 65 Q50 58 74 65" stroke-width=".6"/>',
+ carteplie:'<path d="M25 30 L42 25 L58 30 L75 25 L75 70 L58 75 L42 70 L25 75Z" stroke-linejoin="round"/><line x1="42" y1="25" x2="42" y2="70" stroke-width=".6"/><line x1="58" y1="30" x2="58" y2="75" stroke-width=".6"/>',
+ marqueurX:'<line x1="34" y1="34" x2="66" y2="66" stroke-width="1.6"/><line x1="66" y1="34" x2="34" y2="66" stroke-width="1.6"/><circle cx="50" cy="50" r="24" stroke-dasharray="3 3" stroke-width=".7"/>',
+ itineraire:'<circle cx="26" cy="30" r="5"/><circle cx="74" cy="70" r="5"/><path d="M26 35 Q26 55 50 55 Q74 55 74 65" stroke-dasharray="4 4" stroke-width="1" fill="none"/>',
+ mappemonde:'<rect x="20" y="28" width="60" height="44" rx="3"/><path d="M28 44 Q36 38 44 44 Q52 50 60 42 Q68 36 74 42" stroke-width=".7" fill="none"/><path d="M30 58 Q40 52 50 58 Q60 64 72 56" stroke-width=".7" fill="none"/>'
+};
+window.DECOR_SHAPE_GROUPS = {
+ 'Carnet':['boussole','tampon','avion','relief','couture','cachet','trombone','ruban'],
+ 'Nature':['feuille','palmier','montgolfiere','vagues','soleil','nuage','fougere','etoile','lune','cactus'],
+ 'Tourisme':['valise','appareil','ticket','cocktail','phare','bateau','sacados','montagne','passeport','boussole2','hamac','parasol'],
+ 'Formes':['blob','cercle','arc','pointilles','diagonales','chevrons','rayons','anneaux','triangle','losange','grille','demicercle','zigzag','spirale'],
+ 'Cartographie':['epingle','sextant','fanion','route','globe','carteplie','marqueurX','itineraire','mappemonde']
+};
+window.DECOR_SHAPE_LABELS = {
+ boussole:'Boussole',tampon:'Tampon',avion:'Avion',relief:'Relief',couture:'Couture',cachet:'Cachet',trombone:'Trombone',ruban:'Ruban',
  feuille:'Feuille',palmier:'Palmier',montgolfiere:'Montgolfière',vagues:'Vagues',soleil:'Soleil',nuage:'Nuage',fougere:'Fougère',etoile:'Étoile',lune:'Lune',cactus:'Cactus',
  valise:'Valise',appareil:'Appareil photo',ticket:'Ticket',cocktail:'Cocktail',phare:'Phare',bateau:'Bateau',sacados:'Sac à dos',montagne:'Montagne',passeport:'Passeport',boussole2:'Boussole 2',hamac:'Hamac',parasol:'Parasol',
  blob:'Blob',cercle:'Cercle',arc:'Arc',pointilles:'Pointillés',diagonales:'Diagonales',chevrons:'Chevrons',rayons:'Rayons',anneaux:'Anneaux',triangle:'Triangle',losange:'Losange',grille:'Grille',demicercle:'Demi-cercle',zigzag:'Zigzag',spirale:'Spirale',
@@ -1371,7 +1431,7 @@ function _mkPhaseTitle(event, activePhase, phases){
     reporters: {
       title: '.jr-name,.exp-reporter-name',
       text:  '.jr-bio,.exp-card p',
-      ui:    '.jr-role,.exp-reporter-role,.exp-card-label-reporters,.jr-profile-link,.jr-social-link'
+      ui:    '.jr-role,.exp-reporter-role,.jr-profile-link,.jr-social-link'
     },
     itinerary: {
       title: '.exp-route-name,.exp-map-panel-name',
@@ -1551,7 +1611,7 @@ function render(data){
     const _T = window.TourMagTypo;
     const _rawTypo = _T.getModeTypoRaw(event);           // uniquement les champs réglés
     // Polices Google à charger (zones + modules + police du titre de phase)
-    const _fontsToLoad = _T.collectFonts(_rawTypo, [ (event.phaseTitle||{}).font || '', event.citationTitleFont || '' ]);
+    const _fontsToLoad = _T.collectFonts(_rawTypo, [ (event.phaseTitle||{}).font || '', event.citationTitleFont || '', ((event.expedition||{}).mapTitleStyle||{}).font || '', ((event.expedition||{}).mapSubStyle||{}).font || '', ((event.expedition||{}).legendStyle||{}).font || '', (event.brandNews&&event.brandNews.style?event.brandNews.style.titleFont:'')||'' ]);
     if(_fontsToLoad.length){
       const gfUrl = 'https://fonts.googleapis.com/css2?' + _fontsToLoad.map(f=>'family='+encodeURIComponent(f)+':wght@300;400;500;600;700').join('&') + '&display=swap';
       let gfLink = document.getElementById('gf-typo');
@@ -2293,9 +2353,17 @@ function render(data){
     if(!bnArticles.length) return '';
     const a = bnArticles[0];
     const label = bn.label || 'Brand News';
+    const st = bn.style || {};
+    const badgeCss = st.accent ? `background:${st.accent}` : '';
+    let titleCss='';
+    if(st.titleFont) titleCss+=`font-family:'${st.titleFont}',sans-serif;`;
+    if(st.titleSize) titleCss+=`font-size:${st.titleSize}px;`;
+    if(st.titleColor) titleCss+=`color:${st.titleColor};`;
+    if(st.titleWeight) titleCss+=`font-weight:${st.titleWeight};`;
+    const ctaCss = st.accent ? `color:${st.accent}` : '';
     let o = `<div class="bn-card" onclick="window.open('${a.link}','_blank')">`;
     if(a.image) o += `<div class="bn-card-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
-    o += `<div class="bn-card-body"><div class="bn-card-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div><div class="bn-card-title">${a.title||''}</div><div class="bn-card-cta">Lire l'article →</div></div></div>`;
+    o += `<div class="bn-card-body"><div class="bn-card-badge"${badgeCss?` style="${badgeCss}"`:''}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div><div class="bn-card-title"${titleCss?` style="${titleCss}"`:''}>${a.title||''}</div><div class="bn-card-cta"${ctaCss?` style="${ctaCss}"`:''}>Lire l'article →</div></div></div>`;
     return o;
   }
 
@@ -2792,16 +2860,29 @@ function renderExpedition(data){
     const _mt = (_activePhaseObj && _activePhaseObj.mapTitle) || exp.mapTitle || 'La route, en direct';
     const _ms = (_activePhaseObj && _activePhaseObj.mapSubtitle) || exp.mapSubtitle || "Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant.";
     const _mn = (_activePhaseObj && _activePhaseObj.mapNote) || exp.mapNote || '';
+    // Mise en forme personnalisée du titre / sous-titre de la carte
+    function _mapStyleCss(st){
+      if(!st) return '';
+      let c='';
+      if(st.font) c+=`font-family:'${st.font}',sans-serif;`;
+      if(st.size) c+=`font-size:${st.size}px;`;
+      if(st.color) c+=`color:${st.color};`;
+      if(st.weight) c+=`font-weight:${st.weight};`;
+      if(st.style && st.style!=='normal') c+=`font-style:${st.style};`;
+      return c;
+    }
+    const _mtCss=_mapStyleCss(exp.mapTitleStyle);
+    const _msCss=_mapStyleCss(exp.mapSubStyle);
     return `<section class="exp-mapsec">
-      <div class="exp-section-head"><h2>${_mt}</h2><div class="rule"></div></div>
-      <p class="exp-section-sub">${_ms}</p>
+      <div class="exp-section-head exp-sec-etapes"><h2${_mtCss?` style="${_mtCss}"`:''}>${_mt}</h2><div class="rule"></div></div>
+      <p class="exp-section-sub exp-sec-etapes-sub"${_msCss?` style="${_msCss}"`:''}>${_ms}</p>
       <div class="exp-map-wrap">
         <div id="exp-routemap"></div>
         <div class="exp-map-panel" id="exp-map-panel">
           <button class="exp-map-panel-close" onclick="closeExpMapPanel()">✕</button>
           <div id="exp-map-panel-content"></div>
         </div>
-        <div class="exp-map-legend">
+        <div class="exp-map-legend"${(function(){const ls=exp.legendStyle||{};let c='';if(ls.font)c+=`font-family:'${ls.font}',monospace;`;if(ls.size)c+=`font-size:${ls.size}px;`;return c?` style="${c}"`:'';})()}>
           <b>Légende</b>
           <div class="exp-lg-row"><span class="exp-lg-dot" style="background:var(--exp-accent);box-shadow:0 0 0 2px rgba(255,108,0,.25)"></span><span>Point de départ</span></div>
           <div class="exp-lg-row exp-lg-done"><span class="exp-lg-dot"></span><span>Étape franchie</span></div>
@@ -3068,11 +3149,19 @@ function renderExpedition(data){
     if(!bnArticles.length) return '';
     const a = bnArticles[0];
     const label = bn.label || 'Brand News';
+    const st = bn.style || {};
+    const badgeCss = st.accent ? ` style="background:${st.accent}"` : '';
+    let titleCss='';
+    if(st.titleFont) titleCss+=`font-family:'${st.titleFont}',serif;`;
+    if(st.titleSize) titleCss+=`font-size:${st.titleSize}px;`;
+    if(st.titleColor) titleCss+=`color:${st.titleColor};`;
+    if(st.titleWeight) titleCss+=`font-weight:${st.titleWeight};`;
+    const readCss = st.accent ? ` style="color:${st.accent}"` : '';
     let o = `<div class="exp-card exp-card-bn" onclick="window.open('${a.link}','_blank')" style="cursor:pointer">`;
-    o += `<div class="exp-card-label exp-card-label-bn"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div>`;
+    o += `<div class="exp-card-label exp-card-label-bn"${badgeCss}><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div>`;
     if(a.image) o += `<div class="exp-bn-side-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
-    o += `<div class="exp-bn-side-title">${a.title||''}</div>`;
-    o += `<div class="exp-bn-side-read">Lire l'article →</div>`;
+    o += `<div class="exp-bn-side-title"${titleCss?` style="${titleCss}"`:''}>${a.title||''}</div>`;
+    o += `<div class="exp-bn-side-read"${readCss}>Lire l'article →</div>`;
     o += `</div>`;
     return o;
   };
@@ -3486,14 +3575,22 @@ function renderExpedition(data){
       // Create arrow marker
       const _arrowSvg = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M4 17 L11 5 L18 17" stroke="${accent}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const _arrowMarker = L.marker(_animPath[0], {
-        icon: L.divIcon({className:'', html:`<div id="exp-anim-arrow" style="transition:transform .15s linear">${_arrowSvg}</div>`, iconSize:[22,22], iconAnchor:[11,11]}),
+        icon: L.divIcon({className:'exp-anim-arrow-wrap', html:`<div id="exp-anim-arrow" style="will-change:transform">${_arrowSvg}</div>`, iconSize:[22,22], iconAnchor:[11,11]}),
         interactive: false, zIndexOffset: 900
       }).addTo(map);
+      // Empêche Leaflet d'appliquer une transition CSS sur le marqueur (source de saccade)
+      if(_arrowMarker._icon){ _arrowMarker._icon.style.transition='none'; _arrowMarker._icon.style.willChange='transform'; }
 
       // Animation loop: ~25 seconds per full circuit
       const LOOP_DURATION = 25000;
       let _animStart = null;
+      let _prevAngle = null;
       if(window._expAnimFrame) cancelAnimationFrame(window._expAnimFrame);
+      function _shortestAngle(from, to){
+        // interpolation d'angle par le plus court chemin (évite le saut à chaque segment)
+        let d = ((to - from + 540) % 360) - 180;
+        return from + d;
+      }
       function _animStep(ts){
         if(!_animStart) _animStart = ts;
         const t = ((ts - _animStart) % LOOP_DURATION) / LOOP_DURATION;
@@ -3510,10 +3607,14 @@ function renderExpedition(data){
         const lat = a[0] + (b[0]-a[0]) * frac;
         const lng = a[1] + (b[1]-a[1]) * frac;
         _arrowMarker.setLatLng([lat, lng]);
-        // Rotate arrow to heading
+        if(_arrowMarker._icon) _arrowMarker._icon.style.transition='none';
+        // Rotation lissée par le plus court chemin
         const angle = _bearing(a, b);
+        _prevAngle = (_prevAngle===null) ? angle : _shortestAngle(_prevAngle, angle);
+        // rapprochement progressif pour un virage doux
+        _prevAngle = _prevAngle + (_shortestAngle(_prevAngle, angle) - _prevAngle) * 0.18;
         const el = document.getElementById('exp-anim-arrow');
-        if(el) el.style.transform = 'rotate('+(angle)+'deg)';
+        if(el) el.style.transform = 'rotate('+(_prevAngle)+'deg)';
         window._expAnimFrame = requestAnimationFrame(_animStep);
       }
       window._expAnimFrame = requestAnimationFrame(_animStep);
@@ -4158,7 +4259,7 @@ function mkQuizBlock(opts){
         <div class="quiz-opts">${optsHtml}</div>
         <div class="quiz-actions">
           <button class="quiz-submit" onclick="window._quizSubmit('${qz.id}','${q.id}')">Voter</button>
-          <button class="quiz-change" style="display:none" onclick="window._quizChangeVote('${qz.id}','${q.id}')">Changer mon vote</button>
+          ${qz.lockVote?'':`<button class="quiz-change" style="display:none" onclick="window._quizChangeVote('${qz.id}','${q.id}')">Changer mon vote</button>`}
           <span class="quiz-total"></span>
         </div>
       </div>`;
