@@ -3444,9 +3444,33 @@ async function bulkDeleteMedia(){
 }
 function addMedia(){
   openModal(`<h3>Ajouter une photo</h3>
-    <div class="form-row"><label class="form-label">URL ou upload</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-media-url" placeholder="https://..." style="flex:1">${mkUploadBtn('m-media-url')}${mkMediaPickerBtn('m-media-url')}</div></div>
-    <div class="form-row"><label class="form-label">Légende</label><input class="form-input" id="m-media-name"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveMedia()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Ajouter</button></div>`);
+    <div class="form-row"><label class="form-label">Depuis votre ordinateur</label><div><button class="btn btn-primary" onclick="uploadMediaDirect()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Choisir un fichier…</button><div style="font-size:11px;color:var(--text3);margin-top:4px">La photo est ajoutée directement à la médiathèque.</div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text3);font-size:12px"><div style="flex:1;height:1px;background:var(--border)"></div>ou coller une URL<div style="flex:1;height:1px;background:var(--border)"></div></div>
+    <div class="form-row"><label class="form-label">URL de l'image</label><input class="form-input" id="m-media-url" placeholder="https://..."></div>
+    <div class="form-row"><label class="form-label">Légende <span style="font-weight:400;color:var(--text3);font-size:12px">(optionnel)</span></label><input class="form-input" id="m-media-name"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="saveMedia()">Ajouter l'URL</button></div>`);
+}
+// Upload direct depuis l'ordi dans la médiathèque (ajoute + ferme la popup)
+function uploadMediaDirect(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange=async function(){
+    const file=input.files[0]; if(!file) return;
+    if(file.size>10*1024*1024){toast('Image trop volumineuse (max 10 Mo)','error');return;}
+    const uploadUrl=getUploadUrl();
+    if(!uploadUrl){toast("Configurez l'URL d'upload dans l'onglet Intégration",'error');return;}
+    saving(true);
+    try{
+      const fd=new FormData(); fd.append('image',file);
+      const resp=await fetch(uploadUrl,{method:'POST',body:fd});
+      const data=await resp.json();
+      if(data.error){toast('Erreur: '+data.error,'error');return;}
+      await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});
+      closeModal();
+      toast('Photo ajoutée à la médiathèque');
+    }catch(e){ console.error('Upload error:',e); toast("Erreur d'upload : "+e.message,'error'); }
+  };
+  input.click();
 }
 async function saveMedia(){
   const url=document.getElementById('m-media-url').value.trim();
