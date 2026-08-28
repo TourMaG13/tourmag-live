@@ -434,7 +434,7 @@ select.form-input{cursor:pointer}
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
-          <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Verbatims<span class="badge" id="badge-cit">0</span></div>
+          <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Citations<span class="badge" id="badge-cit">0</span></div>
           <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
           <div class="sidebar-item" data-tab="quiz"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg></span>Quiz / Sondage</div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
@@ -445,10 +445,10 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="contact"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg></span>Contact</div>
           <div class="sidebar-item" data-tab="programme"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-programme"/></svg></span>Programme</div>
           <div class="sidebar-item" data-tab="flash"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-flash"/></svg></span>Flash info</div>
-          <div class="sidebar-item" data-tab="essentiel"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-essentiel"/></svg></span>L'essentiel</div>
-          <div class="sidebar-item" data-tab="kpis"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg></span>Compteurs</div>
-          <div class="sidebar-item" data-tab="journalistes"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-reporters"/></svg></span>Reporters</div>
-          <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-etapes"/></svg></span>Étapes</div>
+          <div class="sidebar-item" data-tab="essentiel"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-essentiel"/></svg></span>Essentiel & Timeline</div>
+          <div class="sidebar-item" data-tab="kpis"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg></span>Chiffres clés</div>
+          <div class="sidebar-item" data-tab="journalistes"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-reporters"/></svg></span>Journalistes</div>
+          <div class="sidebar-item" data-tab="etapes" style="display:none"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-etapes"/></svg></span>Carte interactive</div>
         </div>
       </div>
 
@@ -679,11 +679,12 @@ function applyTabVisibility(){
   // Expedition mode: tabs to hide and rename map (icônes gérées par tabIcon)
   const expHiddenTabs = ['flash','rubriques'];
   const expRenameMap = {
-    essentiel: {label:'À retenir'},
-    live: {label:'Fil de route'},
-    citations: {label:'Verbatims'},
-    journalistes: {label:'Reporters'},
-    kpis: {label:'Compteurs'},
+    essentiel: {label:'Essentiel & Timeline'},
+    live: {label:'Fil live'},
+    citations: {label:'Citations'},
+    journalistes: {label:'Journalistes'},
+    kpis: {label:'Chiffres clés'},
+    etapes: {label:'Carte interactive'},
     sponsors: {label:'Partenaires'},
     contact: {label:'Contact'},
     decor: {label:'Décor'}
@@ -691,10 +692,12 @@ function applyTabVisibility(){
   // Expedition sidebar order (matches front-end rendering order)
   const expTabOrder = ['events','config','kpis','etapes','live','journalistes','citations','questions','quiz','interviews','videos','gallery','articles','programme','sponsors','contact','decor','media','widget','tags','modules','access','guide'];
   const defaultLabels = {
+    essentiel: {label:'Essentiel & Timeline'},
     live: {label:'Fil live'},
     citations: {label:'Citations'},
     journalistes: {label:'Journalistes'},
-    kpis: {label:'Chiffres clés'}
+    kpis: {label:'Chiffres clés'},
+    etapes: {label:'Carte interactive'}
   };
 
   document.querySelectorAll('.sidebar-item').forEach(item=>{
@@ -1493,13 +1496,13 @@ function _fontOpts(selected){
     {key:'live',       label:'Fil live',   icon:'\uD83D\uDCE1'},
     {key:'articles',   label:'Articles',   icon:'\uD83D\uDCF0'},
     {key:'essential',  label:"L'essentiel",icon:'\uD83E\uDDE0'},
-    {key:'citations',  label:'Verbatims',  icon:'\uD83D\uDCAC'},
+    {key:'citations',  label:'Citations',  icon:'\uD83D\uDCAC'},
     {key:'videos',     label:'Vidéos',     icon:'\uD83C\uDFAC'},
     {key:'interviews', label:'Interviews', icon:'\uD83C\uDF99\uFE0F'},
     {key:'gallery',    label:'Galerie',    icon:'\uD83D\uDCF8'},
     {key:'sponsors',   label:'Partenaires',icon:'\uD83E\uDD1D'},
     {key:'contact',    label:'Contact',    icon:'\u2709\uFE0F'},
-    {key:'kpis',       label:'Compteurs',  icon:'\uD83D\uDCCA'}
+    {key:'kpis',       label:'Chiffres clés',  icon:'\uD83D\uDCCA'}
   ];
 
   var AUTO_MODULES = [
@@ -2892,7 +2895,7 @@ function renderModules(el){
   const isExp = ev?.mode === 'expedition';
   const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
   const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'questions',icon:'💬',label:'Questions du public'},{key:'quiz',icon:'📊',label:'Quiz / Sondage'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
-  const expRenames = {essential:'À retenir',live:'Fil de route',citations:'Verbatims',journalists:'Reporters',kpis:'Compteurs',etapes:'Carte & Étapes',contact:'Contact',decor:'Décor'};
+  const expRenames = {essential:'Essentiel & Timeline',live:'Fil live',citations:'Citations',journalists:'Journalistes',kpis:'Chiffres clés',etapes:'Carte interactive',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
   const defaultOrder=['hero','kpis','flash','live','citations','articles','interviews','videos','gallery','programme','journalists','brandnews','sponsors'];
@@ -2940,15 +2943,15 @@ function renderModules(el){
     // In expedition mode, show expedition-specific block order with zone constraints
     const expBlocks = [
       {key:'phaseTabs',icon:'🔀',label:'Onglets Phases',zones:['full']},
-      {key:'kpis',icon:'📊',label:'Compteurs',zones:['full']},
-      {key:'essential',icon:'🧠',label:'À retenir',zones:['full','main']},
+      {key:'kpis',icon:'📊',label:'Chiffres clés',zones:['full']},
+      {key:'essential',icon:'🧠',label:'Essentiel & Timeline',zones:['full','main']},
       {key:'etapes',icon:'🗺️',label:'Carte & Étapes',zones:['full']},
-      {key:'live',icon:'📝',label:'Fil de route',zones:['main']},
-      {key:'reporters',icon:'🎤',label:'Reporters',zones:['side','main']},
+      {key:'live',icon:'📝',label:'Fil live',zones:['main']},
+      {key:'reporters',icon:'🎤',label:'Journalistes',zones:['side','main']},
       {key:'itinerary',icon:'🧭',label:'Itinéraire',zones:['side','main']},
       {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
       {key:'programme',icon:'🗓',label:'Programme',zones:['side','main','full']},
-      {key:'citations',icon:'💬',label:'Verbatims',zones:['full','main']},
+      {key:'citations',icon:'💬',label:'Citations',zones:['full','main']},
       {key:'questions',icon:'💬',label:'Questions du public',zones:['full','main','side']},
       {key:'quiz',icon:'📊',label:'Quiz / Sondage',zones:['full','main','side']},
       {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
@@ -5935,15 +5938,15 @@ function renderAccess(el){
     {key:'phases',icon:'📌',label:'Phases / Temps forts'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
-    {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L\'essentiel'},
-    {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
-    {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
-    {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
+    {key:'essentiel',icon:'🧠',label:'Essentiel & Timeline'},
+    {key:'kpis',icon:'📊',label:'Chiffres clés'},
+    {key:'live',icon:isExp?'🗺️':'📡',label:'Fil live'},
+    {key:'citations',icon:'💬',label:'Citations'},
     {key:'quiz',icon:'📊',label:'Quiz / Sondage'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'interviews',icon:'🎙️',label:'Interviews'},
-    {key:'journalistes',icon:'👤',label:isExp?'Reporters':'Journalistes'},
+    {key:'journalistes',icon:'👤',label:'Journalistes'},
     {key:'gallery',icon:'📸',label:'Galerie photos'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
     {key:'contact',icon:'📞',label:'Contact'},
@@ -6064,14 +6067,14 @@ function renderAccess(el){
   // ===== Boîtes « Paramétrage & apparence » visibles pour les admins =====
   // Modules disposant d'une boîte de paramétrage/apparence dépliable
   const settingsTabs=[
-    {key:'live',icon:isExp?'🗺️':'📡',label:isExp?'Fil de route':'Fil live'},
-    {key:'citations',icon:'💬',label:isExp?'Verbatims':'Citations'},
+    {key:'live',icon:isExp?'🗺️':'📡',label:'Fil live'},
+    {key:'citations',icon:'💬',label:'Citations'},
     {key:'articles',icon:'📰',label:'Articles liés'},
-    {key:'essentiel',icon:'🧠',label:isExp?'À retenir':'L’essentiel'},
+    {key:'essentiel',icon:'🧠',label:'Essentiel & Timeline'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'interviews',icon:'🎙️',label:'Interviews'},
-    {key:'journalistes',icon:'👤',label:isExp?'Reporters':'Journalistes'},
-    {key:'kpis',icon:'📊',label:isExp?'Compteurs':'Chiffres clés'},
+    {key:'journalistes',icon:'👤',label:'Journalistes'},
+    {key:'kpis',icon:'📊',label:'Chiffres clés'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'gallery',icon:'📸',label:'Galerie photos'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
@@ -6990,7 +6993,7 @@ function renderDecor(el){
   h+=`<div class="admin-card" style="margin-top:10px">
     ${toggle('dc-plane-on','✈️ Tracé d\'avion',p.on!==false)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Placer après la section</span>${sel('dc-plane-pos',[{id:'after-map',label:'Carte / Étapes'},{id:'after-live',label:'Fil de route'},{id:'after-citations',label:'Verbatims'},{id:'after-gallery',label:'Galerie'}],p.position||'after-map')}</div>
+      <div><span style="font-size:12px;color:var(--text3)">Placer après la section</span>${sel('dc-plane-pos',[{id:'after-map',label:'Carte / Étapes'},{id:'after-live',label:'Fil live'},{id:'after-citations',label:'Citations'},{id:'after-gallery',label:'Galerie'}],p.position||'after-map')}</div>
       <div>${slider('dc-plane-op',p.opacity||4)}</div>
     </div>
   </div>`;
@@ -7938,6 +7941,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
           <div class="form-row" style="max-width:170px"><label class="form-label">Fond de l'encart</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="w-cfg-bg-on" ${bg?'checked':''} onchange="document.getElementById('w-cfg-bg').disabled=!this.checked"><input type="color" id="w-cfg-bg" value="${bg||'#1B1B2F'}" ${bg?'':'disabled'} style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = dégradé par défaut</div></div>
           <div class="form-row" style="max-width:170px"><label class="form-label">Couleur du texte</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="w-cfg-text-on" ${textColor?'checked':''} onchange="document.getElementById('w-cfg-text').disabled=!this.checked"><input type="color" id="w-cfg-text" value="${textColor||'#ffffff'}" ${textColor?'':'disabled'} style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = blanc par défaut</div></div>
           <div class="form-row" style="max-width:150px"><label class="form-label">Taille du texte</label><select class="form-input" id="w-cfg-textsize"><option value="small"${textSize==='small'?' selected':''}>Petit</option><option value="medium"${textSize==='medium'?' selected':''}>Moyen</option><option value="large"${textSize==='large'?' selected':''}>Grand</option></select></div>
+          <div class="form-row" style="max-width:170px"><label class="form-label">Nombre d'articles affichés</label><select class="form-input" id="w-cfg-artcount"><option value="1"${(cfg.articlesCount||3)==1?' selected':''}>1 article</option><option value="2"${(cfg.articlesCount||3)==2?' selected':''}>2 articles</option><option value="3"${(cfg.articlesCount||3)==3?' selected':''}>3 articles</option></select></div>
         </div>
       </div>
       <div style="margin-bottom:8px"><label class="form-label" style="margin-bottom:8px;display:block">🧩 Modules (glisser l'ordre avec ▲▼, cocher pour afficher)</label>
@@ -8048,7 +8052,8 @@ async function saveWidgetConfig(){
       accent:document.getElementById('w-cfg-accent')?.value||'#E8842C',
       bg:document.getElementById('w-cfg-bg-on')?.checked?(document.getElementById('w-cfg-bg')?.value||''):'',
       textColor:document.getElementById('w-cfg-text-on')?.checked?(document.getElementById('w-cfg-text')?.value||''):'',
-      textSize:document.getElementById('w-cfg-textsize')?.value||'medium'
+      textSize:document.getElementById('w-cfg-textsize')?.value||'medium',
+      articlesCount:parseInt(document.getElementById('w-cfg-artcount')?.value)||3
     };
   }
   const upd={
