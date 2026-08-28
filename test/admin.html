@@ -491,6 +491,85 @@ select.form-input{cursor:pointer}
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script>
+// ==== BIBLIOTHÈQUE DE FORMES DÉCOR (51) — viewBox 0 0 100 100, stroke=currentColor ====
+// Chaque valeur est le contenu interne d'un <svg viewBox="0 0 100 100">. 'C' = couleur (remplacée au rendu).
+window.DECOR_SHAPES = {
+ // — Carnet —
+ boussole:'<g transform="translate(50,50)"><circle r="34" fill="none" stroke="C" stroke-width=".6"/><circle r="26" fill="none" stroke="C" stroke-width=".3"/><circle r="2" fill="C"/><g stroke="C" stroke-width=".8"><line y1="-33" y2="-10"/><line y1="33" y2="10"/><line x1="-33" x2="-10"/><line x1="33" x2="10"/></g><polygon points="0,-33 -3,-9 0,-6 3,-9" fill="C"/><polygon points="0,33 -3,9 0,6 3,9" fill="C" opacity=".4"/><text font-family="Georgia" font-size="8" fill="C" text-anchor="middle" y="-36">N</text></g>',
+ tampon:'<circle cx="50" cy="50" r="33" stroke-dasharray="3 2" stroke-width="1.2"/><circle cx="50" cy="50" r="26" stroke-width=".4"/><text x="50" y="42" font-size="7" fill="C" text-anchor="middle" stroke="none" font-family="monospace">EXPEDITION</text><text x="50" y="56" font-size="11" fill="C" text-anchor="middle" stroke="none" font-family="Georgia">2026</text><line x1="28" y1="62" x2="72" y2="62" stroke-width=".4"/>',
+ avion:'<path d="M12 52 C35 50 55 49 70 49" stroke-dasharray="4 3" stroke-width=".7"/><g transform="translate(72,49) rotate(-4)" fill="C" stroke="none"><path d="M14 0 C14 1.4 11 2.2 6 2.2 L3 2.2 L-3 14 L-5.5 14 L-2 2.2 L-8 2 L-11 5.5 L-12.5 5.5 L-11 0 L-12.5 -5.5 L-11 -5.5 L-8 -2 L-2 -2.2 L-5.5 -14 L-3 -14 L3 -2.2 L6 -2.2 C11 -2.2 14 -1.4 14 0Z"/></g>',
+ relief:'<path d="M10 70 L30 45 L42 58 L58 30 L70 52 L90 40 L90 75 L10 75Z" stroke-width="1" stroke-linejoin="round"/><path d="M52 38 L58 30 L64 40" stroke-width=".5"/>',
+ couture:'<line x1="50" y1="15" x2="50" y2="85" stroke-dasharray="5 4" stroke-width="1.4"/>',
+ cachet:'<rect x="22" y="30" width="56" height="40" rx="3" stroke-dasharray="3 2"/><text x="50" y="47" font-size="6" fill="C" text-anchor="middle" stroke="none" font-family="monospace">PAR AVION</text><text x="50" y="58" font-size="6" fill="C" text-anchor="middle" stroke="none" font-family="monospace">AIR MAIL</text>',
+ trombone:'<path d="M42 25 L42 68 A8 8 0 0 0 58 68 L58 35 A13 13 0 0 0 32 35 L32 72" stroke-width="1.6" stroke-linecap="round"/>',
+ ruban:'<path d="M35 20 L35 80 L50 68 L65 80 L65 20Z" stroke-linejoin="round"/>',
+ // — Nature —
+ feuille:'<path d="M50 82 Q30 60 32 38 Q34 20 50 14 Q66 20 68 38 Q70 60 50 82Z" stroke-linejoin="round"/><line x1="50" y1="20" x2="50" y2="80" stroke-width=".6"/><path d="M50 38 L38 32 M50 48 L36 44 M50 58 L40 56 M50 38 L62 32 M50 48 L64 44 M50 58 L60 56" stroke-width=".5"/>',
+ palmier:'<path d="M48 85 Q46 60 50 40" stroke-width="1.6" fill="none" stroke-linecap="round"/><g fill="none" stroke-width="1.1" stroke-linecap="round"><path d="M50 40 Q34 34 20 40 Q30 34 34 30"/><path d="M50 40 Q36 26 24 20 Q34 24 40 24"/><path d="M50 40 Q50 22 52 12 Q54 20 58 22"/><path d="M50 40 Q66 26 78 22 Q68 26 64 30"/><path d="M50 40 Q66 34 80 42 Q70 36 66 34"/></g><circle cx="47" cy="43" r="2.5" fill="C" stroke="none"/><circle cx="53" cy="43" r="2.5" fill="C" stroke="none"/>',
+ montgolfiere:'<path d="M50 20 Q30 20 30 42 Q30 58 50 70 Q70 58 70 42 Q70 20 50 20Z"/><path d="M50 20 L50 70" stroke-width=".5"/><path d="M38 22 Q34 45 44 68" stroke-width=".5"/><path d="M62 22 Q66 45 56 68" stroke-width=".5"/><path d="M44 70 L46 78 L54 78 L56 70"/><rect x="45" y="78" width="10" height="7" rx="1"/>',
+ vagues:'<path d="M15 45 Q25 38 35 45 T55 45 T75 45 T85 45" stroke-width="1.2"/><path d="M15 55 Q25 48 35 55 T55 55 T75 55 T85 55" stroke-width="1"/><path d="M20 65 Q30 58 40 65 T60 65 T80 65" stroke-width=".8"/>',
+ soleil:'<circle cx="50" cy="55" r="16"/><g stroke-width="1"><line x1="50" y1="30" x2="50" y2="20"/><line x1="68" y1="37" x2="75" y2="30"/><line x1="32" y1="37" x2="25" y2="30"/><line x1="76" y1="55" x2="86" y2="55"/><line x1="24" y1="55" x2="14" y2="55"/></g>',
+ nuage:'<path d="M28 62 Q18 62 18 52 Q18 44 27 44 Q28 32 42 32 Q54 32 56 42 Q70 40 72 52 Q72 62 62 62Z"/>',
+ fougere:'<path d="M50 85 Q50 45 50 18"/><g stroke-width=".7"><path d="M50 30 Q40 26 34 30"/><path d="M50 30 Q60 26 66 30"/><path d="M50 40 Q38 36 30 42"/><path d="M50 40 Q62 36 70 42"/><path d="M50 52 Q37 48 28 55"/><path d="M50 52 Q63 48 72 55"/><path d="M50 65 Q39 62 32 68"/><path d="M50 65 Q61 62 68 68"/></g>',
+ etoile:'<path d="M50 22 L56 42 L77 42 L60 55 L66 76 L50 63 L34 76 L40 55 L23 42 L44 42Z" stroke-linejoin="round"/>',
+ lune:'<path d="M58 20 A32 32 0 1 0 58 80 A26 26 0 1 1 58 20Z"/>',
+ cactus:'<path d="M44 82 L44 34 Q44 26 50 26 Q56 26 56 34 L56 82" stroke-linejoin="round"/><path d="M44 58 Q30 58 30 46 L30 40 Q30 34 36 34" stroke-linejoin="round"/><path d="M56 50 Q70 50 70 40 L70 34 Q70 28 64 28" stroke-linejoin="round"/>',
+ // — Tourisme —
+ valise:'<rect x="26" y="40" width="48" height="34" rx="3"/><path d="M40 40 L40 32 A3 3 0 0 1 43 29 L57 29 A3 3 0 0 1 60 32 L60 40" fill="none"/><line x1="40" y1="40" x2="40" y2="74" stroke-width=".6"/><line x1="60" y1="40" x2="60" y2="74" stroke-width=".6"/>',
+ appareil:'<rect x="22" y="34" width="56" height="38" rx="4"/><circle cx="50" cy="53" r="12"/><circle cx="50" cy="53" r="6" stroke-width=".7"/><path d="M36 34 L40 28 L60 28 L64 34" fill="none"/><circle cx="68" cy="42" r="2" fill="C" stroke="none"/>',
+ ticket:'<path d="M22 38 L78 38 L78 46 A4 4 0 0 0 78 54 L78 62 L22 62 L22 54 A4 4 0 0 0 22 46Z" stroke-linejoin="round"/><line x1="55" y1="38" x2="55" y2="62" stroke-dasharray="2 2" stroke-width=".7"/><path d="M40 46 L46 50 L40 54" stroke-width=".7" fill="none"/>',
+ cocktail:'<path d="M28 32 L72 32 L52 56 L52 74 M52 74 L44 78 L60 78" stroke-linejoin="round" fill="none"/><line x1="52" y1="56" x2="52" y2="74"/><circle cx="63" cy="37" r="3" stroke-width=".8"/><line x1="63" y1="37" x2="70" y2="26" stroke-width=".7"/>',
+ phare:'<path d="M42 78 L44 40 L56 40 L58 78Z"/><rect x="43" y="32" width="14" height="8"/><path d="M46 32 L44 26 L56 26 L54 32" fill="none"/><line x1="44" y1="52" x2="56" y2="52" stroke-width=".6"/><line x1="43" y1="64" x2="57" y2="64" stroke-width=".6"/><path d="M57 30 L68 26 M57 36 L68 38" stroke-width=".7"/>',
+ bateau:'<path d="M20 58 L80 58 L72 72 L28 72Z" stroke-linejoin="round"/><line x1="50" y1="58" x2="50" y2="22" stroke-width="1"/><path d="M50 26 L70 44 L50 44Z" fill="none"/><path d="M50 30 L34 46 L50 46" fill="none" stroke-width=".8"/>',
+ sacados:'<rect x="32" y="34" width="36" height="44" rx="8"/><path d="M40 34 Q40 22 50 22 Q60 22 60 34" fill="none"/><rect x="40" y="48" width="20" height="16" rx="3" stroke-width=".8"/><line x1="50" y1="34" x2="50" y2="48" stroke-width=".6"/>',
+ montagne:'<path d="M15 74 L38 34 L52 56 L64 40 L85 74Z" stroke-linejoin="round"/><path d="M32 44 L38 34 L44 44" stroke-width=".7" fill="none"/><circle cx="66" cy="30" r="6" stroke-width=".8"/>',
+ passeport:'<rect x="32" y="26" width="36" height="48" rx="3"/><circle cx="50" cy="44" r="8"/><line x1="42" y1="44" x2="58" y2="44" stroke-width=".5"/><path d="M50 36 Q46 44 50 52 Q54 44 50 36" stroke-width=".5" fill="none"/><line x1="42" y1="62" x2="58" y2="62" stroke-width=".7"/><line x1="42" y1="67" x2="58" y2="67" stroke-width=".7"/>',
+ boussole2:'<circle cx="50" cy="50" r="28"/><polygon points="50,30 45,50 50,46 55,50" fill="C" stroke="none"/><polygon points="50,70 45,50 50,54 55,50" fill="none"/>',
+ hamac:'<path d="M20 40 Q50 78 80 40" stroke-width="1.4" fill="none"/><line x1="20" y1="40" x2="20" y2="30"/><line x1="80" y1="40" x2="80" y2="30"/><path d="M28 52 Q50 70 72 52" stroke-width=".6" fill="none"/>',
+ parasol:'<path d="M22 46 Q50 20 78 46Z" stroke-linejoin="round"/><line x1="50" y1="46" x2="50" y2="78"/><path d="M22 46 Q36 40 50 46 Q64 40 78 46" stroke-width=".6" fill="none"/><line x1="50" y1="78" x2="56" y2="74" stroke-width=".8"/>',
+ // — Formes & motifs —
+ blob:'<path d="M46 18 Q70 16 76 38 Q84 58 64 70 Q44 82 28 68 Q12 54 22 34 Q30 18 46 18Z" stroke-linejoin="round"/>',
+ cercle:'<circle cx="50" cy="50" r="32" stroke-width="1"/>',
+ arc:'<path d="M22 70 A32 32 0 0 1 78 70" stroke-width="1.4"/>',
+ pointilles:'<g fill="C" stroke="none"><circle cx="30" cy="30" r="2"/><circle cx="45" cy="30" r="2"/><circle cx="60" cy="30" r="2"/><circle cx="30" cy="45" r="2"/><circle cx="45" cy="45" r="2"/><circle cx="60" cy="45" r="2"/><circle cx="30" cy="60" r="2"/><circle cx="45" cy="60" r="2"/><circle cx="60" cy="60" r="2"/></g>',
+ diagonales:'<g stroke-width="1"><line x1="25" y1="70" x2="70" y2="25"/><line x1="35" y1="75" x2="75" y2="35"/><line x1="25" y1="60" x2="60" y2="25"/></g>',
+ chevrons:'<g stroke-width="1.4"><path d="M30 40 L50 30 L70 40"/><path d="M30 55 L50 45 L70 55"/><path d="M30 70 L50 60 L70 70"/></g>',
+ rayons:'<g stroke-width=".8"><line x1="50" y1="80" x2="30" y2="30"/><line x1="50" y1="80" x2="40" y2="26"/><line x1="50" y1="80" x2="50" y2="24"/><line x1="50" y1="80" x2="60" y2="26"/><line x1="50" y1="80" x2="70" y2="30"/></g>',
+ anneaux:'<circle cx="42" cy="50" r="20" stroke-width="1"/><circle cx="58" cy="50" r="20" stroke-width="1"/>',
+ triangle:'<path d="M50 22 L76 72 L24 72Z" stroke-linejoin="round"/>',
+ losange:'<path d="M50 20 L74 50 L50 80 L26 50Z" stroke-linejoin="round"/>',
+ grille:'<g stroke-width=".6"><line x1="25" y1="35" x2="75" y2="35"/><line x1="25" y1="50" x2="75" y2="50"/><line x1="25" y1="65" x2="75" y2="65"/><line x1="35" y1="25" x2="35" y2="75"/><line x1="50" y1="25" x2="50" y2="75"/><line x1="65" y1="25" x2="65" y2="75"/></g>',
+ demicercle:'<path d="M25 55 A25 25 0 0 1 75 55Z"/><g stroke-width=".6"><line x1="50" y1="55" x2="35" y2="38"/><line x1="50" y1="55" x2="50" y2="30"/><line x1="50" y1="55" x2="65" y2="38"/></g>',
+ zigzag:'<path d="M20 50 L32 40 L44 50 L56 40 L68 50 L80 40" stroke-width="1.4"/>',
+ spirale:'<path d="M50 50 Q50 42 58 42 Q68 42 68 52 Q68 66 54 66 Q36 66 36 48 Q36 28 58 28" stroke-width="1.2"/>',
+ // — Cartographie —
+ epingle:'<path d="M50 82 C50 82 32 58 32 42 A18 18 0 1 1 68 42 C68 58 50 82 50 82Z"/><circle cx="50" cy="42" r="7"/>',
+ sextant:'<path d="M25 70 A45 45 0 0 1 70 25" stroke-width="1.2"/><line x1="25" y1="70" x2="70" y2="25" stroke-width=".6"/><line x1="25" y1="70" x2="60" y2="55"/><circle cx="25" cy="70" r="3" fill="C" stroke="none"/>',
+ fanion:'<line x1="30" y1="18" x2="30" y2="82" stroke-width="1.2"/><path d="M30 22 L70 30 L30 44Z" stroke-linejoin="round"/>',
+ route:'<path d="M20 75 Q40 25 80 25" stroke-width="1.6" stroke-dasharray="5 5"/><circle cx="20" cy="75" r="3" fill="C" stroke="none"/><path d="M74 20 L82 25 L74 30" stroke-width="1.2" fill="none"/>',
+ globe:'<circle cx="50" cy="50" r="30"/><ellipse cx="50" cy="50" rx="12" ry="30"/><line x1="20" y1="50" x2="80" y2="50" stroke-width=".7"/><path d="M26 35 Q50 42 74 35" stroke-width=".6"/><path d="M26 65 Q50 58 74 65" stroke-width=".6"/>',
+ carteplie:'<path d="M25 30 L42 25 L58 30 L75 25 L75 70 L58 75 L42 70 L25 75Z" stroke-linejoin="round"/><line x1="42" y1="25" x2="42" y2="70" stroke-width=".6"/><line x1="58" y1="30" x2="58" y2="75" stroke-width=".6"/>',
+ marqueurX:'<line x1="34" y1="34" x2="66" y2="66" stroke-width="1.6"/><line x1="66" y1="34" x2="34" y2="66" stroke-width="1.6"/><circle cx="50" cy="50" r="24" stroke-dasharray="3 3" stroke-width=".7"/>',
+ itineraire:'<circle cx="26" cy="30" r="5"/><circle cx="74" cy="70" r="5"/><path d="M26 35 Q26 55 50 55 Q74 55 74 65" stroke-dasharray="4 4" stroke-width="1" fill="none"/>',
+ mappemonde:'<rect x="20" y="28" width="60" height="44" rx="3"/><path d="M28 44 Q36 38 44 44 Q52 50 60 42 Q68 36 74 42" stroke-width=".7" fill="none"/><path d="M30 58 Q40 52 50 58 Q60 64 72 56" stroke-width=".7" fill="none"/>'
+};
+window.DECOR_SHAPE_GROUPS = {
+ 'Carnet':['boussole','tampon','avion','relief','couture','cachet','trombone','ruban'],
+ 'Nature':['feuille','palmier','montgolfiere','vagues','soleil','nuage','fougere','etoile','lune','cactus'],
+ 'Tourisme':['valise','appareil','ticket','cocktail','phare','bateau','sacados','montagne','passeport','boussole2','hamac','parasol'],
+ 'Formes':['blob','cercle','arc','pointilles','diagonales','chevrons','rayons','anneaux','triangle','losange','grille','demicercle','zigzag','spirale'],
+ 'Cartographie':['epingle','sextant','fanion','route','globe','carteplie','marqueurX','itineraire','mappemonde']
+};
+window.DECOR_SHAPE_LABELS = {
+ boussole:'Boussole',tampon:'Tampon',avion:'Avion',relief:'Relief',couture:'Couture',cachet:'Cachet',trombone:'Trombone',ruban:'Ruban',
+ feuille:'Feuille',palmier:'Palmier',montgolfiere:'Montgolfière',vagues:'Vagues',soleil:'Soleil',nuage:'Nuage',fougere:'Fougère',etoile:'Étoile',lune:'Lune',cactus:'Cactus',
+ valise:'Valise',appareil:'Appareil photo',ticket:'Ticket',cocktail:'Cocktail',phare:'Phare',bateau:'Bateau',sacados:'Sac à dos',montagne:'Montagne',passeport:'Passeport',boussole2:'Boussole 2',hamac:'Hamac',parasol:'Parasol',
+ blob:'Blob',cercle:'Cercle',arc:'Arc',pointilles:'Pointillés',diagonales:'Diagonales',chevrons:'Chevrons',rayons:'Rayons',anneaux:'Anneaux',triangle:'Triangle',losange:'Losange',grille:'Grille',demicercle:'Demi-cercle',zigzag:'Zigzag',spirale:'Spirale',
+ epingle:'Épingle',sextant:'Sextant',fanion:'Fanion',route:'Route',globe:'Globe',carteplie:'Carte pliée',marqueurX:'Marqueur X',itineraire:'Itinéraire',mappemonde:'Mappemonde'
+};
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
@@ -6949,133 +7028,166 @@ const RELIEF_PRESETS = [
 function renderDecor(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const d=ev.decor||{};
-  const c=d.compass||{};const co=d.coords||{};const p=d.plane||{};const b=d.botanical||{};const s=d.stamp||{};const r=d.relief||{};const st=d.stitch||{};
+  // Migration douce de l'ancien schéma vers elements[] si besoin (lecture seule ici — la vraie migration se fait au front)
+  let elements = Array.isArray(d.elements)? d.elements.slice() : [];
+  window._decorEls = elements;
+  window._decorEnabled = d.enabled!==false;
+  window._decorBg = d.bgColor||'';
 
-  function toggle(id,label,checked){return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none"><input type="checkbox" id="${id}" ${checked?'checked':''}><strong style="font-size:14px">${label}</strong></label>`;}
-  function slider(id,val){return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="font-size:11px;color:var(--text3)">Opacité</span><input type="range" id="${id}" min="1" max="20" value="${val||4}" style="flex:1"><span style="font-size:11px;color:var(--text3);min-width:30px" id="${id}-lbl">${(val||4)*5}%</span></div>`;}
-  function sel(id,opts,val){let o=`<select class="form-input" id="${id}" style="font-size:13px">`;opts.forEach(op=>{o+=`<option value="${op.id}"${val===op.id?' selected':''}>${op.label}</option>`;});return o+'</select>';}
-  function pos(id,val){return sel(id,[{id:'top-right',label:'Haut-droit'},{id:'top-left',label:'Haut-gauche'},{id:'bottom-right',label:'Bas-droit'},{id:'bottom-left',label:'Bas-gauche'}],val||'top-right');}
+  const BLOCKS=[
+    {id:'page',label:'Page entière'},
+    {id:'kpis',label:'Chiffres clés'},{id:'essential',label:'Essentiel & Timeline'},
+    {id:'etapes',label:'Carte interactive'},{id:'live',label:'Fil live'},
+    {id:'reporters',label:'Journalistes'},{id:'citations',label:'Citations'},
+    {id:'interviews',label:'Interviews'},{id:'videos',label:'Vidéos'},
+    {id:'gallery',label:'Galerie'},{id:'articles',label:'Articles'},
+    {id:'programme',label:'Programme'},{id:'sponsors',label:'Partenaires'},{id:'contact',label:'Contact'}
+  ];
+  const CORNERS=[
+    {id:'top-left',label:'Haut gauche'},{id:'top-center',label:'Haut centre'},{id:'top-right',label:'Haut droite'},
+    {id:'mid-left',label:'Milieu gauche'},{id:'center',label:'Centre'},{id:'mid-right',label:'Milieu droite'},
+    {id:'bottom-left',label:'Bas gauche'},{id:'bottom-center',label:'Bas centre'},{id:'bottom-right',label:'Bas droite'}
+  ];
+  window._decorBLOCKS=BLOCKS; window._decorCORNERS=CORNERS;
 
-  let h=`<div class="page-title">🎨 Décor de page</div><div class="page-desc">Éléments décoratifs discrets rappelant un carnet de route. Chaque élément est paramétrable et optionnel. S'applique uniquement au mode Expédition.</div>`;
+  let h=`<div class="page-title">🎨 Décor de page</div><div class="page-desc">Ajoutez des éléments décoratifs et placez-les précisément sur n'importe quel bloc du dashboard (mode Expédition). Maximum 12 éléments.</div>`;
 
-  // Global toggle + bg
-  h+=`<div class="admin-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    ${toggle('dc-enabled','Activer les éléments décoratifs',d.enabled!==false)}
-  </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="dc-bg-on" ${d.bgColor?'checked':''}>Fond de page personnalisé</label>
-    <input type="color" id="dc-bg-color" value="${d.bgColor||'#FDFBF7'}" style="width:36px;height:28px;border:1px solid #ddd;border-radius:4px;padding:2px;cursor:pointer">
-    <input class="form-input" id="dc-bg-txt" value="${d.bgColor||''}" placeholder="#FDFBF7" style="width:100px;font-size:12px">
-  </div></div>`;
-
-  // Compass
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-compass-on','🧭 Rose des vents',c.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Position</span>${pos('dc-compass-pos',c.position)}</div>
-      <div>${slider('dc-compass-op',c.opacity||4)}</div>
+  h+=`<div class="admin-card">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="dc-enabled" ${window._decorEnabled?'checked':''}><strong style="font-size:14px">Activer le décor</strong></label>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="dc-bg-on" ${window._decorBg?'checked':''} onchange="document.getElementById('dc-bg').disabled=!this.checked"> Couleur de fond de page</label>
+      <input type="color" id="dc-bg" value="${window._decorBg||'#f4f1ea'}" ${window._decorBg?'':'disabled'} style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px">
     </div>
   </div>`;
 
-  // Coords
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-coords-on','📐 Coordonnées GPS',co.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px">
-      <input class="form-input" id="dc-co-0" value="${(co.labels||[])[0]||''}" placeholder="S 23°42'" style="font-size:12px">
-      <input class="form-input" id="dc-co-1" value="${(co.labels||[])[1]||''}" placeholder="E 133°52'" style="font-size:12px">
-      <input class="form-input" id="dc-co-2" value="${(co.labels||[])[2]||''}" placeholder="S 34°55'" style="font-size:12px">
-      <input class="form-input" id="dc-co-3" value="${(co.labels||[])[3]||''}" placeholder="E 138°36'" style="font-size:12px">
+  // Layout : éditeur à gauche, aperçu à droite
+  h+=`<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:1;min-width:320px">
+      <div class="admin-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <strong style="font-size:14px">Éléments <span id="dc-count" style="color:var(--text3);font-weight:400">(${elements.length}/12)</span></strong>
+          <button class="btn btn-primary btn-sm" onclick="decorAdd()">+ Ajouter</button>
+        </div>
+        <div id="dc-list"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveDecor()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le décor</button></div>
     </div>
-    ${slider('dc-coords-op',co.opacity||3)}
-  </div>`;
-
-  // Plane
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-plane-on','✈️ Tracé d\'avion',p.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Placer après la section</span>${sel('dc-plane-pos',[{id:'after-map',label:'Carte / Étapes'},{id:'after-live',label:'Fil live'},{id:'after-citations',label:'Citations'},{id:'after-gallery',label:'Galerie'}],p.position||'after-map')}</div>
-      <div>${slider('dc-plane-op',p.opacity||4)}</div>
-    </div>
-  </div>`;
-
-  // Botanical
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-botan-on','🌿 Croquis botaniques',b.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Style</span>${sel('dc-botan-style',BOTANICAL_PRESETS,b.style||'eucalyptus')}</div>
-      <div>${slider('dc-botan-op',b.opacity||3)}</div>
+    <div style="flex:1;min-width:300px;position:sticky;top:16px">
+      <div class="admin-card">
+        <strong style="font-size:13px;display:block;margin-bottom:8px">Aperçu</strong>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px">Cadre schématique du dashboard. Le rendu exact se voit sur le live.</div>
+        <div id="dc-preview" style="position:relative;background:${window._decorBg||'#f4f1ea'};border:1px solid var(--border);border-radius:10px;height:460px;overflow:hidden"></div>
+      </div>
     </div>
   </div>`;
 
-  // Stamp
-  const sl=s.lines||['EXPEDITION','WTA','AUSTRALIA','2026','ADELAIDE → ADELAIDE'];
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-stamp-on','📌 Tampon postal',s.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
-      <input class="form-input" id="dc-st-0" value="${sl[0]||''}" placeholder="EXPEDITION" style="font-size:12px">
-      <input class="form-input" id="dc-st-1" value="${sl[1]||''}" placeholder="WTA" style="font-size:12px">
-      <input class="form-input" id="dc-st-2" value="${sl[2]||''}" placeholder="AUSTRALIA" style="font-size:12px">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
-      <input class="form-input" id="dc-st-3" value="${sl[3]||''}" placeholder="2026" style="font-size:12px">
-      <input class="form-input" id="dc-st-4" value="${sl[4]||''}" placeholder="ADELAIDE → ADELAIDE" style="font-size:12px">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Rotation</span><div style="display:flex;align-items:center;gap:6px"><input type="range" id="dc-stamp-rot" min="-30" max="30" value="${s.rotation||12}" style="flex:1"><span style="font-size:11px;min-width:30px" id="dc-stamp-rot-lbl">${s.rotation||12}°</span></div></div>
-      <div>${slider('dc-stamp-op',s.opacity||4)}</div>
-    </div>
-  </div>`;
-
-  // Relief
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-relief-on','🏔 Silhouette de relief',r.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Profil</span>${sel('dc-relief-style',RELIEF_PRESETS,r.style||'hills')}</div>
-      <div>${slider('dc-relief-op',r.opacity||3)}</div>
-    </div>
-  </div>`;
-
-  // Stitch
-  h+=`<div class="admin-card" style="margin-top:10px">
-    ${toggle('dc-stitch-on','〰️ Couture de reliure',st.on!==false)}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-      <div><span style="font-size:12px;color:var(--text3)">Côté</span>${sel('dc-stitch-side',[{id:'left',label:'Gauche'},{id:'right',label:'Droite'}],st.side||'left')}</div>
-      <div>${slider('dc-stitch-op',st.opacity||5)}</div>
-    </div>
-  </div>`;
-
-  h+=`<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveDecor()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le décor</button></div>`;
   el.innerHTML=h;
+  decorRenderList();
+  decorRenderPreview();
+}
 
-  // Wire up opacity slider labels
-  document.querySelectorAll('[id$="-op"]').forEach(sl=>{
-    const lbl=document.getElementById(sl.id+'-lbl');
-    if(sl&&lbl) sl.addEventListener('input',()=>{lbl.textContent=(sl.value*5)+'%';});
+// Sélecteur de forme (groupé) sous forme d'options
+function decorShapeOptions(sel){
+  const G=window.DECOR_SHAPE_GROUPS||{}, L=window.DECOR_SHAPE_LABELS||{};
+  let o='';
+  Object.keys(G).forEach(grp=>{
+    o+=`<optgroup label="${grp}">`;
+    G[grp].forEach(k=>{ o+=`<option value="${k}"${sel===k?' selected':''}>${L[k]||k}</option>`; });
+    o+='</optgroup>';
   });
-  const rotS=document.getElementById('dc-stamp-rot'),rotL=document.getElementById('dc-stamp-rot-lbl');
-  if(rotS&&rotL) rotS.addEventListener('input',()=>{rotL.textContent=rotS.value+'°';});
-  // Sync bg color pickers
-  const bgP=document.getElementById('dc-bg-color'),bgT=document.getElementById('dc-bg-txt');
-  if(bgP&&bgT){bgP.addEventListener('input',()=>{bgT.value=bgP.value;});bgT.addEventListener('input',()=>{if(bgT.value.match(/^#[0-9a-fA-F]{6}$/))bgP.value=bgT.value;});}
+  return o;
+}
+
+function decorAdd(){
+  if(window._decorEls.length>=12){ toast('Maximum 12 éléments'); return; }
+  window._decorEls.push({shape:'boussole',block:'page',corner:'top-right',x:4,y:4,size:120,opacity:30,rotation:0,color:'#8a8578',front:false});
+  decorRenderList(); decorRenderPreview();
+  document.getElementById('dc-count').textContent='('+window._decorEls.length+'/12)';
+}
+function decorDel(i){ window._decorEls.splice(i,1); decorRenderList(); decorRenderPreview(); document.getElementById('dc-count').textContent='('+window._decorEls.length+'/12)'; }
+function decorUpd(i,field,val){ const e=window._decorEls[i]; if(!e)return; if(field==='front') e[field]=val; else if(['x','y','size','opacity','rotation'].indexOf(field)>=0) e[field]=parseFloat(val); else e[field]=val; decorRenderPreview(); }
+
+function decorRenderList(){
+  const wrap=document.getElementById('dc-list'); if(!wrap) return;
+  const BLOCKS=window._decorBLOCKS, CORNERS=window._decorCORNERS, L=window.DECOR_SHAPE_LABELS||{};
+  if(!window._decorEls.length){ wrap.innerHTML='<div style="font-size:12px;color:var(--text3);padding:14px;text-align:center">Aucun élément. Cliquez sur « Ajouter ».</div>'; return; }
+  let h='';
+  window._decorEls.forEach((e,i)=>{
+    const preview=`<svg viewBox="0 0 100 100" width="34" height="34" fill="none" stroke="${e.color||'#8a8578'}" stroke-width="1.4">${(window.DECOR_SHAPES[e.shape]||'').replace(/C/g,e.color||'#8a8578')}</svg>`;
+    h+=`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--card)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:6px">${preview}</div>
+        <select class="form-input" style="flex:1;font-size:12px" onchange="decorUpd(${i},'shape',this.value);decorRenderList()">${decorShapeOptions(e.shape)}</select>
+        <button class="btn btn-ghost btn-xs" onclick="decorDel(${i})" title="Supprimer" style="color:#DC2626">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="font-size:11px;color:var(--text3)">Bloc<select class="form-input" style="font-size:12px" onchange="decorUpd(${i},'block',this.value)">${BLOCKS.map(b=>`<option value="${b.id}"${e.block===b.id?' selected':''}>${b.label}</option>`).join('')}</select></label>
+        <label style="font-size:11px;color:var(--text3)">Ancrage<select class="form-input" style="font-size:12px" onchange="decorUpd(${i},'corner',this.value)">${CORNERS.map(c=>`<option value="${c.id}"${e.corner===c.id?' selected':''}>${c.label}</option>`).join('')}</select></label>
+        <label style="font-size:11px;color:var(--text3)">Décalage X (%)<input type="number" class="form-input" style="font-size:12px" value="${e.x||0}" min="0" max="90" onchange="decorUpd(${i},'x',this.value)"></label>
+        <label style="font-size:11px;color:var(--text3)">Décalage Y (%)<input type="number" class="form-input" style="font-size:12px" value="${e.y||0}" min="0" max="90" onchange="decorUpd(${i},'y',this.value)"></label>
+        <label style="font-size:11px;color:var(--text3)">Taille (px)<input type="number" class="form-input" style="font-size:12px" value="${e.size||120}" min="20" max="320" onchange="decorUpd(${i},'size',this.value)"></label>
+        <label style="font-size:11px;color:var(--text3)">Rotation (°)<input type="number" class="form-input" style="font-size:12px" value="${e.rotation||0}" min="-180" max="180" onchange="decorUpd(${i},'rotation',this.value)"></label>
+        <label style="font-size:11px;color:var(--text3)">Opacité (%)<input type="range" min="5" max="100" value="${e.opacity||30}" style="width:100%" oninput="decorUpd(${i},'opacity',this.value);this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:10px;color:var(--text3)">${e.opacity||30}%</span></label>
+        <label style="font-size:11px;color:var(--text3)">Couleur<div style="display:flex;align-items:center;gap:6px"><input type="color" value="${e.color||'#8a8578'}" style="width:30px;height:26px;border:none;cursor:pointer;border-radius:4px" onchange="decorUpd(${i},'color',this.value);decorRenderList()"><label style="font-size:10px;display:flex;align-items:center;gap:4px"><input type="checkbox" ${e.front?'checked':''} onchange="decorUpd(${i},'front',this.checked)"> Avant-plan</label></div></label>
+      </div>
+    </div>`;
+  });
+  wrap.innerHTML=h;
+}
+
+// Aperçu : cadre schématique avec blocs empilés + éléments placés
+function decorRenderPreview(){
+  const pv=document.getElementById('dc-preview'); if(!pv) return;
+  const bg=document.getElementById('dc-bg-on')?.checked?(document.getElementById('dc-bg')?.value||'#f4f1ea'):'#f4f1ea';
+  pv.style.background=bg;
+  // blocs schématiques (ordre représentatif)
+  const layout=[['kpis','Chiffres'],['etapes','Carte'],['live','Fil live'],['citations','Citations'],['gallery','Galerie'],['sponsors','Partenaires']];
+  let h='';
+  layout.forEach(b=>{
+    h+=`<div data-prev-block="${b[0]}" style="position:relative;margin:6px 8px;height:64px;background:rgba(0,0,0,.03);border:1px dashed rgba(0,0,0,.12);border-radius:6px;overflow:visible;display:flex;align-items:center;justify-content:center"><span style="font-size:9px;color:rgba(0,0,0,.3);font-family:monospace;text-transform:uppercase;letter-spacing:.1em">${b[1]}</span></div>`;
+  });
+  pv.innerHTML=h;
+  // Placer les éléments
+  const scale=0.5; // l'aperçu est ~2x plus petit que le réel
+  window._decorEls.forEach(e=>{
+    const raw=window.DECOR_SHAPES[e.shape]; if(!raw) return;
+    let tgt;
+    if(e.block==='page') tgt=pv;
+    else tgt=pv.querySelector('[data-prev-block="'+e.block+'"]');
+    if(!tgt){ tgt=pv; } // bloc absent du schéma d'aperçu → page
+    const size=Math.min(Math.max(parseInt(e.size)||120,20),320)*scale;
+    const op=(typeof e.opacity==='number'?e.opacity:30)/100;
+    const rot=parseInt(e.rotation)||0;
+    const color=e.color||'#8a8578';
+    const node=document.createElement('div');
+    const c=e.corner||'top-left'; const parts=c.split('-'); let v=parts[0],hz=parts[1]||'center'; if(c==='center'){v='center';hz='center';}
+    let css='position:absolute;pointer-events:none;line-height:0;opacity:'+op+';width:'+size+'px;height:'+size+'px;';
+    css+=(v==='top'?'top:'+(e.y||0)+'%;':v==='bottom'?'bottom:'+(e.y||0)+'%;':'top:50%;');
+    css+=(hz==='left'?'left:'+(e.x||0)+'%;':hz==='right'?'right:'+(e.x||0)+'%;':'left:50%;');
+    const tx=(hz==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
+    css+='transform:translate('+tx+','+ty+') rotate('+rot+'deg);z-index:'+(e.front?'5':'1')+';';
+    node.style.cssText=css;
+    node.innerHTML='<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.4">'+raw.replace(/C/g,color)+'</svg>';
+    tgt.style.position='relative'; tgt.style.overflow='visible';
+    tgt.appendChild(node);
+  });
 }
 
 async function saveDecor(){
   saving(true);
-  const v=id=>document.getElementById(id)?.value?.trim()||'';
-  const ck=id=>document.getElementById(id)?.checked||false;
-  const num=id=>parseInt(document.getElementById(id)?.value)||0;
-  const decor={
-    enabled:ck('dc-enabled'),
-    bgColor:ck('dc-bg-on')?v('dc-bg-txt'):'',
-    compass:{on:ck('dc-compass-on'),position:v('dc-compass-pos'),opacity:num('dc-compass-op')},
-    coords:{on:ck('dc-coords-on'),labels:[v('dc-co-0'),v('dc-co-1'),v('dc-co-2'),v('dc-co-3')],opacity:num('dc-coords-op')},
-    plane:{on:ck('dc-plane-on'),position:v('dc-plane-pos'),opacity:num('dc-plane-op')},
-    botanical:{on:ck('dc-botan-on'),style:v('dc-botan-style'),opacity:num('dc-botan-op')},
-    stamp:{on:ck('dc-stamp-on'),lines:[v('dc-st-0'),v('dc-st-1'),v('dc-st-2'),v('dc-st-3'),v('dc-st-4')],rotation:num('dc-stamp-rot'),opacity:num('dc-stamp-op')},
-    relief:{on:ck('dc-relief-on'),style:v('dc-relief-style'),opacity:num('dc-relief-op')},
-    stitch:{on:ck('dc-stitch-on'),side:v('dc-stitch-side'),opacity:num('dc-stitch-op')}
-  };
-  await evRef().update({decor});
+  const enabled=document.getElementById('dc-enabled')?.checked||false;
+  const bgOn=document.getElementById('dc-bg-on')?.checked;
+  const bgColor=bgOn?(document.getElementById('dc-bg')?.value||''):'';
+  // Nettoie/valide les éléments
+  const elements=(window._decorEls||[]).slice(0,12).map(e=>({
+    shape:e.shape||'cercle', block:e.block||'page', corner:e.corner||'top-right',
+    x:Math.min(Math.max(parseFloat(e.x)||0,0),95), y:Math.min(Math.max(parseFloat(e.y)||0,0),95),
+    size:Math.min(Math.max(parseInt(e.size)||120,20),320),
+    opacity:Math.min(Math.max(parseInt(e.opacity)||30,5),100),
+    rotation:Math.min(Math.max(parseInt(e.rotation)||0,-180),180),
+    color:e.color||'#8a8578', front:!!e.front
+  }));
+  await evRef().update({decor:{enabled,bgColor,elements}});
   toast('Décor enregistré');
 }
 
@@ -7784,7 +7896,7 @@ window.addEventListener('message',function(e){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Page complète (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
-    <div style="position:relative"><textarea class="form-input" rows="14" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block"&gt;&lt;/iframe&gt;
+    <div style="position:relative"><textarea class="form-input" rows="14" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 (function(){
   var base="${frontUrl}";
@@ -7975,7 +8087,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
-    <div style="position:relative"><textarea class="form-input" rows="16" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block"&gt;&lt;/iframe&gt;
+    <div style="position:relative"><textarea class="form-input" rows="16" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 (function(){
   var base="${frontUrl}";
@@ -8006,8 +8118,8 @@ window.addEventListener('message',function(e){
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Option 2 — Widget encart compact (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Encart compact pour la homepage, identique au widget du dashboard crise. Auto-resize via postMessage.</p>
     <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px"><label class="form-label" style="margin:0">👁 Aperçu <span style="font-weight:400;color:var(--text3);font-size:11px">(reflète la dernière configuration enregistrée)</span></label><button class="btn btn-ghost btn-xs" onclick="refreshEncartPreview('prev-wc','${widgetUrl}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-refresh"/></svg> Rafraîchir</button></div>
-    <div style="background:#f1f5f9;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden"><iframe src="${widgetUrl}" id="prev-wc" style="width:100%;border:none;min-height:280px;border-radius:10px;overflow:hidden;display:block"></iframe></div>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w"&gt;&lt;/iframe&gt;
+    <div style="background:#f1f5f9;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden"><iframe src="${widgetUrl}" id="prev-wc" allow="web-share; clipboard-write" style="width:100%;border:none;min-height:280px;border-radius:10px;overflow:hidden;display:block"></iframe></div>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
