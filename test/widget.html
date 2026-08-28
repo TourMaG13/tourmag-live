@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- TourMaG Widget — build 2026-08-28-B : articles sans vignette + nombre configurable + heure HH:MM -->
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -118,9 +119,12 @@ firebase.initializeApp({
   projectId:"tourmag-live"
 });
 const db=firebase.firestore();
+console.log('[TourMaG Widget] build 2026-08-28-B (articles sans vignette + nombre configurable + heure HH:MM)');
 
 // Helper : convertit un champ date Firestore/divers en timestamp comparable
 function _wTs(v){ try{ if(v?.toDate) return v.toDate().getTime(); if(typeof v==='number') return v; if(!v) return 0; const d=new Date(v); return isNaN(d)?0:d.getTime(); }catch(e){ return 0; } }
+// Formate un champ date Firestore/divers en heure HH:MM (comme le dashboard)
+function _wFmtTime(v){ try{ const d=v?.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''; }catch(e){ return ''; } }
 
 const DEMO=false;
 const DEMO_DATA={
@@ -278,7 +282,7 @@ function renderEncart(data, forceRender){
     if(!items.length) return '';
     let s=`<div class="er-mod"><div class="er-mod-label">En direct</div>`;
     items.forEach(it=>{
-      const time=it.time||it.hour||'';
+      const time=_wFmtTime(it.time||it.hour||it.created_at);
       const txt=it.text||it.content||'';
       s+=`<a class="er-litem" href="${liveUrl}" target="_blank">${time?`<div class="er-litem-body"><div class="er-litem-time">${time}</div><div class="er-litem-text">${txt}</div></div>`:`<div class="er-litem-body"><div class="er-litem-text">${txt}</div></div>`}</a>`;
     });
@@ -286,14 +290,14 @@ function renderEncart(data, forceRender){
     return s;
   }
   function modArticles(){
-    const items=(articles||[]).slice(0,3);
+    const n=Math.min(Math.max(parseInt(cfg.articlesCount)||3,1),3);
+    const items=(articles||[]).slice(0,n);
     if(!items.length) return '';
     let s=`<div class="er-mod"><div class="er-mod-label">À lire</div>`;
     items.forEach(it=>{
-      const img=it.image||it.image_url||it.thumb||'';
       const title=it.title||it.text||'';
       const url=it.url||it.link||liveUrl;
-      s+=`<a class="er-litem" href="${url}" target="_blank">${img?`<img class="er-litem-thumb" src="${img}" alt="" onerror="this.remove()">`:''}<div class="er-litem-body"><div class="er-litem-text"><strong>${title}</strong></div></div></a>`;
+      s+=`<a class="er-litem" href="${url}" target="_blank"><div class="er-litem-body"><div class="er-litem-text"><strong>${title}</strong></div></div></a>`;
     });
     s+=`</div>`;
     return s;
