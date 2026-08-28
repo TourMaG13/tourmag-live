@@ -1679,7 +1679,7 @@ function _fontOpts(selected){
     },
     programme: {
       zone:'body',
-      title:'.prog-card .ct,.exp-prog .exp-card-label',
+      title:'',
       text:'.prog-label,.exp-prog-label',
       ui:'.prog-time,.prog-desc,.prog-status,.exp-prog-time,.exp-prog-desc,.exp-prog-status,.exp-prog-day'
     },
@@ -1706,7 +1706,7 @@ function _fontOpts(selected){
     itinerary: {
       title: '.exp-route-name,.exp-map-panel-name',
       text:  '.exp-route-detail,.exp-map-panel-desc',
-      ui:    '.exp-card-label-itin,.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
+      ui:    '.exp-route-acc-btn,.exp-map-panel-status,.exp-map-panel-meta'
     }
   };
 
@@ -2701,7 +2701,7 @@ function renderPhases(el){
         <div style="width:12px;height:12px;border-radius:3px;background:${p.color||'#6366F1'};flex-shrink:0"></div>
         <div class="list-item-content" style="flex:1">
           <div class="list-item-text"><strong>${p.name}</strong> ${dates}</div>
-          <div class="list-item-meta"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">slug: ${p.slug||p.id}</span>${p.heroImage?'<span style="font-size:10px;color:var(--text3);margin-left:8px" title="Hero personnalisé">🖼️ hero</span>':''}${p.qaEnabled?'<span style="font-size:10px;font-weight:600;color:#6366F1;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);padding:1px 6px;border-radius:8px;margin-left:8px" title="Questions du public ouvertes">💬 Questions</span>':''}</div>
+          <div class="list-item-meta"><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text3)">slug: ${_slugify(p.name||'')||p.id}</span>${p.heroImage?'<span style="font-size:10px;color:var(--text3);margin-left:8px" title="Hero personnalisé">🖼️ hero</span>':''}${p.qaEnabled?'<span style="font-size:10px;font-weight:600;color:#6366F1;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);padding:1px 6px;border-radius:8px;margin-left:8px" title="Questions du public ouvertes">💬 Questions</span>':''}</div>
         </div>
         <div class="list-item-actions" style="display:flex;gap:4px">
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},-1)">▲</button>`:''}
@@ -6403,38 +6403,11 @@ function renderGuide(el){
     .guide-toc a{display:block;font-size:13px;color:var(--blue);text-decoration:none;padding:4px 0;transition:color .15s}
     .guide-toc a:hover{color:var(--acc)}
   `;
-  let h=`<style>${guideCSS}</style>
-  <div class="guide">
-  <div class="page-title">📖 Guide d'utilisation</div>
-  <div class="page-desc">Ce guide vous accompagne pas à pas dans l'utilisation de TourMaG Live. Cliquez sur une section pour y accéder directement.</div>
-
-  <div class="guide-toc">
-    <div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
-    <a href="#g-start">1. Premiers pas</a>
-    <a href="#g-events">2. Créer et gérer un événement</a>
-    <a href="#g-modes">3. Les deux modes : Classique et Expédition</a>
-    <a href="#g-programme">4. Le programme</a>
-    <a href="#g-flash">5. Le flash info</a>
-    <a href="#g-essential">6. Les points essentiels / À retenir</a>
-    <a href="#g-live">7. Le fil live / Fil de route</a>
-    <a href="#g-citations">8. Les citations / Verbatims</a>
-    <a href="#g-interviews">9. Les interviews</a>
-    <a href="#g-articles">10. Les articles liés</a>
-    <a href="#g-videos">11. Les vidéos</a>
-    <a href="#g-reporters">12. Reporters / Journalistes</a>
-    <a href="#g-gallery">13. Galerie photos</a>
-    <a href="#g-kpis">14. Compteurs / Chiffres clés</a>
-    <a href="#g-contact">15. Contact</a>
-    <a href="#g-media">16. La médiathèque</a>
-    <a href="#g-rubriques">17. Rubriques et tags</a>
-    <a href="#g-decor">18. Décor (mode Expédition)</a>
-    <a href="#g-modules">19. Disposition des blocs</a>
-    <a href="#g-widget">20. Intégrer sur votre site</a>
-    <a href="#g-access">21. Gestion des accès</a>
-  </div>
-
-  <!-- ==================== 1. PREMIERS PAS ==================== -->
-  <h2 id="g-start">1. 🚀 Premiers pas</h2>
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const hidden=_effectiveHidden(ev)||[];
+  const superAdmin=isSuperAdmin();
+  const SECTIONS=[
+  {id:'g-start', tab:null, toc:'Premiers pas', html:`<h2 id="g-start">1. 🚀 Premiers pas</h2>
   <p>TourMaG Live est un dashboard de couverture événementielle en temps réel. Il permet de créer une page live pour un événement (salon, conférence, expédition…) et d'y publier du contenu en direct : fil d'actualité, citations, programme, vidéos, galerie photo…</p>
 
   <h3>L'interface en un coup d'œil</h3>
@@ -6446,8 +6419,8 @@ function renderGuide(el){
 
   <div class="tip">💡 <strong>Astuce</strong> : Tout ce que vous modifiez est enregistré automatiquement dans le cloud. Le dashboard public se met à jour en temps réel, sans besoin de rafraîchir la page.</div>
 
-  <!-- ==================== 2. ÉVÉNEMENTS ==================== -->
-  <h2 id="g-events">2. 📋 Créer et gérer un événement</h2>
+  <!-- ==================== 2. ÉVÉNEMENTS ==================== -->`},
+  {id:'g-events', tab:null, toc:'Créer et gérer un événement', html:`<h2 id="g-events">2. 📋 Créer et gérer un événement</h2>
   <p>L'onglet <span class="key">📋 Mes événements</span> vous permet de créer, modifier et sélectionner vos événements.</p>
   <h3>Créer un événement</h3>
   <div class="step">
@@ -6465,8 +6438,8 @@ function renderGuide(el){
     <li><strong>Terminé</strong> — Archivé. Les scripts automatiques ne le traitent plus.</li>
   </ul>
 
-  <!-- ==================== 3. MODES ==================== -->
-  <h2 id="g-modes">3. 🔀 Les deux modes : Classique et Expédition</h2>
+  <!-- ==================== 3. MODES ==================== -->`},
+  {id:'g-modes', tab:null, toc:'Les deux modes : Classique et Expédition', html:`<h2 id="g-modes">3. 🔀 Les deux modes : Classique et Expédition</h2>
   <p>Chaque événement fonctionne dans l'un des deux modes. Le mode se choisit à la création ou se modifie ensuite.</p>
   <h3>Mode Classique (Live)</h3>
   <p>Conçu pour les événements éditoriaux : salons, conférences, forums. Layout avec <strong>trois zones</strong> (pleine largeur, colonne principale, colonne latérale) et des blocs repositionnables par glisser-déposer.</p>
@@ -6486,8 +6459,8 @@ function renderGuide(el){
   </div>
   <div class="tip">💡 En mode Expédition, certains onglets changent de nom (« Fil live » → « Fil de route », « Journalistes » → « Reporters »). Les fonctionnalités restent similaires.</div>
 
-  <!-- ==================== 4. PROGRAMME ==================== -->
-  <h2 id="g-programme">4. 🗓 Le programme</h2>
+  <!-- ==================== 4. PROGRAMME ==================== -->`},
+  {id:'g-programme', tab:'programme', toc:'Le programme', html:`<h2 id="g-programme">4. 🗓 Le programme</h2>
   <p>L'onglet <span class="key">🗓 Programme</span> permet de créer l'agenda de votre événement, organisé par journée.</p>
   <div class="step">
     <span class="step-num">1</span> Sélectionnez le jour (Jour 1, Jour 2…).<br>
@@ -6496,8 +6469,8 @@ function renderGuide(el){
   </div>
   <p>Le <strong>titre de l'encart</strong> est personnalisable (ex : « Agenda », « Planning du jour »). Les entrées se réordonnent avec ▲/▼ et se suppriment avec ✕.</p>
 
-  <!-- ==================== 5. FLASH ==================== -->
-  <h2 id="g-flash">5. ⚡ Le flash info</h2>
+  <!-- ==================== 5. FLASH ==================== -->`},
+  {id:'g-flash', tab:'flash', toc:'Le flash info', html:`<h2 id="g-flash">5. ⚡ Le flash info</h2>
   <p>Bandeau d'alerte en haut du dashboard avec animation pulsante pour attirer l'attention.</p>
   <div class="step">
     <span class="step-num">1</span> Onglet <span class="key">⚡ Flash info</span> → tapez votre message.<br>
@@ -6505,8 +6478,8 @@ function renderGuide(el){
   </div>
   <div class="tip">💡 Idéal pour les breaking news : « 🔴 DIRECT — Le ministre prend la parole dans 5 minutes ».</div>
 
-  <!-- ==================== 6. ESSENTIELS ==================== -->
-  <h2 id="g-essential">6. 🧠 Les points essentiels / À retenir</h2>
+  <!-- ==================== 6. ESSENTIELS ==================== -->`},
+  {id:'g-essential', tab:'essentiel', toc:'Essentiel & Timeline', html:`<h2 id="g-essential">6. 🧠 Les points essentiels / À retenir</h2>
   <p>Informations clés de l'événement sous forme de cartes numérotées, alimentées manuellement ou par IA.</p>
   <h3>Ajouter un point manuellement</h3>
   <div class="step">
@@ -6518,8 +6491,8 @@ function renderGuide(el){
   <p>Si le toggle <strong>IA Essentiels</strong> est activé, un script automatique (toutes les 4h) analyse les derniers articles et génère 6 points de synthèse. Ces points cohabitent avec vos points manuels.</p>
   <p>En mode Expédition, chaque carte affiche un <strong>numéro en filigrane</strong>, une <strong>icône SVG</strong> selon le tag, et des couleurs personnalisées.</p>
 
-  <!-- ==================== 7. FIL LIVE ==================== -->
-  <h2 id="g-live">7. 📡 Le fil live / Fil de route</h2>
+  <!-- ==================== 7. FIL LIVE ==================== -->`},
+  {id:'g-live', tab:'live', toc:'Le fil live', html:`<h2 id="g-live">7. 📡 Le fil live / Fil de route</h2>
   <p>Le cœur du dashboard : un flux d'entrées en temps réel.</p>
   <div class="step">
     <span class="step-num">1</span> Sélectionnez le <strong>type</strong> : texte simple, photo, ou flash.<br>
@@ -6532,8 +6505,8 @@ function renderGuide(el){
     <li><strong>Tags live</strong> — Chaque entrée peut être taguée (« Étape », « Rencontre », « Paysage »…).</li>
   </ul>
 
-  <!-- ==================== 8. CITATIONS ==================== -->
-  <h2 id="g-citations">8. 💬 Les citations / Verbatims</h2>
+  <!-- ==================== 8. CITATIONS ==================== -->`},
+  {id:'g-citations', tab:'citations', toc:'Les citations', html:`<h2 id="g-citations">8. 💬 Les citations / Verbatims</h2>
   <p>Mettez en avant des déclarations marquantes d'intervenants.</p>
   <div class="step">
     <span class="step-num">1</span> Onglet <span class="key">💬 Citations</span> (ou « Verbatims » en Expédition).<br>
@@ -6542,8 +6515,8 @@ function renderGuide(el){
   </div>
   <p>Le style (avatar, couleur, bordure) se règle dans <span class="key">🎨 Apparence</span>.</p>
 
-  <!-- ==================== 9. INTERVIEWS ==================== -->
-  <h2 id="g-interviews">9. 🎙️ Les interviews</h2>
+  <!-- ==================== 9. INTERVIEWS ==================== -->`},
+  {id:'g-interviews', tab:'interviews', toc:'Les interviews', html:`<h2 id="g-interviews">9. 🎙️ Les interviews</h2>
   <p>Questions/réponses structurées avec un intervenant identifié.</p>
   <div class="step">
     <span class="step-num">1</span> Onglet <span class="key">🎙️ Interviews</span> → nom, rôle, photo de l'interviewé.<br>
@@ -6551,13 +6524,13 @@ function renderGuide(el){
     <span class="step-num">3</span> Marquez une interview « mise en avant » pour plus de visibilité.
   </div>
 
-  <!-- ==================== 10. ARTICLES ==================== -->
-  <h2 id="g-articles">10. 📰 Les articles liés</h2>
+  <!-- ==================== 10. ARTICLES ==================== -->`},
+  {id:'g-articles', tab:'articles', toc:'Les articles liés', html:`<h2 id="g-articles">10. 📰 Les articles liés</h2>
   <p>Importés <strong>automatiquement</strong> via RSS (toutes les 15 min). Gestion dans l'onglet <span class="key">📰 Articles liés</span> : consultation et suppression si besoin (anti-doublon par URL).</p>
   <div class="tip">💡 Si un article ne s'importe pas, vérifiez qu'il est publié sur TourMaG et que le flux RSS est configuré.</div>
 
-  <!-- ==================== 11. VIDÉOS ==================== -->
-  <h2 id="g-videos">11. 🎬 Les vidéos</h2>
+  <!-- ==================== 11. VIDÉOS ==================== -->`},
+  {id:'g-videos', tab:'videos', toc:'Les vidéos', html:`<h2 id="g-videos">11. 🎬 Les vidéos</h2>
   <p>Intégration depuis <strong>YouTube</strong>, <strong>Instagram</strong>, <strong>Facebook</strong> et <strong>LinkedIn</strong>.</p>
   <div class="step">
     <span class="step-num">1</span> Collez l'URL → détection automatique de la plateforme et du type.<br>
@@ -6566,8 +6539,8 @@ function renderGuide(el){
   </div>
   <div class="warn">⚠️ Facebook et LinkedIn bloquent parfois l'embed. Un lien « Ouvrir sur… » apparaît en fallback. YouTube et Instagram sont les plus fiables.</div>
 
-  <!-- ==================== 12. REPORTERS ==================== -->
-  <h2 id="g-reporters">12. 👤 Reporters / Journalistes</h2>
+  <!-- ==================== 12. REPORTERS ==================== -->`},
+  {id:'g-reporters', tab:'journalistes', toc:'Journalistes', html:`<h2 id="g-reporters">12. 👤 Reporters / Journalistes</h2>
   <p>Fiches des personnes couvrant l'événement.</p>
   <div class="step">
     <span class="step-num">1</span> Nom, rôle (ex : « Envoyé spécial »), biographie, photo.<br>
@@ -6575,8 +6548,8 @@ function renderGuide(el){
     <span class="step-num">3</span> Le reporter sélectionné est associé aux entrées du fil live.
   </div>
 
-  <!-- ==================== 13. GALERIE ==================== -->
-  <h2 id="g-gallery">13. 📸 Galerie photos</h2>
+  <!-- ==================== 13. GALERIE ==================== -->`},
+  {id:'g-gallery', tab:'gallery', toc:'Galerie photos', html:`<h2 id="g-gallery">13. 📸 Galerie photos</h2>
   <p>Carrousel de photos affiché sur le dashboard.</p>
   <div class="step">
     <span class="step-num">1</span> Uploadez ou sélectionnez des photos via la médiathèque.<br>
@@ -6585,20 +6558,20 @@ function renderGuide(el){
   </div>
   <p>En Expédition, un clic ouvre une <strong>lightbox plein écran</strong>. En iframe, la lightbox s'adapte automatiquement via postMessage.</p>
 
-  <!-- ==================== 14. KPIS ==================== -->
-  <h2 id="g-kpis">14. 📊 Compteurs / Chiffres clés</h2>
+  <!-- ==================== 14. KPIS ==================== -->`},
+  {id:'g-kpis', tab:'kpis', toc:'Chiffres clés', html:`<h2 id="g-kpis">14. 📊 Compteurs / Chiffres clés</h2>
   <p>Indicateurs visuels en haut du dashboard (km parcourus, jours restants, rencontres…).</p>
   <div class="step">
     <span class="step-num">1</span> Ajoutez un compteur : <strong>label</strong>, <strong>valeur</strong>, <strong>icône</strong> optionnel.<br>
     <span class="step-num">2</span> Les compteurs s'affichent dans une barre horizontale.
   </div>
 
-  <!-- ==================== 15. CONTACT ==================== -->
-  <h2 id="g-contact">15. 📞 Contact</h2>
+  <!-- ==================== 15. CONTACT ==================== -->`},
+  {id:'g-contact', tab:'contact', toc:'Contact', html:`<h2 id="g-contact">15. 📞 Contact</h2>
   <p>Encadré de contact en bas du dashboard. Renseignez nom, email, téléphone, site web et logo. Les icônes (globe, réseaux sociaux) s'affichent automatiquement.</p>
 
-  <!-- ==================== 16. MÉDIATHÈQUE ==================== -->
-  <h2 id="g-media">16. 📷 La médiathèque</h2>
+  <!-- ==================== 16. MÉDIATHÈQUE ==================== -->`},
+  {id:'g-media', tab:'media', toc:'La médiathèque', html:`<h2 id="g-media">16. 📷 La médiathèque</h2>
   <p>Bibliothèque d'images partagée pour tout l'événement.</p>
   <ul>
     <li><strong>Upload</strong> — Glissez-déposez ou cliquez pour sélectionner.</li>
@@ -6607,13 +6580,13 @@ function renderGuide(el){
   </ul>
   <p>Le bouton 📷 à côté de chaque champ image ouvre le sélecteur de médiathèque.</p>
 
-  <!-- ==================== 17. RUBRIQUES ==================== -->
-  <h2 id="g-rubriques">17. 📁 Rubriques et 🏷 Tags</h2>
+  <!-- ==================== 17. RUBRIQUES ==================== -->`},
+  {id:'g-rubriques', tab:'rubriques', toc:'Rubriques et tags', html:`<h2 id="g-rubriques">17. 📁 Rubriques et 🏷 Tags</h2>
   <p>Les <strong>rubriques</strong> catégorisent les entrées du fil live. Le visiteur peut filtrer par rubrique.</p>
   <p>Les <strong>tags live</strong> (mode Expédition) fonctionnent de la même façon, avec en plus des icônes SVG et une palette de couleurs personnalisée par tag.</p>
 
-  <!-- ==================== 18. DÉCOR ==================== -->
-  <h2 id="g-decor">18. 🎨 Décor (mode Expédition)</h2>
+  <!-- ==================== 18. DÉCOR ==================== -->`},
+  {id:'g-decor', tab:'decor', toc:'Décor (mode Expédition)', html:`<h2 id="g-decor">18. 🎨 Décor (mode Expédition)</h2>
   <p>Uniquement en mode Expédition. Ajoutez des éléments graphiques décoratifs :</p>
   <ul>
     <li><strong>Silhouettes de relief</strong> — Profil montagneux ou paysager en bas de page.</li>
@@ -6621,8 +6594,8 @@ function renderGuide(el){
   </ul>
   <div class="tip">💡 Le décor est purement cosmétique et donne une identité visuelle « terrain » au dashboard.</div>
 
-  <!-- ==================== 19. MODULES ==================== -->
-  <h2 id="g-modules">19. ⚙️ Disposition des blocs</h2>
+  <!-- ==================== 19. MODULES ==================== -->`},
+  {id:'g-modules', tab:'modules', toc:'Disposition des blocs', html:`<h2 id="g-modules">19. ⚙️ Disposition des blocs</h2>
   <p>Contrôlez <strong>quels blocs sont visibles</strong> et <strong>où ils apparaissent</strong>.</p>
   <h3>Activer/désactiver</h3>
   <p>Les interrupteurs permettent d'activer ou désactiver chaque bloc.</p>
@@ -6644,8 +6617,8 @@ function renderGuide(el){
     <span class="step-num">2</span> L'ordre dans chaque zone = ordre d'affichage.
   </div>
 
-  <!-- ==================== 20. INTÉGRATION ==================== -->
-  <h2 id="g-widget">20. 📦 Intégrer sur votre site</h2>
+  <!-- ==================== 20. INTÉGRATION ==================== -->`},
+  {id:'g-widget', tab:'widget', toc:'Intégrer sur votre site', html:`<h2 id="g-widget">20. 📦 Intégrer sur votre site</h2>
   <p>L'onglet <span class="key">📦 Widget homepage</span> fournit les codes d'intégration pour le CMS TourMaG.</p>
   <h3>Options d'intégration</h3>
   <ul>
@@ -6663,8 +6636,8 @@ function renderGuide(el){
   </div>
   <div class="warn">⚠️ <strong>Ne modifiez pas le code embed</strong> : le paramètre <code>frameId</code> dans l'URL et le bloc <code>&lt;style&gt;</code> avec la media query mobile sont indispensables. Sans eux, l'encart sera trop petit sur mobile.</div>
 
-  <!-- ==================== 21. ACCÈS ==================== -->
-  <h2 id="g-access">21. 👥 Gestion des accès</h2>
+  <!-- ==================== 21. ACCÈS ==================== -->`},
+  {id:'g-access', tab:'super', toc:'Gestion des accès', html:`<h2 id="g-access">21. 👥 Gestion des accès</h2>
   <p>L'onglet <span class="key">👥 Accès</span> contrôle qui a accès à quoi (super admins uniquement).</p>
   <h3>Comptes utilisateurs</h3>
   <ul>
@@ -6681,17 +6654,37 @@ function renderGuide(el){
     <span class="step-num">2</span> Seuls les listés (+ super admins) verront cet événement.<br>
     <span class="step-num">3</span> Liste vide = aucune restriction.
   </div>
-  <div class="warn">⚠️ Vérifiez que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>
-
-  <!-- ==================== FIN ==================== -->
+  <div class="warn">⚠️ Vérifiez que votre propre email est dans la liste ou que vous êtes super admin, sinon vous perdrez l'accès !</div>`}
+];
+  // Filtrer selon les droits : section visible si pas d'onglet lié, ou onglet non masqué ; 'super' => super-admin only
+  const visible=SECTIONS.filter(s=>{
+    if(s.tab===null) return true;
+    if(s.tab==='super') return superAdmin;
+    return hidden.indexOf(s.tab)===-1;
+  });
+  let toc='';
+  visible.forEach((s,i)=>{ toc+=`<a href="#${s.id}">${i+1}. ${s.toc}</a>`; });
+  let body='';
+  visible.forEach((s,i)=>{
+    // Renuméroter le titre h2 (retire l'ancien numéro éventuel)
+    let html=s.html.replace(/(<h2 id="[^"]+">)\s*\d+\.\s*/, `$1${i+1}. `);
+    body+=html;
+  });
+  let h=`<style>${guideCSS}</style>
+  <div class="guide">
+  <div class="page-title">📖 Guide d'utilisation</div>
+  <div class="page-desc">Ce guide s'adapte à vos droits d'accès : seules les sections des modules auxquels vous avez accès sont affichées.</div>
+  <div class="guide-toc">
+    <div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
+    ${toc}
+  </div>
+  ${body}
   <div style="margin-top:40px;padding:24px;background:linear-gradient(135deg,#1B1B2F,#2D1B4E);border-radius:12px;text-align:center">
     <div style="font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">Besoin d'aide ?</div>
     <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Contactez l'équipe technique TourMaG pour toute question.<br>Ce guide est aussi accessible à tout moment via le menu 📖 Guide d'utilisation.</div>
   </div>
   </div>`;
-
   el.innerHTML=h;
-  // Handle anchor clicks for TOC
   el.querySelectorAll('.guide-toc a').forEach(a=>{
     a.addEventListener('click',e=>{
       e.preventDefault();
@@ -7242,28 +7235,11 @@ function renderEtapes(el){
       <div class="form-row"><label class="form-label">Titre carte</label><input class="form-input" id="exp-map-title" value="${(exp.mapTitle||'').replace(/"/g,'&quot;')}" placeholder="La route, en direct"></div>
       <div class="form-row"><label class="form-label">Sous-titre carte</label><input class="form-input" id="exp-map-sub" value="${(exp.mapSubtitle||'').replace(/"/g,'&quot;')}"></div>
     </div>
-    ${(function(){
-      const ts=exp.mapTitleStyle||{}, ss=exp.mapSubStyle||{};
-      const fw=[['','Normale'],['300','Fine (300)'],['400','Régulière (400)'],['500','Moyenne (500)'],['600','Semi-gras (600)'],['700','Gras (700)'],['800','Extra-gras (800)']];
-      const fs=[['normal','Normal'],['italic','Italique']];
-      const styleRow=(pfx,st,label)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">${label}</div>
-        <div style="display:grid;grid-template-columns:1fr 90px 70px;gap:8px;margin-bottom:8px">
-          <label style="font-size:10px;color:var(--text3)">Police<select class="form-input" id="${pfx}-font" style="font-size:12px">${_fontOpts(st.font||'')}</select></label>
-          <label style="font-size:10px;color:var(--text3)">Taille (px)<input type="number" class="form-input" id="${pfx}-size" value="${st.size||''}" min="10" max="72" placeholder="auto" style="font-size:12px"></label>
-          <label style="font-size:10px;color:var(--text3)">Couleur<input type="color" id="${pfx}-color" value="${st.color||'#0F2B3C'}" style="width:100%;height:30px;border:none;cursor:pointer;border-radius:4px"></label>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <label style="font-size:10px;color:var(--text3)">Graisse<select class="form-input" id="${pfx}-weight" style="font-size:12px">${fw.map(w=>`<option value="${w[0]}"${(st.weight||'')==w[0]?' selected':''}>${w[1]}</option>`).join('')}</select></label>
-          <label style="font-size:10px;color:var(--text3)">Style<select class="form-input" id="${pfx}-style" style="font-size:12px">${fs.map(w=>`<option value="${w[0]}"${(st.style||'normal')==w[0]?' selected':''}>${w[1]}</option>`).join('')}</select></label>
-        </div>
-      </div>`;
-      return `<details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);padding:6px 0">🎨 Mise en forme du titre & sous-titre</summary>
-        ${styleRow('exp-map-tstyle',ts,'Titre')}
-        ${styleRow('exp-map-sstyle',ss,'Sous-titre')}
-      </details>`;
-    })()}
     <div class="form-row"><label class="form-label">Note sous la carte <span style="font-weight:400;color:var(--text3);font-size:12px">(petite note affichée sous la carte)</span></label><textarea class="form-input" id="exp-map-note" rows="2" placeholder="Ex : Tracé indicatif — positions actualisées chaque jour">${(exp.mapNote||'').replace(/</g,'&lt;')}</textarea></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Label « Itinéraire » (cartouche colonne)</label><input class="form-input" id="exp-itin-label" value="${(exp.itinLabel||'').replace(/"/g,'&quot;')}" placeholder="Itinéraire"></div>
+      <div class="form-row" style="max-width:150px"><label class="form-label">Taille label (px)</label><input type="number" class="form-input" id="exp-itin-label-size" value="${exp.itinLabelSize||''}" min="8" max="24" placeholder="auto" style="width:90px"></div>
+    </div>
     <div class="form-row"><label class="form-label">Fond de carte</label><select class="form-input" id="exp-map-style" style="max-width:320px">
       ${[['osm','OpenStreetMap (standard)'],['osmfr','OpenStreetMap France (labels FR)'],['humanitarian','Humanitarian (clair, épuré)'],['cyclosm','CyclOSM (détaillé, cyclable)'],['topo','OpenTopoMap (topographique)']].map(o=>`<option value="${o[0]}"${(ev.expMapStyle||'osm')===o[0]?' selected':''}>${o[1]}</option>`).join('')}
     </select><div style="font-size:10px;color:var(--text3);margin-top:3px">Fonds gratuits sans clé API. Serveurs communautaires OSM : adaptés à un trafic léger/modéré (recommandé pour TourMaG).</div></div>
@@ -7388,21 +7364,9 @@ async function saveExpeditionSettings(){
     accentColor: document.getElementById('exp-accent-color').value,
     'expedition.mapTitle': document.getElementById('exp-map-title').value.trim(),
     'expedition.mapSubtitle': document.getElementById('exp-map-sub').value.trim(),
-    'expedition.mapTitleStyle': {
-      font:document.getElementById('exp-map-tstyle-font')?.value||'',
-      size:parseInt(document.getElementById('exp-map-tstyle-size')?.value)||'',
-      color:document.getElementById('exp-map-tstyle-color')?.value||'',
-      weight:document.getElementById('exp-map-tstyle-weight')?.value||'',
-      style:document.getElementById('exp-map-tstyle-style')?.value||'normal'
-    },
-    'expedition.mapSubStyle': {
-      font:document.getElementById('exp-map-sstyle-font')?.value||'',
-      size:parseInt(document.getElementById('exp-map-sstyle-size')?.value)||'',
-      color:document.getElementById('exp-map-sstyle-color')?.value||'',
-      weight:document.getElementById('exp-map-sstyle-weight')?.value||'',
-      style:document.getElementById('exp-map-sstyle-style')?.value||'normal'
-    },
     'expedition.mapNote': document.getElementById('exp-map-note').value.trim(),
+    'expedition.itinLabel': document.getElementById('exp-itin-label')?.value.trim()||'',
+    'expedition.itinLabelSize': parseInt(document.getElementById('exp-itin-label-size')?.value)||'',
     'expedition.liveLabel': document.getElementById('exp-live-label').value.trim(),
     'expedition.footerCredits': document.getElementById('exp-footer-credits').value.trim(),
     expMapStyle: document.getElementById('exp-map-style')?.value||'osm',
