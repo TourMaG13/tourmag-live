@@ -1018,6 +1018,10 @@ body.mode-expedition .social-float{display:none}
 @media(max-width:600px){
   /* Filet de sécurité : aucun bandeau ne peut déborder horizontalement */
   .hero-split,.hero-banner,.exp-hero,.exp-hero-banner{max-width:100vw;overflow:hidden}
+  /* Sur mobile les bandeaux sont EMPILÉS : on annule la hauteur fixe réglée
+     dans l'admin (attribut data-h / --hero-h), sinon le conteneur reste bridé
+     à la hauteur "desktan" et la photo empilée est écrasée. */
+  .hero-split[data-h],.exp-hero[data-h]{height:auto!important;min-height:0!important}
   .hero-split-text,.hero-banner-inner,.exp-hero-text,.exp-hero-banner-inner{max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:break-word}
   .hero-logo,.exp-hero-logo{max-width:100%!important}
   /* ===== Bandeau principal — image plein cadre (classique) — mobile : image entière en haut, texte empilé dessous ===== */
