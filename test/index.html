@@ -255,6 +255,8 @@ img{display:block}a{text-decoration:none}
 @keyframes quizPop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .quiz-q-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .quiz-q-badge{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--quiz-accent,#10B981);padding:3px 10px;border-radius:100px;flex-shrink:0;box-shadow:0 2px 6px color-mix(in srgb,var(--quiz-accent,#10B981) 40%,transparent)}
+.quiz-block-badge-row{display:flex;margin-bottom:10px}
+.quiz-block-sub{font-size:12px;color:var(--text3);margin-top:6px}
 .quiz-q-text{font-size:16px;font-weight:700;color:var(--text,#1a1a1a);line-height:1.35}
 .quiz-hint{font-size:11px;color:var(--text3,#888);margin:5px 0 13px;font-style:italic}
 .quiz-opts{display:flex;flex-direction:column;gap:9px}
@@ -4253,6 +4255,8 @@ function mkQuizBlock(opts){
   shown.forEach(qz=>{
     const cls=opts.exp?'quiz-block quiz-exp':'quiz-block';
     const title=qz.title||'Quiz / Sondage';
+    const qzBadge=(typeof qz.badge==='string' && qz.badge.trim())?`<span class="quiz-q-badge quiz-block-badge">${_qEsc(qz.badge.trim())}</span>`:'';
+    const qzSub=(typeof qz.subtitle==='string' && qz.subtitle.trim())?_qEsc(qz.subtitle.trim()):'';
     let inner='';
     let _qnum=0;
     (qz.questions||[]).forEach(q=>{
@@ -4271,7 +4275,7 @@ function mkQuizBlock(opts){
         </button>`;
       });
       inner+=`<div class="quiz-q" data-quiz-q="${key}" data-qnum="${String(_qnum).padStart(2,'0')}">
-        <div class="quiz-q-head">${(typeof q.badge==='string' ? (q.badge.trim()?`<span class="quiz-q-badge">${_qEsc(q.badge.trim())}</span>`:'') : `<span class="quiz-q-badge">${isQuiz?'QUIZ':'SONDAGE'}</span>`)}<span class="quiz-q-text">${_qEsc(q.text)}</span></div>
+        <div class="quiz-q-head"><span class="quiz-q-text">${_qEsc(q.text)}</span></div>
         <div class="quiz-hint">${isMulti?'Plusieurs réponses possibles':'Une seule réponse'}</div>
         <div class="quiz-opts">${optsHtml}</div>
         <div class="quiz-actions">
@@ -4282,8 +4286,8 @@ function mkQuizBlock(opts){
       </div>`;
     });
     const head=opts.exp
-      ? `<h2>${_qEsc(title)}</h2><div class="rule"></div>`
-      : `<div class="sec-title-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ICO.chart||ICO.msgCircle||''}</div><h2>${_qEsc(title)}</h2><div class="sec-title-line"></div><p>${_qEsc(sub)}</p>`;
+      ? `${qzBadge?`<div class="quiz-block-badge-row">${qzBadge}</div>`:''}<h2>${_qEsc(title)}</h2><div class="rule"></div>${qzSub?`<p class="quiz-block-sub">${qzSub}</p>`:''}`
+      : `${qzBadge?`<div class="quiz-block-badge-row">${qzBadge}</div>`:''}<div class="sec-title-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ICO.chart||ICO.msgCircle||''}</div><h2>${_qEsc(title)}</h2><div class="sec-title-line"></div><p>${qzSub||_qEsc(sub)}</p>`;
     out+=`<div class="${cls} fi" data-quiz-block="${qz.id}"${styleVars?` style="${styleVars}"`:''}>
       <div class="${opts.exp?'exp-section-head exp-sec-quiz':'sec-title sec-title-quiz'}">${head}</div>
       ${inner}
