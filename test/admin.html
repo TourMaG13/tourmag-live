@@ -6830,14 +6830,39 @@ function renderStats(el){
     <div class="page-desc">Fréquentation du dashboard « ${(ev&&ev.name)||''} ». Les robots sont exclus des mesures.</div>`;
   h += `<div class="admin-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:13px;color:var(--text2)">Période :</span>
+    <button class="btn ${(_statsRange===1?'btn-primary':'btn-ghost')}" onclick="setStatsRange(1)">Aujourd'hui</button>
     ${[7,30,90].map(d=>`<button class="btn ${(_statsRange===d?'btn-primary':'btn-ghost')}" onclick="setStatsRange(${d})">${d} jours</button>`).join('')}
     <button class="btn btn-ghost" style="margin-left:auto" onclick="loadStats(true)">↻ Actualiser</button>
+    <button class="btn btn-danger" onclick="resetStats()">🗑 Réinitialiser</button>
   </div>`;
   h += `<div id="stats-body">${_skel(3)}</div>`;
   el.innerHTML = h;
   loadStats();
 }
 function setStatsRange(d){ _statsRange=d; _statsCache=null; renderTab(); }
+
+async function resetStats(){
+  if(!currentEventId) return;
+  const ev = eventsData.find(e=>e.id===currentEventId);
+  const nom = (ev&&ev.name)||'cet événement';
+  if(!confirm('Réinitialiser TOUTES les statistiques de « '+nom+' » ?\n\nCette action est irréversible : toutes les données de fréquentation (vues, visiteurs, provenance, clics…) seront définitivement supprimées.')) return;
+  const body = document.getElementById('stats-body');
+  if(body) body.innerHTML = _skel(2);
+  try{
+    const snap = await db.collection('events').doc(currentEventId).collection('stats').get();
+    // Suppression par lots (Firestore limite à 500 opérations par batch)
+    const docs = snap.docs;
+    for(let i=0;i<docs.length;i+=450){
+      const batch = db.batch();
+      docs.slice(i,i+450).forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }
+    toast('Statistiques réinitialisées');
+    loadStats(true);
+  }catch(e){
+    if(body) body.innerHTML = '<div class="empty"><div class="icon">⚠️</div><div class="text">Suppression impossible</div><div class="hint">'+(e.message||e)+'</div><div class="hint" style="margin-top:8px">Vérifiez que vos règles Firestore autorisent la suppression sur la sous-collection « stats ».</div></div>';
+  }
+}
 
 async function loadStats(force){
   const body = document.getElementById('stats-body');
@@ -6863,23 +6888,12 @@ async function loadStats(force){
       .sort((a,b)=>(b.likeCount||0)-(a.likeCount||0))
       .slice(0,8)
       .map(e=>({label:(e.title||e.text||'(sans titre)').replace(/<[^>]+>/g,'').slice(0,60), val:e.likeCount||0}));
-    // Participation aux quiz : nombre de votes par quiz
-    let quizPart = [];
-    try{
-      const votesSnap = await db.collection('events').doc(currentEventId).collection('quizVotes').get();
-      const byQuiz = {};
-      votesSnap.forEach(d=>{ const q=(d.data()||{}).quizId; if(q) byQuiz[q]=(byQuiz[q]||0)+1; });
-      quizPart = (quizzesData||[])
-        .map(q=>({label:(q.title||'Quiz').slice(0,60), val:byQuiz[q.id]||0}))
-        .filter(x=>x.val>0)
-        .sort((a,b)=>b.val-a.val).slice(0,8);
-    }catch(e){ /* lecture votes indisponible : on n'affiche juste pas ce bloc */ }
 
     // Agrégation
     let totViews=0, totUniques=0, totNew=0, totReturning=0;
     let dwellTotal=0, dwellCount=0, bounces=0, engaged=0;
     let sc25=0, sc50=0, sc75=0, sc100=0;
-    const refs={}, clicks={}; const series=[];
+    const refs={}, clicks={}, domains={}; const series=[];
     days.forEach(day=>{
       const d = byDay[day] || {};
       const v = d.views||0, u = d.uniques||0;
@@ -6892,11 +6906,12 @@ async function loadStats(force){
       Object.keys(d).forEach(k=>{
         if(k.indexOf('ref_')===0) refs[k.slice(4)] = (refs[k.slice(4)]||0) + d[k];
         else if(k.indexOf('clk_')===0) clicks[k.slice(4)] = (clicks[k.slice(4)]||0) + d[k];
+        else if(k.indexOf('dom_')===0){ const host=k.slice(4).replace(/_/g,'.'); domains[host]=(domains[host]||0)+d[k]; }
       });
     });
-    _renderStatsBody(body, {totViews, totUniques, refs, clicks, series,
+    _renderStatsBody(body, {totViews, totUniques, refs, clicks, domains, series,
       totNew, totReturning, dwellTotal, dwellCount, bounces, engaged, sc25, sc50, sc75, sc100,
-      topLikes, quizPart});
+      topLikes});
   }catch(e){
     body.innerHTML = '<div class="empty"><div class="icon">⚠️</div><div class="text">Impossible de charger les statistiques</div><div class="hint">'+(e.message||e)+'</div></div>';
   }
@@ -6948,6 +6963,11 @@ function _renderStatsBody(body, s){
   // Provenance
   const refRows = Object.keys(s.refs).sort((a,b)=>s.refs[b]-s.refs[a]);
   h += `<div class="admin-card"><h3>Provenance des visiteurs</h3>${refRows.length?_statBars(refRows.map(k=>({label:refLabels[k]||k, val:s.refs[k]}))):'<div class="empty"><div class="text">Aucune donnée de provenance</div></div>'}</div>`;
+  // Sites référents détaillés (par domaine)
+  const domRows = s.domains ? Object.keys(s.domains).sort((a,b)=>s.domains[b]-s.domains[a]).slice(0,15) : [];
+  if(domRows.length){
+    h += `<div class="admin-card"><h3>Sites référents</h3>${_statBars(domRows.map(k=>({label:k, val:s.domains[k]})), '🔗')}</div>`;
+  }
   // Clics par zone (hors sponsors, isolés à part)
   const sponsorClicks = {};
   const zoneClicks = {};
@@ -6961,9 +6981,6 @@ function _renderStatsBody(body, s){
   // ---- Détail par contenu ----
   if(s.topLikes && s.topLikes.length){
     h += `<div class="admin-card"><h3>Entrées les plus aimées</h3>${_statBars(s.topLikes, '❤')}</div>`;
-  }
-  if(s.quizPart && s.quizPart.length){
-    h += `<div class="admin-card"><h3>Participation aux quiz &amp; sondages</h3>${_statBars(s.quizPart, '🗳')}</div>`;
   }
   const spRows = Object.keys(sponsorClicks).sort((a,b)=>sponsorClicks[b]-sponsorClicks[a]);
   if(spRows.length){
