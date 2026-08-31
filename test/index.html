@@ -4348,9 +4348,92 @@ function mkQuizBlock(opts){
   return `<div id="section-quiz">${out}</div>`;
 }
 
+// ============================================================
+// MODE APERÇU — rendu piloté par l'admin, sans Firestore
+// ============================================================
+function _initPreviewMode(){
+  window._DIAG = { noquiz:true, noresize:false, norealtime:true, preview:true };
+  document.body.classList.add('is-preview');
+
+  // Dernier jeu de données reçu, pour re-rendre si besoin.
+  window._previewData = null;
+
+  function _normalize(payload){
+    // L'admin envoie l'objet event + les collections sous forme de tableaux.
+    // On complète les clés manquantes avec des tableaux vides pour éviter les erreurs.
+    const p = payload || {};
+    const ev = p.event || {};
+    const arr = k => Array.isArray(p[k]) ? p[k] : [];
+    // Résolution des journalistes (même logique que le mode normal)
+    let journalists = arr('journalists');
+    const globalJ = arr('_allGlobalJournalists');
+    if(globalJ.length && Array.isArray(ev.eventJournalists)){
+      journalists = ev.eventJournalists
+        .slice().sort((a,b)=>(a.order||0)-(b.order||0))
+        .map(x=>{ const g=globalJ.find(g=>g.id===x.globalId); return g?{...g,phase:x.phase||''}:null; })
+        .filter(Boolean);
+    }
+    return {
+      event: ev,
+      essential: arr('essential'),
+      live: arr('live'),
+      rubriques: arr('rubriques'),
+      citations: arr('citations'),
+      articles: arr('articles'),
+      programme: arr('programme'),
+      timeline: arr('timeline'),
+      videos: arr('videos'),
+      journalists: journalists,
+      interviews: arr('interviews'),
+      etapes: arr('etapes'),
+      questions: arr('questions')
+    };
+  }
+
+  function _renderPreview(payload){
+    try{
+      const data = _normalize(payload);
+      window._previewData = data;
+      window._quizzes = Array.isArray(payload.quizzes) ? payload.quizzes : (window._quizzes||[]);
+      window._rtState = data;
+      render(data);
+      if(typeof window._tmgResize === 'function') window._tmgResize();
+    }catch(e){
+      console.error('[Aperçu] Erreur de rendu :', e);
+      const app=document.getElementById('app');
+      if(app) app.innerHTML='<div class="ld" style="color:#DC2626;padding:24px;font-size:13px">Aperçu : erreur de rendu — '+(e.message||e)+'</div>';
+    }
+  }
+
+  // Réception des données depuis l'admin
+  window.addEventListener('message', function(e){
+    const d = e.data;
+    if(!d || d.type !== 'tmg-preview-data') return;
+    _renderPreview(d.payload || {});
+  });
+
+  // Écran d'attente + signal "prêt" au parent
+  const app=document.getElementById('app');
+  if(app) app.innerHTML='<div class="ld"><div class="spinner"></div><div class="tx">Aperçu en attente de données…</div></div>';
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({ type:'tmg-preview-ready' }, '*');
+    }
+  }catch(_){}
+}
+
 async function init(){
   const _qs = new URLSearchParams(window.location.search);
   const eventId = _qs.get('event');
+
+  // ============================================================
+  // MODE APERÇU (piloté par l'admin via postMessage)
+  // ?preview=1 → on n'interroge PAS Firestore ; on se rend à partir
+  //              des données reçues en direct depuis la fenêtre parente.
+  // ============================================================
+  if(_qs.get('preview') === '1'){
+    return _initPreviewMode();
+  }
   // Interrupteurs de diagnostic (à retirer une fois la cause trouvée) :
   window._DIAG = {
     noquiz: _qs.has('noquiz'),          // coupe le listener temps réel des votes de quiz
