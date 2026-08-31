@@ -2298,9 +2298,10 @@ function render(data){
     if(!_sp.length) return '';
     let o = `<div class="sponsors-block fi"><h3>${event.sponsorsTitle||'Soutien & Partenaires'}</h3><p>${event.sponsorsSubtitle||'Cette couverture est réalisée avec le soutien de nos partenaires'}</p><div class="sponsors-logos">`;
     _sp.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(s => {
+      var _spKey = (s.name||'sponsor').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'sponsor';
       if(s.logo_url){
         const link = s.url ? ` onclick="window.open('${s.url}','_blank')" style="cursor:pointer"` : '';
-        o += `<img src="${s.logo_url}" alt="${s.name||''}"${link} onerror="this.remove()">`;
+        o += `<img src="${s.logo_url}" alt="${s.name||''}"${link} data-zone="sponsor_${_spKey}" onerror="this.remove()">`;
       } else if(s.name){
         o += `<span style="font-family:'Josefin Sans';font-size:18px;font-weight:700;color:#CBD5E1;letter-spacing:1px">${s.name}</span>`;
       }
@@ -4354,6 +4355,180 @@ function mkQuizBlock(opts){
 }
 
 // ============================================================
+// STATISTIQUES DE CONSULTATION (100% Firebase, sans service externe)
+// Compteurs journaliers agrégés pour limiter les écritures Firestore.
+// Filtrage des robots : user-agent + preuve d'interaction humaine.
+// ============================================================
+var _statsTracked = false;
+function _isLikelyBot(){
+  var ua = (navigator.userAgent||'').toLowerCase();
+  if(!ua) return true;
+  var pat = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegrambot|discordbot|embedly|pinterest|redditbot|applebot|petalbot|yandex|baiduspider|semrush|ahrefs|mj12bot|dotbot|headless|phantomjs|puppeteer|playwright|python-requests|curl|wget|lighthouse|gtmetrix|pingdom|uptimerobot/i;
+  if(pat.test(ua)) return true;
+  if(navigator.webdriver) return true;
+  return false;
+}
+function _visitorId(){
+  var id='';
+  try{ id=localStorage.getItem('tmg_visitor_id')||''; }catch(_){}
+  if(!id){
+    id = 'v_' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+    try{ localStorage.setItem('tmg_visitor_id', id); }catch(_){}
+  }
+  return id;
+}
+function _refSource(){
+  var r = document.referrer || '';
+  if(!r) return 'direct';
+  var host='';
+  try{ host = new URL(r).hostname.replace(/^www\./,'').toLowerCase(); }catch(_){ return 'direct'; }
+  try{ if(host === location.hostname.replace(/^www\./,'').toLowerCase()) return 'interne'; }catch(_){}
+  if(/google\.|bing\.|yahoo\.|duckduckgo\.|qwant\.|ecosia\./.test(host)) return 'recherche';
+  if(/facebook\.|fb\.|instagram\.|linkedin\.|lnkd\.|twitter\.|t\.co|x\.com|youtube\.|tiktok\.|whatsapp|pinterest\./.test(host)) return 'social';
+  return 'referral';
+}
+function _statsDayKey(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _trackVisit(eventId){
+  if(!eventId || _statsTracked) return;
+  if(window._DIAG && window._DIAG.preview) return;
+  if(_isLikelyBot()) return;
+  window._statsEventId = eventId;
+  var FV = firebase.firestore.FieldValue;
+  var day = _statsDayKey();
+  var ref = db.collection('events').doc(eventId).collection('stats').doc(day);
+  var uniqueKey = 'tmg_seen_'+eventId+'_'+day;
+  var firstKey = 'tmg_first_'+eventId;
+  var isUnique = false, isNew = false;
+  try{ isUnique = !localStorage.getItem(uniqueKey); }catch(_){}
+  try{ isNew = !localStorage.getItem(firstKey); }catch(_){}
+  var src = _refSource();
+  var _interacted = false;              // l'internaute a-t-il interagi (scroll/clic/clavier) ?
+  window._statsInteracted = function(){ _interacted = true; };
+
+  function commit(){
+    if(_statsTracked) return; _statsTracked = true;
+    var upd = { views: FV.increment(1), updatedAt: FV.serverTimestamp() };
+    upd['ref_'+src] = FV.increment(1);
+    if(isUnique){ upd.uniques = FV.increment(1); try{ localStorage.setItem(uniqueKey, '1'); }catch(_){} }
+    // Nouveau vs récurrent (sur toute la durée de vie de l'appareil, pas juste le jour)
+    if(isNew){ upd.newVisitors = FV.increment(1); try{ localStorage.setItem(firstKey, '1'); }catch(_){} }
+    else { upd.returningVisitors = FV.increment(1); }
+    ref.set(upd, {merge:true}).catch(function(e){ console.warn('[Stats] vue non enregistrée:', e.message); });
+    _initEngagementTracking(); // démarre le suivi temps passé / scroll / rebond
+  }
+  var done=false;
+  function human(){ if(done) return; done=true; _interacted=true; cleanup(); commit(); }
+  function cleanup(){
+    window.removeEventListener('scroll', human);
+    window.removeEventListener('pointerdown', human);
+    window.removeEventListener('keydown', human);
+    clearTimeout(timer);
+  }
+  var timer = setTimeout(function(){ if(document.visibilityState==='visible') human(); }, 4000);
+  window.addEventListener('scroll', human, {passive:true});
+  window.addEventListener('pointerdown', human);
+  window.addEventListener('keydown', human);
+  _initClickTracking();
+}
+var _clickBuffer = {};
+var _clickFlushTimer = null;
+// ---- Suivi d'engagement : temps passé, profondeur de scroll, rebond ----
+var _engInit = false, _engStart = 0, _engActiveMs = 0, _engLastResume = 0;
+var _engMaxScroll = 0, _engInteracted = false, _engSent = false;
+function _initEngagementTracking(){
+  if(_engInit) return; _engInit = true;
+  _engStart = Date.now(); _engLastResume = _engStart;
+  // Profondeur de scroll (pourcentage max atteint)
+  function onScroll(){
+    _engInteracted = true;
+    var doc = document.documentElement;
+    var scrollable = (doc.scrollHeight - window.innerHeight);
+    var pct = scrollable>0 ? Math.round((window.scrollY / scrollable) * 100) : 100;
+    if(pct > _engMaxScroll) _engMaxScroll = Math.min(100, pct);
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('pointerdown', function(){ _engInteracted = true; }, {passive:true});
+  window.addEventListener('keydown', function(){ _engInteracted = true; });
+  // Ne compter que le temps où l'onglet est réellement visible
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='hidden'){ _engActiveMs += Date.now() - _engLastResume; _sendEngagement(); }
+    else { _engLastResume = Date.now(); }
+  });
+  window.addEventListener('pagehide', function(){ _engActiveMs += Date.now() - _engLastResume; _sendEngagement(); });
+  onScroll();
+}
+function _sendEngagement(){
+  if(_engSent || !window._statsEventId) return;
+  _engSent = true; // une seule fois par session
+  var secs = Math.round(_engActiveMs/1000);
+  if(secs < 0) secs = 0; if(secs > 3600) secs = 3600; // garde-fou
+  var FV = firebase.firestore.FieldValue;
+  var ref = db.collection('events').doc(window._statsEventId).collection('stats').doc(_statsDayKey());
+  var upd = { dwellTotal: FV.increment(secs), dwellCount: FV.increment(1), updatedAt: FV.serverTimestamp() };
+  // Paliers de scroll atteints
+  if(_engMaxScroll >= 25) upd.scroll25 = FV.increment(1);
+  if(_engMaxScroll >= 50) upd.scroll50 = FV.increment(1);
+  if(_engMaxScroll >= 75) upd.scroll75 = FV.increment(1);
+  if(_engMaxScroll >= 100) upd.scroll100 = FV.increment(1);
+  // Rebond : aucune interaction ET très court séjour
+  if(!_engInteracted && secs < 10) upd.bounces = FV.increment(1);
+  else upd.engaged = FV.increment(1);
+  // sendBeacon impossible (Firestore SDK) : on tente l'écriture, keepalive implicite
+  ref.set(upd, {merge:true}).catch(function(){});
+}
+function _trackClick(zone){
+  if(!zone || !window._statsEventId) return;
+  if(window._DIAG && window._DIAG.preview) return;
+  if(_isLikelyBot()) return;
+  _clickBuffer[zone] = (_clickBuffer[zone]||0) + 1;
+  if(_clickFlushTimer) return;
+  _clickFlushTimer = setTimeout(_flushClicks, 3000);
+}
+function _flushClicks(){
+  _clickFlushTimer = null;
+  var zones = Object.keys(_clickBuffer);
+  if(!zones.length || !window._statsEventId) return;
+  var FV = firebase.firestore.FieldValue;
+  var ref = db.collection('events').doc(window._statsEventId).collection('stats').doc(_statsDayKey());
+  var upd = { updatedAt: FV.serverTimestamp() };
+  zones.forEach(function(z){ upd['clk_'+z] = FV.increment(_clickBuffer[z]); });
+  _clickBuffer = {};
+  ref.set(upd, {merge:true}).catch(function(e){ console.warn('[Stats] clics non enregistrés:', e.message); });
+}
+var _clickTrackingOn = false;
+function _initClickTracking(){
+  if(_clickTrackingOn) return; _clickTrackingOn = true;
+  document.addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-zone]') : null;
+    var zone = el ? el.getAttribute('data-zone') : _zoneFromSection(e.target);
+    if(zone) _trackClick(zone);
+  }, true);
+  window.addEventListener('pagehide', _flushClicks);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') _flushClicks(); });
+}
+function _zoneFromSection(target){
+  if(!target || !target.closest) return '';
+  var map = [
+    ['[data-quiz-block]','quiz'], ['#section-quiz','quiz'],
+    ['.live-entry','live'], ['#section-live','live'],
+    ['.citation-card','citations'], ['#section-citations','citations'],
+    ['#section-essential','essentiel'],
+    ['.video-card','videos'], ['#section-videos','videos'],
+    ['.gallery-item','galerie'], ['#section-gallery','galerie'],
+    ['#section-interviews','interviews'],
+    ['#section-programme','programme'],
+    ['.article-card','articles'], ['#section-articles','articles'],
+    ['.leaflet-container','carte'], ['#section-map','carte'],
+    ['a[href]','lien']
+  ];
+  for(var i=0;i<map.length;i++){ if(target.closest(map[i][0])) return map[i][1]; }
+  return '';
+}
+
+// ============================================================
 // MODE APERÇU — rendu piloté par l'admin, sans Firestore
 // ============================================================
 function _initPreviewMode(){
@@ -4446,6 +4621,7 @@ async function init(){
     norealtime: _qs.has('norealtime')   // coupe toutes les mises à jour temps réel
   };
   if(!eventId){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Aucun événement spécifié</div></div>'; return; }
+  _trackVisit(eventId); // Statistiques de consultation (filtrées des robots)
   _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
   window._eventIdForQuestions = eventId; // Q&A — cible des soumissions
   if(!window._DIAG.noquiz) _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
