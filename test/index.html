@@ -1020,10 +1020,10 @@ body.mode-expedition .social-float{display:none}
   .hero-split,.hero-banner,.exp-hero,.exp-hero-banner{max-width:100vw;overflow:hidden}
   .hero-split-text,.hero-banner-inner,.exp-hero-text,.exp-hero-banner-inner{max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:break-word}
   .hero-logo,.exp-hero-logo{max-width:100%!important}
-  /* ===== Bandeau principal — image plein cadre (classique) ===== */
-  .hero-banner{min-height:var(--hero-h,240px)}
-  .hero-banner-img{min-height:var(--hero-h,240px)}
-  .hero-banner-overlay{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.65) 100%)}
+  /* ===== Bandeau principal — image plein cadre (classique) — mobile : image entière en haut, texte empilé dessous ===== */
+  .hero-banner{min-height:0;height:auto;display:flex;flex-direction:column}
+  .hero-banner-img{position:relative;width:100%;height:auto;min-height:0;max-height:60vh;object-fit:contain;background:#111}
+  .hero-banner-overlay{position:static;inset:auto;display:block;background:var(--hero-bg1,#111)}
   .hero-banner-inner{padding:22px 18px;max-width:100%}
   /* ===== Bandeau principal — split (classique) ===== */
   .hero-split-text{padding:24px 18px 20px}
@@ -1033,10 +1033,10 @@ body.mode-expedition .social-float{display:none}
   .hero-badge-row{flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .hero-meta-row{gap:10px 14px}
   .hero-logo{height:calc(var(--logo-h,56px) * .8);max-width:70%}
-  /* ===== Bandeau principal — image plein cadre (expédition) ===== */
-  .exp-hero-banner{min-height:var(--exp-hero-h,240px)}
-  .exp-hero-banner-img{min-height:var(--exp-hero-h,240px)}
-  .exp-hero-banner-overlay{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.68) 100%)}
+  /* ===== Bandeau principal — image plein cadre (expédition) — mobile : image entière en haut, texte empilé dessous ===== */
+  .exp-hero-banner{min-height:0;height:auto;display:flex;flex-direction:column}
+  .exp-hero-banner-img{position:relative;width:100%;height:auto;min-height:0;max-height:60vh;object-fit:contain;background:#111}
+  .exp-hero-banner-overlay{position:static;inset:auto;display:block;background:var(--exp-hero-bg,var(--exp-ink,#111))}
   .exp-hero-banner-inner{padding:24px 18px;max-width:100%}
   .exp-hero-banner-inner h1{font-size:clamp(26px,8vw,40px)}
   /* ===== Bandeau principal — split (expédition) ===== */
