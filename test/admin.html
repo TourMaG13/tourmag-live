@@ -12,13 +12,20 @@
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
 /* AUTH */
-.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--pri)}
-.auth-box{background:var(--card);border-radius:16px;padding:40px 36px;width:360px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.auth-box h1{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:4px;text-align:center}
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:radial-gradient(1200px 600px at 20% -10%,#2b3b52 0%,transparent 60%),radial-gradient(1000px 700px at 100% 110%,#1d2a3d 0%,transparent 55%),linear-gradient(160deg,#1E293B 0%,#0F172A 100%)}
+.auth-screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:22px 22px;opacity:.6;pointer-events:none}
+.auth-glow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.35),transparent 65%);filter:blur(30px);top:-120px;left:-80px;pointer-events:none}
+.auth-box{position:relative;z-index:2;background:var(--card);border-radius:20px;padding:44px 40px 32px;width:400px;max-width:100%;box-shadow:0 30px 80px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.5) inset}
+.auth-logo-mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--acc),#1D4ED8);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 8px 24px rgba(37,99,235,.4)}
+.auth-logo-mark svg{width:26px;height:26px;color:#fff}
+.auth-box h1{font-family:'Josefin Sans';font-size:24px;font-weight:700;margin-bottom:4px;text-align:center;letter-spacing:.5px}
 .auth-box h1 span{color:var(--acc)}
-.auth-box .sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px}
-.auth-box .form-row{margin-bottom:14px}
+.auth-box .sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:28px;text-transform:uppercase;letter-spacing:1.5px}
+.auth-box .form-row{margin-bottom:16px}
+.auth-box .form-label{font-size:11px;letter-spacing:.5px}
 .auth-box .auth-err{font-size:12px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px}
+.auth-box .btn-primary{height:46px;font-size:14px;border-radius:10px;margin-top:10px!important;box-shadow:0 8px 20px rgba(37,99,235,.28)}
+.auth-foot{text-align:center;font-size:11px;color:var(--text3);margin-top:22px}
 
 /* NAV */
 .topbar{background:linear-gradient(180deg,#243244 0%,var(--pri) 100%);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 2px 12px rgba(15,23,42,.16)}
@@ -257,6 +264,7 @@ select.form-input{cursor:pointer}
 .preset-preview-bar .ppb-actions{display:flex;gap:8px;flex-shrink:0}
 .admin-card.previewing{border:1.5px solid var(--acc);box-shadow:0 0 0 3px var(--acc-soft,#FFF3E9)}
 .toggle-row.tr-off{opacity:.5}
+.toggle-row.tr-off .toggle-label{color:var(--text3)}
 
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
@@ -472,13 +480,16 @@ select.form-input{cursor:pointer}
 
 <!-- AUTH SCREEN -->
 <div class="auth-screen" id="auth-screen">
+  <div class="auth-glow"></div>
   <div class="auth-box">
+    <div class="auth-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M4 20h16"/><circle cx="12" cy="10" r="2.5"/></svg></div>
     <h1>TourMaG <span>Live</span></h1>
-    <div class="sub">Back-office — Connexion</div>
+    <div class="sub">Back-office</div>
     <div class="auth-err" id="auth-err"></div>
     <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="auth-email" type="email" placeholder="votre@email.com"></div>
     <div class="form-row"><label class="form-label">Mot de passe</label><input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()" id="auth-btn">Se connecter</button>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="auth-btn">Se connecter</button>
+    <div class="auth-foot">Espace réservé aux équipes autorisées</div>
   </div>
 </div>
 
