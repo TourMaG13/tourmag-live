@@ -2092,10 +2092,10 @@ function moduleSettingsPanel(type, ev){
     return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
   }
   if(type==='quiz'){
-    var s=_tss('app-st-quiz', ev.quizSubtitleTitle, ev.quizSubtitle, ev.quizShowTitle, 'Quiz / Sondage', 'Participez en direct');
+    var s='<div class="form-row-inline"><div class="form-row" style="max-width:120px"><label class="form-label">Module visible</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="app-st-quiz-show" '+(ev.quizShowTitle!==false?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
     s+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Couleurs</div>';
     s+='<div class="form-row-inline"><div class="form-row"><label class="form-label">Accent</label><input type="color" id="app-quiz-accent" value="'+(ev.quizAccent||'#10B981')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div><div class="form-row"><label class="form-label">Fond des cartes</label><input type="color" id="app-quiz-card-bg" value="'+(ev.quizCardBg||'#ffffff')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div>';
-    s+='<div style="font-size:10px;color:var(--text3);margin-top:6px">Le titre de chaque quiz se règle dans l\'onglet Quiz / Sondage. Les polices et tailles se règlent dans « Typographie du contenu » ci-dessous.</div></div>';
+    s+='<div style="font-size:10px;color:var(--text3);margin-top:6px">Le titre, le sous-titre et l\'étiquette de chaque quiz se règlent dans l\'onglet Quiz / Sondage. Les polices et tailles se règlent dans « Typographie du contenu » ci-dessous.</div></div>';
     return s;
   }
   if(type==='questions'){    var s=_tss('app-st-qa', ev.questionsTitle, ev.questionsSubtitle, ev.questionsShowTitle, 'Questions en direct', 'Une question ? Posez-la, la rédaction vous répond.');
@@ -2630,7 +2630,7 @@ async function _collectModuleSettings(type){
     ud.journalistsTitle=_v('app-st-jr-title');
     ud.journalistsTitleSize=_n('app-jr-tsize',14);
   } else if(type==='quiz'){
-    ud.quizSubtitleTitle=_v('app-st-quiz-title');ud.quizSubtitle=_v('app-st-quiz-sub');ud.quizShowTitle=_c('app-st-quiz-show');
+    ud.quizShowTitle=_c('app-st-quiz-show');
     ud.quizAccent=document.getElementById('app-quiz-accent')?.value||'#10B981';
     ud.quizCardBg=document.getElementById('app-quiz-card-bg')?.value||'#ffffff';
   } else if(type==='questions'){
