@@ -1154,8 +1154,13 @@ const db = firebase.firestore();
 // ===== Likes : authentification anonyme (invisible pour l'internaute) =====
 // Attribue un identifiant unique par appareil, sans compte ni action de l'utilisateur.
 // Sert à comptabiliser 1 like par personne par post et à sécuriser les règles Firestore.
+// IMPORTANT : en mode APERÇU (?preview=1), on NE touche PAS à l'authentification.
+// L'aperçu tourne dans une iframe sur le même domaine que l'admin ; un signInAnonymously
+// écraserait la session admin (Firebase Auth partage son stockage par domaine) et
+// déconnecterait l'utilisateur. L'aperçu n'a de toute façon besoin ni des likes ni d'auth.
 var _likeUid = null;
-var _likeAuthReady = (function(){
+var _isPreviewMode = (new URLSearchParams(window.location.search)).get('preview') === '1';
+var _likeAuthReady = _isPreviewMode ? Promise.resolve(null) : (function(){
   try{
     return firebase.auth().signInAnonymously()
       .then(function(cred){ _likeUid = cred.user.uid; return _likeUid; })
