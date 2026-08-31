@@ -107,7 +107,7 @@ img{display:block}a{text-decoration:none}
 .hero-split-image img{width:100%;height:100%;object-fit:cover;animation:heroImgFade .5s ease}
 .hero-split-image::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--hero-bg1) 0%,transparent 30%)}
 @keyframes heroImgFade{from{opacity:0}to{opacity:1}}
-@media(max-width:860px){.hero-split{grid-template-columns:1fr;min-height:auto}.hero-split-text{padding:28px 16px 22px}.hero-title{font-size:26px}.hero-subtitle-text{font-size:13px}.hero-split-image{height:220px}}
+@media(max-width:860px){.hero-split{grid-template-columns:1fr;min-height:auto}.hero-split-text{padding:28px 16px 22px}.hero-title{font-size:26px}.hero-subtitle-text{font-size:13px}.hero-split-image{height:220px}.hero-split-image::after{background:linear-gradient(to bottom,var(--hero-bg1) 0%,transparent 30%)}}
 
 /* HERO TIMELINE */
 .hero-tl{background:linear-gradient(135deg,var(--hero-bg1),var(--hero-bg2));padding:var(--tl-pad-y,16px) 28px var(--tl-pad-b,20px)}
@@ -255,8 +255,9 @@ img{display:block}a{text-decoration:none}
 @keyframes quizPop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .quiz-q-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .quiz-q-badge{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--quiz-accent,#10B981);padding:3px 10px;border-radius:100px;flex-shrink:0;box-shadow:0 2px 6px color-mix(in srgb,var(--quiz-accent,#10B981) 40%,transparent)}
-.quiz-block-badge-row{display:flex;margin-bottom:10px}
+.quiz-block-badge-row{display:flex;margin:4px 0 14px}
 .quiz-block-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.quiz-block-sub-exp{margin-bottom:18px}
 .quiz-q-text{font-size:16px;font-weight:700;color:var(--text,#1a1a1a);line-height:1.35}
 .quiz-hint{font-size:11px;color:var(--text3,#888);margin:5px 0 13px;font-style:italic}
 .quiz-opts{display:flex;flex-direction:column;gap:9px}
@@ -1013,6 +1014,43 @@ body.mode-expedition .social-float{display:none}
   .exp-map-note{font-size:9px}
   .exp-section-head h2{font-size:22px}
   .exp-section-sub{font-size:13.5px;margin-bottom:24px}
+}
+@media(max-width:600px){
+  /* ===== Bandeau principal — image plein cadre (classique) ===== */
+  .hero-banner{min-height:var(--hero-h,240px)}
+  .hero-banner-img{min-height:var(--hero-h,240px)}
+  .hero-banner-overlay{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.65) 100%)}
+  .hero-banner-inner{padding:22px 18px;max-width:100%}
+  /* ===== Bandeau principal — split (classique) ===== */
+  .hero-split-text{padding:24px 18px 20px}
+  .hero-split-image::after{background:linear-gradient(to bottom,var(--hero-bg1) 0%,transparent 30%)}
+  .hero-title{font-size:24px;line-height:1.15;word-break:break-word}
+  .hero-subtitle-text{font-size:12.5px}
+  .hero-badge-row{flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .hero-meta-row{gap:10px 14px}
+  .hero-logo{height:calc(var(--logo-h,56px) * .8);max-width:70%}
+  /* ===== Bandeau principal — image plein cadre (expédition) ===== */
+  .exp-hero-banner{min-height:var(--exp-hero-h,240px)}
+  .exp-hero-banner-img{min-height:var(--exp-hero-h,240px)}
+  .exp-hero-banner-overlay{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.68) 100%)}
+  .exp-hero-banner-inner{padding:24px 18px;max-width:100%}
+  .exp-hero-banner-inner h1{font-size:clamp(26px,8vw,40px)}
+  /* ===== Bandeau principal — split (expédition) ===== */
+  .exp-hero-text{padding:24px 18px 22px}
+  .exp-hero h1{font-size:clamp(26px,8vw,40px);word-break:break-word}
+  .exp-hero-tagline{font-size:13.5px}
+  .exp-hero-subtitle{font-size:11.5px}
+  .exp-hero-badge-row{flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .exp-hero-meta-row{gap:10px 14px}
+  .exp-hero-photo{height:220px}
+  .exp-hero-logo{max-width:70%}
+}
+@media(max-width:400px){
+  .hero-banner-inner,.exp-hero-banner-inner{padding:18px 14px}
+  .hero-split-text,.exp-hero-text{padding:20px 14px 18px}
+  .hero-title{font-size:21px}
+  .exp-hero h1,.exp-hero-banner-inner h1{font-size:clamp(23px,9vw,34px)}
+  .hero-meta-item,.exp-hero-meta-item{font-size:11px}
 }
 </style>
 </head>
@@ -4285,11 +4323,13 @@ function mkQuizBlock(opts){
         </div>
       </div>`;
     });
-    const head=opts.exp
-      ? `${qzBadge?`<div class="quiz-block-badge-row">${qzBadge}</div>`:''}<h2>${_qEsc(title)}</h2><div class="rule"></div>${qzSub?`<p class="quiz-block-sub">${qzSub}</p>`:''}`
-      : `${qzBadge?`<div class="quiz-block-badge-row">${qzBadge}</div>`:''}<div class="sec-title-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ICO.chart||ICO.msgCircle||''}</div><h2>${_qEsc(title)}</h2><div class="sec-title-line"></div><p>${qzSub||_qEsc(sub)}</p>`;
+    const badgeHtml=qzBadge?`<div class="quiz-block-badge-row">${qzBadge}</div>`:'';
+    const headInner=opts.exp
+      ? `<div class="exp-section-head exp-sec-quiz"><h2>${_qEsc(title)}</h2><div class="rule"></div></div>${qzSub?`<p class="exp-section-sub quiz-block-sub-exp">${qzSub}</p>`:''}`
+      : `<div class="sec-title sec-title-quiz"><div class="sec-title-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ICO.chart||ICO.msgCircle||''}</div><h2>${_qEsc(title)}</h2><div class="sec-title-line"></div><p>${qzSub||_qEsc(sub)}</p></div>`;
     out+=`<div class="${cls} fi" data-quiz-block="${qz.id}"${styleVars?` style="${styleVars}"`:''}>
-      <div class="${opts.exp?'exp-section-head exp-sec-quiz':'sec-title sec-title-quiz'}">${head}</div>
+      ${headInner}
+      ${badgeHtml}
       ${inner}
     </div>`;
   });
