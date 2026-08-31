@@ -4747,6 +4747,10 @@ function _renderQuizEditor(qz, phases){
       <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="quiz-ed-title" value="${(qz.title||'').replace(/"/g,'&quot;')}" placeholder="À vous de jouer !"></div>
       <div class="form-row"><label class="form-label">Phase (facultatif)</label><select class="form-input" id="quiz-ed-phase">${phaseOpts}</select></div>
     </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Sous-titre <span style="font-weight:400;color:var(--text3)">(facultatif)</span></label><input class="form-input" id="quiz-ed-subtitle" value="${(qz.subtitle||'').replace(/"/g,'&quot;')}" placeholder="Ex. Donnez votre avis en direct"></div>
+      <div class="form-row"><label class="form-label">Étiquette <span style="font-weight:400;color:var(--text3)">(le petit badge — vide = aucun badge)</span></label><input class="form-input" id="quiz-ed-badge" value="${(qz.badge!=null?qz.badge:'').replace(/"/g,'&quot;')}" placeholder="Ex. SONDAGE, QUIZ, VOTE…"></div>
+    </div>
     <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;margin:4px 0 10px">
       <input type="checkbox" id="quiz-ed-reveal" ${qz.revealAnswer===false?'':'checked'} style="width:16px;height:16px;cursor:pointer">
       <span>Révéler la/les bonne(s) réponse(s) après le vote <span style="color:var(--text3);font-size:11px">(quiz uniquement — décochez pour un quiz « mystère » sans correction visible)</span></span>
@@ -4770,7 +4774,6 @@ function _renderQuizEditor(qz, phases){
         </div>
       </div>
       <div class="form-row"><label class="form-label">Intitulé</label><input class="form-input" data-qq="${qi}" data-qf="text" value="${(q.text||'').replace(/"/g,'&quot;')}" placeholder="Votre question…"></div>
-      <div class="form-row"><label class="form-label">Étiquette <span style="font-weight:400;color:var(--text3)">(le petit badge au-dessus de la question — laissez vide pour n'en afficher aucun)</span></label><input class="form-input" data-qq="${qi}" data-qf="badge" value="${(q.badge!=null?q.badge:(q.type==='quiz'?'QUIZ':'SONDAGE')).replace(/"/g,'&quot;')}" placeholder="ex. SONDAGE, QUIZ, VOTE…"></div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Type</label>
           <select class="form-input" data-qq="${qi}" data-qf="type" onchange="_onQuizTypeChange(${qi},this.value)">
@@ -4811,7 +4814,6 @@ function _collectQuizQuestionsFromDOM(){
     const qi=txtEl.getAttribute('data-qq');
     const type=document.querySelector('[data-qq="'+qi+'"][data-qf="type"]')?.value||'quiz';
     const mode=document.querySelector('[data-qq="'+qi+'"][data-qf="mode"]')?.value||'single';
-    const badgeEl=document.querySelector('[data-qq="'+qi+'"][data-qf="badge"]');
     const opts=[];
     document.querySelectorAll('[data-qq="'+qi+'"][data-qf="opttext"]').forEach(oEl=>{
       const oi=oEl.getAttribute('data-qopt');
@@ -4819,7 +4821,7 @@ function _collectQuizQuestionsFromDOM(){
       opts.push({ text:oEl.value, correct:correctEl?correctEl.checked:false });
     });
     // On garde TOUTES les questions (même vides) pour ne rien perdre pendant l'édition.
-    questions.push({ type, mode, text:txtEl.value, badge:(badgeEl?badgeEl.value:''), options:opts });
+    questions.push({ type, mode, text:txtEl.value, options:opts });
   });
   return questions;
 }
@@ -4835,13 +4837,15 @@ async function createQuiz(){
 async function saveQuiz(){
   if(!_quizEditId){ return; }
   const title=document.getElementById('quiz-ed-title')?.value.trim()||'Sans titre';
+  const subtitle=document.getElementById('quiz-ed-subtitle')?.value.trim()||'';
+  const badge=document.getElementById('quiz-ed-badge')?.value.trim()||'';
   const phase=document.getElementById('quiz-ed-phase')?.value||'';
   const revealAnswer=document.getElementById('quiz-ed-reveal')?.checked!==false;
   const lockVote=document.getElementById('quiz-ed-lock')?.checked===true;
   let questions=_collectQuizQuestionsFromDOM();
   // Nettoyage à l'enregistrement : on retire les options vides, puis les questions sans texte ou sans option.
   questions = questions.map(q=>({
-    type:q.type, mode:q.mode, text:(q.text||'').trim(), badge:(q.badge||'').trim(),
+    type:q.type, mode:q.mode, text:(q.text||'').trim(),
     options:(q.options||[]).map(o=>({text:(o.text||'').trim(),correct:!!o.correct})).filter(o=>o.text)
   })).filter(q=>q.text && q.options.length);
   // Avertissement si un quiz n'a aucune bonne réponse cochée
@@ -4850,8 +4854,8 @@ async function saveQuiz(){
   questions.forEach((q,i)=>{ q.id='q'+(i+1); q.options.forEach((o,oi)=>o.id='o'+(oi+1)); });
   saving(true);
   try{
-    await subCol('quizzes').doc(_quizEditId).update({title, phase, revealAnswer, lockVote, questions});
-    const qz=quizzesData.find(x=>x.id===_quizEditId); if(qz){ qz.title=title; qz.phase=phase; qz.revealAnswer=revealAnswer; qz.lockVote=lockVote; qz.questions=questions; }
+    await subCol('quizzes').doc(_quizEditId).update({title, subtitle, badge, phase, revealAnswer, lockVote, questions});
+    const qz=quizzesData.find(x=>x.id===_quizEditId); if(qz){ qz.title=title; qz.subtitle=subtitle; qz.badge=badge; qz.phase=phase; qz.revealAnswer=revealAnswer; qz.lockVote=lockVote; qz.questions=questions; }
     toast('Quiz enregistré');
     renderTab();
   }catch(e){ toast('Erreur : '+e.message,'error'); }
@@ -4878,6 +4882,8 @@ function _mutateQuiz(fn){
   const qz=quizzesData.find(x=>x.id===_quizEditId); if(!qz) return;
   qz.questions=_collectQuizQuestionsFromDOM();
   const t=document.getElementById('quiz-ed-title'); if(t) qz.title=t.value;
+  const st=document.getElementById('quiz-ed-subtitle'); if(st) qz.subtitle=st.value;
+  const bd=document.getElementById('quiz-ed-badge'); if(bd) qz.badge=bd.value;
   const p=document.getElementById('quiz-ed-phase'); if(p) qz.phase=p.value;
   fn(qz);
   renderTab();
