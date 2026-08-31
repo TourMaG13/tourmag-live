@@ -4387,6 +4387,16 @@ function _refSource(){
   if(/facebook\.|fb\.|instagram\.|linkedin\.|lnkd\.|twitter\.|t\.co|x\.com|youtube\.|tiktok\.|whatsapp|pinterest\./.test(host)) return 'social';
   return 'referral';
 }
+// Domaine référent (nettoyé) pour le détail par site. '' si accès direct ou interne.
+function _refDomain(){
+  var r = document.referrer || '';
+  if(!r) return '';
+  var host='';
+  try{ host = new URL(r).hostname.replace(/^www\./,'').toLowerCase(); }catch(_){ return ''; }
+  try{ if(host === location.hostname.replace(/^www\./,'').toLowerCase()) return ''; }catch(_){}
+  // Clé Firestore sûre : points → underscores, caractères spéciaux retirés
+  return host.replace(/[^a-z0-9.]/g,'').replace(/\./g,'_').slice(0,60);
+}
 function _statsDayKey(){
   var d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -4405,6 +4415,7 @@ function _trackVisit(eventId){
   try{ isUnique = !localStorage.getItem(uniqueKey); }catch(_){}
   try{ isNew = !localStorage.getItem(firstKey); }catch(_){}
   var src = _refSource();
+  var dom = _refDomain();
   var _interacted = false;              // l'internaute a-t-il interagi (scroll/clic/clavier) ?
   window._statsInteracted = function(){ _interacted = true; };
 
@@ -4412,6 +4423,7 @@ function _trackVisit(eventId){
     if(_statsTracked) return; _statsTracked = true;
     var upd = { views: FV.increment(1), updatedAt: FV.serverTimestamp() };
     upd['ref_'+src] = FV.increment(1);
+    if(dom) upd['dom_'+dom] = FV.increment(1); // détail par domaine référent
     if(isUnique){ upd.uniques = FV.increment(1); try{ localStorage.setItem(uniqueKey, '1'); }catch(_){} }
     // Nouveau vs récurrent (sur toute la durée de vie de l'appareil, pas juste le jour)
     if(isNew){ upd.newVisitors = FV.increment(1); try{ localStorage.setItem(firstKey, '1'); }catch(_){} }
