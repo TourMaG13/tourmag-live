@@ -99,13 +99,13 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .tour-step-count{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--acc);margin-bottom:6px}
 .tour-title{font-family:'Josefin Sans';font-size:17px;font-weight:700;color:var(--text);margin-bottom:7px}
 .tour-text{font-size:13.5px;line-height:1.65;color:var(--text2)}
-.tour-actions{display:flex;align-items:center;gap:8px;margin-top:16px}
-.tour-skip{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:6px 4px;margin-right:auto}
-.tour-skip:hover{color:var(--text2)}
-.tour-dots{display:flex;gap:5px;margin-right:auto}
+.tour-dots{display:flex;gap:5px;justify-content:center;margin-top:16px}
 .tour-dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
 .tour-dot.on{background:var(--acc);width:16px;border-radius:3px;transition:width .2s}
-.tour-btn{padding:7px 14px;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Poppins';transition:all .12s}
+.tour-actions{display:flex;align-items:center;gap:8px;margin-top:14px}
+.tour-skip{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:6px 4px;margin-right:auto;flex-shrink:0}
+.tour-skip:hover{color:var(--text2)}
+.tour-btn{padding:7px 14px;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Poppins';transition:all .12s;flex-shrink:0;white-space:nowrap}
 .tour-btn.prev{background:transparent;border:1px solid var(--border);color:var(--text2)}
 .tour-btn.prev:hover{background:#F1F5F9}
 .tour-btn.next{background:var(--acc);color:#fff}.tour-btn.next:hover{background:var(--acc2)}
@@ -592,9 +592,9 @@ select.form-input{cursor:pointer}
     <div class="tour-step-count" id="tour-step-count"></div>
     <div class="tour-title" id="tour-title"></div>
     <div class="tour-text" id="tour-text"></div>
+    <div class="tour-dots" id="tour-dots"></div>
     <div class="tour-actions">
       <button class="tour-skip" id="tour-skip" onclick="endTour()">Passer</button>
-      <div class="tour-dots" id="tour-dots"></div>
       <button class="tour-btn prev" id="tour-prev" onclick="tourPrev()">Précédent</button>
       <button class="tour-btn next" id="tour-next" onclick="tourNext()">Suivant</button>
     </div>
@@ -1103,24 +1103,58 @@ function subCol(name){ return evRef().collection(name); }
 
 // ==================== VISITE GUIDÉE (onboarding) ====================
 var _tourStep = 0;
-var _tourSteps = [
-  { target:null, title:'Bienvenue dans votre espace live 👋',
-    text:"Ce tableau de bord vous permet de gérer votre événement en direct : contenu, apparence et diffusion. Suivez cette courte visite pour prendre l'outil en main en une minute." },
-  { target:'#evpick', title:'Choisissez votre événement',
-    text:"Tout ce que vous modifiez s'applique à l'événement sélectionné ici. Basculez d'un événement à l'autre à tout moment depuis ce menu." },
-  { target:'.sidebar', title:'La navigation',
-    text:"Le menu de gauche regroupe vos réglages : le contenu (fil live, citations, quiz…) et l'apparence. Les sections se replient pour rester lisibles." },
-  { target:'.sidebar-item[data-tab="live"]', title:'Alimentez le fil live',
-    text:"Le « Fil live » est le cœur de l'événement : publiez vos actualités au fil de la journée, elles apparaissent en direct sur le dashboard public." },
-  { target:'.sidebar-item[data-tab="apparence"]', title:'Personnalisez l’apparence',
-    text:"Couleurs, bandeau, titres, polices : l'onglet « Apparence » adapte le rendu du dashboard à votre identité visuelle." },
-  { target:'#preview-toggle-btn', title:'L’aperçu en direct',
-    text:"Ouvrez l'aperçu pour voir le rendu réel de votre dashboard pendant que vous l'éditez, en version bureau ou mobile. Aucune publication n'est nécessaire pour prévisualiser." },
-  { target:'.sidebar-item[data-tab="guide"]', title:'Le guide complet',
-    text:"Besoin d'aller plus loin ? Le « Guide d'utilisation » détaille chaque fonctionnalité, étape par étape." },
-  { target:'#help-btn', title:'Vous êtes prêt 🎉',
+var _tourSteps = []; // construit dynamiquement selon les onglets visibles
+
+// Catalogue complet des étapes possibles. Chaque étape « contenu » ne s'affiche
+// que si l'onglet correspondant est réellement visible pour ce client.
+// target:null = étape centrée (toujours affichée) ; sinon on vérifie la visibilité.
+var _tourCatalog = [
+  { always:true, target:null, title:'Bienvenue dans votre espace live 👋',
+    text:"Ce tableau de bord vous permet de gérer votre événement en direct. Voici une courte visite des blocs que vous pouvez alimenter." },
+  { tab:'live', title:'Le fil live',
+    text:"Le cœur de l'événement : publiez vos actualités au fil de la journée, elles s'affichent en direct sur le dashboard." },
+  { tab:'citations', title:'Les citations',
+    text:"Mettez en avant une phrase forte d'un intervenant ou d'un partenaire, joliment mise en forme sur le dashboard." },
+  { tab:'quiz', title:'Quiz & sondages',
+    text:"Faites participer votre audience en direct : posez une question, les votes s'affichent et se mettent à jour en temps réel." },
+  { tab:'questions', title:'Les questions du public',
+    text:"Recueillez les questions de votre audience, modérez-les, et affichez celles que vous validez sur le dashboard." },
+  { tab:'interviews', title:'Les interviews',
+    text:"Publiez des interviews d'intervenants ou de partenaires pour enrichir la couverture de l'événement." },
+  { tab:'videos', title:'Les vidéos',
+    text:"Ajoutez des vidéos (reportages, temps forts) qui viennent illustrer votre événement." },
+  { tab:'gallery', title:'La galerie photos',
+    text:"Constituez une galerie d'images de l'événement, mise en page automatiquement sur le dashboard." },
+  { tab:'etapes', title:'La carte interactive',
+    text:"En mode expédition, tracez le parcours sur une carte : chaque étape apparaît avec sa fiche et sa position." },
+  { always:true, target:'#help-btn', title:'Vous êtes prêt 🎉',
     text:"Vous pouvez relancer cette visite à tout moment via ce bouton « ? ». Bonne prise en main !" }
 ];
+
+// Un élément est-il réellement visible (pas display:none, présent dans la page) ?
+function _tourVisible(sel){
+  const el = sel ? document.querySelector(sel) : null;
+  if(!el) return false;
+  if(el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0;
+}
+
+// Construit la liste des étapes à jouer selon les onglets visibles.
+function _buildTourSteps(){
+  const steps = [];
+  _tourCatalog.forEach(s=>{
+    if(s.always){
+      // étape centrée sans cible, ou étape ancrée à un élément toujours présent
+      if(!s.target || _tourVisible(s.target)) steps.push(s);
+      return;
+    }
+    // étape « contenu » : on cible l'onglet de sidebar et on n'ajoute que s'il est visible
+    const sel = '.sidebar-item[data-tab="'+s.tab+'"]';
+    if(_tourVisible(sel)) steps.push({ target:sel, title:s.title, text:s.text });
+  });
+  return steps;
+}
 
 function _tourEl(sel){ return sel ? document.querySelector(sel) : null; }
 
@@ -1173,6 +1207,8 @@ function _renderTour(){
 }
 
 function startTour(){
+  _tourSteps = _buildTourSteps();
+  if(!_tourSteps.length) return;
   _tourStep = 0;
   document.getElementById('tour-overlay').classList.add('show');
   _renderTour();
