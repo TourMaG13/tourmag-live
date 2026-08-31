@@ -159,14 +159,26 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 /* ==================== RESPONSIVE MOBILE ==================== */
 @media(max-width:768px){
+  /* Garde-fous globaux : rien ne doit déborder horizontalement sur mobile */
+  html,body{overflow-x:hidden;max-width:100vw}
+  .admin-main{max-width:100vw;overflow-x:hidden}
+  .admin-card{overflow-x:hidden}
+  .admin-main input,.admin-main textarea,.admin-main select,.admin-main img,.admin-main pre{max-width:100%;box-sizing:border-box}
+  /* Tableaux larges → défilables dans leur conteneur, sans casser la page */
+  .admin-card table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .topbar{padding:10px 12px;gap:8px}
   .topbar-hamburger{display:block}
-  .topbar-logo{font-size:14px}
+  .topbar-logo{font-size:14px;flex-shrink:0}
   .topbar-divider{display:none}
-  .evpick-btn{min-width:0;max-width:160px;padding:5px 9px;gap:7px}
+  .evpick{min-width:0;flex:1}
+  .evpick-btn{min-width:0;max-width:100%;width:100%;padding:5px 9px;gap:7px}
   .evpick-l1{display:none}
-  .topbar-right{gap:6px}
+  .topbar-right{gap:6px;flex-shrink:0}
   .topbar-user{display:none}
+  /* L'aperçu latéral et la visite guidée n'ont pas de sens sur petit écran :
+     on les masque de la barre pour éviter la surcharge et les superpositions. */
+  .preview-toggle-btn{display:none!important}
+  .help-btn{display:none!important}
   .topbar-btn{padding:5px 10px;font-size:11px}
   .admin-layout{grid-template-columns:1fr}
   .sidebar{display:none;position:fixed;top:0;left:0;bottom:0;width:260px;z-index:150;box-shadow:4px 0 24px rgba(0,0,0,.15);overflow-y:auto;-webkit-overflow-scrolling:touch}
