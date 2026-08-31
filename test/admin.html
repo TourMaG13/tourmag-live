@@ -547,6 +547,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="media"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-media"/></svg></span>Médiathèque</div>
           <div class="sidebar-item" data-tab="tags"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg></span>Tags live</div>
           <div class="sidebar-item" data-tab="rubriques"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-rubriques"/></svg></span>Rubriques</div>
+          <div class="sidebar-item" data-tab="stats"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Statistiques</div>
           <div class="sidebar-item" data-tab="widget"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg></span>Widget homepage</div>
         </div>
       </div>
@@ -1538,7 +1539,7 @@ var renderPending=null; // debounce handle
 
 function scheduleRender(){
   if(renderPending) clearTimeout(renderPending);
-  renderPending=setTimeout(()=>{ renderPending=null; renderTab(); if(typeof _previewTouch==='function') _previewTouch(); },50);
+  renderPending=setTimeout(()=>{ renderPending=null; if(typeof applyTabVisibility==='function') applyTabVisibility(); renderTab(); if(typeof _previewTouch==='function') _previewTouch(); },50);
 }
 
 // ============================================================
@@ -1750,6 +1751,7 @@ function renderTab(){
     case 'widget':renderWidget(main);break;
     case 'access':renderAccess(main);break;
     case 'guide':renderGuide(main);break;
+    case 'stats':renderStats(main);break;
   }
 }
 
@@ -6805,6 +6807,207 @@ async function executeRemoveAccount(uid,email){
 }
 
 // ==================== GUIDE ====================
+// ==================== STATISTIQUES ====================
+var _statsRange = 30;
+var _statsCache = null;
+function renderStats(el){
+  const ev = eventsData.find(e=>e.id===currentEventId);
+  let h = `<div class="page-title">Statistiques de consultation</div>
+    <div class="page-desc">Fréquentation du dashboard « ${(ev&&ev.name)||''} ». Les robots sont exclus des mesures.</div>`;
+  h += `<div class="admin-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:13px;color:var(--text2)">Période :</span>
+    ${[7,30,90].map(d=>`<button class="btn ${(_statsRange===d?'btn-primary':'btn-ghost')}" onclick="setStatsRange(${d})">${d} jours</button>`).join('')}
+    <button class="btn btn-ghost" style="margin-left:auto" onclick="loadStats(true)">↻ Actualiser</button>
+  </div>`;
+  h += `<div id="stats-body">${_skel(3)}</div>`;
+  el.innerHTML = h;
+  loadStats();
+}
+function setStatsRange(d){ _statsRange=d; _statsCache=null; renderTab(); }
+
+async function loadStats(force){
+  const body = document.getElementById('stats-body');
+  if(!body) return;
+  if(!currentEventId){ body.innerHTML='<div class="empty"><div class="text">Aucun événement sélectionné</div></div>'; return; }
+  try{
+    // Fenêtre de dates
+    const days = [];
+    const today = new Date();
+    for(let i=0;i<_statsRange;i++){
+      const d = new Date(today); d.setDate(today.getDate()-i);
+      days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+    }
+    days.reverse();
+    const snap = await db.collection('events').doc(currentEventId).collection('stats').get();
+    const byDay = {};
+    snap.forEach(doc=>{ byDay[doc.id] = doc.data()||{}; });
+
+    // --- Détail par contenu ---
+    // Top entrées du fil live par likes (déjà en mémoire admin)
+    const topLikes = (liveData||[])
+      .filter(e=>(e.likeCount||0) > 0)
+      .sort((a,b)=>(b.likeCount||0)-(a.likeCount||0))
+      .slice(0,8)
+      .map(e=>({label:(e.title||e.text||'(sans titre)').replace(/<[^>]+>/g,'').slice(0,60), val:e.likeCount||0}));
+    // Participation aux quiz : nombre de votes par quiz
+    let quizPart = [];
+    try{
+      const votesSnap = await db.collection('events').doc(currentEventId).collection('quizVotes').get();
+      const byQuiz = {};
+      votesSnap.forEach(d=>{ const q=(d.data()||{}).quizId; if(q) byQuiz[q]=(byQuiz[q]||0)+1; });
+      quizPart = (quizzesData||[])
+        .map(q=>({label:(q.title||'Quiz').slice(0,60), val:byQuiz[q.id]||0}))
+        .filter(x=>x.val>0)
+        .sort((a,b)=>b.val-a.val).slice(0,8);
+    }catch(e){ /* lecture votes indisponible : on n'affiche juste pas ce bloc */ }
+
+    // Agrégation
+    let totViews=0, totUniques=0, totNew=0, totReturning=0;
+    let dwellTotal=0, dwellCount=0, bounces=0, engaged=0;
+    let sc25=0, sc50=0, sc75=0, sc100=0;
+    const refs={}, clicks={}; const series=[];
+    days.forEach(day=>{
+      const d = byDay[day] || {};
+      const v = d.views||0, u = d.uniques||0;
+      totViews += v; totUniques += u;
+      totNew += d.newVisitors||0; totReturning += d.returningVisitors||0;
+      dwellTotal += d.dwellTotal||0; dwellCount += d.dwellCount||0;
+      bounces += d.bounces||0; engaged += d.engaged||0;
+      sc25 += d.scroll25||0; sc50 += d.scroll50||0; sc75 += d.scroll75||0; sc100 += d.scroll100||0;
+      series.push({day, v});
+      Object.keys(d).forEach(k=>{
+        if(k.indexOf('ref_')===0) refs[k.slice(4)] = (refs[k.slice(4)]||0) + d[k];
+        else if(k.indexOf('clk_')===0) clicks[k.slice(4)] = (clicks[k.slice(4)]||0) + d[k];
+      });
+    });
+    _renderStatsBody(body, {totViews, totUniques, refs, clicks, series,
+      totNew, totReturning, dwellTotal, dwellCount, bounces, engaged, sc25, sc50, sc75, sc100,
+      topLikes, quizPart});
+  }catch(e){
+    body.innerHTML = '<div class="empty"><div class="icon">⚠️</div><div class="text">Impossible de charger les statistiques</div><div class="hint">'+(e.message||e)+'</div></div>';
+  }
+}
+
+function _statNum(n){ return (n||0).toLocaleString('fr-FR'); }
+function _renderStatsBody(body, s){
+  if(!s.totViews){
+    body.innerHTML = '<div class="empty"><div class="icon">📊</div><div class="text">Aucune donnée sur cette période</div><div class="hint">Les statistiques apparaîtront dès que des visiteurs consulteront le dashboard.</div></div>';
+    return;
+  }
+  const refLabels = {direct:'Accès direct', recherche:'Moteurs de recherche', social:'Réseaux sociaux', referral:'Sites référents', interne:'Navigation interne'};
+  const zoneLabels = {live:'Fil live', quiz:'Quiz / Sondage', citations:'Citations', essentiel:'Essentiel', videos:'Vidéos', galerie:'Galerie', interviews:'Interviews', programme:'Programme', articles:'Articles', carte:'Carte', lien:'Liens externes'};
+  // Cartes chiffres
+  let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px">
+    ${_statCard('Vues totales', _statNum(s.totViews), '#2563EB')}
+    ${_statCard('Visiteurs uniques', _statNum(s.totUniques), '#059669')}
+    ${_statCard('Vues / visiteur', s.totUniques?(s.totViews/s.totUniques).toFixed(1):'—', '#7C3AED')}
+  </div>`;
+
+  // Engagement
+  const avgDwell = s.dwellCount ? Math.round(s.dwellTotal/s.dwellCount) : 0;
+  const totBounceEng = (s.bounces||0)+(s.engaged||0);
+  const bounceRate = totBounceEng ? Math.round((s.bounces/totBounceEng)*100) : 0;
+  const totNR = (s.totNew||0)+(s.totReturning||0);
+  const newPct = totNR ? Math.round((s.totNew/totNR)*100) : 0;
+  h += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px">
+    ${_statCard('Temps moyen', _fmtDuration(avgDwell), '#0C6CA1')}
+    ${_statCard('Taux de rebond', totBounceEng? bounceRate+' %':'—', '#D97706')}
+    ${_statCard('Nouveaux visiteurs', totNR? newPct+' %':'—', '#059669')}
+    ${_statCard('Visiteurs récurrents', totNR? (100-newPct)+' %':'—', '#7C3AED')}
+  </div>`;
+
+  // Profondeur de lecture (scroll)
+  if(s.dwellCount){
+    const base = s.dwellCount || 1;
+    const depth = [
+      {label:'Ont vu le haut (0 %)', val:100},
+      {label:'25 % de la page', val:Math.round((s.sc25/base)*100)},
+      {label:'50 % de la page', val:Math.round((s.sc50/base)*100)},
+      {label:'75 % de la page', val:Math.round((s.sc75/base)*100)},
+      {label:'Page entière (100 %)', val:Math.round((s.sc100/base)*100)}
+    ];
+    h += `<div class="admin-card"><h3>Profondeur de lecture</h3>${_statDepth(depth)}</div>`;
+  }
+
+  // Graphique d'évolution (barres SVG légères)
+  h += `<div class="admin-card"><h3>Évolution des vues</h3>${_statChart(s.series)}</div>`;
+  // Provenance
+  const refRows = Object.keys(s.refs).sort((a,b)=>s.refs[b]-s.refs[a]);
+  h += `<div class="admin-card"><h3>Provenance des visiteurs</h3>${refRows.length?_statBars(refRows.map(k=>({label:refLabels[k]||k, val:s.refs[k]}))):'<div class="empty"><div class="text">Aucune donnée de provenance</div></div>'}</div>`;
+  // Clics par zone (hors sponsors, isolés à part)
+  const sponsorClicks = {};
+  const zoneClicks = {};
+  Object.keys(s.clicks).forEach(k=>{
+    if(k.indexOf('sponsor_')===0) sponsorClicks[k.slice(8)] = s.clicks[k];
+    else zoneClicks[k] = s.clicks[k];
+  });
+  const clkRows = Object.keys(zoneClicks).sort((a,b)=>zoneClicks[b]-zoneClicks[a]);
+  h += `<div class="admin-card"><h3>Zones les plus cliquées</h3>${clkRows.length?_statBars(clkRows.map(k=>({label:zoneLabels[k]||k, val:zoneClicks[k]}))):'<div class="empty"><div class="text">Aucun clic enregistré</div></div>'}</div>`;
+
+  // ---- Détail par contenu ----
+  if(s.topLikes && s.topLikes.length){
+    h += `<div class="admin-card"><h3>Entrées les plus aimées</h3>${_statBars(s.topLikes, '❤')}</div>`;
+  }
+  if(s.quizPart && s.quizPart.length){
+    h += `<div class="admin-card"><h3>Participation aux quiz &amp; sondages</h3>${_statBars(s.quizPart, '🗳')}</div>`;
+  }
+  const spRows = Object.keys(sponsorClicks).sort((a,b)=>sponsorClicks[b]-sponsorClicks[a]);
+  if(spRows.length){
+    h += `<div class="admin-card"><h3>Clics par partenaire</h3>${_statBars(spRows.map(k=>({label:k, val:sponsorClicks[k]})))}</div>`;
+  }
+  body.innerHTML = h;
+}
+function _statCard(label, val, color){
+  return `<div class="admin-card" style="margin:0;text-align:center;padding:18px 12px">
+    <div style="font-family:'Josefin Sans';font-size:30px;font-weight:700;color:${color};line-height:1">${val}</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+  </div>`;
+}
+function _statChart(series){
+  const max = Math.max(1, ...series.map(p=>p.v));
+  const W = Math.max(series.length*14, 300), H = 120, bw = Math.max(4, (W/series.length)-3);
+  let bars='';
+  series.forEach((p,i)=>{
+    const bh = Math.round((p.v/max)*(H-20));
+    const x = i*(W/series.length);
+    bars += `<rect x="${x.toFixed(1)}" y="${H-bh}" width="${bw.toFixed(1)}" height="${bh}" rx="2" fill="var(--acc)" opacity="0.85"><title>${p.day} : ${p.v} vue(s)</title></rect>`;
+  });
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="min-width:${Math.min(W,600)}px">${bars}</svg></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px"><span>${series[0]?series[0].day.slice(5):''}</span><span>${series.length?series[series.length-1].day.slice(5):''}</span></div>`;
+}
+function _fmtDuration(secs){
+  secs = secs||0;
+  if(secs < 60) return secs+' s';
+  var m = Math.floor(secs/60), r = secs%60;
+  return m+' min'+(r?(' '+r+' s'):'');
+}
+function _statDepth(rows){
+  return '<div style="display:flex;flex-direction:column;gap:10px">'+rows.map(function(r){
+    var pct = Math.max(0, Math.min(100, r.val));
+    return '<div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px">'
+      + '<span style="color:var(--text2)">'+r.label+'</span>'
+      + '<span style="color:var(--text);font-weight:600">'+pct+' %</span></div>'
+      + '<div style="height:8px;background:var(--bg);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--green);border-radius:20px"></div></div>'
+      + '</div>';
+  }).join('')+'</div>';
+}
+function _statBars(rows, icon){
+  const max = Math.max(1, ...rows.map(r=>r.val));
+  const tot = rows.reduce((a,r)=>a+r.val,0);
+  return '<div style="display:flex;flex-direction:column;gap:10px">'+rows.map(r=>{
+    const pct = Math.round((r.val/max)*100);
+    const share = tot?Math.round((r.val/tot)*100):0;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px">
+        <span style="color:var(--text2)">${icon?icon+' ':''}${r.label}</span>
+        <span style="color:var(--text);font-weight:600">${_statNum(r.val)} <span style="color:var(--text3);font-weight:400">(${share}%)</span></span>
+      </div>
+      <div style="height:8px;background:var(--bg);border-radius:20px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--acc);border-radius:20px"></div></div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 function renderGuide(el){
   const guideCSS=`
     .guide{max-width:780px}
