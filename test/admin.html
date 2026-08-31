@@ -88,6 +88,33 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
 
+/* ==================== VISITE GUIDÉE (onboarding) ==================== */
+.tour-overlay{position:fixed;inset:0;z-index:1000;display:none}
+.tour-overlay.show{display:block}
+/* Voile sombre percé d'un trou lumineux autour de la cible (box-shadow géante) */
+.tour-spot{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,23,42,.62);transition:all .25s cubic-bezier(.4,0,.2,1);pointer-events:none;border:2px solid var(--acc)}
+.tour-spot.no-target{width:0;height:0;left:50%;top:50%;border:none}
+.tour-pop{position:absolute;width:320px;max-width:calc(100vw - 32px);background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh-3);padding:20px 20px 16px;z-index:1001;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.tour-pop.center{left:50%;top:50%;transform:translate(-50%,-50%)}
+.tour-step-count{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--acc);margin-bottom:6px}
+.tour-title{font-family:'Josefin Sans';font-size:17px;font-weight:700;color:var(--text);margin-bottom:7px}
+.tour-text{font-size:13.5px;line-height:1.65;color:var(--text2)}
+.tour-actions{display:flex;align-items:center;gap:8px;margin-top:16px}
+.tour-skip{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:6px 4px;margin-right:auto}
+.tour-skip:hover{color:var(--text2)}
+.tour-dots{display:flex;gap:5px;margin-right:auto}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
+.tour-dot.on{background:var(--acc);width:16px;border-radius:3px;transition:width .2s}
+.tour-btn{padding:7px 14px;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Poppins';transition:all .12s}
+.tour-btn.prev{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.tour-btn.prev:hover{background:#F1F5F9}
+.tour-btn.next{background:var(--acc);color:#fff}.tour-btn.next:hover{background:var(--acc2)}
+/* Bouton Aide dans la topbar */
+.help-btn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.help-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
+@media(prefers-reduced-motion:reduce){.tour-spot,.tour-pop{transition:none}}
+@media(max-width:768px){.tour-pop{width:calc(100vw - 24px)}}
+
 /* ==================== PANNEAU APERÇU EN DIRECT ==================== */
 /* Le panneau est FIXÉ au viewport (jamais dans le flux de scroll de la grille),
    pour que son en-tête et ses boutons restent toujours en place et cliquables. */
@@ -471,6 +498,7 @@ select.form-input{cursor:pointer}
     </div>
     <div class="topbar-right">
       <button class="preview-toggle-btn" id="preview-toggle-btn" onclick="togglePreview()" title="Afficher / masquer l'aperçu en direct">👁 Aperçu</button>
+      <button class="help-btn" id="help-btn" onclick="startTour()" title="Revoir la visite guidée" aria-label="Aide">?</button>
       <span class="topbar-user"><span class="topbar-dot"></span><span id="topbar-user-email"></span></span>
       <button class="topbar-btn ghost" onclick="doLogout()">Déconnexion</button>
     </div>
@@ -558,6 +586,20 @@ select.form-input{cursor:pointer}
   <div class="modal-box" id="modal-box"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-spot" id="tour-spot"></div>
+  <div class="tour-pop" id="tour-pop">
+    <div class="tour-step-count" id="tour-step-count"></div>
+    <div class="tour-title" id="tour-title"></div>
+    <div class="tour-text" id="tour-text"></div>
+    <div class="tour-actions">
+      <button class="tour-skip" id="tour-skip" onclick="endTour()">Passer</button>
+      <div class="tour-dots" id="tour-dots"></div>
+      <button class="tour-btn prev" id="tour-prev" onclick="tourPrev()">Précédent</button>
+      <button class="tour-btn next" id="tour-next" onclick="tourNext()">Suivant</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -723,6 +765,7 @@ auth.onAuthStateChanged(user=>{
         document.getElementById('app-shell').style.display='block';
         document.getElementById('topbar-user-email').textContent=user.email;
         initApp();
+        if(typeof _maybeAutoTour==='function') _maybeAutoTour();
       } else {
         auth.signOut();
         document.getElementById('auth-err').textContent='Compte non autorisé';
@@ -1057,6 +1100,104 @@ function saving(show){document.getElementById('saving').classList.toggle('show',
 
 function evRef(){ return db.collection('events').doc(currentEventId); }
 function subCol(name){ return evRef().collection(name); }
+
+// ==================== VISITE GUIDÉE (onboarding) ====================
+var _tourStep = 0;
+var _tourSteps = [
+  { target:null, title:'Bienvenue dans votre espace live 👋',
+    text:"Ce tableau de bord vous permet de gérer votre événement en direct : contenu, apparence et diffusion. Suivez cette courte visite pour prendre l'outil en main en une minute." },
+  { target:'#evpick', title:'Choisissez votre événement',
+    text:"Tout ce que vous modifiez s'applique à l'événement sélectionné ici. Basculez d'un événement à l'autre à tout moment depuis ce menu." },
+  { target:'.sidebar', title:'La navigation',
+    text:"Le menu de gauche regroupe vos réglages : le contenu (fil live, citations, quiz…) et l'apparence. Les sections se replient pour rester lisibles." },
+  { target:'.sidebar-item[data-tab="live"]', title:'Alimentez le fil live',
+    text:"Le « Fil live » est le cœur de l'événement : publiez vos actualités au fil de la journée, elles apparaissent en direct sur le dashboard public." },
+  { target:'.sidebar-item[data-tab="apparence"]', title:'Personnalisez l’apparence',
+    text:"Couleurs, bandeau, titres, polices : l'onglet « Apparence » adapte le rendu du dashboard à votre identité visuelle." },
+  { target:'#preview-toggle-btn', title:'L’aperçu en direct',
+    text:"Ouvrez l'aperçu pour voir le rendu réel de votre dashboard pendant que vous l'éditez, en version bureau ou mobile. Aucune publication n'est nécessaire pour prévisualiser." },
+  { target:'.sidebar-item[data-tab="guide"]', title:'Le guide complet',
+    text:"Besoin d'aller plus loin ? Le « Guide d'utilisation » détaille chaque fonctionnalité, étape par étape." },
+  { target:'#help-btn', title:'Vous êtes prêt 🎉',
+    text:"Vous pouvez relancer cette visite à tout moment via ce bouton « ? ». Bonne prise en main !" }
+];
+
+function _tourEl(sel){ return sel ? document.querySelector(sel) : null; }
+
+function _positionTour(){
+  const step = _tourSteps[_tourStep];
+  const spot = document.getElementById('tour-spot');
+  const pop = document.getElementById('tour-pop');
+  const el = _tourEl(step.target);
+  pop.classList.remove('center');
+  if(!el){
+    // Étape centrée (accueil / fin)
+    spot.className = 'tour-spot no-target';
+    spot.style.width='0'; spot.style.height='0';
+    pop.classList.add('center');
+    pop.style.left=''; pop.style.top='';
+    return;
+  }
+  // S'assure que la cible est visible (utile pour les items de sidebar)
+  try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){}
+  const r = el.getBoundingClientRect();
+  const pad = 6;
+  spot.className = 'tour-spot';
+  spot.style.left = (r.left - pad) + 'px';
+  spot.style.top = (r.top - pad) + 'px';
+  spot.style.width = (r.width + pad*2) + 'px';
+  spot.style.height = (r.height + pad*2) + 'px';
+  // Placement de l'infobulle : à droite si la place le permet, sinon en dessous, sinon au-dessus
+  const popW = 320, popH = pop.offsetHeight || 180, gap = 14, vw = window.innerWidth, vh = window.innerHeight;
+  let left, top;
+  if(r.right + gap + popW < vw){ left = r.right + gap; top = Math.min(Math.max(12, r.top), vh - popH - 12); }
+  else if(r.bottom + gap + popH < vh){ top = r.bottom + gap; left = Math.min(Math.max(12, r.left), vw - popW - 12); }
+  else if(r.top - gap - popH > 0){ top = r.top - gap - popH; left = Math.min(Math.max(12, r.left), vw - popW - 12); }
+  else { left = Math.min(Math.max(12, r.right + gap), vw - popW - 12); top = 12; }
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+
+function _renderTour(){
+  const step = _tourSteps[_tourStep];
+  document.getElementById('tour-step-count').textContent = 'Étape ' + (_tourStep+1) + ' / ' + _tourSteps.length;
+  document.getElementById('tour-title').innerHTML = step.title;
+  document.getElementById('tour-text').innerHTML = step.text;
+  // Points de progression
+  const dots = _tourSteps.map((s,i)=>'<span class="tour-dot'+(i===_tourStep?' on':'')+'"></span>').join('');
+  document.getElementById('tour-dots').innerHTML = dots;
+  // Boutons
+  document.getElementById('tour-prev').style.visibility = _tourStep===0 ? 'hidden' : 'visible';
+  document.getElementById('tour-next').textContent = _tourStep===_tourSteps.length-1 ? 'Terminer' : 'Suivant';
+  _positionTour();
+}
+
+function startTour(){
+  _tourStep = 0;
+  document.getElementById('tour-overlay').classList.add('show');
+  _renderTour();
+  window.addEventListener('resize', _positionTour);
+  window.addEventListener('keydown', _tourKey);
+}
+function endTour(){
+  document.getElementById('tour-overlay').classList.remove('show');
+  window.removeEventListener('resize', _positionTour);
+  window.removeEventListener('keydown', _tourKey);
+  try{ localStorage.setItem('tmg_tour_seen','1'); }catch(_){}
+}
+function tourNext(){ if(_tourStep < _tourSteps.length-1){ _tourStep++; _renderTour(); } else { endTour(); } }
+function tourPrev(){ if(_tourStep > 0){ _tourStep--; _renderTour(); } }
+function _tourKey(e){
+  if(e.key==='Escape') endTour();
+  else if(e.key==='ArrowRight' || e.key==='Enter') tourNext();
+  else if(e.key==='ArrowLeft') tourPrev();
+}
+// Lancement automatique au tout premier accès (une seule fois)
+function _maybeAutoTour(){
+  let seen=''; try{ seen=localStorage.getItem('tmg_tour_seen')||''; }catch(_){}
+  if(!seen) setTimeout(startTour, 800);
+}
+
 
 // ==================== APERÇU EN DIRECT ====================
 var _previewOn = false;
