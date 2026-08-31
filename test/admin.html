@@ -86,6 +86,38 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
 
+/* ==================== PANNEAU APERÇU EN DIRECT ==================== */
+.admin-layout.preview-on{grid-template-columns:220px minmax(0,1fr) minmax(360px,42%)}
+.admin-layout.preview-on .admin-main{max-width:none}
+.preview-panel{display:none;flex-direction:column;background:#0F172A;border-left:1px solid var(--border);height:calc(100vh - 48px);position:sticky;top:48px}
+.admin-layout.preview-on .preview-panel{display:flex}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#111827;border-bottom:1px solid #1F2937;flex-shrink:0}
+.preview-title{font-family:'Josefin Sans';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#E5E7EB}
+.preview-actions{display:flex;align-items:center;gap:8px}
+.preview-seg{display:inline-flex;background:#0B1220;border:1px solid #1F2937;border-radius:8px;overflow:hidden}
+.preview-seg-btn{border:none;background:none;color:#9CA3AF;font-size:14px;padding:5px 10px;cursor:pointer;transition:all .12s;line-height:1}
+.preview-seg-btn.active{background:var(--acc);color:#fff}
+.preview-refresh,.preview-close{border:none;background:#1F2937;color:#D1D5DB;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:background .12s}
+.preview-refresh:hover,.preview-close:hover{background:#374151}
+.preview-stage{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:repeating-conic-gradient(#0B1220 0% 25%,#0F172A 0% 50%) 50%/22px 22px}
+.preview-frame-wrap{background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.45);border-radius:6px;overflow:hidden;width:100%;transition:width .2s ease}
+.preview-frame-wrap.mobile{width:390px;max-width:100%}
+.preview-frame-wrap.mobile #preview-iframe{height:760px}
+#preview-iframe{width:100%;height:calc(100vh - 140px);border:none;display:block;background:#fff}
+/* Bouton d'ouverture dans la barre du haut */
+.preview-toggle-btn{display:inline-flex;align-items:center;gap:6px;background:var(--acc);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:filter .12s}
+.preview-toggle-btn:hover{filter:brightness(1.05)}
+.preview-toggle-btn.active{background:#0F172A}
+@media(max-width:1100px){
+  /* Trop étroit pour un panneau latéral : l'aperçu passe en superposition plein écran */
+  .admin-layout.preview-on{grid-template-columns:220px 1fr}
+  .admin-layout.preview-on .preview-panel{position:fixed;inset:48px 0 0 0;z-index:140;height:auto}
+}
+@media(max-width:768px){
+  .admin-layout.preview-on{grid-template-columns:1fr}
+  .admin-layout.preview-on .preview-panel{inset:0;z-index:200}
+}
+
 /* ==================== RESPONSIVE MOBILE ==================== */
 @media(max-width:768px){
   .topbar{padding:10px 12px;gap:8px}
@@ -419,6 +451,7 @@ select.form-input{cursor:pointer}
       <div class="evpick-menu" id="evpick-menu"></div>
     </div>
     <div class="topbar-right">
+      <button class="preview-toggle-btn" id="preview-toggle-btn" onclick="togglePreview()" title="Afficher / masquer l'aperçu en direct">👁 Aperçu</button>
       <span class="topbar-user"><span class="topbar-dot"></span><span id="topbar-user-email"></span></span>
       <button class="topbar-btn ghost" onclick="doLogout()">Déconnexion</button>
     </div>
@@ -481,6 +514,24 @@ select.form-input{cursor:pointer}
       </div>
     </div>
     <div class="admin-main" id="admin-main"></div>
+    <aside class="preview-panel" id="preview-panel" aria-hidden="true">
+      <div class="preview-head">
+        <span class="preview-title">Aperçu en direct</span>
+        <div class="preview-actions">
+          <div class="preview-seg" role="group" aria-label="Format d'aperçu">
+            <button type="button" class="preview-seg-btn active" id="preview-seg-desktop" onclick="setPreviewViewport('desktop')" title="Bureau">🖥</button>
+            <button type="button" class="preview-seg-btn" id="preview-seg-mobile" onclick="setPreviewViewport('mobile')" title="Mobile">📱</button>
+          </div>
+          <button type="button" class="preview-refresh" onclick="refreshPreview()" title="Rafraîchir l'aperçu">↻</button>
+          <button type="button" class="preview-close" onclick="togglePreview(false)" title="Fermer l'aperçu">✕</button>
+        </div>
+      </div>
+      <div class="preview-stage" id="preview-stage">
+        <div class="preview-frame-wrap" id="preview-frame-wrap">
+          <iframe id="preview-iframe" title="Aperçu du dashboard" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </aside>
   </div>
 </div>
 
@@ -988,6 +1039,123 @@ function saving(show){document.getElementById('saving').classList.toggle('show',
 function evRef(){ return db.collection('events').doc(currentEventId); }
 function subCol(name){ return evRef().collection(name); }
 
+// ==================== APERÇU EN DIRECT ====================
+var _previewOn = false;
+var _previewReady = false;
+var _previewViewport = 'desktop';
+var _previewPushTimer = null;
+
+// Base d'URL du dashboard (même dossier que l'admin)
+function _previewBaseUrl(){
+  const base = window.location.href.replace(/\/[^\/]*(?:\?.*)?(?:#.*)?$/, '') + '/index.html';
+  return base + '?event=' + encodeURIComponent(currentEventId||'') + '&preview=1';
+}
+
+// Assemble l'état courant (mémoire admin) au format attendu par index.html
+function _collectPreviewPayload(){
+  const ev = eventsData.find(e=>e.id===currentEventId) || {};
+  // Copie défensive pour ne pas transmettre de références vives
+  const clone = x => { try{ return JSON.parse(JSON.stringify(x)); }catch(_){ return x; } };
+  return {
+    event: clone(ev),
+    essential: clone(essentialData||[]),
+    live: clone(liveData||[]),
+    rubriques: clone(rubriquesData||[]),
+    citations: clone(citationsData||[]),
+    articles: clone(articlesData||[]),
+    programme: clone(programmeData||[]),
+    timeline: clone(timelineData||[]),
+    videos: clone(videosData||[]),
+    interviews: clone(interviewsData||[]),
+    etapes: clone(etapesData||[]),
+    questions: clone((questionsData||[]).filter(q=>(q.status||'')==='approved')),
+    quizzes: clone((quizzesData||[]).filter(q=>q.active)),
+    _allGlobalJournalists: clone(journalistsGlobalData||[])
+  };
+}
+
+function pushPreview(){
+  if(!_previewOn || !_previewReady) return;
+  const ifr = document.getElementById('preview-iframe');
+  if(!ifr || !ifr.contentWindow) return;
+  try{
+    ifr.contentWindow.postMessage({ type:'tmg-preview-data', payload:_collectPreviewPayload() }, '*');
+  }catch(e){ console.warn('[Aperçu] envoi impossible :', e.message); }
+}
+
+// À appeler après toute modification de données (débounce léger)
+function _previewTouch(){
+  if(!_previewOn) return;
+  clearTimeout(_previewPushTimer);
+  _previewPushTimer = setTimeout(pushPreview, 180);
+}
+window._previewTouch = _previewTouch;
+
+function togglePreview(force){
+  const layout = document.querySelector('.admin-layout');
+  const panel = document.getElementById('preview-panel');
+  const btn = document.getElementById('preview-toggle-btn');
+  _previewOn = (typeof force==='boolean') ? force : !_previewOn;
+  layout.classList.toggle('preview-on', _previewOn);
+  if(btn) btn.classList.toggle('active', _previewOn);
+  if(panel) panel.setAttribute('aria-hidden', _previewOn?'false':'true');
+  if(_previewOn){
+    const ifr = document.getElementById('preview-iframe');
+    const url = _previewBaseUrl();
+    _previewReady = false;
+    // (Re)charge l'iframe ; le handshake 'tmg-preview-ready' déclenchera le premier envoi
+    if(ifr.getAttribute('data-src') !== url){
+      ifr.setAttribute('data-src', url);
+      ifr.src = url;
+    } else {
+      // déjà chargé : on repousse les données directement
+      _previewReady = true; pushPreview();
+    }
+  }
+}
+
+function setPreviewViewport(mode){
+  _previewViewport = mode;
+  const wrap = document.getElementById('preview-frame-wrap');
+  const bd = document.getElementById('preview-seg-desktop');
+  const bm = document.getElementById('preview-seg-mobile');
+  if(wrap) wrap.classList.toggle('mobile', mode==='mobile');
+  if(bd) bd.classList.toggle('active', mode==='desktop');
+  if(bm) bm.classList.toggle('active', mode==='mobile');
+}
+
+function refreshPreview(){
+  const ifr = document.getElementById('preview-iframe');
+  if(!ifr) return;
+  _previewReady = false;
+  ifr.src = _previewBaseUrl();
+}
+
+// Handshake : l'iframe signale qu'elle est prête à recevoir les données
+window.addEventListener('message', function(e){
+  const d = e.data;
+  if(!d || d.type !== 'tmg-preview-ready') return;
+  _previewReady = true;
+  pushPreview();
+});
+
+// Répercute la frappe en direct : toute saisie dans la zone d'édition pousse l'aperçu.
+// (Les champs qui écrivent en mémoire admin se reflètent immédiatement ; ceux qui
+//  ne sont écrits qu'à l'enregistrement se refléteront après « Enregistrer ».)
+(function _wirePreviewInputs(){
+  function attach(){
+    const main = document.getElementById('admin-main');
+    if(!main || main._previewWired) return;
+    main._previewWired = true;
+    const handler = ()=>{ if(_previewOn) _previewTouch(); };
+    main.addEventListener('input', handler, true);
+    main.addEventListener('change', handler, true);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attach);
+  else attach();
+})();
+
+
 // Global click delegation for data-act buttons (video actions)
 document.addEventListener('click',function(e){
   var btn=e.target.closest('[data-act]');
@@ -1113,6 +1281,7 @@ function switchEvent(id){
   applyTabVisibility();
   renderTab();
   updateTopbarSelect();
+  if(_previewOn && typeof refreshPreview==='function') refreshPreview();
 }
 
 function updateTopbarSelect(){
@@ -1169,7 +1338,7 @@ var renderPending=null; // debounce handle
 
 function scheduleRender(){
   if(renderPending) clearTimeout(renderPending);
-  renderPending=setTimeout(()=>{ renderPending=null; renderTab(); },50);
+  renderPending=setTimeout(()=>{ renderPending=null; renderTab(); if(typeof _previewTouch==='function') _previewTouch(); },50);
 }
 
 // ============================================================
