@@ -611,7 +611,7 @@ body.is-embed{background:transparent}
 .ft a{color:var(--acc2);text-decoration:none}
 
 /* SCROLLBAR */
-html,body{overflow-x:hidden}::-webkit-scrollbar{width:0;display:none}*{scrollbar-width:none}
+html,body{overflow-x:hidden;overflow-x:clip;max-width:100%}::-webkit-scrollbar{width:0;display:none}*{scrollbar-width:none}
 /* ==================== EXPEDITION SKIN ==================== */
 body.mode-expedition{font-family:'Archivo',sans-serif;color:var(--exp-ink);background:var(--exp-paper);scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip}
 body.mode-expedition{--exp-ink:#111111;--exp-paper:#FFFFFF;--exp-stone:#F5F4F2;--exp-line:#E4E2DE;--exp-grey:#6E6B66}
@@ -4271,7 +4271,7 @@ function mkQuizBlock(opts){
         </button>`;
       });
       inner+=`<div class="quiz-q" data-quiz-q="${key}" data-qnum="${String(_qnum).padStart(2,'0')}">
-        <div class="quiz-q-head"><span class="quiz-q-badge">${isQuiz?'QUIZ':'SONDAGE'}</span><span class="quiz-q-text">${_qEsc(q.text)}</span></div>
+        <div class="quiz-q-head">${(typeof q.badge==='string' ? (q.badge.trim()?`<span class="quiz-q-badge">${_qEsc(q.badge.trim())}</span>`:'') : `<span class="quiz-q-badge">${isQuiz?'QUIZ':'SONDAGE'}</span>`)}<span class="quiz-q-text">${_qEsc(q.text)}</span></div>
         <div class="quiz-hint">${isMulti?'Plusieurs réponses possibles':'Une seule réponse'}</div>
         <div class="quiz-opts">${optsHtml}</div>
         <div class="quiz-actions">
