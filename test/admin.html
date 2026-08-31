@@ -21,7 +21,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .auth-box .auth-err{font-size:12px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px}
 
 /* NAV */
-.topbar{background:var(--pri);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.topbar{background:linear-gradient(180deg,#243244 0%,var(--pri) 100%);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 2px 12px rgba(15,23,42,.16)}
 .topbar-hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0}
 .topbar-hamburger:hover{background:rgba(255,255,255,.1)}
 .topbar-logo{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:#fff;white-space:nowrap}
@@ -36,7 +36,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Sélecteur d'événement (topbar) */
 .topbar-divider{width:1px;height:24px;background:rgba(255,255,255,.15);flex-shrink:0}
 .evpick{position:relative;flex-shrink:1;min-width:0}
-.evpick-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 12px;color:#fff;cursor:pointer;font-family:'Poppins';transition:background .15s;min-width:200px;max-width:280px}
+.evpick-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-sm);padding:6px 12px;color:#fff;cursor:pointer;font-family:'Poppins';transition:background .15s,border-color .15s;min-width:200px;max-width:280px}
+.evpick-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
 .evpick-btn:hover{background:rgba(255,255,255,.14)}
 .evpick-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(5,150,105,.22);flex-shrink:0}
 .evpick-txt{flex:1;text-align:left;min-width:0;line-height:1.15}
@@ -66,12 +67,13 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 .sidebar{background:var(--card);border-right:1px solid var(--border);padding:20px 0}
 .sidebar-section{font-family:'Josefin Sans';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);padding:16px 20px 8px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text2);cursor:pointer;transition:all .1s;border-left:3px solid transparent}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text2);cursor:pointer;transition:background .12s,color .12s;border-left:3px solid transparent}
 .sidebar-item:hover{background:#F1F5F9;color:var(--text)}
-.sidebar-item.active{background:var(--acc-soft);color:var(--acc);border-left-color:var(--acc);font-weight:600}
+.sidebar-item.active{background:var(--acc-soft);color:var(--pri);border-left-color:var(--acc);font-weight:600}
+.sidebar-item.active .tab-ic{stroke:var(--acc)}
 .sidebar-item .icon{width:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .tab-ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.sidebar-item .badge{margin-left:auto;font-size:10px;font-weight:700;color:#fff;background:var(--acc);padding:1px 7px;border-radius:10px}
+.sidebar-item .badge{margin-left:auto;font-size:10px;font-weight:700;color:#fff;background:var(--acc);padding:2px 8px;border-radius:20px;min-width:20px;text-align:center;line-height:1.4}
 #badge-qa.qa-pulse{background:#6366F1;animation:qaPulse 1.4s ease-in-out infinite}
 @keyframes qaPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.55);transform:scale(1)}50%{box-shadow:0 0 0 6px rgba(99,102,241,0);transform:scale(1.12)}}
 
@@ -318,9 +320,22 @@ select.form-input{cursor:pointer}
 .toast.success{border-left:4px solid var(--green)}
 .toast.error{border-left:4px solid var(--red)}
 
-.empty{text-align:center;padding:32px;color:var(--text3)}
-.empty .icon{font-size:32px;margin-bottom:8px;opacity:.5}
-.empty .text{font-size:13px}
+.empty{text-align:center;padding:40px 24px;color:var(--text3)}
+.empty .icon{font-size:22px;margin:0 auto 12px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:var(--acc-soft);border-radius:14px;opacity:1}
+.empty .text{font-size:14px;font-weight:600;color:var(--text2)}
+.empty .hint{font-size:12.5px;color:var(--text3);margin-top:5px;line-height:1.6}
+.empty .empty-action{margin-top:16px;display:inline-flex}
+/* ===== Squelettes de chargement ===== */
+.skel-wrap{padding:4px 0}
+.skel-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px;background:var(--card)}
+.skel{position:relative;overflow:hidden;background:#EEF1F5;border-radius:6px}
+.skel::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:skelShimmer 1.3s infinite}
+@keyframes skelShimmer{100%{transform:translateX(100%)}}
+.skel-av{width:38px;height:38px;border-radius:50%;flex-shrink:0}
+.skel-lines{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.skel-line{height:11px}
+.skel-line.w40{width:40%}.skel-line.w60{width:60%}.skel-line.w80{width:80%}.skel-line.w100{width:100%}
+@media(prefers-reduced-motion:reduce){.skel::after{animation:none}}
 
 .saving-indicator{position:fixed;top:60px;right:24px;font-size:11px;color:var(--acc);font-weight:600;opacity:0;transition:opacity .2s;z-index:101}
 .saving-indicator.show{opacity:1}
@@ -1439,6 +1454,7 @@ function subscribeSubCollections(){
 
   if(!currentEventId){ subCollectionsEventId=''; return; }
   subCollectionsEventId=currentEventId;
+  _loadedCols = {}; // nouvel événement : on ré-affiche les squelettes le temps du chargement
   console.log('[TourMaG Live] Subscribing to subcollections for event:', currentEventId);
 
   const subs=[
@@ -1474,6 +1490,7 @@ function subscribeSubCollections(){
       if(s.col==='questions') arr.sort((a,b)=>{ const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0); const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0); return tb-ta; });
       if(s.col==='quizzes') arr.sort((a,b)=>(a.order||0)-(b.order||0));
       window[s.target]=arr;
+      _loadedCols[s.col]=true;
       updateBadges();
       scheduleRender();
     },err=>{
@@ -1504,6 +1521,22 @@ function updateBadges(){
 // ============================================================
 // RENDER DISPATCHER
 // ============================================================
+// Suit quelles sous-collections ont reçu au moins un snapshot Firestore.
+// Permet d'afficher un squelette AVANT la première réponse (au lieu d'un vide).
+var _loadedCols = {};
+// Génère n lignes de squelette de chargement.
+function _skel(n){
+  n = n || 4;
+  var rows = '';
+  var widths = ['w80','w60','w100','w40','w80','w60'];
+  for(var i=0;i<n;i++){
+    rows += '<div class="skel-row"><div class="skel skel-av"></div><div class="skel-lines">'
+      + '<div class="skel skel-line '+widths[i%widths.length]+'"></div>'
+      + '<div class="skel skel-line w40"></div></div></div>';
+  }
+  return '<div class="skel-wrap">'+rows+'</div>';
+}
+
 function renderTab(){
   const main=document.getElementById('admin-main');
   if(!main)return;
@@ -3715,7 +3748,7 @@ function renderLive(el){
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addLive()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> Publier / Programmer</button></div>
   </div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Historique (${liveData.length})</h3>${mkPhaseFilter('live-phase-filter','filterLiveHistory()')}<div style="max-height:600px;overflow-y:auto" id="live-history-list">`;
-  if(!liveData.length) h+=`<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée publiée</div></div>`;
+  if(!liveData.length) h+=!_loadedCols.live ? _skel(4) : `<div class="empty"><div class="icon">📡</div><div class="text">Aucune entrée pour le moment</div><div class="hint">Publiez votre première actualité pour alimenter le fil live.</div></div>`;
   else liveData.forEach(e=>{
     let ts='…';
     let fullDate='';
@@ -3902,7 +3935,7 @@ function renderRubriques(el){
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="rub-color" value="#7C3AED" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Fond</label><input type="color" class="form-input" id="rub-bg" value="#EDE9FE" style="height:42px;padding:4px"></div></div>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addRubrique()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Créer</button></div></div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Existantes</h3><div class="chip-list">`;
-  if(!rubriquesData.length) h+=`<div class="empty"><div class="text">Aucune rubrique</div></div>`;
+  if(!rubriquesData.length) h+=!_loadedCols.rubriques ? _skel(3) : `<div class="empty"><div class="icon">🗂</div><div class="text">Aucune rubrique</div><div class="hint">Créez une rubrique pour organiser vos contenus.</div></div>`;
   else rubriquesData.forEach(r=>{
     h+=`<div class="chip" style="background:${r.bg};color:${r.color}" onclick="editRubrique('${r.id}')"><span>${r.icon} ${r.name}</span><span class="chip-del" onclick="event.stopPropagation();deleteRubrique('${r.id}')">&times;</span></div>`;
   });
@@ -3976,7 +4009,7 @@ function renderCitations(el){
     ${mkPhaseSelect('cit-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addCitation()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-chat"/></svg> Ajouter / Programmer</button></div></div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Historique (${citationsData.length})</h3>`;
-  if(!citationsData.length) h+=`<div class="empty"><div class="text">Aucune citation</div></div>`;
+  if(!citationsData.length) h+=!_loadedCols.citations ? _skel(3) : `<div class="empty"><div class="icon">💬</div><div class="text">Aucune citation</div><div class="hint">Ajoutez une citation pour la mettre en avant sur le dashboard.</div></div>`;
   else citationsData.forEach(c=>{
     const rub=rubriquesData.find(r=>r.id===c.rubrique);
     let dateStr='';
@@ -4142,7 +4175,7 @@ function renderProgramme(el){
     ${mkPhaseSelect('prog-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addProgramme()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-cal2"/></svg> Ajouter</button></div></div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Programme</h3>`;
-  if(!programmeData.length) h+=`<div class="empty"><div class="text">Vide</div></div>`;
+  if(!programmeData.length) h+=!_loadedCols.programme ? _skel(3) : `<div class="empty"><div class="icon">🗓</div><div class="text">Programme vide</div><div class="hint">Ajoutez un créneau pour construire le programme de l'événement.</div></div>`;
   else{
     // Group by day, respecting dayOrder
     const grouped={};
@@ -4408,7 +4441,7 @@ function renderArticles(el){
 
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length})</h3>`;
-  if(!articlesData.length) h+=`<div class="empty"><div class="text">Aucun article</div></div>`;
+  if(!articlesData.length) h+=!_loadedCols.articles ? _skel(3) : `<div class="empty"><div class="icon">📰</div><div class="text">Aucun article</div><div class="hint">Importez un flux RSS ou ajoutez un article manuellement.</div></div>`;
   else articlesData.forEach(a=>{
     const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
     h+=`<div class="list-item">
@@ -4873,7 +4906,7 @@ function renderQuiz(el){
   // Liste des quiz/sondages
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg> Vos quiz / sondages (${list.length})</h3>`;
   if(!list.length){
-    h+=`<div class="empty"><div class="text">Aucun quiz pour le moment.</div></div>`;
+    h+=!_loadedCols.quizzes ? _skel(2) : `<div class="empty"><div class="icon">📊</div><div class="text">Aucun quiz pour le moment</div><div class="hint">Créez un quiz ou un sondage pour faire participer votre audience.</div></div>`;
   } else {
     list.forEach(qz=>{
       const active=qz.active===true;
