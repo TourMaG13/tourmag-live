@@ -2737,6 +2737,7 @@ window._switchPhase = function(e, phaseId){
   const url = new URL(window.location.href);
   if(phaseId) url.searchParams.set('phase', phaseId);
   else url.searchParams.delete('phase');
+  url.searchParams.delete('page'); // on quitte toute page libre en revenant à une phase live
   // Update URL without reload, then re-render
   window.history.replaceState({}, '', url.toString());
   // Re-render with current data
