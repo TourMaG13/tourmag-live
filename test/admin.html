@@ -12,13 +12,16 @@
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
 /* AUTH */
-.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:radial-gradient(1200px 600px at 20% -10%,#2b3b52 0%,transparent 60%),radial-gradient(1000px 700px at 100% 110%,#1d2a3d 0%,transparent 55%),linear-gradient(160deg,#1E293B 0%,#0F172A 100%)}
-.auth-screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:22px 22px;opacity:.6;pointer-events:none}
-.auth-glow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.35),transparent 65%);filter:blur(30px);top:-120px;left:-80px;pointer-events:none}
-.auth-box{position:relative;z-index:2;background:var(--card);border-radius:20px;padding:44px 40px 32px;width:400px;max-width:100%;box-shadow:0 30px 80px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.5) inset}
-.auth-logo-mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--acc),#1D4ED8);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 8px 24px rgba(37,99,235,.4)}
+.auth-screen{min-height:100vh;display:flex;position:relative;overflow:hidden;background:linear-gradient(160deg,#1E293B 0%,#0F172A 100%)}
+.auth-photo{flex:1 1 55%;background-size:cover;background-position:center;position:relative;display:flex;align-items:flex-end}
+.auth-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.15) 0%,rgba(15,23,42,.55) 100%)}
+.auth-photo-fallback{background:radial-gradient(900px 500px at 30% 20%,#2b3b52 0%,transparent 60%),linear-gradient(160deg,#243244,#0F172A)}
+.auth-right{flex:1 1 45%;display:flex;align-items:center;justify-content:center;padding:32px 28px;position:relative;z-index:2;background:var(--bg)}
+.auth-box{width:380px;max-width:100%}
+.auth-logo-img{max-height:64px;max-width:220px;object-fit:contain;display:block;margin:0 auto 22px}
+.auth-logo-mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--acc),#1D4ED8);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:0 8px 24px rgba(37,99,235,.4)}
 .auth-logo-mark svg{width:26px;height:26px;color:#fff}
-.auth-box h1{font-family:'Josefin Sans';font-size:24px;font-weight:700;margin-bottom:4px;text-align:center;letter-spacing:.5px}
+.auth-box h1{font-family:'Josefin Sans';font-size:24px;font-weight:700;margin-bottom:4px;text-align:center;letter-spacing:.5px;color:var(--text)}
 .auth-box h1 span{color:var(--acc)}
 .auth-box .sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:28px;text-transform:uppercase;letter-spacing:1.5px}
 .auth-box .form-row{margin-bottom:16px}
@@ -26,6 +29,12 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .auth-box .auth-err{font-size:12px;color:var(--red);text-align:center;margin-bottom:12px;min-height:16px}
 .auth-box .btn-primary{height:46px;font-size:14px;border-radius:10px;margin-top:10px!important;box-shadow:0 8px 20px rgba(37,99,235,.28)}
 .auth-foot{text-align:center;font-size:11px;color:var(--text3);margin-top:22px}
+@media(max-width:820px){
+  /* Mobile : photo masquée, formulaire seul plein écran */
+  .auth-photo{display:none}
+  .auth-right{flex:1 1 100%;background:linear-gradient(160deg,#1E293B 0%,#0F172A 100%)}
+  .auth-box{background:var(--card);border-radius:20px;padding:36px 28px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+}
 
 /* NAV */
 .topbar{background:linear-gradient(180deg,#243244 0%,var(--pri) 100%);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 2px 12px rgba(15,23,42,.16)}
@@ -597,18 +606,42 @@ select.form-input{cursor:pointer}
 
 <!-- AUTH SCREEN -->
 <div class="auth-screen" id="auth-screen">
-  <div class="auth-glow"></div>
-  <div class="auth-box">
-    <div class="auth-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M4 20h16"/><circle cx="12" cy="10" r="2.5"/></svg></div>
-    <h1>TourMaG <span>Live</span></h1>
-    <div class="sub">Back-office</div>
-    <div class="auth-err" id="auth-err"></div>
-    <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="auth-email" type="email" placeholder="votre@email.com"></div>
-    <div class="form-row"><label class="form-label">Mot de passe</label><input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="auth-btn">Se connecter</button>
-    <div class="auth-foot">Espace réservé aux équipes autorisées</div>
+  <div class="auth-photo auth-photo-fallback" id="auth-photo"></div>
+  <div class="auth-right">
+    <div class="auth-box">
+      <div id="auth-logo-slot"><div class="auth-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M4 20h16"/><circle cx="12" cy="10" r="2.5"/></svg></div></div>
+      <h1>TourMaG <span>Live</span></h1>
+      <div class="sub">Back-office</div>
+      <div class="auth-err" id="auth-err"></div>
+      <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="auth-email" type="email" placeholder="votre@email.com"></div>
+      <div class="form-row"><label class="form-label">Mot de passe</label><input class="form-input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="auth-btn">Se connecter</button>
+      <div class="auth-foot">Espace réservé aux équipes autorisées</div>
+    </div>
   </div>
 </div>
+<script>
+// Charge la photo + le logo de la page de connexion (doc global config/login, lecture publique)
+(function _loadLoginBranding(){
+  function apply(d){
+    if(d && d.photoUrl){ var p=document.getElementById('auth-photo'); if(p){ p.style.backgroundImage="url('"+d.photoUrl.replace(/'/g,"%27")+"')"; p.classList.remove('auth-photo-fallback'); } }
+    if(d && d.logoUrl){ var s=document.getElementById('auth-logo-slot'); if(s){ s.innerHTML='<img class="auth-logo-img" src="'+d.logoUrl.replace(/"/g,'&quot;')+'" alt="Logo" onerror="this.remove()">'; } }
+  }
+  var tries=0;
+  function go(){
+    tries++;
+    try{
+      if(window.firebase && firebase.apps && firebase.apps.length){
+        firebase.firestore().collection('config').doc('login').get()
+          .then(function(snap){ if(snap.exists) apply(snap.data()||{}); }).catch(function(){});
+        return;
+      }
+    }catch(e){}
+    if(tries<60) setTimeout(go,100); // attend l'init Firebase (max ~6 s)
+  }
+  go();
+})();
+</script>
 
 <!-- APP (hidden until auth) -->
 <div id="app-shell" style="display:none">
@@ -2941,6 +2974,15 @@ function renderApparence(el){
   }
   let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg>Apparence</div><div class="page-desc">Tous les réglages visuels de votre dashboard, organisés par module. Cliquez sur une section pour la déplier.</div>';
 
+  // ==================== PAGE DE CONNEXION (réglage global) ====================
+  var _loginInner = ''
+    + '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5">Ces réglages sont <b>communs à tout le back-office</b> (indépendants de l\'événement). La photo s\'affiche à gauche de l\'écran de connexion, le logo au-dessus du formulaire.</div>'
+    + '<div class="form-row"><label class="form-label">Photo de gauche</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-login-photo" style="flex:1" placeholder="Choisissez une image">'+mkMediaPickerBtn('app-login-photo')+mkUploadBtn('app-login-photo')+'</div></div>'
+    + '<div class="form-row" style="margin-top:10px"><label class="form-label">Logo (au-dessus du formulaire)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-login-logo" style="flex:1" placeholder="Choisissez un logo">'+mkMediaPickerBtn('app-login-logo')+mkUploadBtn('app-login-logo')+'</div></div>'
+    + '<div id="app-login-preview" style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap"></div>'
+    + '<div style="margin-top:12px"><button class="btn btn-primary" onclick="saveLoginSettings()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la page de connexion</button></div>';
+  h+=_det('🔐','Page de connexion',_loginInner, false);
+
   // ==================== GÉNÉRAL ====================
   var _gcInner = '';
   _gcInner += '<div class="form-row-inline">';
@@ -3097,6 +3139,39 @@ function renderApparence(el){
   })();
 
   el.innerHTML=h;
+  _loadLoginSettingsIntoForm();
+}
+
+// Réglages « Page de connexion » — document global config/login (lecture publique)
+async function _loadLoginSettingsIntoForm(){
+  var pI=document.getElementById('app-login-photo'), lI=document.getElementById('app-login-logo');
+  if(!pI||!lI) return;
+  try{
+    var snap=await db.collection('config').doc('login').get();
+    var d=snap.exists?(snap.data()||{}):{};
+    pI.value=d.photoUrl||''; lI.value=d.logoUrl||'';
+  }catch(e){ /* pas encore de config : champs vides */ }
+  _refreshLoginPreview();
+  pI.addEventListener('input',_refreshLoginPreview);
+  lI.addEventListener('input',_refreshLoginPreview);
+}
+function _refreshLoginPreview(){
+  var box=document.getElementById('app-login-preview'); if(!box) return;
+  var p=(document.getElementById('app-login-photo')||{}).value||'';
+  var l=(document.getElementById('app-login-logo')||{}).value||'';
+  var h='';
+  if(p) h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Photo</div><img src="'+p+'" style="height:90px;width:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" onerror="this.style.display=\'none\'"></div>';
+  if(l) h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Logo</div><img src="'+l+'" style="height:60px;max-width:180px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--border);padding:6px" onerror="this.style.display=\'none\'"></div>';
+  box.innerHTML=h;
+}
+async function saveLoginSettings(){
+  var photoUrl=(document.getElementById('app-login-photo')||{}).value||'';
+  var logoUrl=(document.getElementById('app-login-logo')||{}).value||'';
+  try{
+    saving(true);
+    await db.collection('config').doc('login').set({photoUrl:photoUrl.trim(),logoUrl:logoUrl.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    toast('Page de connexion enregistrée');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 function previewFont(type){
