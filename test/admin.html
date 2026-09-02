@@ -103,6 +103,21 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sb-group.collapsed .sb-group-items{display:none}
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
+/* Pages libres */
+.cp-list{display:flex;flex-direction:column;gap:8px}
+.cp-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--card)}
+.cp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.cp-info{flex:1;min-width:0}
+.cp-name{font-size:14px;font-weight:600;color:var(--text)}
+.cp-meta{font-size:11.5px;color:var(--text3);margin-top:2px}
+.cp-actions{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.cp-blk{border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:12px;background:var(--bg)}
+.cp-blk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cp-blk-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--acc)}
+.cp-blk-move{display:flex;gap:4px}
+.cp-addgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.cp-addbtn{padding:14px;border:1px dashed var(--border);background:var(--card);border-radius:var(--r-md);font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s}
+.cp-addbtn:hover{border-color:var(--acc);color:var(--acc)}
 /* Bouton « Personnaliser l'apparence » (bas de bloc) */
 .mod-settings-btnrow{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);display:flex;justify-content:flex-start}
 .mod-settings-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;padding:9px 16px;border-radius:100px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,box-shadow .15s}
@@ -718,6 +733,7 @@ select.form-input{cursor:pointer}
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Réglages</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="phases"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg></span>Phases / Temps forts</div>
+          <div class="sidebar-item" data-tab="pages"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M4 3h11l5 5v13H4z M15 3v5h5 M8 13h8 M8 17h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Pages libres</div>
           <div class="sidebar-item" data-tab="access"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></span>Accès</div>
           <div class="sidebar-item" data-tab="guide" style="background:var(--acc-soft);border-left:3px solid var(--acc)"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-guide"/></svg></span>Guide d'utilisation</div>
         </div>
@@ -1939,6 +1955,7 @@ function renderTab(){
     case 'home':renderHome(main);break;
     case 'events':renderEvents(main);break;
     case 'phases':renderPhases(main);break;
+    case 'pages':renderContentPages(main);break;
     case 'apparence':renderApparence(main);break;
     case 'modules':renderModules(main);break;
     case 'live':renderLive(main);break;
@@ -3596,6 +3613,209 @@ function mkPhaseInlineSelect(attrName, attrVal, current){
   const options=phases.map(p=>`<option value="${p.id}"${current===p.id?' selected':''}>${p.name}</option>`).join('');
   return `<select class="form-input" ${attrName}="${attrVal}" style="width:auto;min-width:100px;font-size:11px;padding:3px 6px;height:28px" title="Phase"><option value=""${!current?' selected':''}>Ø Phase</option>${options}</select>`;
 }
+
+// ==================== PAGES LIBRES (contenu éditorial) ====================
+function _uid(){ return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function renderContentPages(el){
+  if(_cpEditId){ return _renderCpEditor(el); }
+  const ev = eventsData.find(e=>e.id===currentEventId)||{};
+  const pages = ev.contentPages || [];
+  let h = '<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><path d="M4 3h11l5 5v13H4z M15 3v5h5 M8 13h8 M8 17h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pages libres</div>';
+  h += '<div class="page-desc">Créez des pages de présentation (texte, images, vidéos, boutons) qui apparaissent comme des onglets sur le dashboard, à côté des phases. Idéal pour présenter longuement une société, un programme, des partenaires… sans noyer le live.</div>';
+
+  // Création
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-add"/></svg> Nouvelle page</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Nom de l'onglet</label><input class="form-input" id="cp-new-name" placeholder="Ex : La société, Le programme…"></div>
+      <div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="cp-new-color" value="#0C6CA1" style="width:56px;height:38px;padding:2px"></div>
+    </div>
+    <div style="margin-top:10px"><button class="btn btn-primary" onclick="addContentPage()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-add"/></svg> Créer la page</button></div>
+  </div>`;
+
+  // Liste
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Pages existantes (${pages.length})</h3>`;
+  if(!pages.length){
+    h += '<div class="empty"><div class="icon">📄</div><div class="text">Aucune page libre</div><div class="hint">Créez une première page pour présenter du contenu éditorial sur votre dashboard.</div></div>';
+  } else {
+    h += '<div class="cp-list">';
+    pages.forEach((p,i)=>{
+      const nbBlocks=(p.blocks||[]).length;
+      h += `<div class="cp-row">
+        <span class="cp-dot" style="background:${p.color||'#0C6CA1'}"></span>
+        <div class="cp-info"><div class="cp-name">${_esc(p.name||'(sans nom)')}</div><div class="cp-meta">${nbBlocks} bloc${nbBlocks>1?'s':''}${p.hero&&p.hero.enabled?' · hero activé':''}</div></div>
+        <div class="cp-actions">
+          ${i>0?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},-1)" title="Monter">▲</button>`:''}
+          ${i<pages.length-1?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},1)" title="Descendre">▼</button>`:''}
+          <button class="btn btn-primary btn-xs" onclick="editContentPage('${p.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Éditer</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteContentPage('${p.id}')">✕</button>
+        </div>
+      </div>`;
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+async function addContentPage(){
+  const name=(document.getElementById('cp-new-name')||{}).value||'';
+  const color=(document.getElementById('cp-new-color')||{}).value||'#0C6CA1';
+  if(!name.trim()){ toast('Donnez un nom à la page','error'); return; }
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pages=(ev.contentPages||[]).slice();
+  pages.push({ id:_uid(), name:name.trim(), color, hero:{enabled:false,type:'split'}, blocks:[] });
+  try{
+    await evRef().update({contentPages:pages});
+    ev.contentPages=pages;
+    toast('Page créée');
+    renderTab();
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function moveContentPage(idx,dir){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pages=(ev.contentPages||[]).slice();
+  const j=idx+dir; if(j<0||j>=pages.length) return;
+  [pages[idx],pages[j]]=[pages[j],pages[idx]];
+  try{ await evRef().update({contentPages:pages}); ev.contentPages=pages; renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function deleteContentPage(id){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const p=(ev.contentPages||[]).find(x=>x.id===id);
+  if(!confirm('Supprimer la page « '+((p&&p.name)||'')+' » et tout son contenu ? Action irréversible.')) return;
+  const pages=(ev.contentPages||[]).filter(x=>x.id!==id);
+  try{ await evRef().update({contentPages:pages}); ev.contentPages=pages; toast('Page supprimée'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+function editContentPage(id){ _cpEditId=id; renderTab(); }
+var _cpEditId=null;
+
+function _cpCurrent(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  return (ev.contentPages||[]).find(p=>p.id===_cpEditId);
+}
+async function _cpSave(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  try{ await evRef().update({contentPages:ev.contentPages||[]}); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+function _escAdm(s){ return (s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function _renderCpEditor(el){
+  const p=_cpCurrent();
+  if(!p){ _cpEditId=null; return renderContentPages(el); }
+  const blocks=p.blocks||[];
+  let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg>'+_escAdm(p.name||'Page')+'</div>';
+  h+='<div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="_cpClose()">← Retour aux pages</button></div>';
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Réglages de la page</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Nom de l'onglet</label><input class="form-input" id="cp-name" value="${_escAdm(p.name||'')}"></div>
+      <div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="cp-color" value="${p.color||'#0C6CA1'}" style="width:56px;height:38px;padding:2px"></div>
+    </div>
+    <label class="toggle-inline" style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="cp-hero-enabled" ${p.hero&&p.hero.enabled?'checked':''}> Afficher un hero (bandeau) en haut de la page</label>
+    <div id="cp-hero-opts" style="margin-top:10px;${p.hero&&p.hero.enabled?'':'display:none'}">
+      <div class="form-row" style="max-width:320px"><label class="form-label">Type de hero</label><select class="form-input" id="cp-hero-type">
+        <option value="split"${(p.hero&&p.hero.type)==='split'?' selected':''}>Divisé (texte à gauche, photo à droite)</option>
+        <option value="full"${(p.hero&&p.hero.type)==='full'?' selected':''}>Image plein cadre</option>
+      </select></div>
+      <div class="form-row"><label class="form-label">Titre du hero</label><input class="form-input" id="cp-hero-title" value="${_escAdm((p.hero&&p.hero.title)||'')}"></div>
+      <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="cp-hero-subtitle" value="${_escAdm((p.hero&&p.hero.subtitle)||'')}"></div>
+      <div class="form-row"><label class="form-label">Image du hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cp-hero-image" style="flex:1" value="${_escAdm((p.hero&&p.hero.image)||'')}">${mkMediaPickerBtn('cp-hero-image')}${mkUploadBtn('cp-hero-image')}</div></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="_cpSaveSettings()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les réglages</button></div>
+  </div>`;
+  h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Blocs de contenu ('+blocks.length+')</h3>';
+  if(!blocks.length){ h+='<div class="empty"><div class="icon">🧱</div><div class="text">Aucun bloc</div><div class="hint">Ajoutez un bloc ci-dessous pour composer votre page.</div></div>'; }
+  blocks.forEach((b,i)=>{ h+=_cpBlockEditor(b,i,blocks.length); });
+  h+='</div>';
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-add"/></svg> Ajouter un bloc</h3>
+    <div class="cp-addgrid">
+      <button class="cp-addbtn" onclick="_cpAddBlock('text')">📝 Texte</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('image')">🖼 Image</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('gallery')">🎞 Galerie</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('video')">🎬 Vidéo</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('buttons')">🔘 Boutons</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('separator')">➖ Séparateur</button>
+    </div>
+  </div>`;
+  el.innerHTML=h;
+}
+function _cpBlockEditor(b,i,total){
+  const mv=`<div class="cp-blk-move">${i>0?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},-1)">▲</button>`:''}${i<total-1?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},1)">▼</button>`:''}<button class="btn btn-danger btn-xs" onclick="_cpDelBlock(${i})">✕</button></div>`;
+  let inner='';
+  if(b.type==='text'){
+    inner=`<div class="form-row"><label class="form-label">Titre (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="title" value="${_escAdm(b.title||'')}"></div>
+      <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" data-cpb="${i}" data-cpf="text" rows="5" placeholder="Vos paragraphes… (double saut de ligne = nouveau paragraphe)">${_escAdm(b.text||'')}</textarea></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Image (optionnelle)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
+        <div class="form-row" style="max-width:200px"><label class="form-label">Position image</label><select class="form-input" data-cpb="${i}" data-cpf="imagePos">
+          <option value="none"${(b.imagePos||'none')==='none'?' selected':''}>Aucune</option>
+          <option value="left"${b.imagePos==='left'?' selected':''}>À gauche du texte</option>
+          <option value="right"${b.imagePos==='right'?' selected':''}>À droite du texte</option>
+          <option value="top"${b.imagePos==='top'?' selected':''}>Au-dessus</option>
+          <option value="bottom"${b.imagePos==='bottom'?' selected':''}>En dessous</option>
+        </select></div>
+      </div>`;
+  } else if(b.type==='image'){
+    inner=`<div class="form-row"><label class="form-label">Image</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
+      <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>`;
+  } else if(b.type==='gallery'){
+    const imgs=(b.images||[]);
+    inner=`<div class="form-row"><label class="form-label">Photos de la galerie</label>
+      <div>${imgs.map((u,gi)=>`<div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" data-cpb="${i}" data-cpgal="${gi}" id="cpgal-${i}-${gi}" style="flex:1" value="${_escAdm(u)}">${mkUploadBtn('cpgal-'+i+'-'+gi)}<button class="btn btn-danger btn-xs" onclick="_cpGalDel(${i},${gi})">✕</button></div>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm" onclick="_cpGalAdd(${i})">＋ Ajouter une photo</button></div>`;
+  } else if(b.type==='video'){
+    inner=`<div class="form-row"><label class="form-label">Lien vidéo (YouTube, Vimeo ou .mp4)</label><input class="form-input" data-cpb="${i}" data-cpf="url" value="${_escAdm(b.url||'')}" placeholder="https://youtube.com/watch?v=…"></div>`;
+  } else if(b.type==='buttons'){
+    const btns=(b.buttons||[]);
+    inner=`<div class="form-row"><label class="form-label">Alignement</label><select class="form-input" data-cpb="${i}" data-cpf="align" style="max-width:160px">
+        <option value="left"${(b.align||'left')==='left'?' selected':''}>Gauche</option>
+        <option value="center"${b.align==='center'?' selected':''}>Centré</option>
+        <option value="right"${b.align==='right'?' selected':''}>Droite</option></select></div>
+      <div>${btns.map((x,bi)=>`<div class="form-row-inline" style="align-items:flex-end;margin-bottom:6px"><div class="form-row"><label class="form-label">Texte</label><input class="form-input" data-cpb="${i}" data-cpbtn="${bi}" data-cpbtnf="label" value="${_escAdm(x.label||'')}"></div><div class="form-row"><label class="form-label">Lien</label><input class="form-input" data-cpb="${i}" data-cpbtn="${bi}" data-cpbtnf="url" value="${_escAdm(x.url||'')}"></div><div class="form-row" style="max-width:70px"><label class="form-label">Coul.</label><input type="color" class="form-input" data-cpb="${i}" data-cpbtn="${bi}" data-cpbtnf="color" value="${x.color||'#0C6CA1'}" style="width:44px;height:38px;padding:2px"></div><button class="btn btn-danger btn-xs" onclick="_cpBtnDel(${i},${bi})">✕</button></div>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm" onclick="_cpBtnAdd(${i})">＋ Ajouter un bouton</button>`;
+  } else if(b.type==='separator'){
+    inner=`<div class="form-row-inline"><div class="form-row" style="max-width:160px"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" data-cpb="${i}" data-cpf="height" value="${b.height||24}" min="0" max="200" style="width:90px"></div>
+      <div class="form-row"><label class="form-label" style="font-weight:400;display:flex;align-items:center;gap:6px;margin-top:22px"><input type="checkbox" data-cpb="${i}" data-cpf="line" ${b.line?'checked':''}> Afficher un trait</label></div></div>`;
+  }
+  const labels={text:'Texte',image:'Image',gallery:'Galerie',video:'Vidéo',buttons:'Boutons',separator:'Séparateur'};
+  return `<div class="cp-blk"><div class="cp-blk-head"><span class="cp-blk-type">${labels[b.type]||b.type}</span>${mv}</div>${inner}</div>`;
+}
+function _cpCollect(){
+  const p=_cpCurrent(); if(!p) return;
+  (p.blocks||[]).forEach((b,i)=>{
+    document.querySelectorAll('[data-cpb="'+i+'"]').forEach(el=>{
+      const f=el.getAttribute('data-cpf');
+      if(f){ b[f]=(el.type==='checkbox')?el.checked:el.value; }
+      const gi=el.getAttribute('data-cpgal');
+      if(gi!==null&&gi!==''){ b.images=b.images||[]; b.images[+gi]=el.value; }
+      const bi=el.getAttribute('data-cpbtn');
+      if(bi!==null&&bi!==''){ const bf=el.getAttribute('data-cpbtnf'); b.buttons=b.buttons||[]; b.buttons[+bi]=b.buttons[+bi]||{}; b.buttons[+bi][bf]=el.value; }
+    });
+  });
+}
+async function _cpAddBlock(type){ _cpCollect(); const p=_cpCurrent(); if(!p)return; p.blocks=p.blocks||[]; const nb={type}; if(type==='separator'){nb.height=24;nb.line=false;} if(type==='gallery')nb.images=['']; if(type==='buttons')nb.buttons=[{label:'En savoir plus',url:'',color:'#0C6CA1'}]; if(type==='text'){nb.imagePos='none';} p.blocks.push(nb); await _cpSave(); renderTab(); }
+async function _cpDelBlock(i){ _cpCollect(); const p=_cpCurrent(); if(!p)return; if(!confirm('Supprimer ce bloc ?'))return; p.blocks.splice(i,1); await _cpSave(); renderTab(); }
+async function _cpMoveBlock(i,d){ _cpCollect(); const p=_cpCurrent(); if(!p)return; const j=i+d; if(j<0||j>=p.blocks.length)return; [p.blocks[i],p.blocks[j]]=[p.blocks[j],p.blocks[i]]; await _cpSave(); renderTab(); }
+async function _cpGalAdd(i){ _cpCollect(); const p=_cpCurrent(); if(!p)return; p.blocks[i].images=p.blocks[i].images||[]; p.blocks[i].images.push(''); await _cpSave(); renderTab(); }
+async function _cpGalDel(i,gi){ _cpCollect(); const p=_cpCurrent(); if(!p)return; p.blocks[i].images.splice(gi,1); await _cpSave(); renderTab(); }
+async function _cpBtnAdd(i){ _cpCollect(); const p=_cpCurrent(); if(!p)return; p.blocks[i].buttons=p.blocks[i].buttons||[]; p.blocks[i].buttons.push({label:'Bouton',url:'',color:'#0C6CA1'}); await _cpSave(); renderTab(); }
+async function _cpBtnDel(i,bi){ _cpCollect(); const p=_cpCurrent(); if(!p)return; p.blocks[i].buttons.splice(bi,1); await _cpSave(); renderTab(); }
+async function _cpSaveSettings(){
+  _cpCollect(); const p=_cpCurrent(); if(!p)return;
+  p.name=(document.getElementById('cp-name')||{}).value||p.name;
+  p.color=(document.getElementById('cp-color')||{}).value||p.color;
+  p.hero=p.hero||{};
+  p.hero.enabled=(document.getElementById('cp-hero-enabled')||{}).checked||false;
+  p.hero.type=(document.getElementById('cp-hero-type')||{}).value||'split';
+  p.hero.title=(document.getElementById('cp-hero-title')||{}).value||'';
+  p.hero.subtitle=(document.getElementById('cp-hero-subtitle')||{}).value||'';
+  p.hero.image=(document.getElementById('cp-hero-image')||{}).value||'';
+  await _cpSave(); toast('Page enregistrée'); renderTab();
+}
+function _cpClose(){ _cpCollect(); _cpSave(); _cpEditId=null; renderTab(); }
+document.addEventListener('change',function(e){
+  if(e.target && e.target.id==='cp-hero-enabled'){ var o=document.getElementById('cp-hero-opts'); if(o) o.style.display=e.target.checked?'':'none'; }
+});
 
 function renderPhases(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
