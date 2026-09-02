@@ -94,6 +94,17 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sb-group.collapsed .sb-group-items{display:none}
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
+/* Icônes SVG des blocs (aperçu modules) */
+.blk-ic,.blk-ic-sm{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.blk-ic{width:16px;height:16px}
+.blk-ic-sm{width:14px;height:14px}
+.blk-prev-cell{display:inline-flex;align-items:center;gap:5px;color:var(--text2)}
+.blk-prev-cell svg{color:var(--acc)}
+.blk-prev-row{border-radius:6px;padding:5px 10px;margin:3px 0;font-size:11.5px;display:flex;align-items:center;justify-content:center;gap:6px}
+.blk-prev-max{background:#FEF9EC;border:1px solid #FCD97D;color:#92400E}
+.blk-prev-max .blk-prev-cell{color:#92400E}
+.blk-prev-full{background:#EEF2FF;border:1px solid #C7D2FE}
+.blk-prev-vp{font-size:9px;color:#B45309;text-transform:uppercase;letter-spacing:.5px}
 
 /* ==================== ACCUEIL (tableau de bord de travail) ==================== */
 .home-hero{background:linear-gradient(135deg,var(--pri) 0%,#2b3b52 100%);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px;box-shadow:var(--sh-2)}
@@ -797,6 +808,10 @@ try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ conso
 // ============================================================
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
 // ============================================================
+// Icônes SVG uniformisées pour les blocs/modules (remplace les émojis).
+const BLOCK_ICONS={hero:'ti-image',phaseTabs:'ti-phases',phasetabs:'ti-phases',kpis:'ti-kpis',flash:'ti-flash',essential:'ti-essentiel',essentiel:'ti-essentiel',live:'ti-live',citations:'ti-citations',questions:'ti-qa',quiz:'ti-quiz',articles:'ti-articles',interviews:'ti-interviews',videos:'ti-videos',gallery:'ti-gallery',programme:'ti-programme',timeline:'ti-pin',journalists:'ti-reporters',journalistes:'ti-reporters',reporters:'ti-reporters',brandnews:'ti-megaphone',sponsors:'ti-sponsors',etapes:'ti-etapes',itinerary:'ti-map',contact:'ti-contact',decor:'ti-decor',media:'ti-media',rubriques:'ti-rubriques',tags:'ti-tags',widget:'ti-widget',stats:'ti-kpis',home:'ti-events'};
+function _blockIco(key,cls){ const id=BLOCK_ICONS[key]||'ti-list'; return '<svg class="'+(cls||'blk-ic')+'" viewBox="0 0 24 24"><use href="#'+id+'"/></svg>'; }
+
 var currentEventId='';
 var currentTab='home';
 var currentUserRole='admin'; // 'admin' (full access) or 'client' (restricted to allowedUsers events)
@@ -1216,6 +1231,8 @@ var _tourSteps = []; // construit dynamiquement selon les onglets visibles
 var _tourCatalog = [
   { always:true, target:null, title:'Bienvenue dans votre espace live 👋',
     text:"Ce tableau de bord vous permet de gérer votre événement en direct. Voici une courte visite des blocs que vous pouvez alimenter." },
+  { always:true, target:'.sidebar-item[data-tab="home"]', title:'Votre page d’accueil',
+    text:"L'onglet « Accueil » est votre point de départ : synthèse de l'événement, publication express, raccourcis, questions à traiter et aperçu de vos contenus, en un coup d'œil." },
   { tab:'live', title:'Le fil live',
     text:"Le cœur de l'événement : publiez vos actualités au fil de la journée, elles s'affichent en direct sur le dashboard." },
   { tab:'citations', title:'Les citations',
@@ -1898,7 +1915,8 @@ function renderHome(el){
     return;
   }
   const isExp = ev.mode==='expedition';
-  const meta = [ev.heroDates, ev.heroLocation].filter(Boolean).join(' · ');
+  const _evTitle = ev.title || ev.internalName || 'Événement';
+  const meta = [ev.dates, ev.location].filter(Boolean).join(' · ');
   const nbPhases = (ev.phases||[]).length;
   const lastLive = (liveData||[])[0];
   const fresh = lastLive ? _timeAgo(lastLive.time) : null;
@@ -1911,7 +1929,7 @@ function renderHome(el){
   h += `<div class="home-hero">
     <div class="home-hero-head">
       <div class="home-hero-l">
-        <h1 class="home-hero-title">${_esc(ev.name||ev.heroTitle||'Événement')}</h1>
+        <h1 class="home-hero-title">${_esc(_evTitle)}</h1>
         ${meta?`<div class="home-hero-sub">${_esc(meta)}</div>`:''}
         <div class="home-hero-tags">
           ${fresh?`<span class="home-chip"><span class="home-chip-dot"></span>Dernière publi ${fresh}</span>`:'<span class="home-chip home-chip-warn">Aucune publication</span>'}
@@ -3669,7 +3687,7 @@ function renderModules(el){
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
   const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
-  const allMods=[{key:'flash',icon:'⚡',label:'Bandeau Flash'},{key:'essential',icon:'🧠',label:'Points essentiels'},{key:'live',icon:'📡',label:'Fil live'},{key:'citations',icon:'💬',label:'Citations'},{key:'questions',icon:'💬',label:'Questions du public'},{key:'quiz',icon:'📊',label:'Quiz / Sondage'},{key:'articles',icon:'📰',label:'Articles liés'},{key:'videos',icon:'🎬',label:'Vidéos'},{key:'interviews',icon:'🎙️',label:'Interviews'},{key:'programme',icon:'🗓',label:'Programme'},{key:'timeline',icon:'📍',label:'Timeline'},{key:'journalists',icon:'👤',label:'Journalistes'},{key:'kpis',icon:'📊',label:'Chiffres clés'},{key:'gallery',icon:'📸',label:'Galerie photos'},{key:'sponsors',icon:'🤝',label:'Partenaires'},{key:'brandnews',icon:'📢',label:'Brand News'},{key:'etapes',icon:'🗺️',label:'Carte & Étapes'},{key:'contact',icon:'📞',label:'Contact'},{key:'decor',icon:'🎨',label:'Décor'}];
+  const allMods=[{key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},{key:'essential',icon:_blockIco('essential'),label:'Points essentiels'},{key:'live',icon:_blockIco('live'),label:'Fil live'},{key:'citations',icon:_blockIco('citations'),label:'Citations'},{key:'questions',icon:_blockIco('questions'),label:'Questions du public'},{key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},{key:'articles',icon:_blockIco('articles'),label:'Articles liés'},{key:'videos',icon:_blockIco('videos'),label:'Vidéos'},{key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},{key:'programme',icon:_blockIco('programme'),label:'Programme'},{key:'timeline',icon:_blockIco('timeline'),label:'Timeline'},{key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},{key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},{key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},{key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},{key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},{key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes'},{key:'contact',icon:_blockIco('contact'),label:'Contact'},{key:'decor',icon:_blockIco('decor'),label:'Décor'}];
   const expRenames = {essential:'Essentiel & Timeline',live:'Fil live',citations:'Citations',journalists:'Journalistes',kpis:'Chiffres clés',etapes:'Carte interactive',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -3678,24 +3696,24 @@ function renderModules(el){
   const defaultZones={hero:'max',kpis:'max',flash:'main',live:'main',citations:'full',videos:'full',interviews:'max',gallery:'full',programme:'side',articles:'full',journalists:'side',brandnews:'side',sponsors:'full',contact:'full',questions:'full',quiz:'full'};
   const blockZones=ev?.blockZones||defaultZones;
   const allBlocks=[
-    {key:'hero',icon:'🏠',label:'Hero (bandeau + timeline)'},
-    {key:'phaseTabs',icon:'🔀',label:'Onglets Phases'},
-    {key:'kpis',icon:'📊',label:'Chiffres clés'},
-    {key:'flash',icon:'⚡',label:'Bandeau Flash'},
-    {key:'essential',icon:'🧠',label:'Points essentiels (IA)'},
-    {key:'live',icon:'📡',label:'Fil live'},
-    {key:'citations',icon:'💬',label:'Citations'},
-    {key:'questions',icon:'💬',label:'Questions du public'},
-    {key:'quiz',icon:'📊',label:'Quiz / Sondage'},
-    {key:'articles',icon:'📰',label:'Articles liés'},
-    {key:'interviews',icon:'🎙️',label:'Interviews'},
-    {key:'videos',icon:'🎬',label:'Vidéos'},
-    {key:'gallery',icon:'📸',label:'Galerie photos'},
-    {key:'programme',icon:'🗓',label:'Programme'},
-    {key:'journalists',icon:'👤',label:'Journalistes'},
-    {key:'brandnews',icon:'📢',label:'Brand News'},
-    {key:'sponsors',icon:'🤝',label:'Partenaires'},
-    {key:'contact',icon:'📞',label:'Contact'}
+    {key:'hero',icon:_blockIco('hero'),label:'Hero (bandeau + timeline)'},
+    {key:'phaseTabs',icon:_blockIco('phaseTabs'),label:'Onglets Phases'},
+    {key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},
+    {key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},
+    {key:'essential',icon:_blockIco('essential'),label:'Points essentiels (IA)'},
+    {key:'live',icon:_blockIco('live'),label:'Fil live'},
+    {key:'citations',icon:_blockIco('citations'),label:'Citations'},
+    {key:'questions',icon:_blockIco('questions'),label:'Questions du public'},
+    {key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},
+    {key:'articles',icon:_blockIco('articles'),label:'Articles liés'},
+    {key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},
+    {key:'videos',icon:_blockIco('videos'),label:'Vidéos'},
+    {key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},
+    {key:'programme',icon:_blockIco('programme'),label:'Programme'},
+    {key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},
+    {key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},
+    {key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},
+    {key:'contact',icon:_blockIco('contact'),label:'Contact'}
   ];
   const blockMap=Object.fromEntries(allBlocks.map(b=>[b.key,b]));
   const orderedKeys=[...blockOrder];
@@ -3717,24 +3735,24 @@ function renderModules(el){
   if(isExp){
     // In expedition mode, show expedition-specific block order with zone constraints
     const expBlocks = [
-      {key:'phaseTabs',icon:'🔀',label:'Onglets Phases',zones:['full']},
-      {key:'kpis',icon:'📊',label:'Chiffres clés',zones:['full']},
-      {key:'essential',icon:'🧠',label:'Essentiel & Timeline',zones:['full','main']},
-      {key:'etapes',icon:'🗺️',label:'Carte & Étapes',zones:['full']},
-      {key:'live',icon:'📝',label:'Fil live',zones:['main']},
-      {key:'reporters',icon:'🎤',label:'Journalistes',zones:['side','main']},
-      {key:'itinerary',icon:'🧭',label:'Itinéraire',zones:['side','main']},
-      {key:'brandnews',icon:'📢',label:'Brand News',zones:['side','main']},
-      {key:'programme',icon:'🗓',label:'Programme',zones:['side','main','full']},
-      {key:'citations',icon:'💬',label:'Citations',zones:['full','main']},
-      {key:'questions',icon:'💬',label:'Questions du public',zones:['full','main','side']},
-      {key:'quiz',icon:'📊',label:'Quiz / Sondage',zones:['full','main','side']},
-      {key:'interviews',icon:'🎙️',label:'Interviews',zones:['full','main']},
-      {key:'videos',icon:'🎬',label:'Vidéos',zones:['full','main']},
-      {key:'gallery',icon:'📸',label:'Galerie photos',zones:['full','main']},
-      {key:'articles',icon:'📰',label:'Articles',zones:['full','main']},
-      {key:'sponsors',icon:'🤝',label:'Partenaires',zones:['full','main']},
-      {key:'contact',icon:'📞',label:'Contact',zones:['side','main','full']}
+      {key:'phaseTabs',icon:_blockIco('phaseTabs'),label:'Onglets Phases',zones:['full']},
+      {key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés',zones:['full']},
+      {key:'essential',icon:_blockIco('essential'),label:'Essentiel & Timeline',zones:['full','main']},
+      {key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes',zones:['full']},
+      {key:'live',icon:_blockIco('live'),label:'Fil live',zones:['main']},
+      {key:'reporters',icon:_blockIco('reporters'),label:'Journalistes',zones:['side','main']},
+      {key:'itinerary',icon:_blockIco('itinerary'),label:'Itinéraire',zones:['side','main']},
+      {key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News',zones:['side','main']},
+      {key:'programme',icon:_blockIco('programme'),label:'Programme',zones:['side','main','full']},
+      {key:'citations',icon:_blockIco('citations'),label:'Citations',zones:['full','main']},
+      {key:'questions',icon:_blockIco('questions'),label:'Questions du public',zones:['full','main','side']},
+      {key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage',zones:['full','main','side']},
+      {key:'interviews',icon:_blockIco('interviews'),label:'Interviews',zones:['full','main']},
+      {key:'videos',icon:_blockIco('videos'),label:'Vidéos',zones:['full','main']},
+      {key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos',zones:['full','main']},
+      {key:'articles',icon:_blockIco('articles'),label:'Articles',zones:['full','main']},
+      {key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires',zones:['full','main']},
+      {key:'contact',icon:_blockIco('contact'),label:'Contact',zones:['side','main','full']}
     ];
     const expDefaultOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','questions','quiz','programme','brandnews','citations','interviews','videos','gallery','articles','sponsors','contact'];
     const expDefaultZones = {kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',questions:'full',quiz:'full',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',sponsors:'full',contact:'side'};
@@ -3788,7 +3806,7 @@ function renderModules(el){
         <select class="form-input" id="sidebar-anchor" style="max-width:300px">
           ${['live','essential','citations','articles','videos','interviews'].map(k=>{
             const b=expBlocks.find(x=>x.key===k);
-            return `<option value="${k}"${(ev?.expSidebarAnchor||'live')===k?' selected':''}>${b?b.icon+' '+b.label:k}</option>`;
+            return `<option value="${k}"${(ev?.expSidebarAnchor||'live')===k?' selected':''}>${b?b.label:k}</option>`;
           }).join('')}
         </select>
       </div>
@@ -3831,7 +3849,7 @@ function renderModules(el){
       <select class="form-input" id="sidebar-anchor" style="max-width:300px">
         ${['live','essential','flash','citations','articles','videos'].map(k=>{
           const b=allBlocks.find(x=>x.key===k);
-          return `<option value="${k}"${(ev?.sidebarAnchor||'live')===k?' selected':''}>${b?b.icon+' '+b.label:k}</option>`;
+          return `<option value="${k}"${(ev?.sidebarAnchor||'live')===k?' selected':''}>${b?b.label:k}</option>`;
         }).join('')}
       </select>
     </div>
@@ -3860,17 +3878,18 @@ function updateBlockPreview(){
     const sel=item.querySelector('.block-zone-sel');
     const zone=sel ? (sel.tagName==='SELECT' ? sel.value : (sel.dataset.value||'main')) : 'main';
     const label=item.querySelector('[style*="flex:1"]')?.textContent||key;
-    const icon=item.querySelectorAll('span')[1]?.textContent||'';
+    const icon=(typeof _blockIco==='function')?_blockIco(key,'blk-ic-sm'):'';
+    const cell = '<span class="blk-prev-cell">'+icon+'<span>'+label+'</span></span>';
     if(zone==='max'){
       flushTwoCols();
-      preview+='<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;padding:3px 8px;margin:2px 0;font-size:11px;text-align:center">🖥 '+icon+' '+label+' <span style="font-size:8px;color:#92400E">(viewport)</span></div>';
+      preview+='<div class="blk-prev-row blk-prev-max">'+cell+' <span class="blk-prev-vp">viewport</span></div>';
     } else if(zone==='full'){
       flushTwoCols();
-      preview+='<div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:4px;padding:3px 8px;margin:2px 0;font-size:11px;text-align:center">⬛ '+icon+' '+label+'</div>';
+      preview+='<div class="blk-prev-row blk-prev-full">'+cell+'</div>';
     } else if(zone==='side'){
-      sideBuf.push(icon);
+      sideBuf.push(cell);
     } else {
-      mainBuf.push(icon);
+      mainBuf.push(cell);
     }
   });
   flushTwoCols();
