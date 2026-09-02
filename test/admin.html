@@ -121,6 +121,17 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-addgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .cp-addbtn{padding:14px;border:1px dashed var(--border);background:var(--card);border-radius:var(--r-md);font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s}
 .cp-addbtn:hover{border-color:var(--acc);color:var(--acc)}
+/* Éditeur de texte riche */
+.rte-toolbar{display:flex;align-items:center;gap:2px;flex-wrap:wrap;border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;padding:5px 8px;background:#F8FAFC}
+.rte-b{border:1px solid transparent;background:none;width:30px;height:28px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);display:inline-flex;align-items:center;justify-content:center;transition:background .12s}
+.rte-b:hover{background:#E2E8F0;color:var(--text)}
+.rte-sep{width:1px;height:18px;background:var(--border);margin:0 3px}
+.rte-color{position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;color:var(--text2)}
+.rte-color:hover{background:#E2E8F0}
+.rte-color input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.rte-area{border-radius:0 0 8px 8px!important;line-height:1.6}
+.rte-area:focus{outline:none;border-color:var(--acc)!important;box-shadow:var(--ring)}
+.rte-area ul{margin:8px 0;padding-left:22px}
 /* Bouton « Personnaliser l'apparence » (bas de bloc) */
 .mod-settings-btnrow{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);display:flex;justify-content:flex-start}
 .mod-settings-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;padding:9px 16px;border-radius:100px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,box-shadow .15s}
@@ -3760,6 +3771,7 @@ function _renderCpEditor(el){
       <button class="cp-addbtn" onclick="_cpAddBlock('gallery')">🎞 Galerie</button>
       <button class="cp-addbtn" onclick="_cpAddBlock('video')">🎬 Vidéo</button>
       <button class="cp-addbtn" onclick="_cpAddBlock('buttons')">🔘 Boutons</button>
+      <button class="cp-addbtn" onclick="_cpAddBlock('html')">&lt;/&gt; HTML</button>
       <button class="cp-addbtn" onclick="_cpAddBlock('separator')">➖ Séparateur</button>
     </div>
   </div>`;
@@ -3770,7 +3782,23 @@ function _cpBlockEditor(b,i,total){
   let inner='';
   if(b.type==='text'){
     inner=`<div class="form-row"><label class="form-label">Titre (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="title" value="${_escAdm(b.title||'')}"></div>
-      <div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" data-cpb="${i}" data-cpf="text" rows="5" placeholder="Vos paragraphes… (double saut de ligne = nouveau paragraphe)">${_escAdm(b.text||'')}</textarea></div>
+      <div class="form-row"><label class="form-label">Texte</label>
+        <div class="rte-toolbar">
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'bold')" title="Gras"><b>B</b></button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'italic')" title="Italique"><i>I</i></button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'underline')" title="Souligné"><u>U</u></button>
+          <span class="rte-sep"></span>
+          <button type="button" class="rte-b" onmousedown="_rteLink(event,${i})" title="Lien">🔗</button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'insertUnorderedList')" title="Liste à puces">•≡</button>
+          <span class="rte-sep"></span>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyLeft')" title="Gauche">⬅</button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyCenter')" title="Centrer">↔</button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyFull')" title="Justifier">☰</button>
+          <span class="rte-sep"></span>
+          <label class="rte-color" title="Couleur du texte">A<input type="color" onchange="_rteColor(${i},this.value)" value="#111111"></label>
+        </div>
+        <div class="rte-area form-input" contenteditable="true" data-cpb="${i}" data-cprte="1" style="min-height:120px;overflow:auto">${b.text||''}</div>
+      </div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Image (optionnelle)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
         <div class="form-row" style="max-width:200px"><label class="form-label">Position image</label><select class="form-input" data-cpb="${i}" data-cpf="imagePos">
@@ -3780,7 +3808,14 @@ function _cpBlockEditor(b,i,total){
           <option value="top"${b.imagePos==='top'?' selected':''}>Au-dessus</option>
           <option value="bottom"${b.imagePos==='bottom'?' selected':''}>En dessous</option>
         </select></div>
+      </div>
+      <div class="form-row-inline">
+        <div class="form-row" style="max-width:220px"><label class="form-label" style="display:flex;align-items:center;gap:6px"><input type="checkbox" data-cpb="${i}" data-cpf="bgOn" ${b.bgOn?'checked':''}> Fond de couleur du bloc</label></div>
+        <div class="form-row" style="max-width:100px"><label class="form-label">Couleur</label><input type="color" class="form-input" data-cpb="${i}" data-cpf="bg" value="${b.bg||'#F1F5F9'}" style="width:56px;height:38px;padding:2px"></div>
       </div>`;
+  } else if(b.type==='html'){
+    inner=`<div class="form-row"><label class="form-label">Code HTML personnalisé</label><textarea class="form-input" data-cpb="${i}" data-cpf="html" rows="8" style="font-family:monospace;font-size:12px" placeholder="&lt;div&gt;Votre HTML…&lt;/div&gt;">${_escAdm(b.html||'')}</textarea>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">⚠️ Code inséré tel quel sur la page. Réservé à un usage avancé (embed, mise en forme spécifique…).</div></div>`;
   } else if(b.type==='image'){
     inner=`<div class="form-row"><label class="form-label">Image</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
       <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>`;
@@ -3803,13 +3838,18 @@ function _cpBlockEditor(b,i,total){
     inner=`<div class="form-row-inline"><div class="form-row" style="max-width:160px"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" data-cpb="${i}" data-cpf="height" value="${b.height||24}" min="0" max="200" style="width:90px"></div>
       <div class="form-row"><label class="form-label" style="font-weight:400;display:flex;align-items:center;gap:6px;margin-top:22px"><input type="checkbox" data-cpb="${i}" data-cpf="line" ${b.line?'checked':''}> Afficher un trait</label></div></div>`;
   }
-  const labels={text:'Texte',image:'Image',gallery:'Galerie',video:'Vidéo',buttons:'Boutons',separator:'Séparateur'};
+  const labels={text:'Texte',html:'HTML personnalisé',image:'Image',gallery:'Galerie',video:'Vidéo',buttons:'Boutons',separator:'Séparateur'};
   return `<div class="cp-blk"><div class="cp-blk-head"><span class="cp-blk-type">${labels[b.type]||b.type}</span>${mv}</div>${inner}</div>`;
 }
+function _rteArea(i){ return document.querySelector('.rte-area[data-cpb="'+i+'"]'); }
+function _rteCmd(ev,i,cmd){ ev.preventDefault(); const a=_rteArea(i); if(a){ a.focus(); document.execCommand(cmd,false,null); } }
+function _rteColor(i,color){ const a=_rteArea(i); if(a){ a.focus(); document.execCommand('foreColor',false,color); } }
+function _rteLink(ev,i){ ev.preventDefault(); const a=_rteArea(i); if(!a) return; a.focus(); const url=prompt('Adresse du lien (https://…) :',''); if(url){ document.execCommand('createLink',false,url); } }
 function _cpCollect(){
   const p=_cpCurrent(); if(!p) return;
   (p.blocks||[]).forEach((b,i)=>{
     document.querySelectorAll('[data-cpb="'+i+'"]').forEach(el=>{
+      if(el.getAttribute('data-cprte')==='1'){ b.text = el.innerHTML; return; }
       const f=el.getAttribute('data-cpf');
       if(f){ b[f]=(el.type==='checkbox')?el.checked:el.value; }
       const gi=el.getAttribute('data-cpgal');
