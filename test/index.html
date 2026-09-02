@@ -41,6 +41,53 @@
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626;--exp-accent:#FF6C00}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+/* ==================== PAGES LIBRES (front) ==================== */
+.cp-page{max-width:820px;margin:0 auto;padding:8px 0 40px}
+/* Hero de page libre */
+.cp-hero{margin-bottom:8px}
+.cp-hero-full{min-height:300px;background-size:cover;background-position:center;display:flex;align-items:flex-end;color:#fff}
+.cp-hero-full .cp-hero-inner{padding:36px 32px;max-width:820px;margin:0 auto;width:100%}
+.cp-hero-full h1{font-family:'Playfair Display',serif;font-size:38px;font-weight:800;margin:0 0 8px;line-height:1.1}
+.cp-hero-full p{font-size:16px;opacity:.9;margin:0;max-width:640px}
+.cp-hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:280px}
+.cp-hero-split .cp-hero-text{display:flex;align-items:center;background:#0f2436;color:#fff}
+.cp-hero-split .cp-hero-inner{padding:36px 32px}
+.cp-hero-split h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;margin:0 0 8px;line-height:1.15}
+.cp-hero-split p{font-size:15px;opacity:.85;margin:0}
+.cp-hero-split .cp-hero-photo{background-size:cover;background-position:center;min-height:280px}
+@media(max-width:760px){
+  .cp-hero-split{grid-template-columns:1fr}
+  .cp-hero-split .cp-hero-photo{min-height:200px}
+  .cp-hero-full h1{font-size:28px}.cp-hero-split h1{font-size:26px}
+}
+.cp-empty{text-align:center;color:#94A3B8;padding:60px 20px;font-size:14px}
+.cp-block{margin-bottom:28px}
+.cp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text);margin:0 0 14px;line-height:1.25}
+.cp-text{font-size:16px;line-height:1.75;color:#334155}
+.cp-text p{margin:0 0 14px}.cp-text p:last-child{margin-bottom:0}
+.cp-img{width:100%;border-radius:12px;display:block}
+.cp-caption{font-size:12.5px;color:#94A3B8;text-align:center;margin-top:8px;font-style:italic}
+.cp-txt-img{width:100%;border-radius:12px;display:block}
+.cp-textimg{display:flex;gap:26px;align-items:flex-start}
+.cp-textimg .cp-txt-media{flex:0 0 42%;max-width:42%}
+.cp-textimg .cp-txt-body{flex:1;min-width:0}
+.cp-img-right{flex-direction:row-reverse}
+.cp-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.cp-gallery img{width:100%;height:160px;object-fit:cover;border-radius:10px}
+.cp-video{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.cp-video iframe,.cp-video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cp-btns{display:flex;gap:12px;flex-wrap:wrap}
+.cp-btns-center{justify-content:center}.cp-btns-right{justify-content:flex-end}
+.cp-btn{display:inline-block;padding:12px 26px;background:var(--acc,#0C6CA1);color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s}
+.cp-btn:hover{filter:brightness(1.08)}
+.cp-hr{border:none;border-top:1px solid #E2E8F0;margin:0}
+@media(max-width:680px){
+  .cp-textimg{flex-direction:column}
+  .cp-textimg .cp-txt-media{flex:none;max-width:100%;margin-bottom:14px}
+  .cp-img-right{flex-direction:column}
+  .cp-h2{font-size:22px}
+  .cp-text{font-size:15px}
+}
 /* Enveloppe de bloc : neutre pour la mise en page (n'affecte ni la grille ni le flex) */
 .blk-wrap{display:contents}
 /* Blocs masqués sur mobile (réglage par bloc dans l'admin) */
@@ -1784,6 +1831,10 @@ function render(data){
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
+  // ===== PAGES LIBRES (contenu éditorial, onglets à côté des phases) =====
+  const contentPages = event.contentPages || [];
+  const urlPage = new URLSearchParams(window.location.search).get('page') || '';
+  const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1866,9 +1917,9 @@ function render(data){
 
   // ===== PHASE TABS =====
   function mkPhaseTabs(){
-    if(!phases.length) return '';
+    if(!phases.length && !contentPages.length) return '';
     // Mode verrouillé : ?lock=1 masque les onglets de phase (le visiteur reste sur la phase du lien)
-    if(new URLSearchParams(window.location.search).get('lock')==='1') return _mkPhaseTitle(event, activePhase, phases);
+    if(new URLSearchParams(window.location.search).get('lock')==='1' && !activeContentPage) return _mkPhaseTitle(event, activePhase, phases);
     const evId = new URLSearchParams(window.location.search).get('event')||'';
     const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
     function phaseUrl(slug){
@@ -1878,12 +1929,24 @@ function render(data){
       if(frameId) params.set('frameId',frameId);
       return '?'+params.toString();
     }
+    function pageUrl(pid){
+      let params = new URLSearchParams();
+      if(evId) params.set('event',evId);
+      params.set('page',pid);
+      if(frameId) params.set('frameId',frameId);
+      return '?'+params.toString();
+    }
     let t = '<div class="dash"><div class="phase-tabs">';
     phases.forEach(p => {
-      const isActive = activePhase === p.id;
+      const isActive = !activeContentPage && activePhase === p.id;
       t += `<a href="${phaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
     });
-    t += '</div>' + _mkPhaseTitle(event, activePhase, phases) + '</div>';
+    // Onglets des pages libres (contenu éditorial)
+    contentPages.forEach(p => {
+      const isActive = activeContentPage && activeContentPage.id === p.id;
+      t += `<a href="${pageUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#0C6CA1'}"><span class="phase-dot" style="background:${p.color||'#0C6CA1'}"></span>${_qEsc(p.name||'')}</a>`;
+    });
+    t += '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases)) + '</div>';
     return t;
   }
 
@@ -2560,6 +2623,20 @@ function render(data){
   function _closeDash(){
     _flushMain();
     if(_inDash){ h+='</div>'; _inDash=false; }
+  }
+
+  // Si une page libre est active : hero + onglets + contenu de la page, puis on saute les blocs live.
+  if(activeContentPage){
+    const cph = activeContentPage.hero || {};
+    if(cph.enabled){ h += _renderCpHero(cph, activeContentPage.color); }
+    else if(typeof mkHero==='function'){ h += rb('hero'); }
+    h += rb('phaseTabs');
+    h += _renderContentPage(activeContentPage);
+    h += `<div class="dash"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>`;
+    document.getElementById('app').innerHTML = h;
+    var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
+    if(typeof window._tmgResize==='function') window._tmgResize();
+    return;
   }
 
   validKeys.forEach(key=>{
@@ -4192,6 +4269,69 @@ window._qaShowMore = function(btn){
   }
 };
 function _qEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ==================== RENDU DES PAGES LIBRES ====================
+function _cpVideoEmbed(url){
+  if(!url) return '';
+  url=url.trim();
+  var yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+  if(yt) return '<div class="cp-video"><iframe src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
+  var vm=url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if(vm) return '<div class="cp-video"><iframe src="https://player.vimeo.com/video/'+vm[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
+  if(/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return '<div class="cp-video"><video src="'+url+'" controls preload="metadata"></video></div>';
+  return '<div class="cp-video"><iframe src="'+_qEsc(url)+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
+}
+function _renderCpHero(hero, color){
+  var c = color || '#0C6CA1';
+  if(hero.type==='full'){
+    var bg = hero.image ? `background-image:linear-gradient(180deg,rgba(15,23,42,.25),rgba(15,23,42,.6)),url('${(hero.image||'').replace(/'/g,'%27')}')` : `background:linear-gradient(135deg,${c},#0f2436)`;
+    return `<div class="cp-hero cp-hero-full" style="${bg}"><div class="cp-hero-inner">${hero.title?`<h1>${_qEsc(hero.title)}</h1>`:''}${hero.subtitle?`<p>${_qEsc(hero.subtitle)}</p>`:''}</div></div>`;
+  }
+  // split
+  return `<div class="cp-hero cp-hero-split"><div class="cp-hero-text" style="border-top:4px solid ${c}"><div class="cp-hero-inner">${hero.title?`<h1>${_qEsc(hero.title)}</h1>`:''}${hero.subtitle?`<p>${_qEsc(hero.subtitle)}</p>`:''}</div></div>${hero.image?`<div class="cp-hero-photo" style="background-image:url('${(hero.image||'').replace(/'/g,'%27')}')"></div>`:''}</div>`;
+}
+function _renderContentPage(page){
+  var blocks = page.blocks || [];
+  var o = '<div class="dash"><div class="cp-page">';
+  if(!blocks.length){ o += '<div class="cp-empty">Cette page n\'a pas encore de contenu.</div>'; }
+  blocks.forEach(function(b){
+    if(b.type==='text'){
+      var pos = b.imagePos || 'none';
+      var imgHtml = b.image ? '<img class="cp-txt-img" src="'+_qEsc(b.image)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      var body = '';
+      if(b.title) body += '<h2 class="cp-h2">'+_qEsc(b.title)+'</h2>';
+      if(b.text) body += '<div class="cp-text">'+_cpTextToHtml(b.text)+'</div>';
+      if(imgHtml && (pos==='left'||pos==='right')){
+        o += '<div class="cp-block cp-textimg cp-img-'+pos+'"><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+body+'</div></div>';
+      } else if(imgHtml && pos==='top'){
+        o += '<div class="cp-block">'+imgHtml+'<div class="cp-txt-body">'+body+'</div></div>';
+      } else if(imgHtml && pos==='bottom'){
+        o += '<div class="cp-block"><div class="cp-txt-body">'+body+'</div>'+imgHtml+'</div>';
+      } else {
+        o += '<div class="cp-block"><div class="cp-txt-body">'+body+'</div></div>';
+      }
+    } else if(b.type==='image'){
+      if(b.image) o += '<div class="cp-block"><img class="cp-img" src="'+_qEsc(b.image)+'" alt="'+_qEsc(b.caption||'')+'" loading="lazy" onerror="this.style.display=\'none\'">'+(b.caption?'<div class="cp-caption">'+_qEsc(b.caption)+'</div>':'')+'</div>';
+    } else if(b.type==='gallery'){
+      var imgs=(b.images||[]).filter(Boolean);
+      if(imgs.length){ o += '<div class="cp-block"><div class="cp-gallery">'+imgs.map(function(u){return '<img src="'+_qEsc(u)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">';}).join('')+'</div></div>'; }
+    } else if(b.type==='video'){
+      o += '<div class="cp-block">'+_cpVideoEmbed(b.url)+'</div>';
+    } else if(b.type==='buttons'){
+      var btns=(b.buttons||[]).filter(function(x){return x&&x.url;});
+      if(btns.length){ o += '<div class="cp-block cp-btns'+(b.align==='center'?' cp-btns-center':(b.align==='right'?' cp-btns-right':''))+'">'+btns.map(function(x){return '<a class="cp-btn" href="'+_qEsc(x.url)+'" target="_blank" rel="noopener" style="'+(x.color?'background:'+x.color:'')+'">'+_qEsc(x.label||'En savoir plus')+'</a>';}).join('')+'</div>'; }
+    } else if(b.type==='separator'){
+      o += '<div class="cp-sep" style="height:'+(parseInt(b.height,10)||24)+'px">'+(b.line?'<hr class="cp-hr">':'')+'</div>';
+    }
+  });
+  o += '</div></div>';
+  return o;
+}
+function _cpTextToHtml(t){
+  // Convertit les sauts de ligne en paragraphes, échappe le HTML
+  return (t||'').split(/\n{2,}/).map(function(par){
+    return '<p>'+_qEsc(par).replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+}
 
 window._submitQuestion = async function(){
   const eventId = window._eventIdForQuestions;
