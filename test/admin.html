@@ -2877,11 +2877,19 @@ function _moduleSettingsInner(tabKey){
   if(settingsType) inner += moduleSettingsPanel(settingsType);
   if(typoKey) inner += moduleTypoPanel(typoKey);
   if(!inner) return '';
-  // Case « Masquer sur mobile » — commune à tous les blocs, stockée dans ev.mobileHidden[]
+  // Case(s) « Masquer sur mobile » — mappées vers les VRAIES clés de blocs du front.
+  // La plupart des onglets = 1 bloc ; « essentiel » = 2 blocs distincts (Essentiel + Timeline).
   var _ev=eventsData.find(function(e){return e.id===currentEventId;})||{};
   var _mh=Array.isArray(_ev.mobileHidden)?_ev.mobileHidden:[];
-  var _isHidden=_mh.indexOf(tabKey)!==-1;
-  inner += '<div class="admin-card" style="margin-top:0"><div class="toggle-row" style="border:none;padding:4px 0"><span class="toggle-label"><svg class="tab-ic" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8"><use href="#ti-eye"/></svg> Masquer ce bloc sur mobile</span><label class="toggle"><input type="checkbox" id="mobhide-'+tabKey+'" '+(_isHidden?'checked':'')+' onchange="toggleMobileHidden(\''+tabKey+'\',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div style="font-size:11px;color:var(--text3)">Le bloc reste visible sur ordinateur et tablette, mais disparaît sur téléphone.</div></div>';
+  var _frontKeys={
+    essentiel:[{k:'essential',label:"Masquer « L'essentiel » sur mobile"},{k:'timeline',label:'Masquer la timeline (frise) sur mobile'}],
+    journalistes:[{k:'journalists',label:'Masquer ce bloc sur mobile'}]
+  }[tabKey] || [{k:tabKey,label:'Masquer ce bloc sur mobile'}];
+  var _mobRows = _frontKeys.map(function(fk){
+    var on=_mh.indexOf(fk.k)!==-1;
+    return '<div class="toggle-row" style="border:none;padding:6px 0"><span class="toggle-label"><svg class="tab-ic" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8"><use href="#ti-eye"/></svg> '+fk.label+'</span><label class="toggle"><input type="checkbox" id="mobhide-'+fk.k+'" '+(on?'checked':'')+' onchange="toggleMobileHidden(\''+fk.k+'\',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>';
+  }).join('');
+  inner += '<div class="admin-card" style="margin-top:0">'+_mobRows+'<div style="font-size:11px;color:var(--text3)">Reste visible sur ordinateur et tablette, disparaît sur téléphone.</div></div>';
   inner += '<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveModule(\''+tabKey+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
   return inner;
 }
