@@ -4850,6 +4850,17 @@ function renderProgramme(el){
       <div class="form-row" style="max-width:240px"><label class="form-label">Espace au-dessus du bloc (px)</label><input type="number" class="form-input" id="prog-mt" value="${ev.programmeMarginTop!=null?ev.programmeMarginTop:''}" min="0" max="120" placeholder="0" style="width:100px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Évite que le bloc soit collé au bloc précédent.</div></div>
       <div class="form-row" style="max-width:240px"><label class="form-label">Badge de statut</label><label class="form-label" style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="prog-hide-status" ${ev.programmeHideStatus?'checked':''}> Masquer le badge « À venir / En cours / Terminé »</label></div>
     </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:220px"><label class="form-label">Taille en-tête de jour (px)</label><input type="number" class="form-input" id="prog-day-size" value="${ev.programmeDaySize||''}" min="8" max="32" placeholder="10" style="width:100px"></div>
+      <div class="form-row" style="max-width:220px"><label class="form-label">Taille badge statut (px)</label><input type="number" class="form-input" id="prog-status-size" value="${ev.programmeStatusSize||''}" min="6" max="20" placeholder="7" style="width:100px"></div>
+    </div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Bouton du bloc (optionnel)</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Texte du bouton</label><input class="form-input" id="prog-btn-label" value="${(ev.programmeButtonLabel||'').replace(/"/g,'&quot;')}" placeholder="En savoir plus"></div>
+        <div class="form-row"><label class="form-label">Lien (URL)</label><input class="form-input" id="prog-btn-url" value="${(ev.programmeButtonUrl||'').replace(/"/g,'&quot;')}" placeholder="https://…"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">Un bouton s'affiche en bas du bloc programme s'il y a un lien. Vide = pas de bouton.</div>
+    </div>
     <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="saveProgrammeAppearance()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer l'apparence</button></div>
     <div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles et couleurs (titre, intitulé, description, heure) se règlent dans « ⚙️ Paramétrage &amp; apparence de ce module » ci-dessous.</div>
   </div>
@@ -5063,7 +5074,11 @@ async function saveProgrammeAppearance(){
   var _chk=function(id){var e=document.getElementById(id);return e?e.checked:false;};
   var ud={
     programmeMarginTop:_ni('prog-mt'),
-    programmeHideStatus:_chk('prog-hide-status')
+    programmeHideStatus:_chk('prog-hide-status'),
+    programmeDaySize:_ni('prog-day-size'),
+    programmeStatusSize:_ni('prog-status-size'),
+    programmeButtonLabel:(document.getElementById('prog-btn-label')||{}).value||'',
+    programmeButtonUrl:(document.getElementById('prog-btn-url')||{}).value||''
   };
   try{
     await evRef().update(ud);
