@@ -1152,6 +1152,9 @@ window.DECOR_SHAPE_LABELS = {
 <script>
 firebase.initializeApp({apiKey:"AIzaSyDtKWuGcF2MFI3Er9mRuL1qtzhbqsQP3PY",authDomain:"tourmag-live.firebaseapp.com",projectId:"tourmag-live"});
 const db = firebase.firestore();
+// Firestore authentifié (app secondaire) pour les écritures qui exigent une auth
+// (likes, votes). Retombe sur db si l'auth anonyme n'est pas dispo.
+function _authedDb(){ return window._pubDb || db; }
 
 // ===== Likes : authentification anonyme (invisible pour l'internaute) =====
 // Attribue un identifiant unique par appareil, sans compte ni action de l'utilisateur.
@@ -1164,15 +1167,21 @@ var _likeUid = null;
 var _isPreviewMode = (new URLSearchParams(window.location.search)).get('preview') === '1';
 var _likeAuthReady = _isPreviewMode ? Promise.resolve(null) : (function(){
   try{
-    // IMPORTANT : persistance NONE → la session anonyme du dashboard public reste
-    // isolée à cet onglet et n'est PAS partagée avec l'admin (même domaine, même
-    // projet Firebase). Sans ça, se connecter en anonyme ici écraserait la session
-    // admin et provoquerait un « compte non autorisé » au retour sur le back-office.
-    var _authP = firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE)
+    // On utilise une INSTANCE Firebase SECONDAIRE dédiée à l'auth anonyme du public.
+    // Une app secondaire a son propre état d'authentification, totalement isolé de
+    // l'app par défaut qu'utilise l'admin. Ainsi, se connecter en anonyme ici ne
+    // touche JAMAIS la session admin (ni au retour, ni au rechargement).
+    var _opts = firebase.app().options;
+    var _pubApp;
+    try{ _pubApp = firebase.app('tmg-public'); }
+    catch(_){ _pubApp = firebase.initializeApp(_opts, 'tmg-public'); }
+    var _pubAuth = _pubApp.auth();
+    // Session anonyme non persistée : elle vit le temps de l'onglet, rien n'est stocké.
+    var _authP = _pubAuth.setPersistence(firebase.auth.Auth.Persistence.NONE)
       .catch(function(){ /* persistance non modifiable : on continue quand même */ });
     return _authP.then(function(){
-      return firebase.auth().signInAnonymously()
-        .then(function(cred){ _likeUid = cred.user.uid; return _likeUid; })
+      return _pubAuth.signInAnonymously()
+        .then(function(cred){ _likeUid = cred.user.uid; window._pubAuth = _pubAuth; try{ window._pubDb = _pubApp.firestore(); }catch(_){ window._pubDb = null; } return _likeUid; })
         .catch(function(e){ console.warn('Auth anonyme indisponible (les likes seront désactivés) :', e.message); return null; });
     });
   }catch(e){ console.warn('Module Auth absent :', e.message); return Promise.resolve(null); }
@@ -3975,7 +3984,7 @@ async function _loadUserLikes(eventId){
   const uid = await _likeAuthReady;
   if(!uid) return; // auth indisponible → likes en lecture seule
   try{
-    const snap = await db.collection('events').doc(eventId).collection('userLikes').doc(uid).get();
+    const snap = await _authedDb().collection('events').doc(eventId).collection('userLikes').doc(uid).get();
     if(snap.exists){
       const liked = snap.data().liked || {};
       Object.keys(liked).forEach(k=>{ if(liked[k]) window._likedSet.add(k); });
@@ -4066,10 +4075,10 @@ window._toggleLike = async function(entryId, btnEl){
   const cEl = document.querySelector('[data-like-count="'+entryId+'"]');
   if(cEl){ const cur=parseInt(cEl.textContent||'0')||0; const nv=Math.max(0,cur+delta); cEl.textContent=nv>0?nv:''; }
   // Ecriture Firestore
-  const entryRef = db.collection('events').doc(eventId).collection('live').doc(entryId);
-  const userRef = db.collection('events').doc(eventId).collection('userLikes').doc(uid);
+  const entryRef = _authedDb().collection('events').doc(eventId).collection('live').doc(entryId);
+  const userRef = _authedDb().collection('events').doc(eventId).collection('userLikes').doc(uid);
   try{
-    const batch = db.batch();
+    const batch = _authedDb().batch();
     batch.set(entryRef, {likeCount: firebase.firestore.FieldValue.increment(delta)}, {merge:true});
     batch.set(userRef, {liked: {[entryId]: wasLiked ? firebase.firestore.FieldValue.delete() : true}}, {merge:true});
     await batch.commit();
@@ -4262,7 +4271,7 @@ window._quizSubmit = async function(quizId, qId){
   window._quizMyVote[quizId]=answers;
   _refreshQuizResults();
   try{
-    await db.collection('events').doc(eventId).collection('quizVotes').doc(uid+'_'+quizId)
+    await _authedDb().collection('events').doc(eventId).collection('quizVotes').doc(uid+'_'+quizId)
       .set({quizId, uid, answers}, {merge:true});
     // Recharge une fois les compteurs à jour (pas d'écoute permanente)
     if(window._loadQuizTally) window._loadQuizTally();
