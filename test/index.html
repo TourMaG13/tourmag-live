@@ -562,6 +562,8 @@ img{display:block}a{text-decoration:none}
 .jr-social-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text3);text-decoration:none;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--border);transition:all .15s}
 .jr-social-link:hover{border-color:var(--acc);color:var(--acc)}
 .jr-profile-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--acc2);text-decoration:none;margin-top:4px;transition:color .15s}
+.jr-more-btn{display:block;width:100%;margin-top:12px;padding:12px;border:1px dashed var(--jr-accent,#CBD5E1);background:transparent;border-radius:12px;font-family:inherit;font-size:13px;font-weight:600;color:var(--jr-accent,#64748B);cursor:pointer;transition:background .15s,border-color .15s}
+.jr-more-btn:hover{background:rgba(100,116,139,.06);border-color:#94A3B8}
 .jr-profile-link:hover{color:var(--acc)}
 @media(max-width:768px){.jr-avatar,.jr-avatar-placeholder{width:40px;height:40px}.jr-name{font-size:12px}}
 
@@ -1162,9 +1164,17 @@ var _likeUid = null;
 var _isPreviewMode = (new URLSearchParams(window.location.search)).get('preview') === '1';
 var _likeAuthReady = _isPreviewMode ? Promise.resolve(null) : (function(){
   try{
-    return firebase.auth().signInAnonymously()
-      .then(function(cred){ _likeUid = cred.user.uid; return _likeUid; })
-      .catch(function(e){ console.warn('Auth anonyme indisponible (les likes seront désactivés) :', e.message); return null; });
+    // IMPORTANT : persistance NONE → la session anonyme du dashboard public reste
+    // isolée à cet onglet et n'est PAS partagée avec l'admin (même domaine, même
+    // projet Firebase). Sans ça, se connecter en anonyme ici écraserait la session
+    // admin et provoquerait un « compte non autorisé » au retour sur le back-office.
+    var _authP = firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE)
+      .catch(function(){ /* persistance non modifiable : on continue quand même */ });
+    return _authP.then(function(){
+      return firebase.auth().signInAnonymously()
+        .then(function(cred){ _likeUid = cred.user.uid; return _likeUid; })
+        .catch(function(e){ console.warn('Auth anonyme indisponible (les likes seront désactivés) :', e.message); return null; });
+    });
   }catch(e){ console.warn('Module Auth absent :', e.message); return Promise.resolve(null); }
 })();
 
@@ -2245,8 +2255,12 @@ function render(data){
     const _jrs = activePhase ? journalists.filter(j => !j.phase || j.phase === activePhase) : journalists;
     if(!_jrs.length) return '';
     let o = `<div class="jr-block fi"><div class="jr-hd"><div class="ci">${ICO.pen}</div><span class="ct">${event.journalistsTitle||'Vos reporters'}</span></div>`;
-    _jrs.forEach(j=>{
-      o+=`<div class="jr-card"><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${j.bio?`<div class="jr-bio">${j.bio}</div>`:''}`;
+    const _accAfter = parseInt(event.journalistsAccordionAfter,10);
+    const _useAcc = (_accAfter>0 && _jrs.length > _accAfter);
+    const _blockId = 'jracc_'+Math.random().toString(36).slice(2,8);
+    _jrs.forEach((j,idx)=>{
+      const _hidden = _useAcc && idx >= _accAfter;
+      o+=`<div class="jr-card${_hidden?' jr-hidden':''}" data-jracc="${_blockId}"${_hidden?' style="display:none"':''}><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${(j.bio && j.showBio!==false)?`<div class="jr-bio">${j.bio}</div>`:''}`;
       const socials=[];
       if(j.twitter){const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');socials.push(`<a class="jr-social-link" href="${tw}" target="_blank" rel="noopener">${_jrIcoX} <span>𝕏</span></a>`);}
       if(j.linkedin) socials.push(`<a class="jr-social-link" href="${j.linkedin}" target="_blank" rel="noopener">${_jrIcoLi} <span>LinkedIn</span></a>`);
@@ -2255,6 +2269,10 @@ function render(data){
       if(j.profileUrl) o+=`<a class="jr-profile-link" href="${j.profileUrl}" target="_blank" rel="noopener">Voir ses articles sur TourMaG →</a>`;
       o+=`</div>`;
     });
+    if(_useAcc){
+      const _rest = _jrs.length - _accAfter;
+      o+=`<button class="jr-more-btn" data-jracc-btn="${_blockId}" onclick="(function(b){var open=b.getAttribute('data-open')==='1';document.querySelectorAll('[data-jracc=\\'${_blockId}\\']').forEach(function(c){c.style.display=open?'none':'';});b.setAttribute('data-open',open?'0':'1');b.innerHTML=open?('Voir les ${_rest} autres ▾'):('Réduire ▴');})(this)">Voir les ${_rest} autres ▾</button>`;
+    }
     o+=`</div>`;
     return o;
   }
@@ -3005,7 +3023,7 @@ function renderExpedition(data){
     if(!reporters.length) return '';
     let o = '';
     reporters.forEach(reporter => {
-      o += `<div class="exp-card"><div class="exp-card-label exp-card-label-reporters">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${reporter.bio ? `<p>${reporter.bio}</p>` : ''}`;
+      o += `<div class="exp-card"><div class="exp-card-label exp-card-label-reporters">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${(reporter.bio && reporter.showBio!==false) ? `<p>${reporter.bio}</p>` : ''}`;
       const socials = [];
       if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);}
       if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
