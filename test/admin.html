@@ -52,16 +52,16 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .evpick-l2{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .evpick-chev{color:rgba(255,255,255,.6);font-size:12px;transition:transform .2s;flex-shrink:0}
 .evpick.open .evpick-chev{transform:rotate(180deg)}
-.evpick-menu{position:absolute;top:calc(100% + 8px);left:0;width:320px;max-width:90vw;background:#fff;border-radius:12px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:8px;display:none;z-index:200;max-height:70vh;overflow-y:auto}
+.evpick-menu{position:absolute;top:calc(100% + 8px);left:0;width:420px;max-width:90vw;background:#fff;border-radius:12px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:8px;display:none;z-index:200;max-height:70vh;overflow-y:auto}
 .evpick.open .evpick-menu{display:block}
 .evpick-mh{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;padding:6px 10px 4px}
 .evpick-ev{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .12s;color:var(--text)}
 .evpick-ev:hover{background:var(--bg)}
 .evpick-ev.cur{background:var(--acc-soft)}
 .evpick-ev .evi{color:var(--acc2);display:flex;flex-shrink:0}
-.evpick-ev .evn{flex:1;min-width:0}
-.evpick-ev .evn .n{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.evpick-ev .evn .m{font-size:10.5px;color:var(--text3)}
+.evpick-ev .evn{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.evpick-ev .evn .n{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.evpick-ev .evn .m{font-size:10.5px;color:var(--text3);display:block}
 .evpick-ev .evbadge{font-size:8.5px;font-weight:700;color:var(--green);background:#DCFCE7;padding:2px 8px;border-radius:20px;flex-shrink:0}
 .evpick-sep{height:1px;background:var(--border);margin:6px 4px}
 .evpick-manage{display:flex;align-items:center;gap:9px;padding:10px;border-radius:8px;color:var(--text2);font-size:12.5px;font-weight:500;width:100%;background:none;border:none;text-align:left;cursor:pointer;font-family:'Poppins'}
@@ -102,7 +102,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Panneau latéral glissant */
 .mod-settings-scrim{position:fixed;inset:0;background:rgba(15,23,42,.4);opacity:0;visibility:hidden;transition:opacity .25s;z-index:150}
 body.mod-settings-open .mod-settings-scrim{opacity:1;visibility:visible}
-.mod-settings-panel{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:92vw;background:var(--bg);box-shadow:-12px 0 40px rgba(15,23,42,.25);transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:151;display:flex;flex-direction:column}
+.mod-settings-panel{position:fixed;top:0;right:0;bottom:0;width:680px;max-width:92vw;background:var(--bg);box-shadow:-12px 0 40px rgba(15,23,42,.25);transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:151;display:flex;flex-direction:column}
 .mod-settings-panel.open{transform:translateX(0)}
 .mod-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:var(--pri);color:#fff;flex-shrink:0}
 .mod-settings-title{font-family:'Josefin Sans';font-size:15px;font-weight:700}
@@ -8535,7 +8535,7 @@ function renderGallery(el){
     </div>`;
   });
   h+=`</div>
-    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="addGalleryRow()">＋ Ajouter une photo</button><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Depuis la médiathèque</button></div>
+    <div style="margin-top:12px"><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Ajouter une photo</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="uploadGalleryPhoto()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Upload</button><button class="btn btn-ghost btn-sm" onclick="pickGalleryFromMedia()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Depuis la médiathèque</button></div></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveGallery()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la galerie</button></div>
   </div>`;
   el.innerHTML=h;
