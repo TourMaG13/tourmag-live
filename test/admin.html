@@ -3646,6 +3646,7 @@ function renderContentPages(el){
         <div class="cp-actions">
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},-1)" title="Monter">▲</button>`:''}
           ${i<pages.length-1?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},1)" title="Descendre">▼</button>`:''}
+          <button class="btn btn-ghost btn-xs" onclick="copyContentPageUrl('${p.id}')" title="Copier le lien de l'onglet"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg></button>
           <button class="btn btn-primary btn-xs" onclick="editContentPage('${p.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Éditer</button>
           <button class="btn btn-danger btn-xs" onclick="deleteContentPage('${p.id}')">✕</button>
         </div>
@@ -3689,6 +3690,15 @@ async function deleteContentPage(id){
 }
 function editContentPage(id){ _cpEditId=id; renderTab(); }
 var _cpEditId=null;
+function copyContentPageUrl(id){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
+  const base=(ev.publicUrl||'').trim()||ghBase;
+  const sep=base.includes('?')?(base.endsWith('?')||base.endsWith('&')?'':'&'):'?';
+  const url=base+sep+'event='+encodeURIComponent(currentEventId)+'&page='+encodeURIComponent(id);
+  try{ navigator.clipboard.writeText(url); toast('Lien de l\'onglet copié'); }
+  catch(e){ prompt('Copiez ce lien :', url); }
+}
 
 function _cpCurrent(){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
