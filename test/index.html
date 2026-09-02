@@ -561,6 +561,7 @@ img{display:block}a{text-decoration:none}
 .jr-socials{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .jr-social-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text3);text-decoration:none;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--border);transition:all .15s}
 .jr-social-link:hover{border-color:var(--acc);color:var(--acc)}
+.jr-social-icon{padding:6px;gap:0;width:30px;height:30px;justify-content:center}
 .jr-profile-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--acc2);text-decoration:none;margin-top:4px;transition:color .15s}
 .jr-more-btn{display:block;width:100%;margin-top:12px;padding:12px;border:1px dashed var(--jr-accent,#CBD5E1);background:transparent;border-radius:12px;font-family:inherit;font-size:13px;font-weight:600;color:var(--jr-accent,#64748B);cursor:pointer;transition:background .15s,border-color .15s}
 .jr-more-btn:hover{background:rgba(100,116,139,.06);border-color:#94A3B8}
@@ -2271,9 +2272,9 @@ function render(data){
       const _hidden = _useAcc && idx >= _accAfter;
       o+=`<div class="jr-card${_hidden?' jr-hidden':''}"${_hidden?` data-jracc="${_blockId}" style="display:none"`:''}><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${(j.bio && j.showBio!==false)?`<div class="jr-bio">${j.bio}</div>`:''}`;
       const socials=[];
-      if(j.twitter){const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');socials.push(`<a class="jr-social-link" href="${tw}" target="_blank" rel="noopener">${_jrIcoX} <span>𝕏</span></a>`);}
-      if(j.linkedin) socials.push(`<a class="jr-social-link" href="${j.linkedin}" target="_blank" rel="noopener">${_jrIcoLi} <span>LinkedIn</span></a>`);
-      if(j.instagram){const ig=j.instagram.startsWith('http')?j.instagram:'https://instagram.com/'+j.instagram.replace('@','');socials.push(`<a class="jr-social-link" href="${ig}" target="_blank" rel="noopener">${_jrIcoIg} <span>Instagram</span></a>`);}
+      if(j.twitter){const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');socials.push(`<a class="jr-social-link jr-social-icon" href="${tw}" target="_blank" rel="noopener" title="X" aria-label="X">${_jrIcoX}</a>`);}
+      if(j.linkedin) socials.push(`<a class="jr-social-link jr-social-icon" href="${j.linkedin}" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">${_jrIcoLi}</a>`);
+      if(j.instagram){const ig=j.instagram.startsWith('http')?j.instagram:'https://instagram.com/'+j.instagram.replace('@','');socials.push(`<a class="jr-social-link jr-social-icon" href="${ig}" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">${_jrIcoIg}</a>`);}
       if(socials.length) o+=`<div class="jr-socials">${socials.join('')}</div>`;
       if(j.profileUrl) o+=`<a class="jr-profile-link" href="${j.profileUrl}" target="_blank" rel="noopener">Voir ses articles sur TourMaG →</a>`;
       o+=`</div>`;
