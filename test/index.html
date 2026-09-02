@@ -2769,7 +2769,10 @@ function renderExpedition(data){
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
-  // Apply global custom colors then per-phase overrides
+  // ===== PAGES LIBRES (mode expédition) =====
+  const contentPages = event.contentPages || [];
+  const urlPage = new URLSearchParams(window.location.search).get('page') || '';
+  const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
   document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
@@ -2956,9 +2959,9 @@ function renderExpedition(data){
   const _b = {};
 
   _b.phaseTabs = function(){
-    if(!phases.length) return '';
+    if(!phases.length && !contentPages.length) return '';
     // Mode verrouillé : ?lock=1 masque les onglets de phase (le visiteur reste sur la phase du lien)
-    if(new URLSearchParams(window.location.search).get('lock')==='1') return _mkPhaseTitle(event, activePhase, phases);
+    if(new URLSearchParams(window.location.search).get('lock')==='1' && !activeContentPage) return _mkPhaseTitle(event, activePhase, phases);
     const evId = new URLSearchParams(window.location.search).get('event')||'';
     const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
     function _ptUrl(slug){
@@ -2968,12 +2971,23 @@ function renderExpedition(data){
       if(frameId) params.set('frameId',frameId);
       return '?'+params.toString();
     }
+    function _pgUrl(pid){
+      let params = new URLSearchParams();
+      if(evId) params.set('event',evId);
+      params.set('page',pid);
+      if(frameId) params.set('frameId',frameId);
+      return '?'+params.toString();
+    }
     let t = '<div class="phase-tabs">';
     phases.forEach(p => {
-      const isActive = activePhase === p.id;
+      const isActive = !activeContentPage && activePhase === p.id;
       t += `<a href="${_ptUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
     });
-    return t + '</div>' + _mkPhaseTitle(event, activePhase, phases);
+    contentPages.forEach(p => {
+      const isActive = activeContentPage && activeContentPage.id === p.id;
+      t += `<a href="${_pgUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#0C6CA1'}"><span class="phase-dot" style="background:${p.color||'#0C6CA1'}"></span>${_qEsc(p.name||'')}</a>`;
+    });
+    return t + '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases));
   };
 
   _b.kpis = function(){
@@ -3508,6 +3522,16 @@ function renderExpedition(data){
   function _expCloseDash(){
     _expFlushMain();
     if(_expInDash){ h+='</div>'; _expInDash=false; }
+  }
+
+  // ===== PAGES LIBRES (expédition) : si une page est active, on affiche onglets + contenu et on saute les blocs live =====
+  if(activeContentPage){
+    h += '<div class="exp-dash">' + _b.phaseTabs() + '</div>';
+    h += '<div class="exp-dash">' + _renderContentPage(activeContentPage) + '</div>';
+    document.getElementById('app').innerHTML = h;
+    var _ubE=document.getElementById('upd-bar'); if(_ubE) _ubE.innerHTML='';
+    if(typeof window._tmgResize==='function') window._tmgResize();
+    return;
   }
 
   finalOrder.forEach(key => {
