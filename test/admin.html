@@ -2276,6 +2276,14 @@ function modifyEvent(id){
       <div class="form-row"><label class="form-label">Lieu</label><input class="form-input" id="m-ev-location" value="${ev.location||''}"></div>
       <div class="form-row"><label class="form-label">Dates</label><input class="form-input" id="m-ev-dates" value="${ev.dates||''}"></div>
     </div>
+    <div style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Bouton du header (optionnel)</div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Texte</label><input class="form-input" id="m-ev-btn-label" value="${(ev.heroButtonLabel||'').replace(/"/g,'&quot;')}" placeholder="En savoir plus"></div>
+        <div class="form-row"><label class="form-label">Lien (URL)</label><input class="form-input" id="m-ev-btn-url" value="${(ev.heroButtonUrl||'').replace(/"/g,'&quot;')}" placeholder="https://…"></div>
+        <div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="m-ev-btn-color" value="${ev.heroButtonColor||'#2563EB'}" style="width:56px;height:38px;padding:2px"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3)">S'affiche sous le lieu et la date. Vide = pas de bouton.</div>
+    </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Statut</label><select class="form-input" id="m-ev-status">
         <option value="upcoming"${ev.status==='upcoming'?' selected':''}>À venir</option>
@@ -2307,6 +2315,9 @@ async function updateEvent(id){
     subtitle:document.getElementById('m-ev-subtitle').value,
     location:document.getElementById('m-ev-location').value,
     dates:document.getElementById('m-ev-dates').value,
+    heroButtonLabel:(document.getElementById('m-ev-btn-label')||{}).value||'',
+    heroButtonUrl:(document.getElementById('m-ev-btn-url')||{}).value||'',
+    heroButtonColor:(document.getElementById('m-ev-btn-color')||{}).value||'#2563EB',
     status:document.getElementById('m-ev-status').value,
     mode:document.getElementById('m-ev-mode').value,
     logo_url:document.getElementById('m-ev-logo').value,
@@ -4858,6 +4869,7 @@ function renderProgramme(el){
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Texte du bouton</label><input class="form-input" id="prog-btn-label" value="${(ev.programmeButtonLabel||'').replace(/"/g,'&quot;')}" placeholder="En savoir plus"></div>
         <div class="form-row"><label class="form-label">Lien (URL)</label><input class="form-input" id="prog-btn-url" value="${(ev.programmeButtonUrl||'').replace(/"/g,'&quot;')}" placeholder="https://…"></div>
+        <div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="prog-btn-color" value="${ev.programmeButtonColor||'#2563EB'}" style="width:56px;height:38px;padding:2px"></div>
       </div>
       <div style="font-size:10px;color:var(--text3);margin-top:2px">Un bouton s'affiche en bas du bloc programme s'il y a un lien. Vide = pas de bouton.</div>
     </div>
@@ -5025,22 +5037,6 @@ async function saveProgrammeEdit(id){
 }
 async function deleteProgramme(id){saving(true);await subCol('programme').doc(id).delete();toast('Supprimé');}
 
-function renameDay(oldDay){
-  openModal(`<h3>Renommer le jour</h3>
-    <div class="form-row"><label class="form-label">Nom actuel : <strong>${oldDay}</strong></label><input class="form-input" id="m-rename-day" value="${oldDay.replace(/"/g,'&quot;')}" placeholder="Nouveau nom"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="executeRenameDay('${oldDay.replace(/'/g,"\\'")}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Renommer</button></div>`);
-}
-async function executeRenameDay(oldDay){
-  const newDay=document.getElementById('m-rename-day').value.trim();
-  if(!newDay){toast('Nom requis','error');return;}
-  if(newDay===oldDay){closeModal();return;}
-  saving(true);
-  const items=programmeData.filter(p=>p.day===oldDay);
-  for(const p of items){
-    await subCol('programme').doc(p.id).update({day:newDay});
-  }
-  closeModal();toast(items.length+' éléments mis à jour');
-}
 async function moveProgInDay(id,dir){
   const item=programmeData.find(p=>p.id===id);
   if(!item)return;
@@ -5078,7 +5074,8 @@ async function saveProgrammeAppearance(){
     programmeDaySize:_ni('prog-day-size'),
     programmeStatusSize:_ni('prog-status-size'),
     programmeButtonLabel:(document.getElementById('prog-btn-label')||{}).value||'',
-    programmeButtonUrl:(document.getElementById('prog-btn-url')||{}).value||''
+    programmeButtonUrl:(document.getElementById('prog-btn-url')||{}).value||'',
+    programmeButtonColor:(document.getElementById('prog-btn-color')||{}).value||'#2563EB'
   };
   try{
     await evRef().update(ud);
