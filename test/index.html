@@ -2269,7 +2269,7 @@ function render(data){
     const _blockId = 'jracc_'+Math.random().toString(36).slice(2,8);
     _jrs.forEach((j,idx)=>{
       const _hidden = _useAcc && idx >= _accAfter;
-      o+=`<div class="jr-card${_hidden?' jr-hidden':''}" data-jracc="${_blockId}"${_hidden?' style="display:none"':''}><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${(j.bio && j.showBio!==false)?`<div class="jr-bio">${j.bio}</div>`:''}`;
+      o+=`<div class="jr-card${_hidden?' jr-hidden':''}"${_hidden?` data-jracc="${_blockId}" style="display:none"`:''}><div class="jr-top">${j.photoUrl?`<img class="jr-avatar" src="${j.photoUrl}" alt="" onerror="this.style.display='none'">`:`<div class="jr-avatar-placeholder">${ICO.user}</div>`}<div><div class="jr-name">${j.name||''}</div>${j.role?`<div class="jr-role">${j.role}</div>`:''}</div></div>${(j.bio && j.showBio!==false)?`<div class="jr-bio">${j.bio}</div>`:''}`;
       const socials=[];
       if(j.twitter){const tw=j.twitter.startsWith('http')?j.twitter:'https://x.com/'+j.twitter.replace('@','');socials.push(`<a class="jr-social-link" href="${tw}" target="_blank" rel="noopener">${_jrIcoX} <span>𝕏</span></a>`);}
       if(j.linkedin) socials.push(`<a class="jr-social-link" href="${j.linkedin}" target="_blank" rel="noopener">${_jrIcoLi} <span>LinkedIn</span></a>`);
