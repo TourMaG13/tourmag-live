@@ -969,7 +969,7 @@ function toast(msg,type='success'){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('show');}
-function closeModal(){document.getElementById('modal').classList.remove('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');if(typeof _flushDeferredRender==='function')_flushDeferredRender();}
 
 // ==================== ROLES & TAB VISIBILITY ====================
 // Compte Firestore de l'utilisateur connecté
@@ -1723,9 +1723,33 @@ document.addEventListener('click',function(ev){
 var subCollectionsEventId=''; // track which event's subcollections we're listening to
 var renderPending=null; // debounce handle
 
+var _renderDeferred=false;
+function _uiBusy(){
+  var panel=document.getElementById('mod-settings-panel');
+  var modal=document.getElementById('modal');
+  var panelOpen = panel && panel.classList.contains('open');
+  var modalOpen = modal && modal.classList.contains('show');
+  return !!(panelOpen || modalOpen);
+}
 function scheduleRender(){
   if(renderPending) clearTimeout(renderPending);
-  renderPending=setTimeout(()=>{ renderPending=null; if(typeof applyTabVisibility==='function') applyTabVisibility(); renderTab(); if(typeof _previewTouch==='function') _previewTouch(); },50);
+  renderPending=setTimeout(()=>{
+    renderPending=null;
+    // Ne pas reconstruire l'onglet pendant qu'un panneau/une fenêtre est ouvert :
+    // cela viderait le contexte en cours (upload, édition). On diffère le rendu.
+    if(_uiBusy()){ _renderDeferred=true; return; }
+    if(typeof applyTabVisibility==='function') applyTabVisibility();
+    renderTab();
+    if(typeof _previewTouch==='function') _previewTouch();
+  },50);
+}
+// À rappeler à la fermeture d'un panneau/fenêtre : applique le rendu différé s'il y en a un.
+function _flushDeferredRender(){
+  if(_renderDeferred && !_uiBusy()){
+    _renderDeferred=false;
+    if(typeof applyTabVisibility==='function') applyTabVisibility();
+    renderTab();
+  }
 }
 
 // ============================================================
@@ -2947,6 +2971,7 @@ function closeModuleSettings(){
   var panel=document.getElementById('mod-settings-panel');
   if(panel) panel.classList.remove('open');
   document.body.classList.remove('mod-settings-open');
+  if(typeof _flushDeferredRender==='function') _flushDeferredRender();
 }
 // Masquer / afficher un bloc sur mobile (stocké dans ev.mobileHidden[])
 async function toggleMobileHidden(tabKey, hide){
@@ -3149,7 +3174,9 @@ async function _loadLoginSettingsIntoForm(){
   try{
     var snap=await db.collection('config').doc('login').get();
     var d=snap.exists?(snap.data()||{}):{};
-    pI.value=d.photoUrl||''; lI.value=d.logoUrl||'';
+    // Ne pas écraser une valeur déjà saisie (ex. upload en cours non encore enregistré)
+    if(!pI.value) pI.value=d.photoUrl||'';
+    if(!lI.value) lI.value=d.logoUrl||'';
   }catch(e){ /* pas encore de config : champs vides */ }
   _refreshLoginPreview();
   pI.addEventListener('input',_refreshLoginPreview);
