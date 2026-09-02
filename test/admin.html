@@ -96,7 +96,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
 
 /* ==================== ACCUEIL (tableau de bord de travail) ==================== */
-.home-hero{background:linear-gradient(135deg,var(--pri) 0%,#2b3b52 100%);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:18px;box-shadow:var(--sh-2);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.home-hero{background:linear-gradient(135deg,var(--pri) 0%,#2b3b52 100%);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px;box-shadow:var(--sh-2)}
+.home-hero-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .home-hero-title{font-family:'Josefin Sans';font-size:24px;font-weight:700;line-height:1.15;margin:0 0 5px}
 .home-hero-sub{font-size:13px;color:rgba(255,255,255,.72);margin-bottom:12px}
 .home-hero-tags{display:flex;gap:8px;flex-wrap:wrap}
@@ -108,12 +109,20 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .home-hero-link{color:#fff;font-size:12.5px;font-weight:600;text-decoration:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:8px 14px;border-radius:10px;transition:background .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .home-hero-link svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .home-hero-link:hover{background:rgba(255,255,255,.18)}
-.home-express{margin-bottom:18px}
-.home-express-row{display:flex;gap:10px;margin-top:6px}
-.home-express-row .form-input{flex:1}
-.home-express-row .btn{flex-shrink:0}
-.home-express-hint{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5}
-.home-actions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+/* Publication express dans le bloc noir */
+.home-express{margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.home-express-row{display:flex;gap:10px}
+.home-express-input{flex:1;padding:11px 14px;border:1px solid rgba(255,255,255,.2);border-radius:var(--r-sm);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'Poppins';transition:border-color .15s,background .15s}
+.home-express-input::placeholder{color:rgba(255,255,255,.5)}
+.home-express-input:focus{outline:none;border-color:var(--acc);background:rgba(255,255,255,.14)}
+.home-express .btn{flex-shrink:0}
+.home-express-hint{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.5}
+/* Sections titrées */
+.home-section{margin-bottom:24px}
+.home-section-title{font-family:'Josefin Sans';font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.home-count{background:var(--amber);color:#fff;font-size:12px;font-weight:700;padding:1px 9px;border-radius:100px;letter-spacing:0}
+/* Cartes raccourcis */
+.home-actions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .home-action{position:relative;text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;transition:box-shadow .15s,transform .1s,border-color .15s;font-family:inherit;display:flex;flex-direction:column;gap:2px}
 .home-action:hover{box-shadow:var(--sh-2);transform:translateY(-1px);border-color:var(--acc)}
 .home-action-ico{margin-bottom:8px;color:var(--acc);display:inline-flex}
@@ -122,25 +131,42 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .home-action-label{font-size:14px;font-weight:600;color:var(--text)}
 .home-action-desc{font-size:11.5px;color:var(--text3)}
 .home-action-badge{position:absolute;top:12px;right:12px;background:var(--amber);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px}
-.home-count{background:var(--amber);color:#fff;font-size:12px;font-weight:700;padding:1px 9px;border-radius:100px;margin-left:4px}
-.home-q-list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+/* Questions à traiter */
+.home-q-list{display:flex;flex-direction:column;gap:10px}
 .home-q-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px}
 .home-q-txt{font-size:13.5px;color:var(--text);line-height:1.45;margin-bottom:10px}
 .home-q-actions{display:flex;gap:6px;flex-wrap:wrap}
 .btn-xs{padding:4px 10px;font-size:11.5px}
+/* Aperçus */
 .home-previews{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.home-preview h3{display:flex;align-items:center;justify-content:space-between}
-.home-preview-more{border:none;background:none;color:var(--acc);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.home-preview-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
-.home-preview-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.4}
+.home-preview-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.home-preview-title{font-family:'Josefin Sans';font-size:15px;font-weight:700;color:var(--text)}
+.home-gerer-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc2);font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;cursor:pointer;font-family:inherit;transition:background .15s}
+.home-gerer-btn:hover{background:var(--acc);color:#fff}
+.home-gerer-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.home-preview-list{display:flex;flex-direction:column;gap:2px}
+.home-preview-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.4}
 .home-preview-item:last-child{border-bottom:none}
-.home-preview-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:6px;flex-shrink:0}
+.home-preview-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);flex-shrink:0}
+.home-preview-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-preview-empty{font-size:12.5px;color:var(--text3);padding:10px 0}
+.home-preview-toggle{justify-content:space-between}
+.home-toggle-btn{flex-shrink:0;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;cursor:pointer;font-family:inherit;transition:all .12s}
+.home-toggle-btn.on{background:#ECFDF5;border-color:#A7F3D0;color:#059669}
+.home-toggle-btn:hover{border-color:var(--acc)}
+/* Ajout express inline */
+.home-inline-add{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.home-inline-add .home-express-input{background:var(--bg);border:1px solid var(--border);color:var(--text)}
+.home-inline-add .home-express-input::placeholder{color:var(--text3)}
+.home-inline-add .home-express-input:focus{border-color:var(--acc);box-shadow:var(--ring)}
+.home-add-btn{border:1px dashed var(--border);background:transparent;color:var(--acc2);font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--r-sm);cursor:pointer;font-family:inherit;margin-bottom:10px;transition:border-color .15s,background .15s}
+.home-add-btn:hover{border-color:var(--acc);background:var(--acc-soft)}
 @media(max-width:768px){
   .home-hero{padding:20px 18px}
   .home-hero-title{font-size:20px}
-  .home-hero-link{width:100%;text-align:center}
-  .home-previews{grid-template-columns:1fr}
+  .home-hero-link{width:100%;justify-content:center;margin-top:4px}
   .home-express-row{flex-direction:column}
+  .home-previews{grid-template-columns:1fr}
 }
 
 /* ==================== VISITE GUIDÉE (onboarding) ==================== */
@@ -1843,7 +1869,6 @@ function _homeDashUrl(ev){
   const ghBase = window.location.href.replace(/\/[^\/]*(?:\?.*)?(?:#.*)?$/, '') + '/index.html';
   const pub = (ev.publicUrl||'').trim();
   const base = pub || ghBase;
-  // On ajoute toujours ?event=<id> : sans lui, la page publique ne sait pas quel événement charger.
   const sep = base.includes('?') ? (base.endsWith('?')||base.endsWith('&')?'':'&') : '?';
   return base + sep + 'event=' + encodeURIComponent(currentEventId);
 }
@@ -1871,7 +1896,6 @@ function renderHome(el){
   const isExp = ev.mode==='expedition';
   const meta = [ev.heroDates, ev.heroLocation].filter(Boolean).join(' · ');
   const nbPhases = (ev.phases||[]).length;
-  // Fraîcheur du live : dernière entrée publiée (liveData déjà trié par time desc)
   const lastLive = (liveData||[])[0];
   const fresh = lastLive ? _timeAgo(lastLive.time) : null;
   const dashUrl = _homeDashUrl(ev);
@@ -1879,32 +1903,30 @@ function renderHome(el){
 
   let h='';
 
-  // ---- En-tête ----
+  // ---- BLOC NOIR : synthèse + publication express ----
   h += `<div class="home-hero">
-    <div class="home-hero-l">
-      <h1 class="home-hero-title">${_esc(ev.name||ev.heroTitle||'Événement')}</h1>
-      ${meta?`<div class="home-hero-sub">${_esc(meta)}</div>`:''}
-      <div class="home-hero-tags">
-        ${fresh?`<span class="home-chip"><span class="home-chip-dot"></span>Dernière publi ${fresh}</span>`:'<span class="home-chip home-chip-warn">Aucune publication</span>'}
-        ${nbPhases?`<span class="home-chip home-chip-ghost">${nbPhases} phase${nbPhases>1?'s':''}${_tabVisible('phases')?' · <a href="#" onclick="event.preventDefault();goToTab(\'phases\')">gérer</a>':''}</span>`:''}
+    <div class="home-hero-head">
+      <div class="home-hero-l">
+        <h1 class="home-hero-title">${_esc(ev.name||ev.heroTitle||'Événement')}</h1>
+        ${meta?`<div class="home-hero-sub">${_esc(meta)}</div>`:''}
+        <div class="home-hero-tags">
+          ${fresh?`<span class="home-chip"><span class="home-chip-dot"></span>Dernière publi ${fresh}</span>`:'<span class="home-chip home-chip-warn">Aucune publication</span>'}
+          ${nbPhases?`<span class="home-chip home-chip-ghost">${nbPhases} phase${nbPhases>1?'s':''}${_tabVisible('phases')?' · <a href="#" onclick="event.preventDefault();goToTab(\'phases\')">gérer</a>':''}</span>`:''}
+        </div>
       </div>
+      <a class="home-hero-link" href="${_esc(dashUrl)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Voir le dashboard public →</a>
     </div>
-    <a class="home-hero-link" href="${_esc(dashUrl)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Voir le dashboard public →</a>
+    ${_tabVisible('live')?`
+    <div class="home-express">
+      <div class="home-express-row">
+        <input class="home-express-input" id="home-express-input" placeholder="${isExp?'Publier une étape / actualité…':'Publier au fil live en un instant…'}" onkeydown="if(event.key==='Enter')homeExpressPublish()">
+        <button class="btn btn-primary" onclick="homeExpressPublish()" id="home-express-btn"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> Publier</button>
+      </div>
+      <div class="home-express-hint">Publié immédiatement sous « La Rédaction ». Pour un contenu détaillé (photo, tag, programmation…), utilisez l'onglet Fil live.</div>
+    </div>`:''}
   </div>`;
 
-  // ---- Publication express ----
-  if(_tabVisible('live')){
-    h += `<div class="admin-card home-express">
-      <h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> ${isExp?'Publier une étape / actualité':'Publication express'}</h3>
-      <div class="home-express-row">
-        <input class="form-input" id="home-express-input" placeholder="Quoi de neuf sur l'événement ?" onkeydown="if(event.key==='Enter'&&(event.metaKey||event.ctrlKey))homeExpressPublish()">
-        <button class="btn btn-primary" onclick="homeExpressPublish()" id="home-express-btn">Publier</button>
-      </div>
-      <div class="home-express-hint">Publié immédiatement au fil live sous « La Rédaction ». Pour un contenu détaillé (photo, tag, programmation…), utilisez l'onglet Fil live.</div>
-    </div>`;
-  }
-
-  // ---- Cartes d'actions rapides ----
+  // ---- SECTION : Raccourcis rapides ----
   const actions = [
     {tab:'live', ico:'ti-live', label:isExp?'Fil / étapes':'Fil live', desc:'Publier une actualité'},
     {tab:'citations', ico:'ti-citations', label:'Citations', desc:'Mettre en avant une phrase'},
@@ -1914,19 +1936,20 @@ function renderHome(el){
     {tab:'gallery', ico:'ti-gallery', label:'Galerie', desc:'Ajouter des photos'}
   ].filter(a=>_tabVisible(a.tab));
   if(actions.length){
-    h += `<div class="home-actions-grid">${actions.map(a=>`
+    h += `<div class="home-section"><h2 class="home-section-title">Raccourcis rapides</h2>
+      <div class="home-actions-grid">${actions.map(a=>`
       <button class="home-action" onclick="goToTab('${a.tab}')">
         ${a.badge>0?`<span class="home-action-badge">${a.badge}</span>`:''}
         <span class="home-action-ico"><svg viewBox="0 0 24 24"><use href="#${a.ico}"/></svg></span>
         <span class="home-action-label">${a.label}</span>
         <span class="home-action-desc">${a.desc}</span>
-      </button>`).join('')}</div>`;
+      </button>`).join('')}</div></div>`;
   }
 
-  // ---- Questions à modérer ----
+  // ---- SECTION : À traiter (questions à modérer) ----
   if(_tabVisible('questions') && pendingQ.length){
-    h += `<div class="admin-card">
-      <h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg> Questions à modérer <span class="home-count">${pendingQ.length}</span></h3>
+    h += `<div class="home-section"><h2 class="home-section-title">À traiter <span class="home-count">${pendingQ.length}</span></h2>
+      <div class="admin-card">
       <div class="home-q-list">${pendingQ.slice(0,5).map(q=>`
         <div class="home-q-item">
           <div class="home-q-txt">${_esc((q.text||'').slice(0,140))}</div>
@@ -1937,26 +1960,69 @@ function renderHome(el){
           </div>
         </div>`).join('')}</div>
       ${pendingQ.length>5?`<button class="btn btn-ghost" style="margin-top:10px;width:100%;justify-content:center" onclick="goToTab('questions')">Voir les ${pendingQ.length-5} autres →</button>`:''}
-    </div>`;
+    </div></div>`;
   }
 
-  // ---- Aperçus de contenu ----
-  const previews = [];
-  if(_tabVisible('live')) previews.push({title:isExp?'Dernières étapes':'Dernières publications', tab:'live', items:(liveData||[]).slice(0,4).map(e=>_stripHtml(e.title||e.text)||'(sans titre)')});
-  if(_tabVisible('citations')) previews.push({title:'Dernières citations', tab:'citations', items:(citationsData||[]).slice(0,4).map(c=>_stripHtml(c.text||c.quote||c.content)||'(citation)')});
-  if(_tabVisible('quiz')) previews.push({title:'Quiz & sondages', tab:'quiz', items:(quizzesData||[]).slice(0,4).map(q=>(q.title||'Quiz')+(q.active?' · 🟢 en ligne':' · ⚪ hors ligne'))});
-  if(_tabVisible('interviews')) previews.push({title:'Dernières interviews', tab:'interviews', items:(interviewsData||[]).slice(0,4).map(i=>_stripHtml(i.name||i.title||i.quote)||'(interview)')});
+  // ---- SECTION : Vue d'ensemble (aperçus + actions express) ----
+  let previewsHtml = '';
 
-  const withItems = previews.filter(p=>p.items.length);
-  if(withItems.length){
-    h += `<div class="home-previews">${withItems.map(p=>`
-      <div class="admin-card home-preview">
-        <h3>${p.title} <button class="home-preview-more" onclick="goToTab('${p.tab}')">Gérer →</button></h3>
-        <div class="home-preview-list">${p.items.map(t=>`<div class="home-preview-item"><span class="home-preview-dot"></span><span>${_esc(t.slice(0,90))}</span></div>`).join('')}</div>
-      </div>`).join('')}</div>`;
+  // Fil live
+  if(_tabVisible('live')){
+    const items=(liveData||[]).slice(0,4);
+    previewsHtml += _homePreviewCard('live', isExp?'Dernières étapes':'Dernières publications',
+      items.map(e=>`<div class="home-preview-item"><span class="home-preview-dot"></span><span>${_esc(_stripHtml(e.title||e.text).slice(0,90))||'(sans titre)'}</span></div>`).join(''), '');
+  }
+  // Citations — avec ajout express
+  if(_tabVisible('citations')){
+    const items=(citationsData||[]).slice(0,4);
+    const expr = `<div class="home-inline-add" id="home-add-cit" style="display:none">
+      <input class="home-express-input" id="home-cit-text" placeholder="La citation…">
+      <input class="home-express-input" id="home-cit-name" placeholder="Nom de l'auteur" style="max-width:180px">
+      <button class="btn btn-primary btn-xs" onclick="homeAddCitation()">Ajouter</button>
+    </div>`;
+    previewsHtml += _homePreviewCard('citations', 'Dernières citations',
+      items.map(c=>`<div class="home-preview-item"><span class="home-preview-dot"></span><span>${_esc(_stripHtml(c.text||c.quote||c.content).slice(0,90))||'(citation)'}</span></div>`).join(''),
+      `<button class="home-add-btn" onclick="_homeToggleAdd('home-add-cit','home-cit-text')">+ Citation express</button>${expr}`);
+  }
+  // Quiz — avec toggle en ligne/hors ligne
+  if(_tabVisible('quiz')){
+    const items=(quizzesData||[]).slice(0,4);
+    previewsHtml += _homePreviewCard('quiz', 'Quiz & sondages',
+      items.map(q=>`<div class="home-preview-item home-preview-toggle"><span class="home-preview-dot" style="background:${q.active?'var(--green)':'var(--text3)'}"></span><span class="home-preview-name">${_esc((q.title||'Quiz').slice(0,70))}</span><button class="home-toggle-btn ${q.active?'on':''}" onclick="homeToggleQuiz('${q.id}',${q.active?'false':'true'})">${q.active?'En ligne':'Hors ligne'}</button></div>`).join(''), '');
+  }
+  // Interviews
+  if(_tabVisible('interviews')){
+    const items=(interviewsData||[]).slice(0,4);
+    previewsHtml += _homePreviewCard('interviews', 'Dernières interviews',
+      items.map(i=>`<div class="home-preview-item"><span class="home-preview-dot"></span><span>${_esc(_stripHtml(i.name||i.title||i.quote).slice(0,90))||'(interview)'}</span></div>`).join(''), '');
+  }
+
+  if(previewsHtml){
+    h += `<div class="home-section"><h2 class="home-section-title">Vue d'ensemble</h2><div class="home-previews">${previewsHtml}</div></div>`;
   }
 
   el.innerHTML = h;
+}
+
+// Carte d'aperçu avec en-tête, bouton Gérer bien visible, contenu et zone d'action optionnelle
+function _homePreviewCard(tab, title, itemsHtml, actionHtml){
+  const body = itemsHtml || '<div class="home-preview-empty">Rien à afficher pour le moment.</div>';
+  return `<div class="admin-card home-preview">
+    <div class="home-preview-head">
+      <span class="home-preview-title">${title}</span>
+      <button class="home-gerer-btn" onclick="goToTab('${tab}')">Gérer <svg viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
+    </div>
+    ${actionHtml||''}
+    <div class="home-preview-list">${body}</div>
+  </div>`;
+}
+
+function _homeToggleAdd(boxId, focusId){
+  const box=document.getElementById(boxId);
+  if(!box) return;
+  const show = box.style.display==='none';
+  box.style.display = show?'flex':'none';
+  if(show){ const f=document.getElementById(focusId); if(f) f.focus(); }
 }
 
 async function homeExpressPublish(){
@@ -1965,22 +2031,31 @@ async function homeExpressPublish(){
   if(!inp) return;
   const txt = inp.value.trim();
   if(!txt){ toast('Écrivez quelque chose à publier','error'); inp.focus(); return; }
-  btn.disabled=true; btn.textContent='Publication…';
+  btn.disabled=true; const _o=btn.innerHTML; btn.textContent='Publication…';
   try{
     await subCol('live').add({
-      text: '<p>'+_esc(txt)+'</p>',
-      title: '',
-      journalist: 'La Rédaction',
-      tag: '', tag_color: '', phase: '',
-      time: firebase.firestore.FieldValue.serverTimestamp()
+      text: '<p>'+_esc(txt)+'</p>', title:'', journalist:'La Rédaction',
+      tag:'', tag_color:'', phase:'', time: firebase.firestore.FieldValue.serverTimestamp()
     });
-    inp.value='';
-    toast('Publié au fil live ✓');
-  }catch(e){
-    toast('Erreur : '+(e.message||e),'error');
-  }finally{
-    btn.disabled=false; btn.textContent='Publier';
-  }
+    inp.value=''; toast('Publié au fil live ✓');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+  finally{ btn.disabled=false; btn.innerHTML=_o; }
+}
+
+async function homeAddCitation(){
+  const t=document.getElementById('home-cit-text'), n=document.getElementById('home-cit-name');
+  if(!t||!n) return;
+  const text=t.value.trim(), name=n.value.trim();
+  if(!text||!name){ toast('Citation et nom requis','error'); return; }
+  try{
+    await subCol('citations').add({text, name, role:'', rubrique:'', avatar:'', photoFormat:'round', phase:'', created_at:firebase.firestore.FieldValue.serverTimestamp()});
+    t.value=''; n.value=''; toast('Citation ajoutée ✓');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+
+async function homeToggleQuiz(id, on){
+  try{ await toggleQuizActive(id, on==='true'||on===true); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 
