@@ -495,7 +495,9 @@ img{display:block}a{text-decoration:none}
 .prog-body{flex:1}
 .prog-label{font-size:var(--prog-label-size,11px);font-weight:600;color:#1C1917;line-height:1.35}
 .prog-desc{font-size:var(--prog-desc-size,9px);color:#57534E;margin-top:1px;line-height:1.4}
-.prog-status{display:inline-block;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
+.prog-status{display:inline-block;font-size:var(--prog-status-size,7px);font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
+.prog-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:10px 20px;background:var(--acc,#E8842C);color:#fff;font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s}
+.prog-btn:hover{filter:brightness(1.08)}
 .prog-status.past{background:#E7E5E4;color:#78716C}
 .prog-status.active{background:#DC2626;color:#fff;animation:livepulse 1.5s infinite}
 .prog-status.upcoming{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B50}
@@ -1749,6 +1751,8 @@ function render(data){
   if(event.programmeLabelSize) document.documentElement.style.setProperty('--prog-label-size', event.programmeLabelSize + 'px');
   if(event.programmeDescSize)  document.documentElement.style.setProperty('--prog-desc-size', event.programmeDescSize + 'px');
   if(event.programmeTimeSize)  document.documentElement.style.setProperty('--prog-time-size', event.programmeTimeSize + 'px');
+  if(event.programmeDaySize)   document.documentElement.style.setProperty('--prog-day-size', event.programmeDaySize + 'px');
+  if(event.programmeStatusSize)document.documentElement.style.setProperty('--prog-status-size', event.programmeStatusSize + 'px');
   // Gallery height
   document.documentElement.style.setProperty('--gal-h', (event.galleryHeight || 260) + 'px');
 
@@ -2204,7 +2208,7 @@ function render(data){
     let o = `<div class="prog-card fi"><div class="hd"><div class="ci">${ICO.clipboard}</div><span class="ct">${event.programmeTitle||'Programme'}</span></div><div class="prog-list">`;
     dayOrder.forEach(day=>{
       if(!grouped[day]||!grouped[day].length)return;
-      if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:10px;font-weight:700;color:#B45309;margin:6px 0 4px;padding:3px 8px;background:rgba(245,158,11,.1);border-radius:5px;display:inline-block">📅 ${day}</div>`;
+      if(hasMultipleDays && day) o += `<div style="font-family:'Josefin Sans';font-size:var(--prog-day-size,10px);font-weight:700;color:#B45309;margin:6px 0 4px;padding:3px 8px;background:rgba(245,158,11,.1);border-radius:5px;display:inline-block">${day}</div>`;
       grouped[day].forEach(p=>{
         const st=autoStatus(p.time,day);
         const sl=st==='past'?'Terminé':st==='active'?'● En cours':'À venir';
@@ -2212,7 +2216,12 @@ function render(data){
         o += `<div class="prog-item${st==='active'?' prog-active':''}">${hasTime?`<div class="prog-time">${p.time}</div>`:''}<div class="prog-body"><div class="prog-label">${p.label}</div>${p.desc?`<div class="prog-desc">${p.desc}</div>`:''}</div>${event.programmeHideStatus?'':`<span class="prog-status ${st}">${sl}</span>`}</div>`;
       });
     });
-    o += `</div></div>`;
+    o += `</div>`;
+    if(event.programmeButtonUrl && event.programmeButtonUrl.trim()){
+      const _btnLabel = (event.programmeButtonLabel||'En savoir plus').trim();
+      o += `<a class="prog-btn" href="${event.programmeButtonUrl.trim()}" target="_blank" rel="noopener">${_btnLabel}</a>`;
+    }
+    o += `</div>`;
     return o;
   }
 
