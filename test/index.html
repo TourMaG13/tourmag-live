@@ -103,6 +103,9 @@ img{display:block}a{text-decoration:none}
 .hero-title{font-family:'Josefin Sans';font-size:38px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:10px}
 .hero-subtitle-text{font-family:'Playfair Display';font-style:italic;font-size:15px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:18px;padding-left:14px;border-left:3px solid var(--acc)}
 .hero-meta-row{display:flex;gap:16px;flex-wrap:wrap}
+.hero-btn{display:inline-block;margin-top:16px;padding:11px 24px;background:var(--acc,#E8842C);color:#fff;font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.hero-btn:hover{filter:brightness(1.08)}
+.exp-hero-btn{margin-top:18px;border-radius:2px;letter-spacing:.04em}
 .hero-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.5)}
 .hero-meta-item svg{width:14px;height:14px;stroke:rgba(255,255,255,.4)}
 .hero-tag{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1);transition:all .15s;display:inline-block}
@@ -496,7 +499,7 @@ img{display:block}a{text-decoration:none}
 .prog-label{font-size:var(--prog-label-size,11px);font-weight:600;color:#1C1917;line-height:1.35}
 .prog-desc{font-size:var(--prog-desc-size,9px);color:#57534E;margin-top:1px;line-height:1.4}
 .prog-status{display:inline-block;font-size:var(--prog-status-size,7px);font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
-.prog-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:10px 20px;background:var(--acc,#E8842C);color:#fff;font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s}
+.prog-btn{display:block;width:fit-content;margin:14px auto 2px;padding:10px 22px;background:var(--prog-btn-color,var(--acc,#E8842C));color:#fff;font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s;text-align:center}
 .prog-btn:hover{filter:brightness(1.08)}
 .prog-status.past{background:#E7E5E4;color:#78716C}
 .prog-status.active{background:#DC2626;color:#fff;animation:livepulse 1.5s infinite}
@@ -1753,6 +1756,7 @@ function render(data){
   if(event.programmeTimeSize)  document.documentElement.style.setProperty('--prog-time-size', event.programmeTimeSize + 'px');
   if(event.programmeDaySize)   document.documentElement.style.setProperty('--prog-day-size', event.programmeDaySize + 'px');
   if(event.programmeStatusSize)document.documentElement.style.setProperty('--prog-status-size', event.programmeStatusSize + 'px');
+  if(event.programmeButtonColor)document.documentElement.style.setProperty('--prog-btn-color', event.programmeButtonColor);
   // Gallery height
   document.documentElement.style.setProperty('--gal-h', (event.galleryHeight || 260) + 'px');
 
@@ -1823,6 +1827,10 @@ function render(data){
   const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
   const _heroLocation = _ph.heroLocation || event.location || '';
   const _heroDates    = _ph.heroDates    || event.dates    || '';
+  // Bouton du header (optionnel) : texte + URL + couleur, sous le lieu/date
+  const _heroBtn = (event.heroButtonUrl && event.heroButtonUrl.trim())
+    ? `<a class="hero-btn" href="${event.heroButtonUrl.trim()}" target="_blank" rel="noopener" style="${event.heroButtonColor?`background:${event.heroButtonColor}`:''}">${(event.heroButtonLabel||'En savoir plus').trim()}</a>`
+    : '';
   // Bandeau : 3 modes de phase — 'own' (image propre), 'off' (désactivé), sinon hérite de l'événement
   const _pbMode = (_ph && _ph.bannerMode) || 'inherit';
   const _evBanner = event.heroBannerEnabled ? (event.heroBannerImage||'') : '';
@@ -1899,7 +1907,7 @@ function render(data){
         o += `<div class="hero-meta-row">`;
         if(_heroLocation) o += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
         if(_heroDates) o += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
-        o += `</div></div></div>`;
+        o += `</div>${_heroBtn}</div></div>`;
       }
       o += `</div>`;
     } else {
@@ -1911,7 +1919,7 @@ function render(data){
     _split += `<div class="hero-meta-row">`;
     if(_heroLocation) _split += `<span class="hero-meta-item">${ICO.mapPin} ${_heroLocation}</span>`;
     if(_heroDates) _split += `<span class="hero-meta-item">${ICO.calendar} ${_heroDates}</span>`;
-    _split += `</div>`;
+    _split += `</div>${_heroBtn}`;
     // Hero tags (separate from live feed tag colors)
     const heroTags = event.heroTags || [];
     if(heroTags.length){
@@ -2701,6 +2709,9 @@ function renderExpedition(data){
   const _heroDates      = _ph.heroDates      || event.dates    || '';
   const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
   const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
+  const _heroBtn = (event.heroButtonUrl && event.heroButtonUrl.trim())
+    ? `<a class="hero-btn exp-hero-btn" href="${event.heroButtonUrl.trim()}" target="_blank" rel="noopener" style="${event.heroButtonColor?`background:${event.heroButtonColor}`:''}">${(event.heroButtonLabel||'En savoir plus').trim()}</a>`
+    : '';
   // Bandeau : 3 modes de phase — 'own' / 'off' / héritage événement
   const _pbMode = (_ph && _ph.bannerMode) || 'inherit';
   const _evBanner = event.heroBannerEnabled ? (event.heroBannerImage||'') : '';
@@ -2812,6 +2823,7 @@ function renderExpedition(data){
       if(_heroLocation) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
       if(_heroDates) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
       if(_bm.length) h += `<div class="exp-hero-meta-row">${_bm.join('')}</div>`;
+      h += _heroBtn;
       h += `</div></div>`;
     }
     h += `</section>`;
@@ -2833,6 +2845,7 @@ function renderExpedition(data){
   if(_heroLocation) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
   if(_heroDates) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
   if(metaItems.length) h += `<div class="exp-hero-meta-row">${metaItems.join('')}</div>`;
+  h += _heroBtn;
 
   // Hero tags
   const heroTags = event.heroTags || [];
