@@ -789,6 +789,10 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 const auth=firebase.auth();
+// La session admin doit survivre au rechargement et à la fermeture de l'onglet.
+// On impose explicitement la persistance LOCAL (au cas où une autre page du même
+// domaine — le dashboard public — aurait modifié la persistance partagée).
+try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ console.warn('setPersistence LOCAL:', e && e.message); }
 
 // ============================================================
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
