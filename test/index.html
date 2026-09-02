@@ -65,6 +65,11 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text);margin:0 0 14px;line-height:1.25}
 .cp-text{font-size:16px;line-height:1.75;color:#334155}
 .cp-text p{margin:0 0 14px}.cp-text p:last-child{margin-bottom:0}
+.cp-text a{color:var(--acc,#0C6CA1);text-decoration:underline}
+.cp-text ul,.cp-text ol{margin:0 0 14px;padding-left:24px}
+.cp-text b,.cp-text strong{font-weight:700}
+.cp-text u{text-decoration:underline}
+.cp-html{font-size:15px;line-height:1.6}
 .cp-img{width:100%;border-radius:12px;display:block}
 .cp-caption{font-size:12.5px;color:#94A3B8;text-align:center;margin-top:8px;font-style:italic}
 .cp-txt-img{width:100%;border-radius:12px;display:block}
@@ -4351,16 +4356,19 @@ function _renderContentPage(page){
       var imgHtml = b.image ? '<img class="cp-txt-img" src="'+_qEsc(b.image)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
       var body = '';
       if(b.title) body += '<h2 class="cp-h2">'+_qEsc(b.title)+'</h2>';
-      if(b.text) body += '<div class="cp-text">'+_cpTextToHtml(b.text)+'</div>';
+      if(b.text) body += '<div class="cp-text">'+b.text+'</div>';
+      var bgStyle = b.bgOn ? ' style="background:'+(b.bg||'#F1F5F9')+';padding:20px 22px;border-radius:12px"' : '';
       if(imgHtml && (pos==='left'||pos==='right')){
-        o += '<div class="cp-block cp-textimg cp-img-'+pos+'"><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+body+'</div></div>';
+        o += '<div class="cp-block cp-textimg cp-img-'+pos+'"'+bgStyle+'><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+body+'</div></div>';
       } else if(imgHtml && pos==='top'){
-        o += '<div class="cp-block">'+imgHtml+'<div class="cp-txt-body">'+body+'</div></div>';
+        o += '<div class="cp-block"'+bgStyle+'>'+imgHtml+'<div class="cp-txt-body">'+body+'</div></div>';
       } else if(imgHtml && pos==='bottom'){
-        o += '<div class="cp-block"><div class="cp-txt-body">'+body+'</div>'+imgHtml+'</div>';
+        o += '<div class="cp-block"'+bgStyle+'><div class="cp-txt-body">'+body+'</div>'+imgHtml+'</div>';
       } else {
-        o += '<div class="cp-block"><div class="cp-txt-body">'+body+'</div></div>';
+        o += '<div class="cp-block"'+bgStyle+'><div class="cp-txt-body">'+body+'</div></div>';
       }
+    } else if(b.type==='html'){
+      if(b.html) o += '<div class="cp-block cp-html">'+b.html+'</div>';
     } else if(b.type==='image'){
       if(b.image) o += '<div class="cp-block"><img class="cp-img" src="'+_qEsc(b.image)+'" alt="'+_qEsc(b.caption||'')+'" loading="lazy" onerror="this.style.display=\'none\'">'+(b.caption?'<div class="cp-caption">'+_qEsc(b.caption)+'</div>':'')+'</div>';
     } else if(b.type==='gallery'){
