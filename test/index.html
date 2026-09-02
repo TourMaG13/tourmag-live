@@ -41,6 +41,10 @@
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626;--exp-accent:#FF6C00}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+/* Enveloppe de bloc : neutre pour la mise en page (n'affecte ni la grille ni le flex) */
+.blk-wrap{display:contents}
+/* Blocs masqués sur mobile (réglage par bloc dans l'admin) */
+@media(max-width:768px){ .blk-wrap.blk-mob-hidden{display:none} }
 img{display:block}a{text-decoration:none}
 
 /* LOADER */
@@ -2508,7 +2512,8 @@ function render(data){
   });
   function getZone(k){ return blockZones[k] || defaultZones[k] || 'main'; }
   const _renderedBlocks = [];
-  function rb(k){ const fn=blockRenderers[k]; const html=fn ? fn() : ''; if(html) _renderedBlocks.push(k); else console.log('[TourMaG Live] Block EMPTY:', k, '| mod.'+k+'=', mod[k]); return html; }
+  const _mobileHidden = Array.isArray(event.mobileHidden) ? event.mobileHidden : [];
+  function rb(k){ const fn=blockRenderers[k]; const html=fn ? fn() : ''; if(html){ _renderedBlocks.push(k); const hideCls=_mobileHidden.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; } else { console.log('[TourMaG Live] Block EMPTY:', k, '| mod.'+k+'=', mod[k]); return ''; } }
 
   const allSideKeys = validKeys.filter(k => getZone(k) === 'side');
   const sidebarAnchor = event.sidebarAnchor || 'live';
@@ -3372,7 +3377,7 @@ function renderExpedition(data){
 
   const expZones = event.expBlockZones || {};
   function getExpZone(k){ return expZones[k] || expDefaultZones[k] || 'main'; }
-  function expRb(k){ const fn=expBlockRenderers[k]; return fn ? fn() : ''; }
+  function expRb(k){ const fn=expBlockRenderers[k]; const html=fn ? fn() : ''; if(!html) return ''; const _mh=Array.isArray(event.mobileHidden)?event.mobileHidden:[]; const hideCls=_mh.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; }
 
   const allExpSideKeys = finalOrder.filter(k => getExpZone(k) === 'side' && expBlockRenderers[k]);
   const expSidebarAnchor = event.expSidebarAnchor || 'live';
