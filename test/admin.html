@@ -94,6 +94,23 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sb-group.collapsed .sb-group-items{display:none}
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
+/* Bouton « Personnaliser l'apparence » (bas de bloc) */
+.mod-settings-btnrow{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);display:flex;justify-content:flex-start}
+.mod-settings-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;padding:9px 16px;border-radius:100px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,box-shadow .15s}
+.mod-settings-btn:hover{border-color:var(--acc);color:var(--acc);box-shadow:var(--sh-1)}
+.mod-settings-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Panneau latéral glissant */
+.mod-settings-scrim{position:fixed;inset:0;background:rgba(15,23,42,.4);opacity:0;visibility:hidden;transition:opacity .25s;z-index:150}
+body.mod-settings-open .mod-settings-scrim{opacity:1;visibility:visible}
+.mod-settings-panel{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:92vw;background:var(--bg);box-shadow:-12px 0 40px rgba(15,23,42,.25);transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:151;display:flex;flex-direction:column}
+.mod-settings-panel.open{transform:translateX(0)}
+.mod-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:var(--pri);color:#fff;flex-shrink:0}
+.mod-settings-title{font-family:'Josefin Sans';font-size:15px;font-weight:700}
+.mod-settings-close{border:none;background:rgba(255,255,255,.12);color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;transition:background .15s}
+.mod-settings-close:hover{background:rgba(255,255,255,.22)}
+.mod-settings-body{flex:1;overflow-y:auto;padding:20px}
+.mod-settings-body .admin-card{box-shadow:none;border:1px solid var(--border)}
+@media(max-width:768px){.mod-settings-panel{width:100vw;max-width:100vw}}
 /* Icônes SVG des blocs (aperçu modules) */
 .blk-ic,.blk-ic-sm{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
 .blk-ic{width:16px;height:16px}
@@ -305,7 +322,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
   [data-gal-row] img{width:40px!important;height:28px!important}
 }
 
-.page-title{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:6px}
+.page-title{font-family:'Josefin Sans';font-size:22px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.pt-ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--acc);flex-shrink:0}
 .page-desc{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6}
 .admin-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;margin-bottom:16px;box-shadow:var(--sh-1)}
 .admin-card h3{font-family:'Josefin Sans';font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
@@ -698,6 +716,14 @@ select.form-input{cursor:pointer}
   <div class="modal-box" id="modal-box"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="mod-settings-scrim" id="mod-settings-scrim" onclick="closeModuleSettings()"></div>
+<aside class="mod-settings-panel" id="mod-settings-panel" aria-hidden="true">
+  <div class="mod-settings-head">
+    <span class="mod-settings-title" id="mod-settings-title">Apparence</span>
+    <button class="mod-settings-close" onclick="closeModuleSettings()" aria-label="Fermer">✕</button>
+  </div>
+  <div class="mod-settings-body" id="mod-settings-body"></div>
+</aside>
 <div class="tour-overlay" id="tour-overlay">
   <div class="tour-spot" id="tour-spot"></div>
   <div class="tour-pop" id="tour-pop">
@@ -1883,6 +1909,12 @@ function renderTab(){
     case 'guide':renderGuide(main);break;
     case 'stats':renderStats(main);break;
   }
+  // Bouton « Personnaliser l'apparence » en bas des blocs concernés (position uniforme)
+  const _settingsTabs=['live','citations','articles','essentiel','videos','interviews','gallery','journalistes','questions','quiz','programme','kpis','contact','etapes','sponsors'];
+  if(_settingsTabs.includes(currentTab) && typeof _moduleSettingsButton==='function'){
+    const btn=_moduleSettingsButton(currentTab);
+    if(btn) main.insertAdjacentHTML('beforeend', btn);
+  }
 }
 
 // ==================== ACCUEIL (tableau de bord de travail) ====================
@@ -2083,7 +2115,7 @@ async function homeToggleQuiz(id, on){
 
 // ==================== EVENTS ====================
 function renderEvents(el){
-  let h=`<div class="page-title">Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-events"/></svg>Mes événements</div><div class="page-desc">Créez et gérez vos événements.</div>`;
   if(!isClient()) h+=`<div style="margin-bottom:16px"><button class="btn btn-primary" onclick="newEvent()">＋ Nouvel événement</button></div>`;
   if(eventsData.length){
     h+=`<div class="admin-card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -2827,8 +2859,13 @@ function moduleSettingsPanel(type, ev){
 // Bloc complet "Paramétrage du module" à insérer dans un onglet : réglages fins
 // + typo + un seul bouton d'enregistrement. tabKey = data-tab de l'onglet.
 function moduleConfigBlock(tabKey){
-  // Masquage de la boîte « Paramétrage & apparence » pour les non-super-admins
-  // (piloté par le profil d'accès appliqué → ev.hiddenModuleSettings).
+  // La boîte de réglages est désormais rendue via un bouton en bas de page
+  // (voir _renderModuleSettingsButton, appelé depuis renderTab). On ne rend donc
+  // plus rien inline ici, pour garantir une position cohérente sur tous les blocs.
+  return '';
+}
+// Contenu des réglages (identique à l'ancien <details>, sans l'enveloppe).
+function _moduleSettingsInner(tabKey){
   if(!isSuperAdmin()){
     var _ev=eventsData.find(e=>e.id===currentEventId)||{};
     var _hms=_effectiveHiddenMS(_ev);
@@ -2839,9 +2876,33 @@ function moduleConfigBlock(tabKey){
   var inner = '';
   if(settingsType) inner += moduleSettingsPanel(settingsType);
   if(typoKey) inner += moduleTypoPanel(typoKey);
-  inner += '<div style="margin-top:12px"><button class="btn btn-primary" onclick="saveModule(\''+tabKey+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer ce module</button></div>';
-  return '<details class="admin-card" style="margin:0 0 16px"><summary style="cursor:pointer;font-weight:700;padding:12px 0;list-style:none">⚙️ Paramétrage &amp; apparence de ce module</summary><div style="padding:6px 0">'+inner+'</div></details>';
+  if(!inner) return '';
+  inner += '<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveModule(\''+tabKey+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
+  return inner;
 }
+// Le bouton placé en bas de chaque bloc concerné.
+function _moduleSettingsButton(tabKey){
+  if(!_moduleSettingsInner(tabKey)) return ''; // rien à régler / masqué pour ce profil
+  return '<div class="mod-settings-btnrow"><button class="mod-settings-btn" onclick="openModuleSettings(\''+tabKey+'\')"><svg viewBox="0 0 24 24"><use href="#ti-sliders"/></svg> Personnaliser l\'apparence</button></div>';
+}
+// Ouvre le panneau latéral avec les réglages du bloc.
+function openModuleSettings(tabKey){
+  var panel=document.getElementById('mod-settings-panel');
+  var body=document.getElementById('mod-settings-body');
+  var titleEl=document.getElementById('mod-settings-title');
+  if(!panel||!body) return;
+  body.innerHTML=_moduleSettingsInner(tabKey);
+  var names={live:'Fil live',citations:'Citations',articles:'Articles',essentiel:"L'essentiel",videos:'Vidéos',interviews:'Interviews',gallery:'Galerie',journalistes:'Journalistes',questions:'Questions',quiz:'Quiz / Sondage',programme:'Programme',kpis:'Chiffres clés',contact:'Contact',etapes:'Étapes',sponsors:'Partenaires'};
+  if(titleEl) titleEl.textContent='Apparence — '+(names[tabKey]||tabKey);
+  document.body.classList.add('mod-settings-open');
+  panel.classList.add('open');
+}
+function closeModuleSettings(){
+  var panel=document.getElementById('mod-settings-panel');
+  if(panel) panel.classList.remove('open');
+  document.body.classList.remove('mod-settings-open');
+}
+
 
 function renderApparence(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
@@ -2851,7 +2912,7 @@ function renderApparence(el){
   function _det(icon, label, inner, open){
     return '<details class="admin-card" style="margin-bottom:10px"'+(open?' open':'')+'><summary style="cursor:pointer;font-size:14px;font-weight:700;padding:14px 0 4px;list-style:none;display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+icon+'</span>'+label+'<span style="margin-left:auto;font-size:11px;color:var(--text3)">▾</span></summary><div style="padding:8px 0 4px">'+inner+'</div></details>';
   }
-  let h='<div class="page-title">Apparence</div><div class="page-desc">Tous les réglages visuels de votre dashboard, organisés par module. Cliquez sur une section pour la déplier.</div>';
+  let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg>Apparence</div><div class="page-desc">Tous les réglages visuels de votre dashboard, organisés par module. Cliquez sur une section pour la déplier.</div>';
 
   // ==================== GÉNÉRAL ====================
   var _gcInner = '';
@@ -3400,7 +3461,7 @@ function renderPhases(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
   const phases=ev.phases||[];
-  let h=`<div class="page-title">Phases / Temps forts</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg>Phases / Temps forts</div>
   <div class="page-desc">Découpez votre événement en phases (ex : "IFTM Sept.", "Convention Nov."). Chaque contenu pourra être assigné à une phase, et le front affichera des onglets pour filtrer.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une phase</h3>
     <div class="form-row-inline">
@@ -3659,7 +3720,7 @@ window.filterLiveHistory=function(){filterByPhaseAttr('live-history-list','live-
 // ==================== FLASH INFO ====================
 function renderFlash(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  let h=`<div class="page-title">Flash info</div><div class="page-desc">Bandeau rouge en haut du front. Laissez le texte vide pour le masquer.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-flash"/></svg>Flash info</div><div class="page-desc">Bandeau rouge en haut du front. Laissez le texte vide pour le masquer.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> Paramétrage</h3>
     <div class="form-row"><label class="form-label">Texte du flash</label><input class="form-input" id="flash-text" value="${(ev.flash_text||'').replace(/"/g,'&quot;')}" placeholder="Ex: Ouverture officielle du salon à 9h30"></div>
     <div class="form-row"><label class="form-label">Lien (optionnel)</label><input class="form-input" id="flash-link" value="${ev.flash_link||''}" placeholder="https://www.tourmag.com/..."></div>
@@ -3727,7 +3788,7 @@ function renderModules(el){
   const zoneLabels={full:'⬛ Pleine largeur',main:'◀ Colonne principale',side:'▶ Sidebar'};
   const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
 
-  let h=`<div class="page-title">Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg>Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-puzzle"/></svg> Visibilité</h3>`;
   mods.forEach(m=>{const checked=mod[m.key]!==false;h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${checked?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
   h+=`</div>`;
@@ -4027,7 +4088,7 @@ function tagObj(t){ return typeof t==='string'?{name:t,color:''}:t; }
 
 function renderTags(el){
   const defaultColors=['#475569','#DC2626','#059669','#2563EB','#7C3AED','#D97706','#0891B2','#DB2777'];
-  let h=`<div class="page-title">Tags live</div><div class="page-desc">Tags disponibles pour le fil live avec couleur personnalisable.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg>Tags live</div><div class="page-desc">Tags disponibles pour le fil live avec couleur personnalisable.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg> Tags personnalisés</h3><div class="chip-list">`;
   tagsData.forEach((t,i)=>{
     const n=tagName(t), c=tagColor(t)||defaultColors[i%defaultColors.length];
@@ -4095,7 +4156,7 @@ function renderMedia(el){
   const start = _mediaPage * MEDIA_PER_PAGE;
   const pageItems = filtered.slice(start, start + MEDIA_PER_PAGE);
 
-  let h = `<div class="page-title">Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
+  let h = `<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-media"/></svg>Médiathèque</div><div class="page-desc">Photos liées à cet événement. Sélectionnez-les rapidement dans le fil live.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-camera"/></svg> Photos (${mediaData.length})</h3>
     <div class="media-toolbar">
       <input type="text" class="form-input" placeholder="🔍 Rechercher…" value="${_mediaSearch.replace(/"/g,'&quot;')}" oninput="_mediaSearch=this.value;_mediaPage=0;renderMedia(document.getElementById('admin-main'))">
@@ -4233,7 +4294,7 @@ function renderLive(el){
   _saveLiveDraft();
   const tagOpts=tagsData.map(t=>{const n=tagName(t);return `<option value="${n}">${n}</option>`;}).join('');
 
-  let h=`<div class="page-title">Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg>Fil live</div><div class="page-desc">Publication instantanée. Les autres journalistes connectés voient vos ajouts en temps réel.</div>
 
   `+moduleConfigBlock('live')+`
 
@@ -4443,7 +4504,7 @@ async function deleteLive(id){if(!confirm('Supprimer cette entrée ?'))return;sa
 
 // ==================== RUBRIQUES ====================
 function renderRubriques(el){
-  let h=`<div class="page-title">Rubriques</div><div class="page-desc">Cliquez sur une rubrique pour la modifier.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-rubriques"/></svg>Rubriques</div><div class="page-desc">Cliquez sur une rubrique pour la modifier.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Nouvelle</h3>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="rub-name"></div><div class="form-row"><label class="form-label">Emoji</label><input class="form-input" id="rub-icon" placeholder="🤖" maxlength="4"></div></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" class="form-input" id="rub-color" value="#7C3AED" style="height:42px;padding:4px"></div><div class="form-row"><label class="form-label">Fond</label><input type="color" class="form-input" id="rub-bg" value="#EDE9FE" style="height:42px;padding:4px"></div></div>
@@ -4510,7 +4571,7 @@ function renderCitations(el){
   const isExp=ev.mode==='expedition';
   const citVisible=ev.citVisibleCount||6;
   const rubOpts=rubriquesData.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
-  let h=`<div class="page-title">Citations</div><div class="page-desc">Verbatims des intervenants.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg>Citations</div><div class="page-desc">Verbatims des intervenants.</div>
 
   `+moduleConfigBlock('citations')+`
 
@@ -4646,7 +4707,7 @@ function renderProgramme(el){
   allDays.forEach(d=>{if(!dayOrder.includes(d))dayOrder.push(d);});
   const dayOpts=dayOrder.map(d=>`<option value="${d}">${d}</option>`).join('');
 
-  let h=`<div class="page-title">Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-programme"/></svg>Programme</div><div class="page-desc">Organisez le programme par jours. L'heure est optionnelle.</div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tags"/></svg> Titre de l'encart</h3>
     <div class="form-row"><label class="form-label">Titre affiché sur le dashboard public</label>
@@ -4894,7 +4955,7 @@ function renderArticles(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   rssFeeds=ev?.rssFeeds||[];
 
-  let h=`<div class="page-title">Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-articles"/></svg>Articles liés</div><div class="page-desc">Ajoutez manuellement ou importez depuis un flux RSS.</div>
 
   `+moduleConfigBlock('articles')+`
 
@@ -5407,7 +5468,7 @@ function renderQuiz(el){
   const phases=ev.phases||[];
   const list=quizzesData.slice();
 
-  let h=`<div class="page-title">📊 Quiz / Sondage</div><div class="page-desc">Créez plusieurs quiz (avec bonne réponse) ou sondages (sans). Activez chacun indépendamment et, si vous le souhaitez, rattachez-le à une phase. Activez d'abord le module « Quiz / Sondage » dans l'onglet Modules.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Quiz / Sondage</div><div class="page-desc">Créez plusieurs quiz (avec bonne réponse) ou sondages (sans). Activez chacun indépendamment et, si vous le souhaitez, rattachez-le à une phase. Activez d'abord le module « Quiz / Sondage » dans l'onglet Modules.</div>`;
   h+=moduleConfigBlock('quiz');
 
   // Migration de l'ancien quiz unique
@@ -5642,7 +5703,7 @@ function renderQuestions(el){
   const approved=questionsData.filter(q=>q.status==='approved');
   const rejected=questionsData.filter(q=>q.status==='rejected');
 
-  let h=`<div class="page-title">💬 Questions du public</div><div class="page-desc">Les internautes posent des questions depuis le dashboard. Elles arrivent ici en attente : validez-les pour les afficher publiquement, avec une réponse facultative.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg>Questions du public</div><div class="page-desc">Les internautes posent des questions depuis le dashboard. Elles arrivent ici en attente : validez-les pour les afficher publiquement, avec une réponse facultative.</div>`;
   h+=moduleConfigBlock('questions');
 
   // ── File d'attente ──
@@ -5754,7 +5815,7 @@ function renderEssentiel(el){
 function renderTimelineHTML(){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const iaTimelineEnabled=ev.iaTimeline!==false;
-  let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title">📍 Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
+  let h=`<div style="margin-top:32px;padding-top:24px;border-top:2px solid var(--border)"><div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-pin"/></svg>Timeline</div><div class="page-desc">Frise chronologique dans le hero du front.</div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-robot"/></svg> IA Timeline</h3>
     <div class="toggle-row"><span class="toggle-label"><span class="icon">🤖</span>Génération IA automatique de la timeline</span><label class="toggle"><input type="checkbox" ${iaTimelineEnabled?'checked':''} onchange="toggleIATimeline(this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>
@@ -5924,7 +5985,7 @@ function renderIAHTML(){
     }
   });
 
-  let h=`<div class="page-title">L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-essentiel"/></svg>L'essentiel</div><div class="page-desc">Points de synthèse (IA automatique + manuels) et timeline de l'événement.</div>
 
   `+moduleConfigBlock('essentiel')+`
 
@@ -6083,7 +6144,7 @@ function renderVideos(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sections=ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
 
-  let h=`<div class="page-title">Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg>Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
 
   `+moduleConfigBlock('videos')+`
 
@@ -6360,7 +6421,7 @@ function renderJournalistes(el){
     return g?{...g,_order:ej.order,_phase:ej.phase||''}:null;
   }).filter(Boolean).sort((a,b)=>(a._order||0)-(b._order||0));
 
-  let h=`<div class="page-title">Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-reporters"/></svg>Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
 
   `+moduleConfigBlock('journalistes')+`
 
@@ -7148,7 +7209,7 @@ var _statsRange = 30;
 var _statsCache = null;
 function renderStats(el){
   const ev = eventsData.find(e=>e.id===currentEventId);
-  let h = `<div class="page-title">Statistiques de consultation</div>
+  let h = `<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg>Statistiques de consultation</div>
     <div class="page-desc">Fréquentation du dashboard « ${(ev&&ev.name)||''} ». Les robots sont exclus des mesures.</div>`;
   h += `<div class="admin-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:13px;color:var(--text2)">Période :</span>
@@ -7558,7 +7619,7 @@ function renderGuide(el){
   });
   let h=`<style>${guideCSS}</style>
   <div class="guide">
-  <div class="page-title">📖 Guide d'utilisation</div>
+  <div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-guide"/></svg>Guide d'utilisation</div>
   <div class="page-desc">Ce guide s'adapte à vos droits : vous ne voyez que les rubriques auxquelles vous avez accès. Cliquez sur une ligne du sommaire pour y aller directement.</div>
   <div class="guide-toc">
     <div style="font-family:'Josefin Sans';font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sommaire</div>
@@ -7593,7 +7654,7 @@ async function saveVidSettings(){
 function renderInterviews(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const items=interviewsData||[];
-  let h=`<div class="page-title">🎙️ Interviews</div><div class="page-desc">Ajoutez des interviews à mettre en avant sur le dashboard. Chaque interview peut renvoyer vers un article complet.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg>Interviews</div><div class="page-desc">Ajoutez des interviews à mettre en avant sur le dashboard. Chaque interview peut renvoyer vers un article complet.</div>
 
   `+moduleConfigBlock('interviews')+`
 
@@ -7661,7 +7722,7 @@ function renderKpis(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const kpis=ev.kpis||[];
   const hasCountdown = kpis.some(k=>k.type==='countdown');
-  let h=`<div class="page-title">📊 Chiffres clés</div><div class="page-desc">Ajoutez des chiffres clés qui s'affichent en bandeau sous le hero (ex: "1 200 Exposants"). Activez/désactivez via le module "Chiffres clés".</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg>Chiffres clés</div><div class="page-desc">Ajoutez des chiffres clés qui s'affichent en bandeau sous le hero (ex: "1 200 Exposants"). Activez/désactivez via le module "Chiffres clés".</div>
   <div class="admin-card"><h3>Chiffres</h3><div id="kpis-list">`;
   kpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((k,i)=>{
     if(k.type==='countdown'){
@@ -7785,7 +7846,7 @@ function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const ct=_normalizeContact(ev.contact);
   let peopleHtml=ct.people.length?ct.people.map((p,i)=>_ctPersonRow(p,i)).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';
-  let h=`<div class="page-title">📞 Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">📅 Lien de prise de RDV global (optionnel)</label><input class="form-input" id="ct-booking-global" value="${(ct.bookingUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/votre-equipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Bouton « Prendre rendez-vous » affiché une fois pour tout le bloc, en plus des liens propres à chaque contact.</div></div>
@@ -7949,7 +8010,7 @@ function renderDecor(el){
   ];
   window._decorBLOCKS=BLOCKS; window._decorCORNERS=CORNERS;
 
-  let h=`<div class="page-title">🎨 Décor de page</div><div class="page-desc">Ajoutez des éléments décoratifs et placez-les précisément sur n'importe quel bloc du dashboard (mode Expédition). Maximum 12 éléments.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-decor"/></svg>Décor de page</div><div class="page-desc">Ajoutez des éléments décoratifs et placez-les précisément sur n'importe quel bloc du dashboard (mode Expédition). Maximum 12 éléments.</div>`;
 
   h+=`<div class="admin-card">
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="dc-enabled" ${window._decorEnabled?'checked':''}><strong style="font-size:14px">Activer le décor</strong></label>
@@ -8104,7 +8165,7 @@ async function saveItwSettings(){
 function renderEtapes(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const exp=ev.expedition||{};
-  let h=`<div class="page-title">📍 Étapes du parcours</div><div class="page-desc">Gérez les étapes de l'expédition. Chaque étape apparaît sur la carte et dans la sidebar itinéraire du dashboard.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-etapes"/></svg>Étapes du parcours</div><div class="page-desc">Gérez les étapes de l'expédition. Chaque étape apparaît sur la carte et dans la sidebar itinéraire du dashboard.</div>`;
 
   // Expedition settings card
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-map"/></svg> Paramètres de l'expédition</h3>
@@ -8451,7 +8512,7 @@ async function saveEtapeEdit(id){
 function renderGallery(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const photos=ev.gallery||[];
-  let h=`<div class="page-title">📸 Galerie photos</div><div class="page-desc">Ajoutez des photos d'ambiance. Elles s'affichent en grille sur le dashboard. Activez/désactivez via le module "Galerie photos".</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg>Galerie photos</div><div class="page-desc">Ajoutez des photos d'ambiance. Elles s'affichent en grille sur le dashboard. Activez/désactivez via le module "Galerie photos".</div>
 
   `+moduleConfigBlock('gallery')+`
 
@@ -8606,7 +8667,7 @@ async function saveGalSettings(){
 function renderSponsors(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sponsors=ev.sponsors||[];
-  let h=`<div class="page-title">🤝 Partenaires</div><div class="page-desc">Ajoutez les logos de vos partenaires. Ce bloc apparaît en bas du dashboard. Activez/désactivez via le module "Partenaires".</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-sponsors"/></svg>Partenaires</div><div class="page-desc">Ajoutez les logos de vos partenaires. Ce bloc apparaît en bas du dashboard. Activez/désactivez via le module "Partenaires".</div>
   <div class="admin-card"><h3>Configuration</h3>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="sp-title" value="${(ev.sponsorsTitle||'').replace(/"/g,'&quot;')}" placeholder="Soutien & Partenaires"></div>
