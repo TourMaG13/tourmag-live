@@ -2877,6 +2877,11 @@ function _moduleSettingsInner(tabKey){
   if(settingsType) inner += moduleSettingsPanel(settingsType);
   if(typoKey) inner += moduleTypoPanel(typoKey);
   if(!inner) return '';
+  // Case « Masquer sur mobile » — commune à tous les blocs, stockée dans ev.mobileHidden[]
+  var _ev=eventsData.find(function(e){return e.id===currentEventId;})||{};
+  var _mh=Array.isArray(_ev.mobileHidden)?_ev.mobileHidden:[];
+  var _isHidden=_mh.indexOf(tabKey)!==-1;
+  inner += '<div class="admin-card" style="margin-top:0"><div class="toggle-row" style="border:none;padding:4px 0"><span class="toggle-label"><svg class="tab-ic" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8"><use href="#ti-eye"/></svg> Masquer ce bloc sur mobile</span><label class="toggle"><input type="checkbox" id="mobhide-'+tabKey+'" '+(_isHidden?'checked':'')+' onchange="toggleMobileHidden(\''+tabKey+'\',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div><div style="font-size:11px;color:var(--text3)">Le bloc reste visible sur ordinateur et tablette, mais disparaît sur téléphone.</div></div>';
   inner += '<div style="margin-top:16px"><button class="btn btn-primary" onclick="saveModule(\''+tabKey+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
   return inner;
 }
@@ -2901,6 +2906,20 @@ function closeModuleSettings(){
   var panel=document.getElementById('mod-settings-panel');
   if(panel) panel.classList.remove('open');
   document.body.classList.remove('mod-settings-open');
+}
+// Masquer / afficher un bloc sur mobile (stocké dans ev.mobileHidden[])
+async function toggleMobileHidden(tabKey, hide){
+  if(!currentEventId) return;
+  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{};
+  var arr=Array.isArray(ev.mobileHidden)?ev.mobileHidden.slice():[];
+  var i=arr.indexOf(tabKey);
+  if(hide && i===-1) arr.push(tabKey);
+  else if(!hide && i!==-1) arr.splice(i,1);
+  try{
+    await db.collection('events').doc(currentEventId).update({mobileHidden:arr});
+    ev.mobileHidden=arr;
+    toast(hide?'Bloc masqué sur mobile':'Bloc affiché sur mobile');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 
