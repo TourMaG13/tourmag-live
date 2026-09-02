@@ -387,11 +387,11 @@ select.form-input{cursor:pointer}
 .toggle-row:last-child{border-bottom:none}
 .toggle-label{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
 .toggle-label .icon{display:inline-flex;align-items:center;justify-content:center;width:18px}
-.toggle{position:relative;width:40px;height:22px;cursor:pointer}
+.toggle{position:relative;width:42px;height:24px;cursor:pointer;display:inline-block;flex-shrink:0}
 .toggle input{opacity:0;position:absolute;width:0;height:0;pointer-events:none}
-.toggle-track{position:absolute;inset:0;background:#D1D5DB;border-radius:11px;transition:background .2s}
-.toggle input:checked+.toggle-track{background:var(--green)}
-.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-track{position:absolute;inset:0;background:#CBD5E1;border:1px solid #94A3B8;border-radius:12px;transition:background .2s,border-color .2s}
+.toggle input:checked+.toggle-track{background:var(--green);border-color:var(--green)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none}
 .toggle input:checked~.toggle-knob{transform:translateX(18px)}
 
 .list-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
