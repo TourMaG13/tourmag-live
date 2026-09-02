@@ -95,6 +95,54 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 
 .admin-main{padding:24px 32px;max-width:960px;overflow-y:auto}
 
+/* ==================== ACCUEIL (tableau de bord de travail) ==================== */
+.home-hero{background:linear-gradient(135deg,var(--pri) 0%,#2b3b52 100%);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:18px;box-shadow:var(--sh-2);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.home-hero-title{font-family:'Josefin Sans';font-size:24px;font-weight:700;line-height:1.15;margin:0 0 5px}
+.home-hero-sub{font-size:13px;color:rgba(255,255,255,.72);margin-bottom:12px}
+.home-hero-tags{display:flex;gap:8px;flex-wrap:wrap}
+.home-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;font-size:11.5px;font-weight:500;padding:4px 11px;border-radius:100px}
+.home-chip a{color:#fff;text-decoration:underline}
+.home-chip-dot{width:7px;height:7px;border-radius:50%;background:#34D399;box-shadow:0 0 0 3px rgba(52,211,153,.25)}
+.home-chip-warn{background:rgba(251,191,36,.25);color:#FDE68A}
+.home-chip-ghost{background:rgba(255,255,255,.08)}
+.home-hero-link{color:#fff;font-size:12.5px;font-weight:600;text-decoration:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:8px 14px;border-radius:10px;transition:background .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.home-hero-link svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.home-hero-link:hover{background:rgba(255,255,255,.18)}
+.home-express{margin-bottom:18px}
+.home-express-row{display:flex;gap:10px;margin-top:6px}
+.home-express-row .form-input{flex:1}
+.home-express-row .btn{flex-shrink:0}
+.home-express-hint{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5}
+.home-actions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.home-action{position:relative;text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;transition:box-shadow .15s,transform .1s,border-color .15s;font-family:inherit;display:flex;flex-direction:column;gap:2px}
+.home-action:hover{box-shadow:var(--sh-2);transform:translateY(-1px);border-color:var(--acc)}
+.home-action-ico{margin-bottom:8px;color:var(--acc);display:inline-flex}
+.home-action-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.home-action:hover .home-action-ico{color:var(--acc2)}
+.home-action-label{font-size:14px;font-weight:600;color:var(--text)}
+.home-action-desc{font-size:11.5px;color:var(--text3)}
+.home-action-badge{position:absolute;top:12px;right:12px;background:var(--amber);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.home-count{background:var(--amber);color:#fff;font-size:12px;font-weight:700;padding:1px 9px;border-radius:100px;margin-left:4px}
+.home-q-list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.home-q-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px}
+.home-q-txt{font-size:13.5px;color:var(--text);line-height:1.45;margin-bottom:10px}
+.home-q-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-xs{padding:4px 10px;font-size:11.5px}
+.home-previews{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.home-preview h3{display:flex;align-items:center;justify-content:space-between}
+.home-preview-more{border:none;background:none;color:var(--acc);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.home-preview-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.home-preview-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.4}
+.home-preview-item:last-child{border-bottom:none}
+.home-preview-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:6px;flex-shrink:0}
+@media(max-width:768px){
+  .home-hero{padding:20px 18px}
+  .home-hero-title{font-size:20px}
+  .home-hero-link{width:100%;text-align:center}
+  .home-previews{grid-template-columns:1fr}
+  .home-express-row{flex-direction:column}
+}
+
 /* ==================== VISITE GUIDÉE (onboarding) ==================== */
 .tour-overlay{position:fixed;inset:0;z-index:1000;display:none}
 .tour-overlay.show{display:block}
@@ -173,6 +221,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
   .evpick{min-width:0;flex:1}
   .evpick-btn{min-width:0;max-width:100%;width:100%;padding:5px 9px;gap:7px}
   .evpick-l1{display:none}
+  /* Menu déroulant d'événement : sur mobile, ancré au viewport pour ne jamais déborder */
+  .evpick-menu{position:fixed;top:56px;left:8px;right:8px;width:auto;max-width:none;max-height:calc(100vh - 72px)}
   .topbar-right{gap:6px;flex-shrink:0}
   .topbar-user{display:none}
   /* L'aperçu latéral et la visite guidée n'ont pas de sens sur petit écran :
@@ -531,7 +581,8 @@ select.form-input{cursor:pointer}
   <div class="admin-layout">
     <div class="sidebar" id="sidebar">
       <!-- Point d'entrée toujours visible -->
-      <div class="sidebar-item active" data-tab="events"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-events"/></svg></span>Mes événements</div>
+      <div class="sidebar-item active" data-tab="home"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Accueil</div>
+      <div class="sidebar-item" data-tab="events"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-events"/></svg></span>Mes événements</div>
 
       <div class="sb-group" data-group="contenu">
         <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu</span><span class="sb-group-chev">▾</span></button>
@@ -717,7 +768,7 @@ const auth=firebase.auth();
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
 // ============================================================
 var currentEventId='';
-var currentTab='events';
+var currentTab='home';
 var currentUserRole='admin'; // 'admin' (full access) or 'client' (restricted to allowedUsers events)
 var currentUserPresetId=null; // #1 : profil d'accès affecté au compte connecté (logique "Remplace")
 var eventsData=[];    // [{id, ...data}]
@@ -1434,6 +1485,12 @@ function autoStatus(timeStr,dayStr){
 // ============================================================
 // NAV
 // ============================================================
+// Navigation programmatique vers un onglet (utilisée par la page d'accueil)
+function goToTab(tab){
+  const item=document.querySelector('.sidebar-item[data-tab="'+tab+'"]');
+  if(item && item.style.display!=='none'){ item.click(); return true; }
+  return false;
+}
 document.querySelectorAll('.sidebar-item').forEach(item=>{
   item.addEventListener('click',()=>{
     const tab=item.dataset.tab;if(!tab)return;
@@ -1749,6 +1806,7 @@ function renderTab(){
   if(!main)return;
   updateBadges();
   switch(currentTab){
+    case 'home':renderHome(main);break;
     case 'events':renderEvents(main);break;
     case 'phases':renderPhases(main);break;
     case 'apparence':renderApparence(main);break;
@@ -1779,6 +1837,152 @@ function renderTab(){
     case 'stats':renderStats(main);break;
   }
 }
+
+// ==================== ACCUEIL (tableau de bord de travail) ====================
+function _homeDashUrl(ev){
+  const ghBase = window.location.href.replace(/\/[^\/]*(?:\?.*)?(?:#.*)?$/, '') + '/index.html';
+  const pub = (ev.publicUrl||'').trim();
+  const base = pub || ghBase;
+  // On ajoute toujours ?event=<id> : sans lui, la page publique ne sait pas quel événement charger.
+  const sep = base.includes('?') ? (base.endsWith('?')||base.endsWith('&')?'':'&') : '?';
+  return base + sep + 'event=' + encodeURIComponent(currentEventId);
+}
+function _timeAgo(ts){
+  if(!ts) return null;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const mins = Math.floor((Date.now()-d.getTime())/60000);
+  if(isNaN(mins)) return null;
+  if(mins<1) return "à l'instant";
+  if(mins<60) return 'il y a '+mins+' min';
+  const h=Math.floor(mins/60);
+  if(h<24) return 'il y a '+h+' h';
+  return 'il y a '+Math.floor(h/24)+' j';
+}
+function _stripHtml(s){ return (s||'').toString().replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim(); }
+function _esc(s){ return (s||'').toString().replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function _tabVisible(tab){ const i=document.querySelector('.sidebar-item[data-tab="'+tab+'"]'); return !!(i && i.style.display!=='none'); }
+
+function renderHome(el){
+  const ev = eventsData.find(e=>e.id===currentEventId);
+  if(!ev){
+    el.innerHTML = '<div class="empty" style="margin-top:60px"><div class="icon">🏠</div><div class="text">Aucun événement sélectionné</div><div class="hint">Choisissez un événement dans la barre du haut pour voir son tableau de bord.</div></div>';
+    return;
+  }
+  const isExp = ev.mode==='expedition';
+  const meta = [ev.heroDates, ev.heroLocation].filter(Boolean).join(' · ');
+  const nbPhases = (ev.phases||[]).length;
+  // Fraîcheur du live : dernière entrée publiée (liveData déjà trié par time desc)
+  const lastLive = (liveData||[])[0];
+  const fresh = lastLive ? _timeAgo(lastLive.time) : null;
+  const dashUrl = _homeDashUrl(ev);
+  const pendingQ = (questionsData||[]).filter(q=>(q.status||'')==='pending');
+
+  let h='';
+
+  // ---- En-tête ----
+  h += `<div class="home-hero">
+    <div class="home-hero-l">
+      <h1 class="home-hero-title">${_esc(ev.name||ev.heroTitle||'Événement')}</h1>
+      ${meta?`<div class="home-hero-sub">${_esc(meta)}</div>`:''}
+      <div class="home-hero-tags">
+        ${fresh?`<span class="home-chip"><span class="home-chip-dot"></span>Dernière publi ${fresh}</span>`:'<span class="home-chip home-chip-warn">Aucune publication</span>'}
+        ${nbPhases?`<span class="home-chip home-chip-ghost">${nbPhases} phase${nbPhases>1?'s':''}${_tabVisible('phases')?' · <a href="#" onclick="event.preventDefault();goToTab(\'phases\')">gérer</a>':''}</span>`:''}
+      </div>
+    </div>
+    <a class="home-hero-link" href="${_esc(dashUrl)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Voir le dashboard public →</a>
+  </div>`;
+
+  // ---- Publication express ----
+  if(_tabVisible('live')){
+    h += `<div class="admin-card home-express">
+      <h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-bolt"/></svg> ${isExp?'Publier une étape / actualité':'Publication express'}</h3>
+      <div class="home-express-row">
+        <input class="form-input" id="home-express-input" placeholder="Quoi de neuf sur l'événement ?" onkeydown="if(event.key==='Enter'&&(event.metaKey||event.ctrlKey))homeExpressPublish()">
+        <button class="btn btn-primary" onclick="homeExpressPublish()" id="home-express-btn">Publier</button>
+      </div>
+      <div class="home-express-hint">Publié immédiatement au fil live sous « La Rédaction ». Pour un contenu détaillé (photo, tag, programmation…), utilisez l'onglet Fil live.</div>
+    </div>`;
+  }
+
+  // ---- Cartes d'actions rapides ----
+  const actions = [
+    {tab:'live', ico:'ti-live', label:isExp?'Fil / étapes':'Fil live', desc:'Publier une actualité'},
+    {tab:'citations', ico:'ti-citations', label:'Citations', desc:'Mettre en avant une phrase'},
+    {tab:'quiz', ico:'ti-quiz', label:'Quiz / Sondage', desc:'Faire participer le public'},
+    {tab:'questions', ico:'ti-qa', label:'Questions', desc:'Modérer les questions', badge:pendingQ.length},
+    {tab:'interviews', ico:'ti-interviews', label:'Interviews', desc:'Publier une interview'},
+    {tab:'gallery', ico:'ti-gallery', label:'Galerie', desc:'Ajouter des photos'}
+  ].filter(a=>_tabVisible(a.tab));
+  if(actions.length){
+    h += `<div class="home-actions-grid">${actions.map(a=>`
+      <button class="home-action" onclick="goToTab('${a.tab}')">
+        ${a.badge>0?`<span class="home-action-badge">${a.badge}</span>`:''}
+        <span class="home-action-ico"><svg viewBox="0 0 24 24"><use href="#${a.ico}"/></svg></span>
+        <span class="home-action-label">${a.label}</span>
+        <span class="home-action-desc">${a.desc}</span>
+      </button>`).join('')}</div>`;
+  }
+
+  // ---- Questions à modérer ----
+  if(_tabVisible('questions') && pendingQ.length){
+    h += `<div class="admin-card">
+      <h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg> Questions à modérer <span class="home-count">${pendingQ.length}</span></h3>
+      <div class="home-q-list">${pendingQ.slice(0,5).map(q=>`
+        <div class="home-q-item">
+          <div class="home-q-txt">${_esc((q.text||'').slice(0,140))}</div>
+          <div class="home-q-actions">
+            <button class="btn btn-primary btn-xs" onclick="approveQuestion('${q.id}')">Valider</button>
+            <button class="btn btn-ghost btn-xs" onclick="answerQuestion('${q.id}')">Répondre</button>
+            <button class="btn btn-ghost btn-xs" onclick="rejectQuestion('${q.id}')">Retirer</button>
+          </div>
+        </div>`).join('')}</div>
+      ${pendingQ.length>5?`<button class="btn btn-ghost" style="margin-top:10px;width:100%;justify-content:center" onclick="goToTab('questions')">Voir les ${pendingQ.length-5} autres →</button>`:''}
+    </div>`;
+  }
+
+  // ---- Aperçus de contenu ----
+  const previews = [];
+  if(_tabVisible('live')) previews.push({title:isExp?'Dernières étapes':'Dernières publications', tab:'live', items:(liveData||[]).slice(0,4).map(e=>_stripHtml(e.title||e.text)||'(sans titre)')});
+  if(_tabVisible('citations')) previews.push({title:'Dernières citations', tab:'citations', items:(citationsData||[]).slice(0,4).map(c=>_stripHtml(c.text||c.quote||c.content)||'(citation)')});
+  if(_tabVisible('quiz')) previews.push({title:'Quiz & sondages', tab:'quiz', items:(quizzesData||[]).slice(0,4).map(q=>(q.title||'Quiz')+(q.active?' · 🟢 en ligne':' · ⚪ hors ligne'))});
+  if(_tabVisible('interviews')) previews.push({title:'Dernières interviews', tab:'interviews', items:(interviewsData||[]).slice(0,4).map(i=>_stripHtml(i.name||i.title||i.quote)||'(interview)')});
+
+  const withItems = previews.filter(p=>p.items.length);
+  if(withItems.length){
+    h += `<div class="home-previews">${withItems.map(p=>`
+      <div class="admin-card home-preview">
+        <h3>${p.title} <button class="home-preview-more" onclick="goToTab('${p.tab}')">Gérer →</button></h3>
+        <div class="home-preview-list">${p.items.map(t=>`<div class="home-preview-item"><span class="home-preview-dot"></span><span>${_esc(t.slice(0,90))}</span></div>`).join('')}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+async function homeExpressPublish(){
+  const inp = document.getElementById('home-express-input');
+  const btn = document.getElementById('home-express-btn');
+  if(!inp) return;
+  const txt = inp.value.trim();
+  if(!txt){ toast('Écrivez quelque chose à publier','error'); inp.focus(); return; }
+  btn.disabled=true; btn.textContent='Publication…';
+  try{
+    await subCol('live').add({
+      text: '<p>'+_esc(txt)+'</p>',
+      title: '',
+      journalist: 'La Rédaction',
+      tag: '', tag_color: '', phase: '',
+      time: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    inp.value='';
+    toast('Publié au fil live ✓');
+  }catch(e){
+    toast('Erreur : '+(e.message||e),'error');
+  }finally{
+    btn.disabled=false; btn.textContent='Publier';
+  }
+}
+
 
 // ==================== EVENTS ====================
 function renderEvents(el){
@@ -2503,7 +2707,9 @@ function moduleSettingsPanel(type, ev){
     return s;
   }
   if(type==='reporters'){
-    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
+    return '<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre du bloc</label><input class="form-input" id="app-st-jr-title" value="'+(ev.journalistsTitle||'').replace(/"/g,'&quot;')+'" placeholder="Vos reporters"></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille du titre (px)</label><input type="number" class="form-input" id="app-jr-tsize" value="'+(ev.journalistsTitleSize||14)+'" min="10" max="28" style="width:80px"></div></div>'
+      +'<div class="form-row" style="max-width:280px;margin-top:10px"><label class="form-label">Replier au-delà de … journalistes</label><input type="number" class="form-input" id="app-jr-accordion" value="'+(ev.journalistsAccordionAfter!=null?ev.journalistsAccordionAfter:'')+'" min="1" max="100" placeholder="ex. 6" style="width:100px"><div style="font-size:10px;color:var(--text3);margin-top:4px">Au-delà de ce nombre, les journalistes en trop sont masqués derrière un bouton « Voir les X autres ». Laisser vide = tout afficher.</div></div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:4px">Les tailles du nom, du poste et de la bio se règlent ci-dessous (Titres / nom, Labels, Texte courant).</div>';
   }
   if(type==='quiz'){
     var s='<div class="form-row-inline"><div class="form-row" style="max-width:120px"><label class="form-label">Module visible</label><label class="toggle" style="margin-top:4px"><input type="checkbox" id="app-st-quiz-show" '+(ev.quizShowTitle!==false?'checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div>';
@@ -3044,6 +3250,8 @@ async function _collectModuleSettings(type){
   } else if(type==='reporters'){
     ud.journalistsTitle=_v('app-st-jr-title');
     ud.journalistsTitleSize=_n('app-jr-tsize',14);
+    var _accEl=document.getElementById('app-jr-accordion');
+    ud.journalistsAccordionAfter=(_accEl && _accEl.value!=='')?(parseInt(_accEl.value,10)||null):null;
   } else if(type==='quiz'){
     ud.quizShowTitle=_c('app-st-quiz-show');
     ud.quizAccent=document.getElementById('app-quiz-accent')?.value||'#10B981';
@@ -6182,7 +6390,9 @@ function editGlobalJournalist(id){
       <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-jr-name" value="${j.name||''}"></div>
       <div class="form-row"><label class="form-label">Fonction / Titre</label><input class="form-input" id="m-jr-role" value="${j.role||''}"></div>
     </div>
-    <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="m-jr-bio" rows="3">${j.bio||''}</textarea></div>
+    <div class="form-row"><label class="form-label">Bio courte</label><textarea class="form-input" id="m-jr-bio" rows="3">${j.bio||''}</textarea>
+      <label class="toggle-inline" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-jr-showbio" ${(j.showBio!==false)?'checked':''}> Afficher la bio sur le dashboard</label>
+    </div>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Photo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-jr-photo" value="${j.photoUrl||''}" style="flex:1">${mkMediaPickerBtn('m-jr-photo')}${mkUploadBtn('m-jr-photo')}</div></div>
       <div class="form-row"><label class="form-label">Lien profil TourMaG</label><input class="form-input" id="m-jr-profile" value="${j.profileUrl||''}"></div>
@@ -6204,6 +6414,7 @@ async function saveGlobalJournalist(id){
     name:document.getElementById('m-jr-name').value.trim(),
     role:document.getElementById('m-jr-role').value.trim(),
     bio:document.getElementById('m-jr-bio').value.trim(),
+    showBio:(document.getElementById('m-jr-showbio')||{}).checked!==false,
     photoUrl:document.getElementById('m-jr-photo').value.trim(),
     profileUrl:document.getElementById('m-jr-profile').value.trim(),
     twitter:document.getElementById('m-jr-twitter').value.trim(),
@@ -6484,6 +6695,7 @@ function renderAccess(el){
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
     {key:'essentiel',icon:'🧠',label:'Essentiel & Timeline'},
+    {key:'home',icon:'🏠',label:'Accueil'},
     {key:'kpis',icon:'📊',label:'Chiffres clés'},
     {key:'stats',icon:'📈',label:'Statistiques'},
     {key:'live',icon:isExp?'🗺️':'📡',label:'Fil live'},
