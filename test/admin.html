@@ -132,6 +132,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .rte-area{border-radius:0 0 8px 8px!important;line-height:1.6}
 .rte-area:focus{outline:none;border-color:var(--acc)!important;box-shadow:var(--ring)}
 .rte-area ul{margin:8px 0;padding-left:22px}
+/* Barres de l'éditeur de page */
+.cp-editbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.cp-savebar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px;margin-top:8px;box-shadow:0 -4px 14px rgba(15,23,42,.06);z-index:5}
+.cp-savebar-hint{font-size:12px;color:var(--text3)}
 /* Bouton « Personnaliser l'apparence » (bas de bloc) */
 .mod-settings-btnrow{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);display:flex;justify-content:flex-start}
 .mod-settings-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;padding:9px 16px;border-radius:100px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,box-shadow .15s}
@@ -3631,7 +3635,7 @@ function mkPhaseInlineSelect(attrName, attrVal, current){
 // ==================== PAGES LIBRES (contenu éditorial) ====================
 function _uid(){ return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function renderContentPages(el){
-  if(_cpEditId){ return _renderCpEditor(el); }
+  if(_cpEditKind==='page' && _cpEditId){ return _renderCpEditor(el); }
   const ev = eventsData.find(e=>e.id===currentEventId)||{};
   const pages = ev.contentPages || [];
   let h = '<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><path d="M4 3h11l5 5v13H4z M15 3v5h5 M8 13h8 M8 17h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pages libres</div>';
@@ -3702,8 +3706,10 @@ async function deleteContentPage(id){
   try{ await evRef().update({contentPages:pages}); ev.contentPages=pages; toast('Page supprimée'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
-function editContentPage(id){ _cpEditId=id; renderTab(); }
+function editContentPage(id){ _cpEditKind='page'; _cpEditId=id; renderTab(); }
+function editPhaseContent(id){ _cpEditKind='phase'; _cpEditId=id; renderTab(); }
 var _cpEditId=null;
+var _cpEditKind='page';
 function copyContentPageUrl(id){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
@@ -3716,11 +3722,15 @@ function copyContentPageUrl(id){
 
 function _cpCurrent(){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  if(_cpEditKind==='phase'){ return (ev.phases||[]).find(p=>p.id===_cpEditId); }
   return (ev.contentPages||[]).find(p=>p.id===_cpEditId);
 }
 async function _cpSave(){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  try{ await evRef().update({contentPages:ev.contentPages||[]}); }
+  try{
+    if(_cpEditKind==='phase') await evRef().update({phases:ev.phases||[]});
+    else await evRef().update({contentPages:ev.contentPages||[]});
+  }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 function _escAdm(s){ return (s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -3728,8 +3738,11 @@ function _renderCpEditor(el){
   const p=_cpCurrent();
   if(!p){ _cpEditId=null; return renderContentPages(el); }
   const blocks=p.blocks||[];
-  let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg>'+_escAdm(p.name||'Page')+'</div>';
-  h+='<div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="_cpClose()">← Retour aux pages</button></div>';
+  let h='<div class="cp-editbar"><button class="btn btn-ghost btn-sm" onclick="_cpClose()">← Retour</button><div class="page-title" style="margin:0;font-size:18px">'+(_cpEditKind==='phase'?'Contenu de la phase — ':'')+_escAdm(p.name||'Page')+'</div><button class="btn btn-primary btn-sm" onclick="_cpSaveAll()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
+  if(_cpEditKind==='phase'){
+    h+='<div style="font-size:12px;color:var(--text3);margin-bottom:14px">Ce contenu s\'affiche <b>au-dessus du fil live</b> quand cette phase est active. Idéal pour introduire la phase avec du texte, des images, des vidéos…</div>';
+  }
+  if(_cpEditKind==='page'){
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Réglages de la page</h3>
     <div class="form-row-inline">
       <div class="form-row"><label class="form-label">Nom de l'onglet</label><input class="form-input" id="cp-name" value="${_escAdm(p.name||'')}"></div>
@@ -3758,8 +3771,8 @@ function _renderCpEditor(el){
       <div class="form-row"><label class="form-label">Sous-titre</label><input class="form-input" id="cp-hero-subtitle" value="${_escAdm((p.hero&&p.hero.subtitle)||'')}"></div>
       <div class="form-row"><label class="form-label">Image du hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="cp-hero-image" style="flex:1" value="${_escAdm((p.hero&&p.hero.image)||'')}">${mkMediaPickerBtn('cp-hero-image')}${mkUploadBtn('cp-hero-image')}</div></div>
     </div>
-    <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="_cpSaveSettings()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les réglages</button></div>
   </div>`;
+  } // fin réglages page uniquement
   h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Blocs de contenu ('+blocks.length+')</h3>';
   if(!blocks.length){ h+='<div class="empty"><div class="icon">🧱</div><div class="text">Aucun bloc</div><div class="hint">Ajoutez un bloc ci-dessous pour composer votre page.</div></div>'; }
   blocks.forEach((b,i)=>{ h+=_cpBlockEditor(b,i,blocks.length); });
@@ -3775,13 +3788,37 @@ function _renderCpEditor(el){
       <button class="cp-addbtn" onclick="_cpAddBlock('separator')">➖ Séparateur</button>
     </div>
   </div>`;
+  h+='<div class="cp-savebar"><span class="cp-savebar-hint">Pensez à enregistrer vos modifications de texte.</span><button class="btn btn-primary" onclick="_cpSaveAll()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la page</button></div>';
   el.innerHTML=h;
+}
+async function _cpSaveAll(){
+  _cpCollect();
+  const p=_cpCurrent(); if(!p) return;
+  if(_cpEditKind==='page'){
+    p.name=(document.getElementById('cp-name')||{}).value||p.name;
+    p.color=(document.getElementById('cp-color')||{}).value||p.color;
+    p.tabFont=(document.getElementById('cp-tab-font')||{}).value||'';
+    p.tabSize=parseInt((document.getElementById('cp-tab-size')||{}).value,10)||'';
+    p.tabStyle=(document.getElementById('cp-tab-style')||{}).value||'';
+    p.hero=p.hero||{};
+    p.hero.enabled=(document.getElementById('cp-hero-enabled')||{}).checked||false;
+    p.hero.type=(document.getElementById('cp-hero-type')||{}).value||'split';
+    p.hero.title=(document.getElementById('cp-hero-title')||{}).value||'';
+    p.hero.subtitle=(document.getElementById('cp-hero-subtitle')||{}).value||'';
+    p.hero.image=(document.getElementById('cp-hero-image')||{}).value||'';
+  }
+  await _cpSave(); toast(_cpEditKind==='phase'?'Contenu de la phase enregistré':'Page enregistrée'); renderTab();
 }
 function _cpBlockEditor(b,i,total){
   const mv=`<div class="cp-blk-move">${i>0?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},-1)">▲</button>`:''}${i<total-1?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},1)">▼</button>`:''}<button class="btn btn-danger btn-xs" onclick="_cpDelBlock(${i})">✕</button></div>`;
   let inner='';
   if(b.type==='text'){
-    inner=`<div class="form-row"><label class="form-label">Titre (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="title" value="${_escAdm(b.title||'')}"></div>
+    inner=`<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="title" value="${_escAdm(b.title||'')}"></div>
+      <div class="form-row" style="max-width:170px"><label class="form-label">Alignement du titre</label><select class="form-input" data-cpb="${i}" data-cpf="titleAlign">
+        <option value="left"${(b.titleAlign||'left')==='left'?' selected':''}>Gauche</option>
+        <option value="center"${b.titleAlign==='center'?' selected':''}>Centré</option>
+        <option value="right"${b.titleAlign==='right'?' selected':''}>Droite</option>
+      </select></div></div>
       <div class="form-row"><label class="form-label">Texte</label>
         <div class="rte-toolbar">
           <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'bold')" title="Gras"><b>B</b></button>
@@ -3818,7 +3855,16 @@ function _cpBlockEditor(b,i,total){
       <div style="font-size:10px;color:var(--text3);margin-top:4px">⚠️ Code inséré tel quel sur la page. Réservé à un usage avancé (embed, mise en forme spécifique…).</div></div>`;
   } else if(b.type==='image'){
     inner=`<div class="form-row"><label class="form-label">Image</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
-      <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>`;
+      <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>
+      <div class="form-row-inline">
+        <div class="form-row" style="max-width:180px"><label class="form-label">Largeur</label><input class="form-input" data-cpb="${i}" data-cpf="width" value="${_escAdm(b.width||'')}" placeholder="ex : 400px ou 60%"></div>
+        <div class="form-row" style="max-width:180px"><label class="form-label">Alignement</label><select class="form-input" data-cpb="${i}" data-cpf="align">
+          <option value="center"${(b.align||'center')==='center'?' selected':''}>Centré</option>
+          <option value="left"${b.align==='left'?' selected':''}>Gauche</option>
+          <option value="right"${b.align==='right'?' selected':''}>Droite</option>
+        </select></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3)">Largeur vide = pleine largeur. Exemples : 300px, 50%.</div>`;
   } else if(b.type==='gallery'){
     const imgs=(b.images||[]);
     inner=`<div class="form-row"><label class="form-label">Photos de la galerie</label>
@@ -3881,12 +3927,13 @@ async function _cpSaveSettings(){
   p.hero.image=(document.getElementById('cp-hero-image')||{}).value||'';
   await _cpSave(); toast('Page enregistrée'); renderTab();
 }
-function _cpClose(){ _cpCollect(); _cpSave(); _cpEditId=null; renderTab(); }
+function _cpClose(){ _cpCollect(); _cpSave(); _cpEditId=null; _cpEditKind='page'; renderTab(); }
 document.addEventListener('change',function(e){
   if(e.target && e.target.id==='cp-hero-enabled'){ var o=document.getElementById('cp-hero-opts'); if(o) o.style.display=e.target.checked?'':'none'; }
 });
 
 function renderPhases(el){
+  if(_cpEditKind==='phase' && _cpEditId){ return _renderCpEditor(el); }
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(!ev){el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>';return;}
   const phases=ev.phases||[];
@@ -3916,6 +3963,7 @@ function renderPhases(el){
         <div class="list-item-actions" style="display:flex;gap:4px">
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},-1)">▲</button>`:''}
           ${i<phases.length-1?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},1)">▼</button>`:''}
+          <button class="btn btn-ghost btn-xs" onclick="editPhaseContent('${p.id}')" title="Contenu éditorial (au-dessus du live)"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Contenu</button>
           <button class="btn btn-ghost btn-xs" onclick="editPhase(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
           <button class="btn btn-danger btn-xs" onclick="deletePhase(${i})">✕</button>
         </div>
