@@ -3817,16 +3817,26 @@ async function _cpSaveAll(){
   }
   await _cpSave(); toast(_cpEditKind==='phase'?'Contenu de la phase enregistré':'Page enregistrée'); renderTab();
 }
+function _cpFontOpts(cur){
+  var fonts=['','Poppins','Josefin Sans','Oswald','Outfit','Playfair Display','Lora','Merriweather','Crimson Text','EB Garamond','Montserrat','Roboto','Inter'];
+  return fonts.map(function(f){ return '<option value="'+f+'"'+((cur||'')===f?' selected':'')+'>'+(f||'Par défaut')+'</option>'; }).join('');
+}
 function _cpBlockEditor(b,i,total){
   const mv=`<div class="cp-blk-move">${i>0?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},-1)">▲</button>`:''}${i<total-1?`<button class="btn btn-ghost btn-xs" onclick="_cpMoveBlock(${i},1)">▼</button>`:''}<button class="btn btn-danger btn-xs" onclick="_cpDelBlock(${i})">✕</button></div>`;
   let inner='';
   if(b.type==='text'){
     inner=`<div class="form-row-inline"><div class="form-row"><label class="form-label">Titre (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="title" value="${_escAdm(b.title||'')}"></div>
-      <div class="form-row" style="max-width:170px"><label class="form-label">Alignement du titre</label><select class="form-input" data-cpb="${i}" data-cpf="titleAlign">
+      <div class="form-row" style="max-width:150px"><label class="form-label">Alignement du titre</label><select class="form-input" data-cpb="${i}" data-cpf="titleAlign">
         <option value="left"${(b.titleAlign||'left')==='left'?' selected':''}>Gauche</option>
         <option value="center"${b.titleAlign==='center'?' selected':''}>Centré</option>
         <option value="right"${b.titleAlign==='right'?' selected':''}>Droite</option>
       </select></div></div>
+      <div class="form-row-inline">
+        <div class="form-row" style="max-width:220px"><label class="form-label">Police du titre</label><select class="form-input" data-cpb="${i}" data-cpf="titleFont">
+          ${_cpFontOpts(b.titleFont)}
+        </select></div>
+        <div class="form-row" style="max-width:150px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" data-cpb="${i}" data-cpf="titleSize" value="${b.titleSize||''}" min="14" max="60" placeholder="26" style="width:90px"></div>
+      </div>
       <div class="form-row"><label class="form-label">Texte</label>
         <div class="rte-toolbar">
           <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'bold')" title="Gras"><b>B</b></button>
@@ -3855,9 +3865,13 @@ function _cpBlockEditor(b,i,total){
         </select></div>
       </div>
       <div class="form-row-inline">
-        <div class="form-row" style="max-width:220px"><label class="form-label">Police du bloc</label><select class="form-input" data-cpb="${i}" data-cpf="font">
-          ${['','Poppins','Josefin Sans','Oswald','Playfair Display','Lora','Merriweather','Crimson Text','EB Garamond','Montserrat','Roboto','Inter'].map(f=>`<option value="${f}"${(b.font||'')===f?' selected':''}>${f||'Par défaut'}</option>`).join('')}
+        <div class="form-row" style="max-width:220px"><label class="form-label">Police du texte</label><select class="form-input" data-cpb="${i}" data-cpf="font">
+          ${_cpFontOpts(b.font)}
         </select></div>
+        <div class="form-row" style="max-width:140px"><label class="form-label">Taille texte (px)</label><input type="number" class="form-input" data-cpb="${i}" data-cpf="textSize" value="${b.textSize||''}" min="11" max="32" placeholder="16" style="width:85px"></div>
+        <div class="form-row" style="max-width:140px"><label class="form-label">Interlignage</label><input type="number" step="0.05" class="form-input" data-cpb="${i}" data-cpf="lineHeight" value="${b.lineHeight||''}" min="1" max="2.5" placeholder="1.75" style="width:85px"></div>
+      </div>
+      <div class="form-row-inline">
         <div class="form-row" style="max-width:200px"><label class="form-label">Espacement sous le bloc (px)</label><input type="number" class="form-input" data-cpb="${i}" data-cpf="pad" value="${b.pad!=null?b.pad:''}" min="0" max="120" placeholder="défaut" style="width:100px"></div>
       </div>
       <div class="form-row-inline">
