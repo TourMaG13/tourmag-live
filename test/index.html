@@ -1,6 +1,6 @@
 <!--
   TourMaG Live — Dashboard événementiel v2
-  ===========================================
+  ==========================================
   Hébergé sur GitHub Pages (tourmag13.github.io/tourmag-live/)
   
   EMBED SNIPPET — à coller sur TourMaG.com :
@@ -3500,7 +3500,7 @@ function renderExpedition(data){
 
   const expZones = event.expBlockZones || {};
   function getExpZone(k){ return expZones[k] || expDefaultZones[k] || 'main'; }
-  function expRb(k){ const fn=expBlockRenderers[k]; const html=fn ? fn() : ''; if(!html) return ''; const _mh=Array.isArray(event.mobileHidden)?event.mobileHidden:[]; const hideCls=_mh.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; }
+  function expRb(k){ const fn=expBlockRenderers[k]; let html=fn ? fn() : ''; if(k==='phaseTabs' && !activeContentPage){ const _apo = activePhase ? phases.find(p=>p.id===activePhase) : null; if(_apo && _apo.blocks && _apo.blocks.length && typeof _renderContentPage==='function'){ html += _renderContentPage(_apo); } } if(!html) return ''; const _mh=Array.isArray(event.mobileHidden)?event.mobileHidden:[]; const hideCls=_mh.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; }
 
   const allExpSideKeys = finalOrder.filter(k => getExpZone(k) === 'side' && expBlockRenderers[k]);
   const expSidebarAnchor = event.expSidebarAnchor || 'live';
