@@ -35,7 +35,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TourMaG Live — Couverture événementielle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Archivo:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Crimson+Text:wght@400;600&family=EB+Garamond:wght@400;500;600&family=Montserrat:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626;--exp-accent:#FF6C00}
@@ -43,6 +43,13 @@
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 /* ==================== PAGES LIBRES (front) ==================== */
 .cp-page{max-width:820px;margin:0 auto;padding:8px 0 40px}
+/* Boîte repliable du contenu de phase */
+.phase-content-box{position:relative}
+.phase-content-toggle{display:inline-flex;align-items:center;gap:8px;background:rgba(15,23,42,.05);border:1px solid rgba(15,23,42,.12);color:#334155;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:100px;cursor:pointer;font-family:inherit;transition:background .15s;margin:4px 0}
+.phase-content-toggle:hover{background:rgba(15,23,42,.09)}
+.pct-chevron{font-size:9px}
+.phase-content-body{overflow:hidden;transition:max-height .35s ease,opacity .25s ease;max-height:6000px;opacity:1}
+.phase-content-box.collapsed .phase-content-body{max-height:0;opacity:0;pointer-events:none}
 /* Hero de page libre */
 .cp-hero{margin-bottom:8px}
 .cp-hero-full{min-height:300px;background-size:cover;background-position:center;display:flex;align-items:flex-end;color:#fff}
@@ -2600,7 +2607,7 @@ function render(data){
   function getZone(k){ return blockZones[k] || defaultZones[k] || 'main'; }
   const _renderedBlocks = [];
   const _mobileHidden = Array.isArray(event.mobileHidden) ? event.mobileHidden : [];
-  function rb(k){ const fn=blockRenderers[k]; let html=fn ? fn() : ''; if(k==='phaseTabs' && !activeContentPage){ const _apo = activePhase ? phases.find(p=>p.id===activePhase) : null; if(_apo && _apo.blocks && _apo.blocks.length && typeof _renderContentPage==='function'){ html += _renderContentPage(_apo); } } if(html){ _renderedBlocks.push(k); const hideCls=_mobileHidden.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; } else { console.log('[TourMaG Live] Block EMPTY:', k, '| mod.'+k+'=', mod[k]); return ''; } }
+  function rb(k){ const fn=blockRenderers[k]; let html=fn ? fn() : ''; if(k==='phaseTabs' && !activeContentPage){ const _apo = activePhase ? phases.find(p=>p.id===activePhase) : null; if(_apo && _apo.blocks && _apo.blocks.length && typeof _renderContentPage==='function'){ html += _wrapPhaseContent(_renderContentPage(_apo)); } } if(html){ _renderedBlocks.push(k); const hideCls=_mobileHidden.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; } else { console.log('[TourMaG Live] Block EMPTY:', k, '| mod.'+k+'=', mod[k]); return ''; } }
 
   const allSideKeys = validKeys.filter(k => getZone(k) === 'side');
   const sidebarAnchor = event.sidebarAnchor || 'live';
@@ -3500,7 +3507,7 @@ function renderExpedition(data){
 
   const expZones = event.expBlockZones || {};
   function getExpZone(k){ return expZones[k] || expDefaultZones[k] || 'main'; }
-  function expRb(k){ const fn=expBlockRenderers[k]; let html=fn ? fn() : ''; if(k==='phaseTabs' && !activeContentPage){ const _apo = activePhase ? phases.find(p=>p.id===activePhase) : null; if(_apo && _apo.blocks && _apo.blocks.length && typeof _renderContentPage==='function'){ html += _renderContentPage(_apo); } } if(!html) return ''; const _mh=Array.isArray(event.mobileHidden)?event.mobileHidden:[]; const hideCls=_mh.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; }
+  function expRb(k){ const fn=expBlockRenderers[k]; let html=fn ? fn() : ''; if(k==='phaseTabs' && !activeContentPage){ const _apo = activePhase ? phases.find(p=>p.id===activePhase) : null; if(_apo && _apo.blocks && _apo.blocks.length && typeof _renderContentPage==='function'){ html += _wrapPhaseContent(_renderContentPage(_apo)); } } if(!html) return ''; const _mh=Array.isArray(event.mobileHidden)?event.mobileHidden:[]; const hideCls=_mh.indexOf(k)!==-1?' blk-mob-hidden':''; return '<div class="blk-wrap'+hideCls+'" data-block="'+k+'">'+html+'</div>'; }
 
   const allExpSideKeys = finalOrder.filter(k => getExpZone(k) === 'side' && expBlockRenderers[k]);
   const expSidebarAnchor = event.expSidebarAnchor || 'live';
@@ -4346,6 +4353,25 @@ function _renderCpHero(hero, color){
   // split
   return `<div class="cp-hero cp-hero-split"><div class="cp-hero-text" style="border-top:4px solid ${c}"><div class="cp-hero-inner">${hero.title?`<h1>${_qEsc(hero.title)}</h1>`:''}${hero.subtitle?`<p>${_qEsc(hero.subtitle)}</p>`:''}</div></div>${hero.image?`<div class="cp-hero-photo" style="background-image:url('${(hero.image||'').replace(/'/g,'%27')}')"></div>`:''}</div>`;
 }
+// Enveloppe le contenu de phase dans une boîte repliable (dépliée par défaut).
+function _wrapPhaseContent(inner){
+  return '<div class="phase-content-box" id="phaseContentBox">'
+    + '<div class="dash"><button type="button" class="phase-content-toggle" onclick="_togglePhaseContent()" aria-expanded="true">'
+    + '<span class="pct-label">Masquer la présentation</span><span class="pct-chevron">▲</span></button></div>'
+    + '<div class="phase-content-body">' + inner + '</div>'
+    + '</div>';
+}
+window._togglePhaseContent = function(){
+  var box=document.getElementById('phaseContentBox'); if(!box) return;
+  var open = !box.classList.contains('collapsed');
+  box.classList.toggle('collapsed', open);
+  var btn=box.querySelector('.phase-content-toggle');
+  var lbl=box.querySelector('.pct-label');
+  var chev=box.querySelector('.pct-chevron');
+  if(btn) btn.setAttribute('aria-expanded', open?'false':'true');
+  if(lbl) lbl.textContent = open ? 'Voir la présentation' : 'Masquer la présentation';
+  if(chev) chev.textContent = open ? '▼' : '▲';
+};
 function _renderContentPage(page){
   var blocks = page.blocks || [];
   var gapStyle = (page.blockGap!=null && page.blockGap!=='') ? ' style="--cp-gap:'+parseInt(page.blockGap,10)+'px"' : '';
@@ -4355,9 +4381,15 @@ function _renderContentPage(page){
     if(b.type==='text'){
       var pos = b.imagePos || 'none';
       var imgHtml = b.image ? '<img class="cp-txt-img" src="'+_qEsc(b.image)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      var body = '';
-      if(b.title) body += '<h2 class="cp-h2"'+(b.titleAlign&&b.titleAlign!=='left'?' style="text-align:'+b.titleAlign+'"':'')+'>'+_qEsc(b.title)+'</h2>';
-      if(b.text) body += '<div class="cp-text">'+b.text+'</div>';
+      var titleStyle='';
+      if(b.titleAlign&&b.titleAlign!=='left') titleStyle+='text-align:'+b.titleAlign+';';
+      if(b.titleFont) titleStyle+="font-family:'"+b.titleFont+"',serif;";
+      if(b.titleSize) titleStyle+='font-size:'+parseInt(b.titleSize,10)+'px;';
+      var titleHtml = b.title ? '<h2 class="cp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_qEsc(b.title)+'</h2>' : '';
+      var txtStyle='';
+      if(b.textSize) txtStyle+='font-size:'+parseInt(b.textSize,10)+'px;';
+      if(b.lineHeight) txtStyle+='line-height:'+b.lineHeight+';';
+      var textHtml = b.text ? '<div class="cp-text"'+(txtStyle?' style="'+txtStyle+'"':'')+'>'+b.text+'</div>' : '';
       // Styles du bloc : fond, police, espacement propre
       var blkStyle='';
       if(b.bgOn) blkStyle += 'background:'+(b.bg||'#F1F5F9')+';padding:20px 22px;border-radius:12px;';
@@ -4365,13 +4397,14 @@ function _renderContentPage(page){
       if(b.pad!=null && b.pad!=='') blkStyle += 'margin-bottom:'+parseInt(b.pad,10)+'px;';
       var st = blkStyle ? ' style="'+blkStyle+'"' : '';
       if(imgHtml && (pos==='left'||pos==='right')){
-        o += '<div class="cp-block cp-textimg cp-img-'+pos+'"'+st+'><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+body+'</div></div>';
+        // Titre pleine largeur EN HAUT, puis image + texte côte à côte en dessous
+        o += '<div class="cp-block"'+st+'>'+titleHtml+'<div class="cp-textimg cp-img-'+pos+'"><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+textHtml+'</div></div></div>';
       } else if(imgHtml && pos==='top'){
-        o += '<div class="cp-block"'+st+'>'+imgHtml+'<div class="cp-txt-body">'+body+'</div></div>';
+        o += '<div class="cp-block"'+st+'>'+imgHtml+'<div class="cp-txt-body">'+titleHtml+textHtml+'</div></div>';
       } else if(imgHtml && pos==='bottom'){
-        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+body+'</div>'+imgHtml+'</div>';
+        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+titleHtml+textHtml+'</div>'+imgHtml+'</div>';
       } else {
-        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+body+'</div></div>';
+        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+titleHtml+textHtml+'</div></div>';
       }
     } else if(b.type==='html'){
       if(b.html) o += '<div class="cp-block cp-html">'+b.html+'</div>';
