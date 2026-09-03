@@ -721,6 +721,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
           <div class="sidebar-item" data-tab="gallery"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg></span>Galerie photos</div>
+          <div class="sidebar-item" data-tab="product"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4 8 4 8-4zM4 7v10l8 4 8-4V7M12 11v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Produit</div>
           <div class="sidebar-item" data-tab="articles"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-articles"/></svg></span>Articles liés</div>
           <div class="sidebar-item" data-tab="sponsors"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-sponsors"/></svg></span>Partenaires</div>
           <div class="sidebar-item" data-tab="contact"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg></span>Contact</div>
@@ -908,7 +909,7 @@ try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ conso
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
 // ============================================================
 // Icônes SVG uniformisées pour les blocs/modules (remplace les émojis).
-const BLOCK_ICONS={hero:'ti-image',phaseTabs:'ti-phases',phasetabs:'ti-phases',kpis:'ti-kpis',flash:'ti-flash',essential:'ti-essentiel',essentiel:'ti-essentiel',live:'ti-live',citations:'ti-citations',questions:'ti-qa',quiz:'ti-quiz',articles:'ti-articles',interviews:'ti-interviews',videos:'ti-videos',gallery:'ti-gallery',programme:'ti-programme',timeline:'ti-pin',journalists:'ti-reporters',journalistes:'ti-reporters',reporters:'ti-reporters',brandnews:'ti-megaphone',sponsors:'ti-sponsors',etapes:'ti-etapes',itinerary:'ti-map',contact:'ti-contact',decor:'ti-decor',media:'ti-media',rubriques:'ti-rubriques',tags:'ti-tags',widget:'ti-widget',stats:'ti-kpis',home:'ti-events'};
+const BLOCK_ICONS={hero:'ti-image',phaseTabs:'ti-phases',phasetabs:'ti-phases',kpis:'ti-kpis',flash:'ti-flash',essential:'ti-essentiel',essentiel:'ti-essentiel',live:'ti-live',citations:'ti-citations',questions:'ti-qa',quiz:'ti-quiz',articles:'ti-articles',interviews:'ti-interviews',videos:'ti-videos',gallery:'ti-gallery',programme:'ti-programme',timeline:'ti-pin',journalists:'ti-reporters',journalistes:'ti-reporters',reporters:'ti-reporters',brandnews:'ti-megaphone',sponsors:'ti-sponsors',etapes:'ti-etapes',itinerary:'ti-map',contact:'ti-contact',decor:'ti-decor',media:'ti-media',rubriques:'ti-rubriques',tags:'ti-tags',widget:'ti-widget',stats:'ti-kpis',home:'ti-events',product:'ti-sponsors'};
 function _blockIco(key,cls){ const id=BLOCK_ICONS[key]||'ti-list'; return '<svg class="'+(cls||'blk-ic')+'" viewBox="0 0 24 24"><use href="#'+id+'"/></svg>'; }
 
 var currentEventId='';
@@ -1995,6 +1996,7 @@ function renderTab(){
     case 'etapes':renderEtapes(main);break;
     case 'kpis':renderKpis(main);break;
     case 'gallery':renderGallery(main);break;
+    case 'product':renderProductTab(main);break;
     case 'sponsors':renderSponsors(main);break;
     case 'contact':renderContact(main);break;
     case 'decor':renderDecor(main);break;
@@ -4315,7 +4317,7 @@ function renderModules(el){
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
   const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
-  const allMods=[{key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},{key:'essential',icon:_blockIco('essential'),label:'Points essentiels'},{key:'live',icon:_blockIco('live'),label:'Fil live'},{key:'citations',icon:_blockIco('citations'),label:'Citations'},{key:'questions',icon:_blockIco('questions'),label:'Questions du public'},{key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},{key:'articles',icon:_blockIco('articles'),label:'Articles liés'},{key:'videos',icon:_blockIco('videos'),label:'Vidéos'},{key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},{key:'programme',icon:_blockIco('programme'),label:'Programme'},{key:'timeline',icon:_blockIco('timeline'),label:'Timeline'},{key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},{key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},{key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},{key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},{key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},{key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes'},{key:'contact',icon:_blockIco('contact'),label:'Contact'},{key:'decor',icon:_blockIco('decor'),label:'Décor'}];
+  const allMods=[{key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},{key:'essential',icon:_blockIco('essential'),label:'Points essentiels'},{key:'live',icon:_blockIco('live'),label:'Fil live'},{key:'citations',icon:_blockIco('citations'),label:'Citations'},{key:'questions',icon:_blockIco('questions'),label:'Questions du public'},{key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},{key:'articles',icon:_blockIco('articles'),label:'Articles liés'},{key:'videos',icon:_blockIco('videos'),label:'Vidéos'},{key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},{key:'programme',icon:_blockIco('programme'),label:'Programme'},{key:'timeline',icon:_blockIco('timeline'),label:'Timeline'},{key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},{key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},{key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},{key:'product',icon:_blockIco('product'),label:'Produit'},{key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},{key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},{key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes'},{key:'contact',icon:_blockIco('contact'),label:'Contact'},{key:'decor',icon:_blockIco('decor'),label:'Décor'}];
   const expRenames = {essential:'Essentiel & Timeline',live:'Fil live',citations:'Citations',journalists:'Journalistes',kpis:'Chiffres clés',etapes:'Carte interactive',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -4340,6 +4342,7 @@ function renderModules(el){
     {key:'programme',icon:_blockIco('programme'),label:'Programme'},
     {key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},
     {key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},
+    {key:'product',icon:_blockIco('product'),label:'Produit'},
     {key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},
     {key:'contact',icon:_blockIco('contact'),label:'Contact'}
   ];
@@ -9077,6 +9080,102 @@ async function saveEtapeEdit(id){
 }
 
 // ==================== GALERIE PHOTOS ====================
+// ==================== MODULE PRODUIT (éditeur) ====================
+function renderProductTab(el){
+  const ev = eventsData.find(e=>e.id===currentEventId)||{};
+  const p = ev.product || {};
+  const gal = p.gallery || [];
+  let h = '<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4 8 4 8-4zM4 7v10l8 4 8-4V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Produit</div>';
+  h += '<div class="page-desc">Une fiche produit riche et personnalisable, affichée sur le dashboard (mode classique et expédition). Activez le module dans l\'onglet Modules pour le rendre visible.</div>';
+
+  // Réglages généraux
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Apparence</h3>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:130px"><label class="form-label">Couleur d'accent</label><input type="color" class="form-input" id="pr-accent" value="${p.accent||'#0C6CA1'}" style="width:56px;height:38px;padding:2px"></div>
+      <div class="form-row" style="max-width:220px"><label class="form-label">Police globale</label><select class="form-input" id="pr-font">${_cpFontOpts(p.font)}</select></div>
+      <div class="form-row" style="max-width:260px"><label class="form-label">Disposition</label><select class="form-input" id="pr-layout">
+        <option value="top"${(p.layout||'top')==='top'?' selected':''}>Photo en grand au-dessus</option>
+        <option value="side"${p.layout==='side'?' selected':''}>Photo à droite du titre</option>
+      </select></div>
+    </div>
+  </div>`;
+
+  // Contenu
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Contenu</h3>
+    <div class="form-row"><label class="form-label">Titre du produit</label><input class="form-input" id="pr-title" value="${_escAdm(p.title||'')}"></div>
+    <div class="form-row"><label class="form-label">Description</label>${_prRte('pr-desc', p.description)}</div>
+    <div class="form-row"><label class="form-label">Photo principale</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="pr-mainimage" style="flex:1" value="${_escAdm(p.mainImage||'')}">${mkMediaPickerBtn('pr-mainimage')}${mkUploadBtn('pr-mainimage')}</div></div>
+  </div>`;
+
+  // Points forts + Bon à savoir
+  h += `<div class="admin-card"><h3>✓ Points forts &amp; ℹ Bon à savoir</h3>
+    <div class="form-row"><label class="form-label">Titre encart 1</label><input class="form-input" id="pr-strongtitle" value="${_escAdm(p.strongTitle||'Points forts')}"></div>
+    <div class="form-row"><label class="form-label">Contenu « Points forts » (texte ou liste à puces)</label>${_prRte('pr-strong', p.strong)}</div>
+    <div class="form-row" style="margin-top:14px"><label class="form-label">Titre encart 2</label><input class="form-input" id="pr-knowtitle" value="${_escAdm(p.knowTitle||'Bon à savoir')}"></div>
+    <div class="form-row"><label class="form-label">Contenu « Bon à savoir »</label>${_prRte('pr-know', p.know)}</div>
+  </div>`;
+
+  // Mosaïque
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg> Mosaïque de photos</h3>
+    <div id="pr-gallery">${gal.map((u,gi)=>`<div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" data-prgal="${gi}" id="prgal-${gi}" style="flex:1" value="${_escAdm(u)}">${mkUploadBtn('prgal-'+gi)}<button class="btn btn-danger btn-xs" onclick="_prGalDel(${gi})">✕</button></div>`).join('')}</div>
+    <button class="btn btn-ghost btn-sm" onclick="_prGalAdd()">＋ Ajouter une photo</button>
+  </div>`;
+
+  // Bouton
+  h += `<div class="admin-card"><h3>🔘 Bouton</h3>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Texte du bouton</label><input class="form-input" id="pr-btnlabel" value="${_escAdm(p.btnLabel||'')}" placeholder="En savoir plus"></div>
+      <div class="form-row"><label class="form-label">Lien (URL)</label><input class="form-input" id="pr-btnurl" value="${_escAdm(p.btnUrl||'')}" placeholder="https://…"></div>
+    </div>
+  </div>`;
+
+  h += '<div class="cp-savebar"><span class="cp-savebar-hint">Pensez à enregistrer.</span><button class="btn btn-primary" onclick="saveProduct()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le produit</button></div>';
+  el.innerHTML = h;
+}
+// Mini éditeur riche réutilisable pour le module produit
+function _prRte(id, val){
+  return `<div class="rte-toolbar">
+    <button type="button" class="rte-b" onmousedown="_prRteCmd(event,'${id}','bold')"><b>B</b></button>
+    <button type="button" class="rte-b" onmousedown="_prRteCmd(event,'${id}','italic')"><i>I</i></button>
+    <button type="button" class="rte-b" onmousedown="_prRteCmd(event,'${id}','underline')"><u>U</u></button>
+    <span class="rte-sep"></span>
+    <button type="button" class="rte-b" onmousedown="_prRteLink(event,'${id}')">🔗</button>
+    <button type="button" class="rte-b" onmousedown="_prRteCmd(event,'${id}','insertUnorderedList')">•≡</button>
+  </div>
+  <div class="rte-area form-input" contenteditable="true" id="${id}" style="min-height:90px;overflow:auto">${val||''}</div>`;
+}
+function _prRteCmd(ev,id,cmd){ ev.preventDefault(); var a=document.getElementById(id); if(a){ a.focus(); document.execCommand(cmd,false,null); } }
+function _prRteLink(ev,id){ ev.preventDefault(); var a=document.getElementById(id); if(!a)return; a.focus(); var u=prompt('Adresse du lien (https://…) :',''); if(u) document.execCommand('createLink',false,u); }
+function _prCollectGal(){
+  var ev=eventsData.find(e=>e.id===currentEventId)||{}; ev.product=ev.product||{};
+  var arr=[]; document.querySelectorAll('[data-prgal]').forEach(el=>{ arr[+el.getAttribute('data-prgal')]=el.value; });
+  ev.product.gallery=arr.filter(x=>x!==undefined);
+}
+async function _prGalAdd(){ _prCollectGal(); var ev=eventsData.find(e=>e.id===currentEventId); ev.product.gallery=ev.product.gallery||[]; ev.product.gallery.push(''); await evRef().update({product:ev.product}); renderTab(); }
+async function _prGalDel(i){ _prCollectGal(); var ev=eventsData.find(e=>e.id===currentEventId); ev.product.gallery.splice(i,1); await evRef().update({product:ev.product}); renderTab(); }
+async function saveProduct(){
+  var ev=eventsData.find(e=>e.id===currentEventId)||{};
+  var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
+  var galArr=[]; document.querySelectorAll('[data-prgal]').forEach(el=>{ galArr[+el.getAttribute('data-prgal')]=el.value; });
+  var product={
+    accent:g('pr-accent')||'#0C6CA1',
+    font:g('pr-font')||'',
+    layout:g('pr-layout')||'top',
+    title:g('pr-title'),
+    description:(document.getElementById('pr-desc')||{}).innerHTML||'',
+    mainImage:g('pr-mainimage'),
+    strongTitle:g('pr-strongtitle'),
+    strong:(document.getElementById('pr-strong')||{}).innerHTML||'',
+    knowTitle:g('pr-knowtitle'),
+    know:(document.getElementById('pr-know')||{}).innerHTML||'',
+    gallery:galArr.filter(x=>x!==undefined&&x!==''),
+    btnLabel:g('pr-btnlabel'),
+    btnUrl:g('pr-btnurl')
+  };
+  try{ saving(true); await evRef().update({product}); ev.product=product; toast('Produit enregistré'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+
 function renderGallery(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const photos=ev.gallery||[];
