@@ -43,6 +43,14 @@
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 /* ==================== PAGES LIBRES (front) ==================== */
 .cp-page{max-width:1100px;margin:0 auto;padding:8px 24px 40px}
+/* ==================== MODULE CARTE PAYS ==================== */
+.cmap-block{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(15,23,42,.07);padding:24px 22px}
+.cmap-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:#0f172a;text-align:center;margin-bottom:18px}
+.cmap-holder{position:relative;width:100%}
+.cmap-canvas{width:100%;height:460px}
+.cmap-loading{text-align:center;color:#94a3b8;font-size:13px;padding:14px}
+.cmap-block .jqvmap-label{background:#0f172a;color:#fff;font-size:12px;padding:5px 10px;border-radius:6px;border:none}
+@media(max-width:720px){.cmap-canvas{height:320px}.cmap-title{font-size:20px}}
 /* ==================== MODULE PRODUIT ==================== */
 .pr-card{max-width:860px;margin:0 auto 24px;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(15,23,42,.08);overflow:hidden;padding:0 0 28px}
 .pr-mainimg img{width:100%;max-height:420px;object-fit:cover;display:block}
@@ -2615,10 +2623,10 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(){return _renderProducts(event);}};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(){return _renderProducts(event);},countrymap:function(){return _renderCountryMap(event);}};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
-  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','sponsors','contact'];
+  const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','countrymap','sponsors','contact'];
 
   const fullBlockOrder = event.blockOrder || defaultOrder;
   const orderedKeys = [...fullBlockOrder];
@@ -3443,6 +3451,7 @@ function renderExpedition(data){
   };
 
   _b.product = function(){ if(mod.product===false) return ''; return _renderProducts(event); };
+  _b.countrymap = function(){ if(mod.countrymap===false) return ''; return _renderCountryMap(event); };
   _b.contact = function(){
     const ctRaw = event.contact;
     if(mod.contact===false || !ctRaw) return '';
@@ -3532,8 +3541,8 @@ function renderExpedition(data){
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
-  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','quiz','questions','programme','brandnews','citations','interviews','videos','gallery','articles','product','sponsors','contact'];
-  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',product:'full',sponsors:'full',contact:'side',questions:'full',quiz:'full'};
+  const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','quiz','questions','programme','brandnews','citations','interviews','videos','gallery','articles','product','countrymap','sponsors','contact'];
+  const expDefaultZones = {phaseTabs:'full',kpis:'full',essential:'full',etapes:'full',live:'main',reporters:'side',itinerary:'side',programme:'side',brandnews:'side',citations:'full',interviews:'full',videos:'full',gallery:'full',articles:'full',product:'full',countrymap:'full',sponsors:'full',contact:'side',questions:'full',quiz:'full'};
   const expBlockOrder = event.expBlockOrder || defaultExpOrder;
   const finalOrder = [...expBlockOrder];
   // Auto-inject new blocks for legacy events
@@ -4453,6 +4462,125 @@ window._togglePhaseContent = function(){
 // ==================== MODULE PRODUIT (fiche unique) ====================
 // Rend tous les produits affectés à l'onglet/phase actuellement visible.
 // Migration : l'ancien event.product (unique) est traité comme un produit affiché partout.
+// ==================== MODULE CARTE PAYS (jqvmap) ====================
+var _cmLoaded = {};
+function _cmLoadScript(src){
+  return new Promise(function(res,rej){
+    if(_cmLoaded[src]) return res();
+    var s=document.createElement('script'); s.src=src;
+    s.onload=function(){ _cmLoaded[src]=true; res(); };
+    s.onerror=function(){ rej(new Error('load '+src)); };
+    document.head.appendChild(s);
+  });
+}
+function _cmLoadCss(href){
+  if(document.querySelector('link[href="'+href+'"]')) return;
+  var l=document.createElement('link'); l.rel='stylesheet'; l.href=href; document.head.appendChild(l);
+}
+var _CM_CONTINENTS = {
+  europe:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.europe.js',
+  africa:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.africa.js',
+  asia:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.asia.js',
+  north_america:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.north-america.js',
+  south_america:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.south-america.js',
+  australia:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.australia.js'
+};
+function _renderCountryMap(event){
+  var cm = event.countryMap;
+  if(!cm || !cm.continent) return '';
+  var countries = Array.isArray(cm.countries) ? cm.countries : [];
+  if(!countries.length) return '';
+  var accent = cm.accent || 'var(--acc,#0C6CA1)';
+  var id = 'cmap-'+Math.random().toString(36).slice(2,8);
+  // config sérialisée pour l'init
+  window._cmConfigs = window._cmConfigs || {};
+  window._cmConfigs[id] = {continent:cm.continent, countries:countries, accent:accent, inactive:cm.inactiveColor||'#E2E8F0', title:cm.title||''};
+  setTimeout(function(){ _cmInit(id); }, 30);
+  return '<div class="dash"><div class="cmap-block">'
+    + (cm.title?'<div class="cmap-title">'+_qEsc(cm.title)+'</div>':'')
+    + '<div class="cmap-holder"><div id="'+id+'" class="cmap-canvas"></div></div>'
+    + '<div class="cmap-loading" id="'+id+'-load">Chargement de la carte…</div>'
+    + '</div></div>';
+}
+function _cmInit(id){
+  var cfg = (window._cmConfigs||{})[id];
+  if(!cfg) return;
+  var el = document.getElementById(id);
+  if(!el) return;
+  _cmLoadCss('https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/jqvmap.min.css');
+  var jq = 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js';
+  var core = 'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/jquery.vmap.min.js';
+  var mapfile = _CM_CONTINENTS[cfg.continent];
+  if(!mapfile){ _cmFail(id,'Continent non disponible'); return; }
+  _cmLoadScript(jq)
+    .then(function(){ return _cmLoadScript(core); })
+    .then(function(){ return _cmLoadScript(mapfile); })
+    .then(function(){ _cmRender(id, cfg); })
+    .catch(function(e){ _cmFail(id, 'Carte indisponible'); console.warn('[Carte pays]', e); });
+}
+function _cmFail(id,msg){ var l=document.getElementById(id+'-load'); if(l){ l.textContent=msg; } }
+function _cmRender(id, cfg){
+  var $ = window.jQuery; if(!$){ _cmFail(id,'Carte indisponible'); return; }
+  var load=document.getElementById(id+'-load'); if(load) load.style.display='none';
+  var byCode = {}; cfg.countries.forEach(function(c){ if(c && c.code) byCode[c.code.toLowerCase()] = c; });
+  var selectedRegions = Object.keys(byCode);
+  var colors = {}; selectedRegions.forEach(function(code){ colors[code] = byCode[code].color || cfg.accent; });
+  // Détecte le nom de carte réellement enregistré par le fichier jqvmap chargé
+  var mapName = cfg.continent;
+  try{
+    var maps = ($.fn.vectorMap && $.fn.vectorMap('getMapObject')) ? null : null; // placeholder
+  }catch(_){}
+  // jqvmap enregistre les cartes sous des noms comme 'europe_en', 'africa_en'… ou parfois sans suffixe.
+  var candidates = [cfg.continent+'_en', cfg.continent, cfg.continent.replace('_','-')+'_en', cfg.continent.replace('_','-')];
+  // On tente d'identifier via l'objet global des cartes si dispo
+  var registered = (window.jQuery && jQuery.fn.vectorMap && jQuery.fn.vectorMap.maps) ? jQuery.fn.vectorMap.maps : null;
+  if(registered){
+    for(var i=0;i<candidates.length;i++){ if(registered[candidates[i]]){ mapName=candidates[i]; break; } }
+    if(!registered[mapName]){ var keys=Object.keys(registered); if(keys.length) mapName=keys[keys.length-1]; }
+  } else {
+    mapName = candidates[0];
+  }
+  try{
+    $('#'+id).vectorMap({
+      map: mapName,
+      backgroundColor: 'transparent',
+      borderColor: '#fff', borderWidth: 1,
+      color: cfg.inactive,
+      enableZoom: false, showTooltip: true,
+      hoverColor: false,
+      onLabelShow: function(ev, label, code){
+        var c = byCode[(code||'').toLowerCase()];
+        if(!c){ ev.preventDefault(); return; }
+        label.text(c.name ? (c.name + (c.info?(' — '+c.info):'')) : label.text());
+      },
+      onRegionClick: function(ev, code){
+        var c = byCode[(code||'').toLowerCase()];
+        if(!c){ ev.preventDefault(); return; }
+        if(c.dest==='url' && c.url){ window.open(c.url, c.newTab===false?'_self':'_blank'); }
+        else if(c.dest==='tab' && c.tab){ _cmGoTab(c.tab); }
+      },
+      colors: colors
+    });
+    selectedRegions.forEach(function(code){
+      try{ $('#'+id+' svg [id$="_'+code+'"], #'+id+' svg path[data-code="'+code+'"]').css('fill', colors[code]); }catch(_){}
+    });
+    // Curseur pointer sur les pays actifs
+    var st=document.createElement('style');
+    st.textContent = selectedRegions.map(function(c){return '#'+id+' svg [id$="_'+c+'"]{cursor:pointer}';}).join('');
+    document.head.appendChild(st);
+  }catch(e){ _cmFail(id,'Carte indisponible'); console.warn('[Carte pays] init', e); }
+}
+// Navigue vers un onglet (phase ou page) : "phase:<id>" ou "page:<id>"
+function _cmGoTab(tok){
+  var params = new URLSearchParams(window.location.search);
+  params.delete('phase'); params.delete('page');
+  if(tok.indexOf('page:')===0) params.set('page', tok.slice(5));
+  else if(tok.indexOf('phase:')===0) params.set('phase', tok.slice(6));
+  var url = window.location.pathname + '?' + params.toString();
+  window.history.replaceState({}, '', url);
+  if(window._rtState && typeof render==='function') render(window._rtState);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 function _renderProducts(event){
   var list = Array.isArray(event.products) ? event.products.slice() : [];
   if(!list.length && event.product && (event.product.title||event.product.description||event.product.mainImage)){
