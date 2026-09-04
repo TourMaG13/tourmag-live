@@ -1846,7 +1846,10 @@ function _uiBusy(){
   var modal=document.getElementById('modal');
   var panelOpen = panel && panel.classList.contains('open');
   var modalOpen = modal && modal.classList.contains('show');
-  return !!(panelOpen || modalOpen);
+  // L'éditeur du constructeur est un contexte d'édition : ne pas le reconstruire
+  // sous un snapshot Firestore, sinon on écrase la saisie en cours (contenteditable).
+  var builderEditing = (typeof _bpEditId!=='undefined' && _bpEditId);
+  return !!(panelOpen || modalOpen || builderEditing);
 }
 function scheduleRender(){
   if(renderPending) clearTimeout(renderPending);
@@ -4069,7 +4072,7 @@ function _renderBuilderEditor(el){
   el.innerHTML=h;
 }
 
-function _bpCloseEditor(){ _bpEditId=null; _bpSelSection=null; renderTab(); }
+function _bpCloseEditor(){ _bpEditId=null; _bpSelSection=null; renderTab(); if(typeof _flushDeferredRender==='function') _flushDeferredRender(); }
 async function _bpSaveAndToast(){ await _bpSavePage(); toast('Page enregistrée'); }
 
 // ---------- Palette ----------
@@ -4406,10 +4409,13 @@ function _bpRte(id, val){
     +'<button type="button" class="rte-b" onmousedown="_bpRteCmd(event,\''+id+'\',\'justifyRight\')" title="Droite">➡</button>'
     +'<button type="button" class="rte-b" onmousedown="_bpRteCmd(event,\''+id+'\',\'justifyFull\')" title="Justifier">☰</button>'
     +'</div>'
-    +'<div class="rte-area form-input" contenteditable="true" id="'+id+'" style="min-height:110px;overflow:auto" oninput="_bpSetCt(\'text\',this.innerHTML)">'+(val||'')+'</div>';
+    +'<div class="rte-area form-input" contenteditable="true" id="'+id+'" style="min-height:110px;overflow:auto" oninput="_bpSetText(this.innerHTML)">'+(val||'')+'</div>';
 }
-function _bpRteCmd(ev,id,cmd){ ev.preventDefault(); var a=document.getElementById(id); if(a){ a.focus(); document.execCommand(cmd,false,null); _bpSetCt('text',a.innerHTML); } }
-function _bpRteLink(ev,id){ ev.preventDefault(); var a=document.getElementById(id); if(!a)return; a.focus(); var u=prompt('Adresse du lien (https://…) :',''); if(u){ document.execCommand('createLink',false,u); _bpSetCt('text',a.innerHTML); } }
+// Setter texte : met à jour la donnée + sauvegarde différée, SANS redessiner le canevas
+// (le contenteditable garde ainsi le focus et le curseur pendant la frappe).
+function _bpSetText(html){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.text=html; _bpSavePageDebounced(); }
+function _bpRteCmd(ev,id,cmd){ ev.preventDefault(); var a=document.getElementById(id); if(a){ a.focus(); document.execCommand(cmd,false,null); _bpSetText(a.innerHTML); } }
+function _bpRteLink(ev,id){ ev.preventDefault(); var a=document.getElementById(id); if(!a)return; a.focus(); var u=prompt('Adresse du lien (https://…) :',''); if(u){ document.execCommand('createLink',false,u); _bpSetText(a.innerHTML); } }
 
 // Propriétés de la page (quand rien n'est sélectionné)
 function _bpPagePropsHtml(){
