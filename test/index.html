@@ -42,7 +42,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 /* ==================== PAGES LIBRES (front) ==================== */
-.cp-page{max-width:820px;margin:0 auto;padding:8px 0 40px}
+.cp-page{max-width:1100px;margin:0 auto;padding:8px 24px 40px}
 /* ==================== MODULE PRODUIT ==================== */
 .pr-card{max-width:860px;margin:0 auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(15,23,42,.08);overflow:hidden;padding:0 0 28px}
 .pr-mainimg img{width:100%;max-height:420px;object-fit:cover;display:block}
@@ -160,6 +160,17 @@ img{display:block}a{text-decoration:none}
 .sticky-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.06);transform:translateY(-100%);transition:transform .35s ease}
 .phase-tabs{display:flex;align-items:center;gap:6px;padding:14px 0 10px;flex-wrap:wrap;justify-content:center}
 .phase-tab{display:inline-flex;align-items:center;gap:5px;padding:7px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid transparent;background:#F1F5F9;color:#475569;transition:all .2s;text-decoration:none;white-space:nowrap}
+/* Onglet menu déroulant */
+.phase-tab-dd{position:relative;display:inline-block}
+.phase-tab-ddbtn{border:none;font-family:inherit}
+.dd-caret{font-size:9px;margin-left:2px;transition:transform .2s}
+.phase-tab-dd.open .dd-caret{transform:rotate(180deg)}
+.phase-menu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border-radius:12px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:6px;display:none;z-index:60;min-width:200px;max-width:280px}
+.phase-tab-dd.open .phase-menu{display:block}
+.phase-menu-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;color:#475569;text-decoration:none;cursor:pointer;white-space:nowrap}
+.phase-menu-item:hover{background:#F1F5F9;color:#0f172a}
+.phase-menu-item.active{background:color-mix(in srgb,var(--phase-color,#0C6CA1) 12%,#fff);color:var(--phase-color,#0C6CA1)}
+@media(max-width:768px){ .phase-menu{position:static;box-shadow:none;padding:4px 0 4px 18px;min-width:0} }
 .phase-tab:hover{background:#E2E8F0;color:#1E293B}
 .phase-tab.active{background:#fff;border-color:var(--phase-color,#6366F1);color:var(--phase-color,#6366F1);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .phase-tab .phase-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -1873,13 +1884,20 @@ function render(data){
   // ===== PHASE FILTERING =====
   const phases = event.phases || [];
   const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
-  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
+  const contentPages = event.contentPages || [];
+  var _urlPhaseRaw = new URLSearchParams(window.location.search).get('phase') || '';
+  var _urlPageRaw = new URLSearchParams(window.location.search).get('page') || '';
+  // Onglet par défaut : si l'URL ne précise ni phase ni page, on applique event.defaultTab
+  if(!_urlPhaseRaw && !_urlPageRaw && event.defaultTab){
+    if(event.defaultTab.indexOf('page:')===0) _urlPageRaw = event.defaultTab.slice(5);
+    else if(event.defaultTab.indexOf('phase:')===0) _urlPhaseRaw = event.defaultTab.slice(6);
+  }
+  const urlPage = (contentPages.find(p=>p.id===_urlPageRaw)) ? _urlPageRaw : '';
+  const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
+  const _urlPhaseEff = _urlPhaseRaw;
+  const activePhase = (phases.find(p => p.id === _urlPhaseEff)) ? _urlPhaseEff : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
-  // ===== PAGES LIBRES (contenu éditorial, onglets à côté des phases) =====
-  const contentPages = event.contentPages || [];
-  const urlPage = new URLSearchParams(window.location.search).get('page') || '';
-  const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
   function _pf(arr){
     if(!activePhase || !phases.length) return arr;
     return (arr||[]).filter(item => !item.phase || item.phase === activePhase);
@@ -1982,16 +2000,7 @@ function render(data){
       return '?'+params.toString();
     }
     let t = '<div class="dash"><div class="phase-tabs">';
-    _buildTabList(phases, contentPages, event.tabOrder).forEach(item => {
-      const p = item.obj;
-      if(item.kind==='phase'){
-        const isActive = !activeContentPage && activePhase === p.id;
-        t += `<a href="${phaseUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
-      } else {
-        const isActive = activeContentPage && activeContentPage.id === p.id;
-        t += `<a href="${pageUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="${_cpTabStyle(p,'#0C6CA1')}"><span class="phase-dot" style="background:${p.color||'#0C6CA1'}"></span>${_qEsc(p.name||'')}</a>`;
-      }
-    });
+    t += _renderTabItems(phases, contentPages, event.tabOrder, {phaseUrl:phaseUrl, pageUrl:pageUrl, activePhase:activePhase, activeContentPage:activeContentPage});
     t += '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases)) + '</div>';
     return t;
   }
@@ -2812,13 +2821,19 @@ function renderExpedition(data){
   if(event.journalistsTitleSize) document.documentElement.style.setProperty('--jr-title-size', event.journalistsTitleSize + 'px');
   else document.documentElement.style.removeProperty('--jr-title-size');
   const phases = event.phases || [];
-  const urlPhase = new URLSearchParams(window.location.search).get('phase') || '';
+  const contentPages = event.contentPages || [];
+  var _urlPhaseRaw = new URLSearchParams(window.location.search).get('phase') || '';
+  var _urlPageRaw = new URLSearchParams(window.location.search).get('page') || '';
+  if(!_urlPhaseRaw && !_urlPageRaw && event.defaultTab){
+    if(event.defaultTab.indexOf('page:')===0) _urlPageRaw = event.defaultTab.slice(5);
+    else if(event.defaultTab.indexOf('phase:')===0) _urlPhaseRaw = event.defaultTab.slice(6);
+  }
+  const urlPhase = _urlPhaseRaw;
   const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
   // ===== PAGES LIBRES (mode expédition) =====
-  const contentPages = event.contentPages || [];
-  const urlPage = new URLSearchParams(window.location.search).get('page') || '';
+  const urlPage = (contentPages.find(p=>p.id===_urlPageRaw)) ? _urlPageRaw : '';
   const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
   document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
@@ -3026,16 +3041,7 @@ function renderExpedition(data){
       return '?'+params.toString();
     }
     let t = '<div class="phase-tabs">';
-    _buildTabList(phases, contentPages, event.tabOrder).forEach(item => {
-      const p = item.obj;
-      if(item.kind==='phase'){
-        const isActive = !activeContentPage && activePhase === p.id;
-        t += `<a href="${_ptUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
-      } else {
-        const isActive = activeContentPage && activeContentPage.id === p.id;
-        t += `<a href="${_pgUrl(p.id)}" class="phase-tab${isActive?' active':''}" style="${_cpTabStyle(p,'#0C6CA1')}"><span class="phase-dot" style="background:${p.color||'#0C6CA1'}"></span>${_qEsc(p.name||'')}</a>`;
-      }
-    });
+    t += _renderTabItems(phases, contentPages, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, activePhase:activePhase, activeContentPage:activeContentPage});
     return t + '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases));
   };
 
@@ -4352,8 +4358,44 @@ function _cpTabStyle(p, baseColor){
   if(p.tabStyle==='italic') s += 'font-style:italic;';
   return s;
 }
-// Construit la liste ordonnée des onglets (phases + pages libres) selon event.tabOrder.
-// tabOrder = ["phase:<id>","page:<id>",...]. Les éléments absents de tabOrder sont ajoutés à la fin.
+// Rend les onglets avec regroupement en menus déroulants (parentTab).
+// ctx: {phaseUrl, pageUrl, activePhase, activeContentPage}
+function _renderTabItems(phases, contentPages, tabOrder, ctx){
+  const flat = _buildTabList(phases, contentPages, tabOrder); // ordre complet
+  const tok = it => (it.kind==='phase'?'phase:':'page:')+it.obj.id;
+  const isChild = it => !!it.obj.parentTab;
+  // Regroupe les enfants par parent
+  const childrenOf = {};
+  flat.forEach(it=>{ if(isChild(it)){ (childrenOf[it.obj.parentTab]=childrenOf[it.obj.parentTab]||[]).push(it); } });
+  function tabLink(it, inMenu){
+    const p=it.obj;
+    if(it.kind==='phase'){
+      const active = !ctx.activeContentPage && ctx.activePhase===p.id;
+      return `<a href="${ctx.phaseUrl(p.id)}" class="${inMenu?'phase-menu-item':'phase-tab'}${active?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${p.color||'#6366F1'}"></span>${p.name}</a>`;
+    } else {
+      const active = ctx.activeContentPage && ctx.activeContentPage.id===p.id;
+      return `<a href="${ctx.pageUrl(p.id)}" class="${inMenu?'phase-menu-item':'phase-tab'}${active?' active':''}" style="${_cpTabStyle(p,'#0C6CA1')}"><span class="phase-dot" style="background:${p.color||'#0C6CA1'}"></span>${_qEsc(p.name||'')}</a>`;
+    }
+  }
+  let t='';
+  flat.forEach(it=>{
+    if(isChild(it)) return; // rendu dans le menu de son parent
+    const kids = childrenOf[tok(it)];
+    if(kids && kids.length){
+      // Onglet parent = menu déroulant. Actif si lui-même ou un enfant est actif.
+      const selfActive = it.kind==='phase' ? (!ctx.activeContentPage && ctx.activePhase===it.obj.id) : (ctx.activeContentPage && ctx.activeContentPage.id===it.obj.id);
+      const kidActive = kids.some(k=> k.kind==='phase' ? (!ctx.activeContentPage && ctx.activePhase===k.obj.id) : (ctx.activeContentPage && ctx.activeContentPage.id===k.obj.id));
+      t += `<div class="phase-tab-dd${(selfActive||kidActive)?' active':''}" style="--phase-color:${it.obj.color||'#0C6CA1'}">`
+        + `<button type="button" class="phase-tab phase-tab-ddbtn" onclick="this.parentNode.classList.toggle('open')"><span class="phase-dot" style="background:${it.obj.color||'#0C6CA1'}"></span>${_qEsc(it.obj.name||'')} <span class="dd-caret">▾</span></button>`
+        + `<div class="phase-menu">` + tabLink(it,true) + kids.map(k=>tabLink(k,true)).join('') + `</div>`
+        + `</div>`;
+    } else {
+      t += tabLink(it,false);
+    }
+  });
+  return t;
+}
+// Rend les onglets avec regroupement en menus déroulants (parentTab).
 function _buildTabList(phases, contentPages, tabOrder){
   const byPhase={}; (phases||[]).forEach(p=>byPhase[p.id]=p);
   const byPage={}; (contentPages||[]).forEach(p=>byPage[p.id]=p);
@@ -4412,10 +4454,13 @@ function _renderProduct(pr, event){
   var hasContent = pr.title||pr.description||pr.mainImage||(pr.gallery&&pr.gallery.length)||pr.strong||pr.know||(pr.btnUrl);
   if(!hasContent) return '';
   var accent = pr.accent || 'var(--acc,#0C6CA1)';
-  var font = pr.font ? "font-family:'"+pr.font+"',sans-serif;" : '';
-  var layout = pr.layout || 'top'; // 'top' (photo en haut) ou 'side' (photo à droite)
+  var textColor = pr.textColor || '#334155';
+  var layout = pr.layout || 'top';
+  var titleStyle = (pr.titleFont?"font-family:'"+pr.titleFont+"',serif;":'') + (pr.titleSize?'font-size:'+parseInt(pr.titleSize,10)+'px;':'');
+  var textStyle = (pr.textFont?"font-family:'"+pr.textFont+"',sans-serif;":'') + (pr.textSize?'font-size:'+parseInt(pr.textSize,10)+'px;':'') + 'color:'+textColor+';';
+  var boxFontStyle = pr.boxFont?"font-family:'"+pr.boxFont+"',sans-serif;":'';
   var mainImg = pr.mainImage ? '<div class="pr-mainimg"><img src="'+_qEsc(pr.mainImage)+'" alt="'+_qEsc(pr.title||'')+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>' : '';
-  var titleBlock = (pr.title?'<h2 class="pr-title">'+_qEsc(pr.title)+'</h2>':'') + (pr.description?'<div class="pr-desc">'+pr.description+'</div>':'');
+  var titleBlock = (pr.title?'<h2 class="pr-title"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_qEsc(pr.title)+'</h2>':'') + (pr.description?'<div class="pr-desc"'+(textStyle?' style="'+textStyle+'"':'')+'>'+pr.description+'</div>':'');
 
   var head;
   if(layout==='side' && mainImg){
@@ -4427,7 +4472,7 @@ function _renderProduct(pr, event){
   // Deux encarts côte à côte
   var boxes='';
   if(pr.strong || pr.know){
-    boxes = '<div class="pr-boxes">';
+    boxes = '<div class="pr-boxes"'+(boxFontStyle?' style="'+boxFontStyle+'"':'')+'>';
     if(pr.strong) boxes += '<div class="pr-box pr-box-strong"><div class="pr-box-h"><span class="pr-box-ico">✓</span> '+_qEsc(pr.strongTitle||'Points forts')+'</div><div class="pr-box-body">'+pr.strong+'</div></div>';
     if(pr.know) boxes += '<div class="pr-box pr-box-know"><div class="pr-box-h"><span class="pr-box-ico">ℹ</span> '+_qEsc(pr.knowTitle||'Bon à savoir')+'</div><div class="pr-box-body">'+pr.know+'</div></div>';
     boxes += '</div>';
@@ -4441,7 +4486,7 @@ function _renderProduct(pr, event){
   // Bouton
   var btn = (pr.btnUrl && pr.btnUrl.trim()) ? '<div class="pr-btn-wrap"><a class="pr-btn" href="'+_qEsc(pr.btnUrl.trim())+'" target="_blank" rel="noopener" style="background:'+accent+'">'+_qEsc(pr.btnLabel||'En savoir plus')+'</a></div>' : '';
 
-  return '<div class="dash"><div class="pr-card" style="--pr-accent:'+accent+';'+font+'">'
+  return '<div class="dash"><div class="pr-card" style="--pr-accent:'+accent+';">'
     + head + boxes + mosaic + btn
     + '</div></div>';
 }
