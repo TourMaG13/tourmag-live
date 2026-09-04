@@ -642,6 +642,7 @@ select.form-input{cursor:pointer}
 <g id="ti-hourglass"><path d="M6 3h12M6 21h12"/><path d="M6 3c0 5 12 5 12 0M6 21c0-5 12-5 12 0"/></g>
 <g id="ti-upload"><path d="M12 15V4"/><polyline points="7 9 12 4 17 9"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></g>
 <g id="ti-check"><polyline points="20 6 9 17 4 12"/></g>
+<g id="ti-pages"><path d="M4 3h11l5 5v13H4z"/><path d="M15 3v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></g>
 </defs></svg>
 
 <!-- AUTH SCREEN -->
@@ -911,7 +912,7 @@ try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ conso
 // STATE — alimenté par onSnapshot (Firestore = source de vérité)
 // ============================================================
 // Icônes SVG uniformisées pour les blocs/modules (remplace les émojis).
-const BLOCK_ICONS={hero:'ti-image',phaseTabs:'ti-phases',phasetabs:'ti-phases',kpis:'ti-kpis',flash:'ti-flash',essential:'ti-essentiel',essentiel:'ti-essentiel',live:'ti-live',citations:'ti-citations',questions:'ti-qa',quiz:'ti-quiz',articles:'ti-articles',interviews:'ti-interviews',videos:'ti-videos',gallery:'ti-gallery',programme:'ti-programme',timeline:'ti-pin',journalists:'ti-reporters',journalistes:'ti-reporters',reporters:'ti-reporters',brandnews:'ti-megaphone',sponsors:'ti-sponsors',etapes:'ti-etapes',itinerary:'ti-map',contact:'ti-contact',decor:'ti-decor',media:'ti-media',rubriques:'ti-rubriques',tags:'ti-tags',widget:'ti-widget',stats:'ti-kpis',home:'ti-events',product:'ti-sponsors',countrymap:'ti-map'};
+const BLOCK_ICONS={hero:'ti-image',phaseTabs:'ti-phases',phasetabs:'ti-phases',kpis:'ti-kpis',flash:'ti-flash',essential:'ti-essentiel',essentiel:'ti-essentiel',live:'ti-live',citations:'ti-citations',questions:'ti-qa',quiz:'ti-quiz',articles:'ti-articles',interviews:'ti-interviews',videos:'ti-videos',gallery:'ti-gallery',programme:'ti-programme',timeline:'ti-pin',journalists:'ti-reporters',journalistes:'ti-reporters',reporters:'ti-reporters',brandnews:'ti-megaphone',sponsors:'ti-sponsors',etapes:'ti-etapes',itinerary:'ti-map',contact:'ti-contact',decor:'ti-decor',media:'ti-media',rubriques:'ti-rubriques',tags:'ti-tags',widget:'ti-widget',stats:'ti-kpis',home:'ti-events',product:'ti-sponsors',countrymap:'ti-map',pages:'ti-pages'};
 function _blockIco(key,cls){ const id=BLOCK_ICONS[key]||'ti-list'; return '<svg class="'+(cls||'blk-ic')+'" viewBox="0 0 24 24"><use href="#'+id+'"/></svg>'; }
 
 var currentEventId='';
@@ -1068,7 +1069,8 @@ function tabIconId(tab, variant){
     essentiel:'ti-essentiel', kpis:'ti-kpis', journalistes:'ti-reporters', etapes:'ti-etapes',
     questions:'ti-qa', quiz:'ti-quiz',
     apparence:'ti-apparence', decor:'ti-decor', modules:'ti-modules', media:'ti-media',
-    tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide'
+    tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide',
+    pages:'ti-pages', product:'ti-sponsors', countrymap:'ti-map'
   };
   if(tab==='live' && variant==='expedition') return 'ti-map';
   return map[tab]||'ti-modules';
@@ -3851,8 +3853,9 @@ function _cpBlockEditor(b,i,total){
           <button type="button" class="rte-b" onmousedown="_rteLink(event,${i})" title="Lien">🔗</button>
           <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'insertUnorderedList')" title="Liste à puces">•≡</button>
           <span class="rte-sep"></span>
-          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyLeft')" title="Gauche">⬅</button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyLeft')" title="Aligner à gauche">⬅</button>
           <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyCenter')" title="Centrer">↔</button>
+          <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyRight')" title="Aligner à droite">➡</button>
           <button type="button" class="rte-b" onmousedown="_rteCmd(event,${i},'justifyFull')" title="Justifier">☰</button>
           <span class="rte-sep"></span>
           <label class="rte-color" title="Couleur du texte">A<input type="color" onchange="_rteColor(${i},this.value)" value="#111111"></label>
@@ -3861,14 +3864,21 @@ function _cpBlockEditor(b,i,total){
       </div>
       <div class="form-row-inline">
         <div class="form-row"><label class="form-label">Image (optionnelle)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
-        <div class="form-row" style="max-width:200px"><label class="form-label">Position image</label><select class="form-input" data-cpb="${i}" data-cpf="imagePos">
+        <div class="form-row" style="max-width:230px"><label class="form-label">Position image</label><select class="form-input" data-cpb="${i}" data-cpf="imagePos">
           <option value="none"${(b.imagePos||'none')==='none'?' selected':''}>Aucune</option>
-          <option value="left"${b.imagePos==='left'?' selected':''}>À gauche du texte</option>
-          <option value="right"${b.imagePos==='right'?' selected':''}>À droite du texte</option>
+          <option value="left"${b.imagePos==='left'?' selected':''}>À gauche (colonne)</option>
+          <option value="right"${b.imagePos==='right'?' selected':''}>À droite (colonne)</option>
+          <option value="wrap-left"${b.imagePos==='wrap-left'?' selected':''}>Habillage à gauche</option>
+          <option value="wrap-right"${b.imagePos==='wrap-right'?' selected':''}>Habillage à droite</option>
           <option value="top"${b.imagePos==='top'?' selected':''}>Au-dessus</option>
           <option value="bottom"${b.imagePos==='bottom'?' selected':''}>En dessous</option>
         </select></div>
       </div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Crédit / copyright photo (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="imageCredit" value="${_escAdm(b.imageCredit||'')}" placeholder="© Auteur / Agence"></div>
+        <div class="form-row" style="max-width:170px"><label class="form-label">Largeur image (habillage)</label><input class="form-input" data-cpb="${i}" data-cpf="imageWidth" value="${_escAdm(b.imageWidth||'')}" placeholder="ex : 260px ou 40%"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin:-6px 0 4px">« Colonne » = image et texte côte à côte. « Habillage » = le texte entoure l'image.</div>
       <div class="form-row-inline">
         <div class="form-row" style="max-width:220px"><label class="form-label">Police du texte</label><select class="form-input" data-cpb="${i}" data-cpf="font">
           ${_cpFontOpts(b.font)}
@@ -3888,7 +3898,10 @@ function _cpBlockEditor(b,i,total){
       <div style="font-size:10px;color:var(--text3);margin-top:4px">✅ Le HTML <b>et le CSS</b> (balise &lt;style&gt;) sont acceptés et appliqués tels quels. Usage avancé : embed, mise en forme spécifique…</div></div>`;
   } else if(b.type==='image'){
     inner=`<div class="form-row"><label class="form-label">Image</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-cpb="${i}" data-cpf="image" id="cpb-img-${i}" style="flex:1" value="${_escAdm(b.image||'')}">${mkMediaPickerBtn('cpb-img-'+i)}${mkUploadBtn('cpb-img-'+i)}</div></div>
-      <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Légende (optionnelle)</label><input class="form-input" data-cpb="${i}" data-cpf="caption" value="${_escAdm(b.caption||'')}"></div>
+        <div class="form-row"><label class="form-label">Crédit / copyright (optionnel)</label><input class="form-input" data-cpb="${i}" data-cpf="credit" value="${_escAdm(b.credit||'')}" placeholder="© Auteur / Agence"></div>
+      </div>
       <div class="form-row-inline">
         <div class="form-row" style="max-width:180px"><label class="form-label">Largeur</label><input class="form-input" data-cpb="${i}" data-cpf="width" value="${_escAdm(b.width||'')}" placeholder="ex : 400px ou 60%"></div>
         <div class="form-row" style="max-width:180px"><label class="form-label">Alignement</label><select class="form-input" data-cpb="${i}" data-cpf="align">
@@ -3901,7 +3914,7 @@ function _cpBlockEditor(b,i,total){
   } else if(b.type==='gallery'){
     const imgs=(b.images||[]);
     inner=`<div class="form-row"><label class="form-label">Photos de la galerie</label>
-      <div>${imgs.map((u,gi)=>`<div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" data-cpb="${i}" data-cpgal="${gi}" id="cpgal-${i}-${gi}" style="flex:1" value="${_escAdm(u)}">${mkUploadBtn('cpgal-'+i+'-'+gi)}<button class="btn btn-danger btn-xs" onclick="_cpGalDel(${i},${gi})">✕</button></div>`).join('')}</div>
+      <div>${imgs.map((u,gi)=>{const _url=(typeof u==='object'&&u)?(u.url||''):u;const _cr=(typeof u==='object'&&u)?(u.credit||''):'';return `<div style="display:flex;gap:6px;margin-bottom:6px;align-items:flex-start;flex-wrap:wrap"><input class="form-input" data-cpb="${i}" data-cpgal="${gi}" id="cpgal-${i}-${gi}" style="flex:1 1 200px" value="${_escAdm(_url)}" placeholder="URL de la photo">${mkMediaPickerBtn('cpgal-'+i+'-'+gi)}${mkUploadBtn('cpgal-'+i+'-'+gi)}<input class="form-input" data-cpb="${i}" data-cpgalcr="${gi}" style="flex:1 1 160px" value="${_escAdm(_cr)}" placeholder="© crédit (optionnel)"><button class="btn btn-danger btn-xs" onclick="_cpGalDel(${i},${gi})">✕</button></div>`;}).join('')}</div>
       <button class="btn btn-ghost btn-sm" onclick="_cpGalAdd(${i})">＋ Ajouter une photo</button></div>`;
   } else if(b.type==='video'){
     inner=`<div class="form-row"><label class="form-label">Lien vidéo (YouTube, Vimeo ou .mp4)</label><input class="form-input" data-cpb="${i}" data-cpf="url" value="${_escAdm(b.url||'')}" placeholder="https://youtube.com/watch?v=…"></div>`;
@@ -3945,7 +3958,9 @@ function _cpCollect(){
       const f=el.getAttribute('data-cpf');
       if(f){ b[f]=(el.type==='checkbox')?el.checked:el.value; }
       const gi=el.getAttribute('data-cpgal');
-      if(gi!==null&&gi!==''){ b.images=b.images||[]; b.images[+gi]=el.value; }
+      if(gi!==null&&gi!==''){ b.images=b.images||[]; const _ex=b.images[+gi]; const _cr=(typeof _ex==='object'&&_ex)?(_ex.credit||''):''; b.images[+gi]=_cr?{url:el.value,credit:_cr}:el.value; }
+      const gcr=el.getAttribute('data-cpgalcr');
+      if(gcr!==null&&gcr!==''){ b.images=b.images||[]; const _ex=b.images[+gcr]; const _url=(typeof _ex==='object'&&_ex)?(_ex.url||''):(_ex||''); const _v=el.value.trim(); b.images[+gcr]=_v?{url:_url,credit:_v}:_url; }
       const bi=el.getAttribute('data-cpbtn');
       if(bi!==null&&bi!==''){ const bf=el.getAttribute('data-cpbtnf'); b.buttons=b.buttons||[]; b.buttons[+bi]=b.buttons[+bi]||{}; b.buttons[+bi][bf]=el.value; }
     });
@@ -4355,8 +4370,8 @@ function renderModules(el){
   const ev=eventsData.find(e=>e.id===currentEventId);
   const mod=ev?.modules||{};
   const isExp = ev?.mode === 'expedition';
-  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
-  const allMods=[{key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},{key:'essential',icon:_blockIco('essential'),label:'Points essentiels'},{key:'live',icon:_blockIco('live'),label:'Fil live'},{key:'citations',icon:_blockIco('citations'),label:'Citations'},{key:'questions',icon:_blockIco('questions'),label:'Questions du public'},{key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},{key:'articles',icon:_blockIco('articles'),label:'Articles liés'},{key:'videos',icon:_blockIco('videos'),label:'Vidéos'},{key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},{key:'programme',icon:_blockIco('programme'),label:'Programme'},{key:'timeline',icon:_blockIco('timeline'),label:'Timeline'},{key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},{key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},{key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},{key:'product',icon:_blockIco('product'),label:'Produit'},{key:'countrymap',icon:_blockIco('countrymap'),label:'Carte pays'},{key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},{key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},{key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes'},{key:'contact',icon:_blockIco('contact'),label:'Contact'},{key:'decor',icon:_blockIco('decor'),label:'Décor'}];
+  const expModuleKeys = ['essential','live','citations','videos','interviews','journalists','kpis','gallery','pages','product','countrymap','sponsors','articles','etapes','programme','contact','decor','brandnews','questions','quiz'];
+  const allMods=[{key:'flash',icon:_blockIco('flash'),label:'Bandeau Flash'},{key:'essential',icon:_blockIco('essential'),label:'Points essentiels'},{key:'live',icon:_blockIco('live'),label:'Fil live'},{key:'citations',icon:_blockIco('citations'),label:'Citations'},{key:'questions',icon:_blockIco('questions'),label:'Questions du public'},{key:'quiz',icon:_blockIco('quiz'),label:'Quiz / Sondage'},{key:'articles',icon:_blockIco('articles'),label:'Articles liés'},{key:'videos',icon:_blockIco('videos'),label:'Vidéos'},{key:'interviews',icon:_blockIco('interviews'),label:'Interviews'},{key:'programme',icon:_blockIco('programme'),label:'Programme'},{key:'timeline',icon:_blockIco('timeline'),label:'Timeline'},{key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},{key:'kpis',icon:_blockIco('kpis'),label:'Chiffres clés'},{key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos'},{key:'pages',icon:_blockIco('pages'),label:'Pages libres'},{key:'product',icon:_blockIco('product'),label:'Produit'},{key:'countrymap',icon:_blockIco('countrymap'),label:'Carte pays'},{key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},{key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},{key:'etapes',icon:_blockIco('etapes'),label:'Carte & Étapes'},{key:'contact',icon:_blockIco('contact'),label:'Contact'},{key:'decor',icon:_blockIco('decor'),label:'Décor'}];
   const expRenames = {essential:'Essentiel & Timeline',live:'Fil live',citations:'Citations',journalists:'Journalistes',kpis:'Chiffres clés',etapes:'Carte interactive',contact:'Contact',decor:'Décor'};
   const mods = isExp ? allMods.filter(m => expModuleKeys.includes(m.key)).map(m => ({...m, label: expRenames[m.key] || m.label})) : allMods.filter(m => m.key !== 'etapes');
 
@@ -4381,6 +4396,7 @@ function renderModules(el){
     {key:'programme',icon:_blockIco('programme'),label:'Programme'},
     {key:'journalists',icon:_blockIco('journalists'),label:'Journalistes'},
     {key:'brandnews',icon:_blockIco('brandnews'),label:'Brand News'},
+    {key:'pages',icon:_blockIco('pages'),label:'Pages libres (onglets)'},
     {key:'product',icon:_blockIco('product'),label:'Produit'},
     {key:'countrymap',icon:_blockIco('countrymap'),label:'Carte pays'},
     {key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires'},
@@ -4421,6 +4437,9 @@ function renderModules(el){
       {key:'interviews',icon:_blockIco('interviews'),label:'Interviews',zones:['full','main']},
       {key:'videos',icon:_blockIco('videos'),label:'Vidéos',zones:['full','main']},
       {key:'gallery',icon:_blockIco('gallery'),label:'Galerie photos',zones:['full','main']},
+      {key:'pages',icon:_blockIco('pages'),label:'Pages libres (onglets)',zones:['full']},
+      {key:'product',icon:_blockIco('product'),label:'Produit',zones:['full','main']},
+      {key:'countrymap',icon:_blockIco('countrymap'),label:'Carte pays',zones:['full','main']},
       {key:'articles',icon:_blockIco('articles'),label:'Articles',zones:['full','main']},
       {key:'sponsors',icon:_blockIco('sponsors'),label:'Partenaires',zones:['full','main']},
       {key:'contact',icon:_blockIco('contact'),label:'Contact',zones:['side','main','full']}
@@ -7476,6 +7495,9 @@ function renderAccess(el){
     {key:'interviews',icon:'🎙️',label:'Interviews'},
     {key:'journalistes',icon:'👤',label:'Journalistes'},
     {key:'gallery',icon:'📸',label:'Galerie photos'},
+    {key:'pages',icon:'📄',label:'Pages libres'},
+    {key:'product',icon:'📦',label:'Produit'},
+    {key:'countrymap',icon:'🌍',label:'Carte pays'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
     {key:'contact',icon:'📞',label:'Contact'},
     {key:'etapes',icon:'🗺️',label:'Carte & Étapes'},
