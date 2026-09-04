@@ -2048,7 +2048,8 @@ function render(data){
   function mkPhaseTabs(){
     // Onglets « pages libres » masqués si le module est désactivé
     const _cpTabs = (mod.pages===false) ? [] : contentPages;
-    if(!phases.length && !_cpTabs.length) return '';
+    const _bpTabs = (mod.pages===false) ? [] : (Array.isArray(event.builderPages)?event.builderPages:[]);
+    if(!phases.length && !_cpTabs.length && !_bpTabs.length) return '';
     // Mode verrouillé : ?lock=1 masque les onglets de phase (le visiteur reste sur la phase du lien)
     if(new URLSearchParams(window.location.search).get('lock')==='1' && !activeContentPage) return _mkPhaseTitle(event, activePhase, phases);
     const evId = new URLSearchParams(window.location.search).get('event')||'';
@@ -2067,8 +2068,15 @@ function render(data){
       if(frameId) params.set('frameId',frameId);
       return '?'+params.toString();
     }
+    function builderUrl(bid){
+      let params = new URLSearchParams();
+      if(evId) params.set('event',evId);
+      params.set('bpage',bid);
+      if(frameId) params.set('frameId',frameId);
+      return '?'+params.toString();
+    }
     let t = '<div class="dash"><div class="phase-tabs">';
-    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:phaseUrl, pageUrl:pageUrl, activePhase:activePhase, activeContentPage:activeContentPage});
+    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:phaseUrl, pageUrl:pageUrl, builderUrl:builderUrl, activePhase:activePhase, activeContentPage:activeContentPage, activeBuilderPage:null, builderPages:_bpTabs});
     t += '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases)) + '</div>';
     return t;
   }
@@ -2765,8 +2773,23 @@ function render(data){
     if(!_bpId) return; // pas de page-builder ciblée → legacy
     const _bp = _builderPages.find(p=>p.id===_bpId);
     if(!_bp) return;
-    // On rend la page-builder et on court-circuite le legacy
-    const html = _renderBuilderPage(_bp, event, {
+    // Barre d'onglets avec la page-builder courante marquée active
+    const evId2 = new URLSearchParams(window.location.search).get('event')||'';
+    const frameId2 = new URLSearchParams(window.location.search).get('frameId')||'';
+    const _mkUrl = (kind,id) => { let p=new URLSearchParams(); if(evId2)p.set('event',evId2); if(kind==='phase'&&id)p.set('phase',id); if(kind==='page')p.set('page',id); if(kind==='builder')p.set('bpage',id); if(frameId2)p.set('frameId',frameId2); return '?'+p.toString(); };
+    let tabsHtml='';
+    const _cpTabs2 = (mod.pages===false)?[]:contentPages;
+    const _bpTabs2 = (mod.pages===false)?[]:_builderPages;
+    if(phases.length || _cpTabs2.length || _bpTabs2.length){
+      tabsHtml = '<div class="dash"><div class="phase-tabs">'
+        + _renderTabItems(phases, _cpTabs2, event.tabOrder, {
+            phaseUrl:(s)=>_mkUrl('phase',s), pageUrl:(p)=>_mkUrl('page',p), builderUrl:(b)=>_mkUrl('builder',b),
+            activePhase:null, activeContentPage:null, activeBuilderPage:_bp, builderPages:_bpTabs2
+          })
+        + '</div></div>';
+    }
+    // On rend la page-builder (onglets en tête) et on court-circuite le legacy
+    const html = tabsHtml + _renderBuilderPage(_bp, event, {
       blockRenderers: blockRenderers, getZone: getZone,
       mobileHidden: _mobileHidden, renderContentPage: _renderContentPage
     });
@@ -3118,12 +3141,13 @@ function renderExpedition(data){
   // ===== BLOCK-BASED RENDERING =====
   const _b = {};
 
-  _b.phaseTabs = function(){
+  _b.phaseTabs = function(activeBuilderPage){
     // Onglets « pages libres » masqués si le module est désactivé
     const _cpTabs = (mod.pages===false) ? [] : contentPages;
-    if(!phases.length && !_cpTabs.length) return '';
+    const _bpTabs = (mod.pages===false) ? [] : (Array.isArray(event.builderPages)?event.builderPages:[]);
+    if(!phases.length && !_cpTabs.length && !_bpTabs.length) return '';
     // Mode verrouillé : ?lock=1 masque les onglets de phase (le visiteur reste sur la phase du lien)
-    if(new URLSearchParams(window.location.search).get('lock')==='1' && !activeContentPage) return _mkPhaseTitle(event, activePhase, phases);
+    if(new URLSearchParams(window.location.search).get('lock')==='1' && !activeContentPage && !activeBuilderPage) return _mkPhaseTitle(event, activePhase, phases);
     const evId = new URLSearchParams(window.location.search).get('event')||'';
     const frameId = new URLSearchParams(window.location.search).get('frameId')||'';
     function _ptUrl(slug){
@@ -3140,9 +3164,16 @@ function renderExpedition(data){
       if(frameId) params.set('frameId',frameId);
       return '?'+params.toString();
     }
+    function _bpUrl(bid){
+      let params = new URLSearchParams();
+      if(evId) params.set('event',evId);
+      params.set('bpage',bid);
+      if(frameId) params.set('frameId',frameId);
+      return '?'+params.toString();
+    }
     let t = '<div class="phase-tabs">';
-    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, activePhase:activePhase, activeContentPage:activeContentPage});
-    return t + '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases));
+    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, builderUrl:_bpUrl, activePhase:(activeBuilderPage?null:activePhase), activeContentPage:(activeBuilderPage?null:activeContentPage), activeBuilderPage:activeBuilderPage||null, builderPages:_bpTabs});
+    return t + '</div>' + ((activeContentPage||activeBuilderPage)?'':_mkPhaseTitle(event, activePhase, phases));
   };
 
   _b.kpis = function(){
@@ -3696,7 +3727,8 @@ function renderExpedition(data){
     if(!_bpId) return;
     const _bp=_bpPagesExp.find(p=>p.id===_bpId);
     if(!_bp) return;
-    const html = _renderBuilderPage(_bp, event, {
+    const _tabs = '<div class="exp-dash">' + _b.phaseTabs(_bp) + '</div>';
+    const html = _tabs + _renderBuilderPage(_bp, event, {
       blockRenderers: _b, getZone: getExpZone,
       mobileHidden: (Array.isArray(event.mobileHidden)?event.mobileHidden:[]),
       renderContentPage: _renderContentPage
@@ -4490,21 +4522,27 @@ function _cpTabStyle(p, baseColor){
 // Rend les onglets avec regroupement en menus déroulants (parentTab).
 // ctx: {phaseUrl, pageUrl, activePhase, activeContentPage}
 function _renderTabItems(phases, contentPages, tabOrder, ctx){
-  const flat = _buildTabList(phases, contentPages, tabOrder); // ordre complet
-  const tok = it => (it.kind==='phase'?'phase:':'page:')+it.obj.id;
+  const flat = _buildTabList(phases, contentPages, tabOrder, ctx.builderPages); // ordre complet
+  const tok = it => (it.kind==='phase'?'phase:':(it.kind==='builder'?'builder:':'page:'))+it.obj.id;
   const isChild = it => !!it.obj.parentTab;
   // Regroupe les enfants par parent
   const childrenOf = {};
   flat.forEach(it=>{ if(isChild(it)){ (childrenOf[it.obj.parentTab]=childrenOf[it.obj.parentTab]||[]).push(it); } });
+  const _isActive = it => {
+    if(it.kind==='phase') return !ctx.activeContentPage && !ctx.activeBuilderPage && ctx.activePhase===it.obj.id;
+    if(it.kind==='builder') return ctx.activeBuilderPage && ctx.activeBuilderPage.id===it.obj.id;
+    return ctx.activeContentPage && ctx.activeContentPage.id===it.obj.id;
+  };
   function tabLink(it, inMenu){
     const p=it.obj;
-    const dot = p.dotColor || p.color || (it.kind==='phase'?'#6366F1':'#0C6CA1');
+    const dot = p.dotColor || p.color || (it.kind==='phase'?'#6366F1':(it.kind==='builder'?'#7C3AED':'#0C6CA1'));
+    const cls = (inMenu?'phase-menu-item':'phase-tab')+(_isActive(it)?' active':'');
     if(it.kind==='phase'){
-      const active = !ctx.activeContentPage && ctx.activePhase===p.id;
-      return `<a href="${ctx.phaseUrl(p.id)}" class="${inMenu?'phase-menu-item':'phase-tab'}${active?' active':''}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${dot}"></span>${p.name}</a>`;
+      return `<a href="${ctx.phaseUrl(p.id)}" class="${cls}" style="--phase-color:${p.color||'#6366F1'}" onclick="window._switchPhase(event,'${p.id}')"><span class="phase-dot" style="background:${dot}"></span>${p.name}</a>`;
+    } else if(it.kind==='builder'){
+      return `<a href="${ctx.builderUrl(p.id)}" class="${cls}" style="--phase-color:${p.color||'#7C3AED'}"><span class="phase-dot" style="background:${dot}"></span>${_qEsc(p.name||'')}</a>`;
     } else {
-      const active = ctx.activeContentPage && ctx.activeContentPage.id===p.id;
-      return `<a href="${ctx.pageUrl(p.id)}" class="${inMenu?'phase-menu-item':'phase-tab'}${active?' active':''}" style="${_cpTabStyle(p,'#0C6CA1')}"><span class="phase-dot" style="background:${dot}"></span>${_qEsc(p.name||'')}</a>`;
+      return `<a href="${ctx.pageUrl(p.id)}" class="${cls}" style="${_cpTabStyle(p,'#0C6CA1')}"><span class="phase-dot" style="background:${dot}"></span>${_qEsc(p.name||'')}</a>`;
     }
   }
   let t='';
@@ -4513,8 +4551,8 @@ function _renderTabItems(phases, contentPages, tabOrder, ctx){
     const kids = childrenOf[tok(it)];
     if(kids && kids.length){
       // Onglet parent = menu déroulant. Actif si lui-même ou un enfant est actif.
-      const selfActive = it.kind==='phase' ? (!ctx.activeContentPage && ctx.activePhase===it.obj.id) : (ctx.activeContentPage && ctx.activeContentPage.id===it.obj.id);
-      const kidActive = kids.some(k=> k.kind==='phase' ? (!ctx.activeContentPage && ctx.activePhase===k.obj.id) : (ctx.activeContentPage && ctx.activeContentPage.id===k.obj.id));
+      const selfActive = _isActive(it);
+      const kidActive = kids.some(k=> _isActive(k));
       const _pdot = it.obj.dotColor || it.obj.color || '#0C6CA1';
       const _clickable = it.obj.parentClickable!==false; // par défaut cliquable
       const _hover = it.obj.parentOpen==='hover';
@@ -4534,17 +4572,22 @@ function _renderTabItems(phases, contentPages, tabOrder, ctx){
   return t;
 }
 // Rend les onglets avec regroupement en menus déroulants (parentTab).
-function _buildTabList(phases, contentPages, tabOrder){
+function _buildTabList(phases, contentPages, tabOrder, builderPages){
   const byPhase={}; (phases||[]).forEach(p=>byPhase[p.id]=p);
   const byPage={}; (contentPages||[]).forEach(p=>byPage[p.id]=p);
+  // Pages-builder visibles dans la navigation (nav.visible !== false)
+  const bp=(builderPages||[]).filter(p=>!p.nav || p.nav.visible!==false);
+  const byBuilder={}; bp.forEach(p=>byBuilder[p.id]=p);
   const out=[]; const seen={};
   (tabOrder||[]).forEach(tok=>{
     if(tok.indexOf('phase:')===0){ const id=tok.slice(6); if(byPhase[id]&&!seen[tok]){ out.push({kind:'phase',obj:byPhase[id]}); seen[tok]=1; } }
+    else if(tok.indexOf('builder:')===0){ const id=tok.slice(8); if(byBuilder[id]&&!seen[tok]){ out.push({kind:'builder',obj:byBuilder[id]}); seen[tok]=1; } }
     else if(tok.indexOf('page:')===0){ const id=tok.slice(5); if(byPage[id]&&!seen[tok]){ out.push({kind:'page',obj:byPage[id]}); seen[tok]=1; } }
   });
-  // Ajoute les éléments non listés (nouveaux) à la fin, phases puis pages
+  // Ajoute les éléments non listés (nouveaux) à la fin : phases, pages libres, puis pages-builder
   (phases||[]).forEach(p=>{ if(!seen['phase:'+p.id]) out.push({kind:'phase',obj:p}); });
   (contentPages||[]).forEach(p=>{ if(!seen['page:'+p.id]) out.push({kind:'page',obj:p}); });
+  bp.forEach(p=>{ if(!seen['builder:'+p.id]) out.push({kind:'builder',obj:p}); });
   return out;
 }
 // ==================== RENDU DES PAGES LIBRES ====================
