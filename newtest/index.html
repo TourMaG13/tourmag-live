@@ -4916,12 +4916,10 @@ function _bpRenderSection(sec, event, ctx){
   if(ctx.blockRenderers && !ctx.blockRenderers['journalists'] && ctx.blockRenderers['reporters']){
     legacyDelegate['journalists']='reporters';
   }
-  // Une "galerie" (et une "vidéo") peut être soit le MODULE live (source partagée),
-  // soit un BLOC éditorial avec son propre contenu posé dans la section.
-  // Si la section porte son propre contenu éditorial, on rend localement.
-  const hasOwnEditorial = (type==='gallery' && ct.images && ct.images.length)
-                       || (type==='video' && ct.url);
-  if(!hasOwnEditorial && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
+  // Types éditoriaux : TOUJOURS rendus localement (jamais délégués à un module live),
+  // même vides. Cela évite qu'une galerie/vidéo builder tombe sur le module live homonyme.
+  const EDITORIAL = {text:1, image:1, gallery:1, video:1, buttons:1, separator:1, html:1};
+  if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try { inner = ctx.blockRenderers[legacyDelegate[type]]() || ''; }
     catch(e){ inner=''; console.warn('[builder] renderer "'+type+'" a échoué', e); }
   } else {
@@ -4946,6 +4944,8 @@ function _bpRenderContentModule(sec, event, ctx){
 
   switch(sec.type){
     case 'text': {
+      // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
+      if(!ct.title && !ct.text && !ct.image) return '';
       const titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
       const textHtml  = ct.text ? '<div class="bp-text"'+(textStyle?' style="'+textStyle+'"':'')+'>'+ct.text+'</div>' : '';
       // image + habillage (réutilise la logique des blocs de contenu)
