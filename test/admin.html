@@ -4091,14 +4091,25 @@ function _cpTabOrderSection(ev){
   h+='</select></div>';
   h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Ordonnez les onglets (▲▼). Vous pouvez regrouper des onglets sous un onglet « parent » : ils deviennent alors un menu déroulant.</div>';
   h+='<div class="cp-list">';
-  // Options de parent : uniquement les onglets qui ne sont pas eux-mêmes des enfants
-  const parentOptions = list.filter(x=>!x.obj.parentTab);
+  // Un onglet qui a déjà des enfants ne peut pas devenir enfant à son tour (pas d'imbrication à 3 niveaux).
+  const hasKids = {};
+  list.forEach(x=>{ if(x.obj.parentTab) hasKids[x.obj.parentTab]=true; });
   list.forEach((it,i)=>{
     const badge = it.kind==='phase' ? '<span class="cp-taborder-badge cp-tb-phase">Phase</span>' : '<span class="cp-taborder-badge cp-tb-page">Page</span>';
-    const parentSel = `<select class="form-input" style="max-width:190px;font-size:12px;padding:5px 8px" onchange="_setTabParent('${it.tok}',this.value)">
+    // Parents possibles pour CET onglet : tous les autres onglets, sauf ceux qui sont déjà enfants (éviter 3 niveaux)
+    const myTok = it.tok;
+    const opts = list.filter(x => x.tok!==myTok && !x.obj.parentTab);
+    // Cas particulier : si cet onglet a lui-même des enfants, il ne peut pas être rattaché (il est parent) → on désactive
+    const iAmParent = hasKids[myTok];
+    let parentSel;
+    if(iAmParent){
+      parentSel = '<span style="font-size:11px;color:var(--text3)">Onglet parent (contient des sous-onglets)</span>';
+    } else {
+      parentSel = `<select class="form-input" style="max-width:210px;font-size:12px;padding:5px 8px" onchange="_setTabParent('${myTok}',this.value)">
         <option value="">— Onglet principal —</option>
-        ${parentOptions.filter(x=>x.tok!==it.tok).map(x=>`<option value="${x.tok}"${(it.obj.parentTab||'')===x.tok?' selected':''}>↳ sous « ${_escAdm(x.obj.name||'')} »</option>`).join('')}
+        ${opts.map(x=>`<option value="${x.tok}"${(it.obj.parentTab||'')===x.tok?' selected':''}>↳ sous « ${_escAdm(x.obj.name||'')} »</option>`).join('')}
       </select>`;
+    }
     h+=`<div class="cp-row">
       <span class="cp-dot" style="background:${it.obj.color||(it.kind==='phase'?'#6366F1':'#0C6CA1')}"></span>
       <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}</div><div class="cp-meta" style="margin-top:4px">${parentSel}</div></div>
