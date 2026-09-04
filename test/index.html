@@ -44,7 +44,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* ==================== PAGES LIBRES (front) ==================== */
 .cp-page{max-width:1100px;margin:0 auto;padding:8px 24px 40px}
 /* ==================== MODULE PRODUIT ==================== */
-.pr-card{max-width:860px;margin:0 auto;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(15,23,42,.08);overflow:hidden;padding:0 0 28px}
+.pr-card{max-width:860px;margin:0 auto 24px;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(15,23,42,.08);overflow:hidden;padding:0 0 28px}
 .pr-mainimg img{width:100%;max-height:420px;object-fit:cover;display:block}
 .pr-head-side{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center}
 .pr-head-side .pr-head-text{padding:32px 30px}
@@ -1894,6 +1894,7 @@ function render(data){
   }
   const urlPage = (contentPages.find(p=>p.id===_urlPageRaw)) ? _urlPageRaw : '';
   const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
+  window._activeContentPageId = activeContentPage ? activeContentPage.id : '';
   const _urlPhaseEff = _urlPhaseRaw;
   const activePhase = (phases.find(p => p.id === _urlPhaseEff)) ? _urlPhaseEff : (phases.length ? phases[0].id : '');
   window._activePhase = activePhase;
@@ -2614,7 +2615,7 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(){return _renderProduct(event.product,event);}};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(){return _renderProducts(event);}};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
   const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','sponsors','contact'];
@@ -2835,6 +2836,7 @@ function renderExpedition(data){
   // ===== PAGES LIBRES (mode expédition) =====
   const urlPage = (contentPages.find(p=>p.id===_urlPageRaw)) ? _urlPageRaw : '';
   const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
+  window._activeContentPageId = activeContentPage ? activeContentPage.id : '';
   document.documentElement.style.setProperty('--live', event.liveColor || '#DC2626');
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
   if(_activePhaseObj){
@@ -3440,7 +3442,7 @@ function renderExpedition(data){
     return o+`</div></section>`;
   };
 
-  _b.product = function(){ if(mod.product===false) return ''; return _renderProduct(event.product, event); };
+  _b.product = function(){ if(mod.product===false) return ''; return _renderProducts(event); };
   _b.contact = function(){
     const ctRaw = event.contact;
     if(mod.contact===false || !ctRaw) return '';
@@ -4449,6 +4451,26 @@ window._togglePhaseContent = function(){
   if(chev) chev.textContent = open ? '▼' : '▲';
 };
 // ==================== MODULE PRODUIT (fiche unique) ====================
+// Rend tous les produits affectés à l'onglet/phase actuellement visible.
+// Migration : l'ancien event.product (unique) est traité comme un produit affiché partout.
+function _renderProducts(event){
+  var list = Array.isArray(event.products) ? event.products.slice() : [];
+  if(!list.length && event.product && (event.product.title||event.product.description||event.product.mainImage)){
+    list = [Object.assign({}, event.product, {tabs:[]})]; // ancien produit → affiché partout
+  }
+  if(!list.length) return '';
+  // Onglet/page courant sous forme de token
+  var curTok = window._activeContentPageId ? ('page:'+window._activeContentPageId) : (window._activePhase ? ('phase:'+window._activePhase) : '');
+  var out='';
+  list.forEach(function(pr){
+    var tabs = Array.isArray(pr.tabs) ? pr.tabs : [];
+    // tabs vide = afficher partout ; sinon, seulement si l'onglet courant est dans la liste
+    if(tabs.length && curTok && tabs.indexOf(curTok)===-1) return;
+    if(tabs.length && !curTok) return; // pas d'onglet courant identifiable → on n'affiche que les "partout"
+    out += _renderProduct(pr, event);
+  });
+  return out;
+}
 function _renderProduct(pr, event){
   if(!pr) return '';
   var hasContent = pr.title||pr.description||pr.mainImage||(pr.gallery&&pr.gallery.length)||pr.strong||pr.know||(pr.btnUrl);
