@@ -4508,15 +4508,28 @@ function _cmInit(id){
   var el = document.getElementById(id);
   if(!el) return;
   _cmLoadCss('https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/jqvmap.min.css');
-  var jq = 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js';
   var core = 'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/jquery.vmap.min.js';
   var mapfile = _CM_CONTINENTS[cfg.continent];
   if(!mapfile){ _cmFail(id,'Continent non disponible'); return; }
-  _cmLoadScript(jq)
-    .then(function(){ return _cmLoadScript(core); })
-    .then(function(){ return _cmLoadScript(mapfile); })
+  // 1) jQuery : on réutilise celle déjà présente si elle existe, sinon on la charge.
+  var jqReady;
+  if(window.jQuery){ jqReady = Promise.resolve(); }
+  else { jqReady = _cmLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js'); }
+  jqReady
+    .then(function(){
+      // 2) Plugin jqvmap : à charger seulement s'il n'est pas déjà greffé sur jQuery
+      if(window.jQuery && window.jQuery.fn && window.jQuery.fn.vectorMap) return;
+      return _cmLoadScript(core);
+    })
+    .then(function(){
+      if(!(window.jQuery && window.jQuery.fn && window.jQuery.fn.vectorMap)){
+        throw new Error('plugin jqvmap non greffé (jQuery '+(window.jQuery?window.jQuery.fn.jquery:'?')+')');
+      }
+      // 3) Fichier de carte du continent
+      return _cmLoadScript(mapfile);
+    })
     .then(function(){ _cmRender(id, cfg); })
-    .catch(function(e){ _cmFail(id, 'Carte indisponible'); console.warn('[Carte pays]', e); });
+    .catch(function(e){ _cmFail(id, 'Carte indisponible'); console.warn('[Carte pays] échec:', e && e.message, e); });
 }
 function _cmFail(id,msg){ var l=document.getElementById(id+'-load'); if(l){ l.textContent=msg; } }
 function _cmRender(id, cfg){
