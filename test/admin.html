@@ -4084,13 +4084,24 @@ function _cpTabOrderSection(ev){
   if((phases.length+pages.length)<2) return ''; // rien à ordonner s'il n'y a qu'un onglet
   const list=_admTabList(ev);
   let h='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg> Ordre des onglets</h3>';
-  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Glissez l\'ordre d\'affichage des onglets sur le dashboard. Vous pouvez intercaler librement les phases (live) et les pages libres.</div>';
+  // Onglet par défaut
+  h+='<div class="form-row" style="max-width:360px;margin-bottom:14px"><label class="form-label">Onglet ouvert par défaut</label><select class="form-input" id="tab-default" onchange="_saveDefaultTab(this.value)">';
+  h+='<option value="">Premier onglet (automatique)</option>';
+  list.forEach(it=>{ h+=`<option value="${it.tok}"${(ev.defaultTab||'')===it.tok?' selected':''}>${_escAdm(it.obj.name||'')}</option>`; });
+  h+='</select></div>';
+  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Ordonnez les onglets (▲▼). Vous pouvez regrouper des onglets sous un onglet « parent » : ils deviennent alors un menu déroulant.</div>';
   h+='<div class="cp-list">';
+  // Options de parent : uniquement les onglets qui ne sont pas eux-mêmes des enfants
+  const parentOptions = list.filter(x=>!x.obj.parentTab);
   list.forEach((it,i)=>{
-    const badge = it.kind==='phase' ? '<span class="cp-taborder-badge cp-tb-phase">Phase live</span>' : '<span class="cp-taborder-badge cp-tb-page">Page libre</span>';
+    const badge = it.kind==='phase' ? '<span class="cp-taborder-badge cp-tb-phase">Phase</span>' : '<span class="cp-taborder-badge cp-tb-page">Page</span>';
+    const parentSel = `<select class="form-input" style="max-width:190px;font-size:12px;padding:5px 8px" onchange="_setTabParent('${it.tok}',this.value)">
+        <option value="">— Onglet principal —</option>
+        ${parentOptions.filter(x=>x.tok!==it.tok).map(x=>`<option value="${x.tok}"${(it.obj.parentTab||'')===x.tok?' selected':''}>↳ sous « ${_escAdm(x.obj.name||'')} »</option>`).join('')}
+      </select>`;
     h+=`<div class="cp-row">
       <span class="cp-dot" style="background:${it.obj.color||(it.kind==='phase'?'#6366F1':'#0C6CA1')}"></span>
-      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')}</div><div class="cp-meta">${badge}</div></div>
+      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}</div><div class="cp-meta" style="margin-top:4px">${parentSel}</div></div>
       <div class="cp-actions">
         ${i>0?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},-1)">▲</button>`:''}
         ${i<list.length-1?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},1)">▼</button>`:''}
@@ -4099,6 +4110,20 @@ function _cpTabOrderSection(ev){
   });
   h+='</div></div>';
   return h;
+}
+async function _saveDefaultTab(tok){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  try{ await evRef().update({defaultTab:tok||''}); ev.defaultTab=tok||''; toast('Onglet par défaut enregistré'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// Définit (ou retire) le parent d'un onglet → crée un menu déroulant
+async function _setTabParent(tok, parentTok){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  // Applique parentTab sur la phase ou la page correspondante
+  function apply(list){ (list||[]).forEach(o=>{ if(('phase:'+o.id===tok)||('page:'+o.id===tok)){ if(parentTok) o.parentTab=parentTok; else delete o.parentTab; } }); }
+  apply(ev.phases); apply(ev.contentPages);
+  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[]}); toast(parentTok?'Onglet regroupé':'Onglet principal'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Renvoie la liste ordonnée [{kind,obj,tok}] selon ev.tabOrder (+ nouveaux à la fin)
 function _admTabList(ev){
@@ -9092,12 +9117,19 @@ function renderProductTab(el){
   h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Apparence</h3>
     <div class="form-row-inline">
       <div class="form-row" style="max-width:130px"><label class="form-label">Couleur d'accent</label><input type="color" class="form-input" id="pr-accent" value="${p.accent||'#0C6CA1'}" style="width:56px;height:38px;padding:2px"></div>
-      <div class="form-row" style="max-width:220px"><label class="form-label">Police globale</label><select class="form-input" id="pr-font">${_cpFontOpts(p.font)}</select></div>
+      <div class="form-row" style="max-width:130px"><label class="form-label">Couleur du texte</label><input type="color" class="form-input" id="pr-textcolor" value="${p.textColor||'#334155'}" style="width:56px;height:38px;padding:2px"></div>
       <div class="form-row" style="max-width:260px"><label class="form-label">Disposition</label><select class="form-input" id="pr-layout">
         <option value="top"${(p.layout||'top')==='top'?' selected':''}>Photo en grand au-dessus</option>
         <option value="side"${p.layout==='side'?' selected':''}>Photo à droite du titre</option>
       </select></div>
     </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:200px"><label class="form-label">Police du titre</label><select class="form-input" id="pr-titlefont">${_cpFontOpts(p.titleFont)}</select></div>
+      <div class="form-row" style="max-width:130px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="pr-titlesize" value="${p.titleSize||''}" min="16" max="56" placeholder="32" style="width:85px"></div>
+      <div class="form-row" style="max-width:200px"><label class="form-label">Police du texte</label><select class="form-input" id="pr-textfont">${_cpFontOpts(p.textFont)}</select></div>
+      <div class="form-row" style="max-width:130px"><label class="form-label">Taille texte (px)</label><input type="number" class="form-input" id="pr-textsize" value="${p.textSize||''}" min="12" max="26" placeholder="16" style="width:85px"></div>
+    </div>
+    <div class="form-row" style="max-width:220px"><label class="form-label">Police des encarts</label><select class="form-input" id="pr-boxfont">${_cpFontOpts(p.boxFont)}</select></div>
   </div>`;
 
   // Contenu
@@ -9159,8 +9191,13 @@ async function saveProduct(){
   var galArr=[]; document.querySelectorAll('[data-prgal]').forEach(el=>{ galArr[+el.getAttribute('data-prgal')]=el.value; });
   var product={
     accent:g('pr-accent')||'#0C6CA1',
-    font:g('pr-font')||'',
+    textColor:g('pr-textcolor')||'#334155',
     layout:g('pr-layout')||'top',
+    titleFont:g('pr-titlefont')||'',
+    titleSize:parseInt(g('pr-titlesize'),10)||'',
+    textFont:g('pr-textfont')||'',
+    textSize:parseInt(g('pr-textsize'),10)||'',
+    boxFont:g('pr-boxfont')||'',
     title:g('pr-title'),
     description:(document.getElementById('pr-desc')||{}).innerHTML||'',
     mainImage:g('pr-mainimage'),
