@@ -126,6 +126,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-blk-collapsed .cp-blk-head{margin-bottom:0}
 .cp-blk-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--acc)}
 .cp-blk-move{display:flex;gap:4px}
+.bp-home-badge{display:inline-block;font-size:10px;font-weight:700;color:#5B21B6;background:#EDE9FE;padding:2px 8px;border-radius:5px;margin-left:8px;vertical-align:middle}
 /* ==================== ÉDITEUR CONSTRUCTEUR (bpe-*) ==================== */
 .bpe-wrap{display:flex;gap:18px;align-items:flex-start;margin-top:10px}
 .bpe-palette{width:260px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;position:sticky;top:10px;max-height:calc(100vh - 110px);overflow:auto}
@@ -3860,16 +3861,19 @@ function renderBuilderTab(el){
     h+='<div class="empty"><div class="icon">🧩</div><div class="text">Aucune page pour l\'instant</div><div class="hint">Créez votre première page ci-dessus.</div></div>';
   } else {
     h+='<div class="cp-list">';
+    const homeId = ev.builderHome || '';
     list.forEach(function(p,i){
       const nbSec=(p.sections||[]).length;
       const secLabel = nbSec ? (nbSec+' module'+(nbSec>1?'s':'')) : 'Vide';
       const dot = p.color || '#7C3AED';
+      const isHome = (p.id===homeId);
       h+='<div class="cp-row">'
         +'<span class="cp-dot" style="background:'+dot+'"></span>'
-        +'<div class="cp-info"><div class="cp-name">'+_escAdm(p.name||'(sans nom)')+'</div><div class="cp-meta">'+secLabel+'</div></div>'
+        +'<div class="cp-info"><div class="cp-name">'+_escAdm(p.name||'(sans nom)')+(isHome?' <span class="bp-home-badge">🏠 Accueil</span>':'')+'</div><div class="cp-meta">'+secLabel+'</div></div>'
         +'<div class="cp-actions">'
         +(i>0?'<button class="btn btn-ghost btn-xs" onclick="_bpMove('+i+',-1)" title="Monter">▲</button>':'')
         +(i<list.length-1?'<button class="btn btn-ghost btn-xs" onclick="_bpMove('+i+',1)" title="Descendre">▼</button>':'')
+        +'<button class="btn '+(isHome?'btn-primary':'btn-ghost')+' btn-xs" onclick="_bpSetHome(\''+p.id+'\')" title="'+(isHome?'Page d\'accueil (cliquer pour retirer)':'Définir comme page d\'accueil')+'">'+(isHome?'🏠':'⌂')+'</button>'
         +'<button class="btn btn-ghost btn-xs" onclick="_bpCopyUrl(\''+p.id+'\')" title="Copier le lien de la page"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg></button>'
         +'<button class="btn btn-ghost btn-xs" onclick="_bpPreview(\''+p.id+'\')" title="Aperçu"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg></button>'
         +'<button class="btn btn-ghost btn-xs" onclick="renameBuilderPage(\''+p.id+'\')" title="Renommer"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>'
@@ -3912,6 +3916,17 @@ async function _bpMove(idx,dir){
   try{ await _bpPersist(list); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
+// Définir / retirer la page d'accueil (opt-in : tant qu'aucune n'est définie, l'accueil classique reste)
+async function _bpSetHome(id){
+  const ev=_bpCurrentEv();
+  const newHome = (ev.builderHome===id) ? '' : id;
+  ev.builderHome = newHome;
+  try{
+    await evRef().update({ builderHome: newHome });
+    toast(newHome ? 'Page définie comme accueil' : 'Accueil classique rétabli');
+    renderTab();
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 async function renameBuilderPage(id){
   const ev=_bpCurrentEv(); const list=_bpList(ev).slice();
   const p=list.find(x=>x.id===id); if(!p) return;
@@ -3935,7 +3950,9 @@ async function deleteBuilderPage(id){
   const p=_bpList(ev).find(x=>x.id===id);
   if(!confirm('Supprimer la page « '+((p&&p.name)||'')+' » et tout son contenu ? Action irréversible.')) return;
   const list=_bpList(ev).filter(x=>x.id!==id);
-  try{ await _bpPersist(list); toast('Page supprimée'); renderTab(); }
+  const patch={ builderPages: list };
+  if(ev.builderHome===id){ patch.builderHome=''; ev.builderHome=''; } // la page d'accueil supprimée → retour accueil classique
+  try{ ev.builderPages=list; await evRef().update(patch); toast('Page supprimée'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 function editBuilderPage(id){
