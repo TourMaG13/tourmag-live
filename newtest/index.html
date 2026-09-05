@@ -2765,11 +2765,17 @@ function render(data){
   let _builderHandled = false;
   (function _builderRouting(){
     if(!_builderPages.length) return; // aucun builder → legacy inchangé
-    const _bpRaw = new URLSearchParams(window.location.search).get('bpage') || '';
+    const _q = new URLSearchParams(window.location.search);
+    const _bpRaw = _q.get('bpage') || '';
     // page-builder par défaut si event.defaultTab pointe dessus (tok "builder:ID")
     let _defBp = '';
     if(!_bpRaw && event.defaultTab && event.defaultTab.indexOf('builder:')===0){ _defBp = event.defaultTab.slice(8); }
-    const _bpId = _bpRaw || _defBp;
+    // Page d'accueil-builder (opt-in) : affichée par défaut si AUCUNE page précise n'est demandée
+    let _homeBp = '';
+    if(!_bpRaw && !_defBp && event.builderHome && !_q.get('page') && !_q.get('phase')){
+      if(_builderPages.some(p=>p.id===event.builderHome)) _homeBp = event.builderHome;
+    }
+    const _bpId = _bpRaw || _defBp || _homeBp;
     if(!_bpId) return; // pas de page-builder ciblée → legacy
     const _bp = _builderPages.find(p=>p.id===_bpId);
     if(!_bp) return;
@@ -3720,10 +3726,15 @@ function renderExpedition(data){
   let _bpHandledExp = false;
   (function(){
     if(!_bpPagesExp.length) return;
-    const _bpRaw = new URLSearchParams(window.location.search).get('bpage') || '';
+    const _q = new URLSearchParams(window.location.search);
+    const _bpRaw = _q.get('bpage') || '';
     let _defBp='';
     if(!_bpRaw && event.defaultTab && event.defaultTab.indexOf('builder:')===0){ _defBp=event.defaultTab.slice(8); }
-    const _bpId=_bpRaw||_defBp;
+    let _homeBp='';
+    if(!_bpRaw && !_defBp && event.builderHome && !_q.get('page') && !_q.get('phase')){
+      if(_bpPagesExp.some(p=>p.id===event.builderHome)) _homeBp=event.builderHome;
+    }
+    const _bpId=_bpRaw||_defBp||_homeBp;
     if(!_bpId) return;
     const _bp=_bpPagesExp.find(p=>p.id===_bpId);
     if(!_bp) return;
@@ -4523,6 +4534,10 @@ function _cpTabStyle(p, baseColor){
 // ctx: {phaseUrl, pageUrl, activePhase, activeContentPage}
 function _renderTabItems(phases, contentPages, tabOrder, ctx){
   const flat = _buildTabList(phases, contentPages, tabOrder, ctx.builderPages); // ordre complet
+  // Règle (nouveau système) : pas d'onglets s'il n'y a qu'une seule destination au total.
+  // Appliquée seulement si des pages-builder existent, pour ne pas changer le legacy.
+  const _hasBuilder = ctx.builderPages && ctx.builderPages.length;
+  if(_hasBuilder && flat.length <= 1) return '';
   const tok = it => (it.kind==='phase'?'phase:':(it.kind==='builder'?'builder:':'page:'))+it.obj.id;
   const isChild = it => !!it.obj.parentTab;
   // Regroupe les enfants par parent
