@@ -5019,7 +5019,53 @@ function _bpRenderSection(sec, event, ctx){
 
   const secStyle = _bpSectionStyle(ap);
   const st = secStyle ? ' style="'+secStyle+'"' : '';
-  return '<div class="bp-section bp-'+type+'"'+st+' data-bp-type="'+type+'">'+inner+'</div>';
+  // Pour les modules live/riches délégués : on applique l'apparence du constructeur
+  // par-dessus, via un style CSS scopé sur cette section (police/taille/couleur/graisse).
+  let overrideCss='';
+  let secId='';
+  const isDelegated = !EDITORIAL[type] && legacyDelegate[type];
+  if(isDelegated){
+    secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
+    overrideCss = _bpModuleOverrideCss(secId, ap);
+  }
+  const idAttr = secId ? ' id="'+secId+'"' : '';
+  return '<div class="bp-section bp-'+type+'"'+idAttr+st+' data-bp-type="'+type+'">'+overrideCss+inner+'</div>';
+}
+
+// Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
+// d'un module live/riche, sans toucher à son code. On ne pose que les propriétés définies.
+function _bpModuleOverrideCss(secId, ap){
+  ap=ap||{};
+  const t=ap.title||{}, tx=ap.text||{};
+  const sel='#'+secId;
+  let rules=[];
+  // Titres du module (h2 de section, titres internes)
+  let titleDecl=[];
+  if(t.font)   titleDecl.push("font-family:'"+t.font+"',sans-serif !important");
+  if(t.size)   titleDecl.push('font-size:'+parseInt(t.size,10)+'px !important');
+  if(t.color)  titleDecl.push('color:'+t.color+' !important');
+  if(t.weight) titleDecl.push('font-weight:'+t.weight+' !important');
+  if(t.style)  titleDecl.push('font-style:'+t.style+' !important');
+  if(t.align)  titleDecl.push('text-align:'+t.align+' !important');
+  if(titleDecl.length){
+    rules.push(sel+' h1, '+sel+' h2, '+sel+' h3, '+sel+' .sec-title h2, '+sel+' .exp-section-head h2, '+sel+' .pr-title {'+titleDecl.join(';')+'}');
+  }
+  // Corps de texte du module
+  let bodyDecl=[];
+  if(tx.font)   bodyDecl.push("font-family:'"+tx.font+"',sans-serif !important");
+  if(tx.size)   bodyDecl.push('font-size:'+parseInt(tx.size,10)+'px !important');
+  if(tx.color)  bodyDecl.push('color:'+tx.color+' !important');
+  if(tx.lh)     bodyDecl.push('line-height:'+tx.lh+' !important');
+  if(tx.weight) bodyDecl.push('font-weight:'+tx.weight+' !important');
+  if(tx.style)  bodyDecl.push('font-style:'+tx.style+' !important');
+  if(bodyDecl.length){
+    rules.push(sel+' p, '+sel+' .live-entry-text, '+sel+' .cit-text, '+sel+' .pr-text, '+sel+' .pr-box-body, '+sel+' li, '+sel+' .exp-entry-text {'+bodyDecl.join(';')+'}');
+  }
+  // Couleur principale : variable + éléments d'accent courants
+  if(ap.accent){
+    rules.push(sel+' {--acc:'+ap.accent+';--pr-accent:'+ap.accent+'}');
+  }
+  return rules.length ? '<style>'+rules.join('\n')+'</style>' : '';
 }
 
 // Modules de contenu éditorial (texte, image, galerie, vidéo, boutons, séparateur, html)
