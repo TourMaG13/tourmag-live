@@ -1396,6 +1396,51 @@ function closeMediaPicker(){
 function saving(show){document.getElementById('saving').classList.toggle('show',show);if(show)setTimeout(()=>document.getElementById('saving').classList.remove('show'),2000);}
 
 function evRef(){ return db.collection('events').doc(currentEventId); }
+// ===== CANAUX DE LIVE =====
+// Renvoie la liste des canaux (toujours au moins « Principal »).
+function _liveChannels(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const arr=Array.isArray(ev.liveChannels)?ev.liveChannels.slice():[];
+  if(!arr.some(c=>c.id==='main')) arr.unshift({id:'main',name:'Principal'});
+  return arr;
+}
+function _liveChannelName(id){ const c=_liveChannels().find(x=>x.id===(id||'main')); return c?c.name:'Principal'; }
+async function _liveChannelsPersist(list){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  ev.liveChannels=list;
+  await evRef().update({liveChannels:list});
+}
+async function addLiveChannel(){
+  const inp=document.getElementById('live-chan-new');
+  const name=(inp&&inp.value||'').trim();
+  if(!name){ toast('Nom du canal requis','error'); return; }
+  const list=_liveChannels().filter(c=>c.id!=='main'); // on reconstruit sans le main auto
+  list.push({id:_uid(),name:name});
+  const full=[{id:'main',name:(_liveChannels().find(c=>c.id==='main')||{}).name||'Principal'}].concat(list);
+  try{ await _liveChannelsPersist(full); toast('Canal créé'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function renameLiveChannel(id){
+  const list=_liveChannels();
+  const c=list.find(x=>x.id===id); if(!c) return;
+  const name=prompt('Nom du canal :', c.name||''); if(name===null) return;
+  c.name=name.trim()||c.name;
+  try{ await _liveChannelsPersist(list); toast('Canal renommé'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function deleteLiveChannel(id){
+  if(id==='main'){ toast('Le canal Principal ne peut pas être supprimé','error'); return; }
+  const cnt=(liveData||[]).filter(e=>(e.channel||'main')===id).length;
+  if(!confirm('Supprimer ce canal'+(cnt?(' ? Les '+cnt+' entrée(s) qui y sont rattachées repasseront au canal Principal.'):' ?'))) return;
+  const list=_liveChannels().filter(c=>c.id!==id);
+  try{
+    await _liveChannelsPersist(list);
+    // Réaffecte les entrées orphelines au canal principal
+    const orphans=(liveData||[]).filter(e=>(e.channel||'main')===id);
+    for(const e of orphans){ try{ await subCol('live').doc(e.id).update({channel:'main'}); }catch(x){} }
+    toast('Canal supprimé'); renderTab();
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function subCol(name){ return evRef().collection(name); }
 
 // ==================== VISITE GUIDÉE (onboarding) ====================
@@ -4016,6 +4061,7 @@ var BP_CATALOG = [
     {type:'contact',    name:'Contact',            icon:'ti-contact',    nature:'live', mode:'both'},
   ]},
   {group:'Expédition', items:[
+    {type:'etapes',     name:'Carte & Étapes',     icon:'ti-map',        nature:'rich', mode:'expedition'},
     {type:'itinerary',  name:'Itinéraire',         icon:'ti-map',        nature:'live', mode:'expedition'},
   ]},
   {group:'En-tête', items:[
@@ -4053,6 +4099,7 @@ function _bpDefaultSection(type){
   if(type==='separator'){ s.content={height:24,line:false}; }
   if(type==='kpis'||type==='citations'||type==='programme'||type==='sponsors'||type==='contact'||type==='questions'||type==='quiz'||type==='interviews'||type==='videos'||type==='articles'||type==='journalists'||type==='countrymap'||type==='product'||type==='essential'||type==='brandnews'){ s.zone='full'; }
   if(type==='itinerary'){ s.zone='side'; }
+  if(type==='etapes'){ s.zone='full'; }
   return s;
 }
 
@@ -4181,7 +4228,11 @@ function _bpSectionPreview(s){
     case 'itinerary': return '<div class="bpe-ph" style="height:80px">🧭 Itinéraire (étapes du voyage)</div>';
     case 'etapes': return '<div class="bpe-ph" style="height:130px">🗺 Carte & Étapes interactive</div>';
     case 'brandnews': return '<div class="bpe-ph" style="height:56px">📣 Brand News</div>';
-    case 'product': return '<div class="bpe-ph" style="height:90px">📦 Fiche produit</div>';
+    case 'product': {
+      var _pn='';
+      if(c.productId){ var ev=_bpCurrentEv(); var pr=(Array.isArray(ev.products)?ev.products:[]).find(function(p){return p.id===c.productId;}); if(pr) _pn=pr.title||pr.name||''; }
+      return '<div class="bpe-ph" style="height:90px">📦 '+(_pn?('Fiche : '+_escAdm(_pn)):'Fiche produit')+'</div>';
+    }
     case 'countrymap': return '<div class="bpe-ph" style="height:120px">🌍 Carte pays interactive</div>';
     default:{
       const meta=BP_TYPE[s.type]||{name:s.type};
@@ -4368,10 +4419,19 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live (étape suivante). Par défaut : Principal.</div></div>'
         +'<div class="bpe-fld"><label>Nombre d\'entrées affichées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>';
     }
-    case 'product':
-      return '<div class="bpe-hint" style="padding:4px 0">Ce module affiche vos fiches produit affectées à cette page. La sélection fine de la fiche sera branchée à l\'étape suivante ; pour l\'instant il utilise les fiches existantes de l\'événement.</div>';
+    case 'product': {
+      const ev=_bpCurrentEv();
+      const prods=Array.isArray(ev.products)?ev.products:[];
+      if(!prods.length){
+        return '<div class="bpe-hint" style="padding:4px 0">Aucune fiche produit n\'existe encore. Créez-en dans l\'onglet <b>Produit</b> à gauche, puis revenez la sélectionner ici.</div>';
+      }
+      return '<div class="bpe-fld"><label>Fiche produit à afficher</label><select onchange="_bpSetCt(\'productId\',this.value)">'
+        +'<option value="">— Toutes les fiches de cette page —</option>'
+        +prods.map(function(p){return '<option value="'+p.id+'"'+((c.productId||'')===p.id?' selected':'')+'>'+_escAdm(p.title||p.name||'(sans titre)')+'</option>';}).join('')
+        +'</select><div class="bpe-hint">Choisissez une fiche précise, ou laissez « Toutes » pour le comportement par affectation d\'onglets.</div></div>';
+    }
     case 'countrymap':
-      return '<div class="bpe-hint" style="padding:4px 0">Ce module affiche la carte pays configurée dans l\'onglet Carte pays. Réglages détaillés à l\'étape suivante.</div>';
+      return '<div class="bpe-hint" style="padding:4px 0">Ce module affiche la carte pays configurée dans l\'onglet <b>Carte pays</b> à gauche. Continent, pays et couleurs s\'y règlent ; ils s\'appliquent partout où le module est déposé.</div>';
     default:
       return '<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié). Il s\'affichera ici à l\'emplacement choisi. Réglages détaillés à l\'étape suivante.</div>';
   }
@@ -5720,10 +5780,28 @@ function renderLive(el){
 
   `+moduleConfigBlock('live')+`
 
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg> Canaux de live</h3>
+    <div class="page-desc" style="margin:0 0 10px">Créez plusieurs fils live séparés (ex : Plénière, Ateliers). Chaque entrée est publiée dans un canal, et vous choisissez quel canal afficher sur chaque page du constructeur.</div>
+    <div id="live-chan-list">`+_liveChannels().map(function(c){
+      const cnt=(liveData||[]).filter(e=>(e.channel||'main')===c.id).length;
+      return '<div class="cp-row"><span class="cp-dot" style="background:#DC2626"></span>'
+        +'<div class="cp-info"><div class="cp-name">'+_escAdm(c.name)+(c.id==='main'?' <span style="font-size:10px;color:var(--text3)">(par défaut)</span>':'')+'</div><div class="cp-meta">'+cnt+' entrée'+(cnt>1?'s':'')+'</div></div>'
+        +'<div class="cp-actions">'
+        +'<button class="btn btn-ghost btn-xs" onclick="renameLiveChannel(\''+c.id+'\')" title="Renommer"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>'
+        +(c.id==='main'?'':'<button class="btn btn-danger btn-xs" onclick="deleteLiveChannel(\''+c.id+'\')" title="Supprimer">✕</button>')
+        +'</div></div>';
+    }).join('')+`</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px">
+      <div class="form-row" style="flex:1;margin:0"><label class="form-label">Nouveau canal</label><input class="form-input" id="live-chan-new" placeholder="Ex : Ateliers" onkeydown="if(event.key==='Enter')addLiveChannel()"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addLiveChannel()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-add"/></svg> Ajouter</button>
+    </div>
+  </div>
+
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Nouvelle entrée</h3>
     <div class="form-row"><label class="form-label">Titre <span style="font-weight:400;color:var(--text3);font-size:12px">(optionnel)</span></label><input class="form-input" id="live-title" placeholder="Ex : Arrivée à Istanbul"></div>
     <div class="form-row"><label class="form-label">Texte</label><div class="ql-editor-wrap"><div id="live-text-editor"></div></div></div>
     <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Canal</label><select class="form-input" id="live-channel">`+_liveChannels().map(function(c){return '<option value="'+c.id+'">'+_escAdm(c.name)+'</option>';}).join('')+`</select></div>
       <div class="form-row"><label class="form-label">Tag</label><select class="form-input" id="live-tag">${tagOpts}</select></div>
       <div class="form-row"><label class="form-label">Journaliste</label><input class="form-input" id="live-journalist" value="${auth.currentUser?.email?.split('@')[0]||''}"></div>
     </div>
@@ -5775,6 +5853,7 @@ function renderLive(el){
           <span class="list-item-tag">${e.tag||''}</span>
           <span>${e.journalist||''}</span>
           ${mkPhaseBadge(e.phase)}
+          ${(e.channel&&e.channel!=='main')?`<span style="font-size:10px;font-weight:600;color:#DC2626;background:rgba(220,38,38,.08);padding:2px 7px;border-radius:4px">📡 ${_escAdm(_liveChannelName(e.channel))}</span>`:''}
           ${e.image?'<span>📷</span>':''}
           ${e.url?`<span><a href="${e.url}" target="_blank" style="color:var(--blue)">🔗</a></span>`:''}
           ${fullDate?`<span style="opacity:.5">${fullDate}</span>`:''}
@@ -5829,6 +5908,7 @@ async function addLive(){
     title:document.getElementById('live-title').value.trim(),
     tag_color:tagData?tagColor(tagData):'',
     phase:document.getElementById('live-phase')?.value||'',
+    channel:document.getElementById('live-channel')?.value||'main',
     time:firebase.firestore.FieldValue.serverTimestamp()
   };
   if(image){
