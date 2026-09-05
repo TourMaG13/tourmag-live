@@ -3801,6 +3801,7 @@ function renderContentPages(el){
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},-1)" title="Monter">▲</button>`:''}
           ${i<pages.length-1?`<button class="btn btn-ghost btn-xs" onclick="moveContentPage(${i},1)" title="Descendre">▼</button>`:''}
           <button class="btn btn-ghost btn-xs" onclick="copyContentPageUrl('${p.id}')" title="Copier le lien de l'onglet"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg></button>
+          <button class="btn btn-ghost btn-xs" onclick="convertContentPageToBuilder('${p.id}')" title="Convertir en page Constructeur (copie)"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-copy"/></svg> → Builder</button>
           <button class="btn btn-primary btn-xs" onclick="editContentPage('${p.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Éditer</button>
           <button class="btn btn-danger btn-xs" onclick="deleteContentPage('${p.id}')">✕</button>
         </div>
@@ -3930,6 +3931,9 @@ function renderBuilderTab(el){
     h+='</div>';
   }
   h+='</div>';
+
+  // Ordre des onglets (partagé avec Phases) — visible dès qu'il y a 2+ destinations
+  h += _cpTabOrderSection(ev);
 
   el.innerHTML=h;
 }
@@ -4101,6 +4105,88 @@ function _bpDefaultSection(type){
   if(type==='itinerary'){ s.zone='side'; }
   if(type==='etapes'){ s.zone='full'; }
   return s;
+}
+
+// ============================================================
+// MIGRATION — convertit une page libre / phase en page-builder
+// ============================================================
+// Convertit UN bloc de page libre (champs "à plat") en section builder
+// (format {type, zone, appearance:{title,text,bg}, content:{...}}).
+function _bpConvertBlock(b){
+  const t=b.type;
+  const s={ id:_uid(), type:t, zone:'full', appearance:{}, content:{} };
+  // Apparence commune
+  const ap={};
+  if(b.titleFont||b.titleSize||b.titleAlign){ ap.title={}; if(b.titleFont)ap.title.font=b.titleFont; if(b.titleSize)ap.title.size=parseInt(b.titleSize,10); if(b.titleAlign)ap.title.align=b.titleAlign; }
+  if(b.font||b.textSize||b.lineHeight){ ap.text=ap.text||{}; if(b.font)ap.text.font=b.font; if(b.textSize)ap.text.size=parseInt(b.textSize,10); if(b.lineHeight)ap.text.lh=parseFloat(b.lineHeight); }
+  if(b.bgOn){ ap.bg={on:true,color:b.bg||'#F1F5F9'}; }
+  if(b.pad!=null && b.pad!=='') ap.pad=parseInt(b.pad,10);
+  s.appearance=ap;
+  // Contenu par type
+  if(t==='text'){ s.zone='main'; s.content={ title:b.title||'', text:b.text||'', image:b.image||'', imagePos:b.imagePos||'none', imageWidth:b.imageWidth||'', imageCredit:b.imageCredit||'' }; }
+  else if(t==='image'){ s.content={ image:b.image||'', caption:b.caption||'', credit:b.credit||'', width:b.width||'', align:b.align||'center' }; }
+  else if(t==='gallery'){ s.content={ galSize:b.galSize||'m', galH:b.galH, galMin:b.galMin, images:Array.isArray(b.images)?b.images:[] }; }
+  else if(t==='video'){ s.content={ url:b.url||'' }; }
+  else if(t==='buttons'){ s.content={ align:b.align||'left', buttons:Array.isArray(b.buttons)?b.buttons:[] }; }
+  else if(t==='separator'){ s.content={ height:(b.height!=null?parseInt(b.height,10):24), line:!!b.line }; }
+  else if(t==='html'){ s.content={ html:b.html||'' }; }
+  else { s.content={}; }
+  return s;
+}
+// Convertit une PAGE LIBRE en page-builder (copie fidèle des blocs éditoriaux).
+function _bpFromContentPage(cp){
+  const page={
+    id:_uid(),
+    name:(cp.name||'Page')+' (builder)',
+    mode:(_bpCurrentEv().mode==='expedition'?'expedition':'classic'),
+    color:cp.color||'#7C3AED',
+    dotColor:cp.dotColor||'',
+    nav:{ visible:true, clickable:true, parentTab:'' },
+    display:{ type:'always' },
+    sections:(Array.isArray(cp.blocks)?cp.blocks:[]).map(_bpConvertBlock)
+  };
+  return page;
+}
+// Convertit une PHASE en page-builder : ses blocs éditoriaux + les modules live (base).
+function _bpFromPhase(ph){
+  const mode=(_bpCurrentEv().mode==='expedition'?'expedition':'classic');
+  // 1) Les blocs éditoriaux propres à la phase (au-dessus du live), convertis fidèlement
+  const editorial=(Array.isArray(ph.blocks)?ph.blocks:[]).map(_bpConvertBlock);
+  // 2) Les modules live typiques, posés comme base de départ (à ajuster)
+  const mods = mode==='expedition'
+    ? ['essential','live','citations','videos','interviews','gallery']
+    : ['kpis','live','citations','videos','interviews','gallery'];
+  const liveMods = mods.map(function(m){ return _bpDefaultSection(m); });
+  return {
+    id:_uid(),
+    name:(ph.name||'Phase')+' (builder)',
+    mode:mode,
+    color:ph.color||'#7C3AED',
+    dotColor:ph.dotColor||'',
+    nav:{ visible:true, clickable:true, parentTab:'' },
+    display:{ type:'always' },
+    sections: editorial.concat(liveMods)
+  };
+}
+async function convertContentPageToBuilder(id){
+  const ev=_bpCurrentEv();
+  const cp=(ev.contentPages||[]).find(p=>p.id===id);
+  if(!cp){ toast('Page introuvable','error'); return; }
+  if(!confirm('Créer une copie « page builder » de « '+(cp.name||'')+' » ? L\'originale sera conservée.')) return;
+  const list=_bpList(ev).slice();
+  list.push(_bpFromContentPage(cp));
+  try{ await _bpPersist(list); toast('Page convertie — voir dans le Constructeur'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function convertPhaseToBuilder(id){
+  const ev=_bpCurrentEv();
+  const ph=(ev.phases||[]).find(p=>p.id===id);
+  if(!ph){ toast('Phase introuvable','error'); return; }
+  if(!confirm('Créer une page builder à partir de la phase « '+(ph.name||'')+' » ?\n\nLes modules live seront posés comme base de départ, à ajuster ensuite. L\'originale est conservée.')) return;
+  const list=_bpList(ev).slice();
+  list.push(_bpFromPhase(ph));
+  try{ await _bpPersist(list); toast('Phase convertie — voir dans le Constructeur'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 // ---------- Rendu de l'éditeur (3 colonnes) ----------
@@ -4339,7 +4425,6 @@ function _bpConfigHtml(){
 // Socle d'apparence unifié : couleurs + fond + espacement (+ titre/texte si pertinent)
 function _bpAppearanceHtml(s){
   const ap=s.appearance||{};
-  const hasTitle = ['text','hero','product'].includes(s.type) || true; // titre possible partout via section
   let h='';
   // Couleur principale + couleur du texte (unifiées)
   h+='<div class="bpe-fld-row">'
@@ -4352,30 +4437,45 @@ function _bpAppearanceHtml(s){
   if(bgOn){
     h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+((ap.bg&&ap.bg.color)||'#F1F5F9')+'" onchange="_bpSetBg(\'color\',this.value)"></div>';
   }
-  // Titre : police/taille/alignement (align rangé avec le titre)
-  if(s.type==='text' || s.type==='hero'){
-    const t=ap.title||{};
-    h+='<div class="bpe-sub">Titre</div>';
-    h+='<div class="bpe-fld-row">'
-      +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(t.size||'')+'" placeholder="26" onchange="_bpSetApRole(\'title\',\'size\',this.value)"></div>'
-      +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(t.color||'#0F172A')+'" onchange="_bpSetApRole(\'title\',\'color\',this.value)"></div>'
-      +'</div>';
-    h+='<div class="bpe-fld"><label>Alignement du titre</label><div class="bpe-seg">'
-      +['left','center','right'].map(function(a){return '<button class="'+((t.align||'left')===a?'on':'')+'" onclick="_bpSetApRole(\'title\',\'align\',\''+a+'\')">'+({left:'Gauche',center:'Centré',right:'Droite'}[a])+'</button>';}).join('')
-      +'</div></div>';
-  }
-  // Corps de texte : taille + interligne
-  if(s.type==='text'){
-    const tx=ap.text||{};
-    h+='<div class="bpe-sub">Texte</div>';
-    h+='<div class="bpe-fld-row">'
-      +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(tx.size||'')+'" placeholder="16" onchange="_bpSetApRole(\'text\',\'size\',this.value)"></div>'
-      +'<div class="bpe-fld"><label>Interligne</label><input type="number" step="0.05" value="'+(tx.lh||'')+'" placeholder="1.75" onchange="_bpSetApRole(\'text\',\'lh\',this.value)"></div>'
-      +'</div>';
-  }
+  // ---- TITRE (tous les modules : titre de section / titre interne) ----
+  const t=ap.title||{};
+  h+='<div class="bpe-sub">Titre</div>';
+  h+='<div class="bpe-fld"><label>Police du titre</label><select onchange="_bpSetApRole(\'title\',\'font\',this.value)">'+_cpFontOpts(t.font)+'</select></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(t.size||'')+'" placeholder="26" onchange="_bpSetApRole(\'title\',\'size\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(t.color||'#0F172A')+'" onchange="_bpSetApRole(\'title\',\'color\',this.value)"></div>'
+    +'</div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetApRole(\'title\',\'weight\',this.value)">'+_bpWeightOpts(t.weight)+'</select></div>'
+    +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'title\',\'style\',this.value)"><option value=""'+(!t.style?' selected':'')+'>Normal</option><option value="italic"'+(t.style==='italic'?' selected':'')+'>Italique</option></select></div>'
+    +'</div>';
+  h+='<div class="bpe-fld"><label>Alignement du titre</label><div class="bpe-seg">'
+    +['left','center','right'].map(function(a){return '<button class="'+((t.align||'left')===a?'on':'')+'" onclick="_bpSetApRole(\'title\',\'align\',\''+a+'\')">'+({left:'Gauche',center:'Centré',right:'Droite'}[a])+'</button>';}).join('')
+    +'</div></div>';
+  // ---- TEXTE / CORPS (tous les modules) ----
+  const tx=ap.text||{};
+  h+='<div class="bpe-sub">Texte</div>';
+  h+='<div class="bpe-fld"><label>Police du texte</label><select onchange="_bpSetApRole(\'text\',\'font\',this.value)">'+_cpFontOpts(tx.font)+'</select></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(tx.size||'')+'" placeholder="16" onchange="_bpSetApRole(\'text\',\'size\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Interligne</label><input type="number" step="0.05" value="'+(tx.lh||'')+'" placeholder="1.75" onchange="_bpSetApRole(\'text\',\'lh\',this.value)"></div>'
+    +'</div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetApRole(\'text\',\'weight\',this.value)">'+_bpWeightOpts(tx.weight)+'</select></div>'
+    +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'text\',\'style\',this.value)"><option value=""'+(!tx.style?' selected':'')+'>Normal</option><option value="italic"'+(tx.style==='italic'?' selected':'')+'>Italique</option></select></div>'
+    +'</div>';
   // Espacement sous le bloc (commun)
   h+='<div class="bpe-fld"><label>Espacement sous le bloc (px)</label><input type="number" value="'+(ap.pad!=null?ap.pad:'')+'" placeholder="28" onchange="_bpSetAp(\'pad\',this.value)"></div>';
+  // Note pour les modules live/riches : l'apparence s'applique par-dessus leurs réglages d'origine
+  if(!['text','image','gallery','video','buttons','separator','html','hero'].includes(s.type)){
+    h+='<div class="bpe-hint" style="margin-top:6px">Ces réglages s\'appliquent par-dessus l\'apparence d\'origine du module. Laissez vide pour conserver son style habituel.</div>';
+  }
   return h;
+}
+// Options de graisse
+function _bpWeightOpts(cur){
+  const opts=[['','Par défaut'],['300','Léger'],['400','Normal'],['500','Moyen'],['600','Semi-gras'],['700','Gras'],['800','Extra-gras']];
+  return opts.map(function(o){return '<option value="'+o[0]+'"'+((cur||'')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
 }
 
 // Champs de contenu spécifiques par module (essentiels en étape 2 ; détail complet en étape 3)
@@ -4840,6 +4940,7 @@ function renderPhases(el){
           ${i>0?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},-1)">▲</button>`:''}
           ${i<phases.length-1?`<button class="btn btn-ghost btn-xs" onclick="movePhase(${i},1)">▼</button>`:''}
           <button class="btn btn-ghost btn-xs" onclick="editPhaseContent('${p.id}')" title="Contenu éditorial (au-dessus du live)"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Contenu</button>
+          <button class="btn btn-ghost btn-xs" onclick="convertPhaseToBuilder('${p.id}')" title="Convertir en page Constructeur (copie)"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-copy"/></svg> → Builder</button>
           <button class="btn btn-ghost btn-xs" onclick="editPhase(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
           <button class="btn btn-danger btn-xs" onclick="deletePhase(${i})">✕</button>
         </div>
@@ -4909,12 +5010,13 @@ function renderPhases(el){
   h += _cpTabOrderSection(ev);
   el.innerHTML=h;
 }
-// Section « Ordre des onglets » : liste unifiée phases + pages, réordonnable.
+// Section « Ordre des onglets » : liste unifiée phases + pages libres + pages-builder, réordonnable.
 function _cpTabOrderSection(ev){
   const phases=ev.phases||[];
   const pages=ev.contentPages||[];
-  if(!phases.length && !pages.length) return '';
-  if((phases.length+pages.length)<2) return ''; // rien à ordonner s'il n'y a qu'un onglet
+  const builders=(Array.isArray(ev.builderPages)?ev.builderPages:[]).filter(p=>!p.nav || p.nav.visible!==false);
+  const total=phases.length+pages.length+builders.length;
+  if(total<2) return ''; // rien à ordonner s'il n'y a qu'un onglet (ou aucun)
   const list=_admTabList(ev);
   let h='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg> Ordre des onglets</h3>';
   // Onglet par défaut
@@ -4928,7 +5030,7 @@ function _cpTabOrderSection(ev){
   const hasKids = {};
   list.forEach(x=>{ if(x.obj.parentTab) hasKids[x.obj.parentTab]=true; });
   list.forEach((it,i)=>{
-    const badge = it.kind==='phase' ? '<span class="cp-taborder-badge cp-tb-phase">Phase</span>' : '<span class="cp-taborder-badge cp-tb-page">Page</span>';
+    const badge = it.kind==='phase' ? '<span class="cp-taborder-badge cp-tb-phase">Phase</span>' : (it.kind==='builder' ? '<span class="cp-taborder-badge" style="background:#EDE9FE;color:#5B21B6">Constructeur</span>' : '<span class="cp-taborder-badge cp-tb-page">Page</span>');
     // Parents possibles pour CET onglet : tous les autres onglets, sauf ceux qui sont déjà enfants (éviter 3 niveaux)
     const myTok = it.tok;
     const opts = list.filter(x => x.tok!==myTok && !x.obj.parentTab);
@@ -4979,47 +5081,50 @@ async function _saveDefaultTab(tok){
 // Définit (ou retire) le parent d'un onglet → crée un menu déroulant
 async function _setTabParent(tok, parentTok){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  // Applique parentTab sur la phase ou la page correspondante
-  function apply(list){ (list||[]).forEach(o=>{ if(('phase:'+o.id===tok)||('page:'+o.id===tok)){ if(parentTok) o.parentTab=parentTok; else delete o.parentTab; } }); }
-  apply(ev.phases); apply(ev.contentPages);
-  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[]}); toast(parentTok?'Onglet regroupé':'Onglet principal'); renderTab(); }
+  function apply(list, pfx){ (list||[]).forEach(o=>{ if(pfx+o.id===tok){ if(parentTok) o.parentTab=parentTok; else delete o.parentTab; } }); }
+  apply(ev.phases,'phase:'); apply(ev.contentPages,'page:'); apply(ev.builderPages,'builder:');
+  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[], builderPages:ev.builderPages||[]}); toast(parentTok?'Onglet regroupé':'Onglet principal'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Couleur du point d'un onglet (vide = fallback couleur de la phase/page)
 async function _setTabDotColor(tok, color){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  function apply(list){ (list||[]).forEach(o=>{ if(('phase:'+o.id===tok)||('page:'+o.id===tok)){ if(color) o.dotColor=color; else delete o.dotColor; } }); }
-  apply(ev.phases); apply(ev.contentPages);
-  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[]}); renderTab(); }
+  function apply(list, pfx){ (list||[]).forEach(o=>{ if(pfx+o.id===tok){ if(color) o.dotColor=color; else delete o.dotColor; } }); }
+  apply(ev.phases,'phase:'); apply(ev.contentPages,'page:'); apply(ev.builderPages,'builder:');
+  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[], builderPages:ev.builderPages||[]}); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Onglet parent cliquable ou non (mène ou non à sa propre page)
 async function _setTabParentClickable(tok, clickable){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  function apply(list){ (list||[]).forEach(o=>{ if(('phase:'+o.id===tok)||('page:'+o.id===tok)){ if(clickable) delete o.parentClickable; else o.parentClickable=false; } }); }
-  apply(ev.phases); apply(ev.contentPages);
-  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[]}); toast(clickable?'Parent cliquable':'Parent non cliquable'); renderTab(); }
+  function apply(list, pfx){ (list||[]).forEach(o=>{ if(pfx+o.id===tok){ if(clickable) delete o.parentClickable; else o.parentClickable=false; } }); }
+  apply(ev.phases,'phase:'); apply(ev.contentPages,'page:'); apply(ev.builderPages,'builder:');
+  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[], builderPages:ev.builderPages||[]}); toast(clickable?'Parent cliquable':'Parent non cliquable'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Mode d'ouverture du menu parent (clic ou survol)
 async function _setTabParentOpen(tok, mode){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  function apply(list){ (list||[]).forEach(o=>{ if(('phase:'+o.id===tok)||('page:'+o.id===tok)){ o.parentOpen=(mode==='hover'?'hover':'click'); } }); }
-  apply(ev.phases); apply(ev.contentPages);
-  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[]}); renderTab(); }
+  function apply(list, pfx){ (list||[]).forEach(o=>{ if(pfx+o.id===tok){ o.parentOpen=(mode==='hover'?'hover':'click'); } }); }
+  apply(ev.phases,'phase:'); apply(ev.contentPages,'page:'); apply(ev.builderPages,'builder:');
+  try{ await evRef().update({phases:ev.phases||[], contentPages:ev.contentPages||[], builderPages:ev.builderPages||[]}); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Renvoie la liste ordonnée [{kind,obj,tok}] selon ev.tabOrder (+ nouveaux à la fin)
 function _admTabList(ev){
   const phases=ev.phases||[], pages=ev.contentPages||[];
+  const builders=(Array.isArray(ev.builderPages)?ev.builderPages:[]).filter(p=>!p.nav || p.nav.visible!==false);
   const byP={}; phases.forEach(p=>byP['phase:'+p.id]=p);
   const byG={}; pages.forEach(p=>byG['page:'+p.id]=p);
+  const byB={}; builders.forEach(p=>byB['builder:'+p.id]=p);
   const order=ev.tabOrder||[]; const out=[]; const seen={};
   order.forEach(tok=>{
     if(byP[tok]&&!seen[tok]){ out.push({kind:'phase',obj:byP[tok],tok}); seen[tok]=1; }
+    else if(byB[tok]&&!seen[tok]){ out.push({kind:'builder',obj:byB[tok],tok}); seen[tok]=1; }
     else if(byG[tok]&&!seen[tok]){ out.push({kind:'page',obj:byG[tok],tok}); seen[tok]=1; }
   });
   phases.forEach(p=>{ const tok='phase:'+p.id; if(!seen[tok]) out.push({kind:'phase',obj:p,tok}); });
+  builders.forEach(p=>{ const tok='builder:'+p.id; if(!seen[tok]) out.push({kind:'builder',obj:p,tok}); });
   pages.forEach(p=>{ const tok='page:'+p.id; if(!seen[tok]) out.push({kind:'page',obj:p,tok}); });
   return out;
 }
