@@ -2207,12 +2207,14 @@ function render(data){
     return `<div class="live-entry" id="live-${e.id||''}"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}${mkShareButton(e)}</div></div></div>`;
   }
 
-  function mkLive(){
+  function mkLive(opts){
     if(mod.live===false || !live || !live.length) return '';
-    const pubLive=live.filter(_isPublished);
+    var _chan = opts && opts.channel;
+    var _src = _chan ? live.filter(function(e){ return (e.channel||'main')===_chan; }) : live;
+    const pubLive=_src.filter(_isPublished);
     if(!pubLive.length) return '';
     let o = `<div id="section-live">${event.liveShowTitle!==false?`<div class="sec-title sec-title-live fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.radio}</div><h2>${event.liveTitle||'Fil Live'}</h2><div class="sec-title-line"></div><p>${event.liveSubtitle||'Minute par minute, depuis l\'événement'}</p></div>`:""}</div><div class="live-feed fi">`;
-    const _liveVis = event.liveVisibleCount || LIVE_VISIBLE;
+    const _liveVis = (opts && opts.limit) ? opts.limit : (event.liveVisibleCount || LIVE_VISIBLE);
     const vis = pubLive.slice(0, _liveVis);
     const ext = pubLive.slice(_liveVis);
     vis.forEach((e,i) => { o += mkLiveEntry(e, i===0); });
@@ -2690,7 +2692,7 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(){return mod.product===false?'':_renderProducts(event);},countrymap:function(){return mod.countrymap===false?'':_renderCountryMap(event);}};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
   const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','countrymap','sponsors','contact'];
@@ -3299,18 +3301,21 @@ function renderExpedition(data){
     </section>`;
   };
 
-  _b.live = function(){
+  _b.live = function(opts){
     if(mod.live===false) return '';
+    // Filtrage par canal si demandé par un module builder
+    var _pub = pubLive;
+    if(opts && opts.channel){ _pub = (live||[]).filter(function(e){ return (e.channel||'main')===opts.channel; }).filter(_isPublished); }
     let o = '';
     if(event.liveShowTitle!==false){
       o += `<div class="exp-section-head exp-sec-live"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
       o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
     }
-    if(pubLive.length){
-      const EXP_LIVE_VIS = event.liveVisibleCount || event.expLiveVisibleCount || 5;
+    if(_pub.length){
+      const EXP_LIVE_VIS = (opts && opts.limit) ? opts.limit : (event.liveVisibleCount || event.expLiveVisibleCount || 5);
       const _lineClamp = event.liveLineClamp || 0;
-      const visEntries = pubLive.slice(0, EXP_LIVE_VIS);
-      const extraEntries = pubLive.slice(EXP_LIVE_VIS);
+      const visEntries = _pub.slice(0, EXP_LIVE_VIS);
+      const extraEntries = _pub.slice(EXP_LIVE_VIS);
       // Day separator helper
       let _lastDay = '';
       function dayHeader(entry){
@@ -3578,7 +3583,7 @@ function renderExpedition(data){
     return o+`</div></section>`;
   };
 
-  _b.product = function(){ if(mod.product===false) return ''; return _renderProducts(event); };
+  _b.product = function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); };
   _b.countrymap = function(){ if(mod.countrymap===false) return ''; return _renderCountryMap(event); };
   _b.contact = function(){
     const ctRaw = event.contact;
@@ -3749,6 +3754,13 @@ function renderExpedition(data){
     document.getElementById('app').innerHTML = html;
     var _ubB=document.getElementById('upd-bar'); if(_ubB) _ubB.innerHTML='';
     if(typeof _bpActivateFx==='function') _bpActivateFx();
+    // Si la page-builder contient une carte (module "etapes"), on initialise Leaflet
+    // exactement comme dans le flux expédition normal (init JS post-rendu).
+    var _hasMap = (_bp.sections||[]).some(function(s){ return s.type==='etapes'; });
+    if(_hasMap){
+      // L'init a besoin que le conteneur soit dans le DOM et dimensionné : on diffère d'un tick.
+      setTimeout(function(){ try{ _initExpMap(filteredEtapes, event, mod); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
+    }
     if(typeof window._tmgResize==='function') window._tmgResize();
     _bpHandledExp = true;
   })();
@@ -3795,7 +3807,142 @@ function renderExpedition(data){
   document.getElementById('app').innerHTML = h;
 
   // ===== INIT LEAFLET MAP =====
-  if(filteredEtapes.length && mod.etapes!==false && document.getElementById('exp-routemap')){
+  _initExpMap(filteredEtapes, event, mod);
+
+  // ===== DECORATIVE ELEMENTS =====
+  if(window._decorTimer) clearTimeout(window._decorTimer);
+  document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
+  document.body.style.removeProperty('background');
+
+  window._decorTimer = setTimeout(function(){
+    // Nettoyage (au cas où un autre cycle de rendu aurait nettoyé avant nous)
+    document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
+    document.body.style.removeProperty('background');
+    try {
+    var dc = event.decor;
+    if(!dc || dc.enabled===false || mod.decor===false) return;
+
+    if(dc.bgColor) document.body.style.setProperty('background', dc.bgColor, 'important');
+
+    var SHAPES = window.DECOR_SHAPES || {};
+
+    // ---- Rétro-compatibilité : convertit l'ancien schéma en éléments si aucun elements[] ----
+    var elements = Array.isArray(dc.elements) ? dc.elements.slice() : null;
+    if(!elements){
+      elements = [];
+      if(dc.compass && dc.compass.on!==false) elements.push({shape:'boussole',block:'etapes',corner:(dc.compass.position||'top-left'),x:2,y:2,size:120,opacity:(dc.compass.opacity||4)/20*100,color:'#999'});
+      if(dc.plane && dc.plane.on!==false){ var pm={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'}; elements.push({shape:'avion',block:(pm[dc.plane.position]||'etapes'),corner:'bottom-center',x:0,y:0,size:120,opacity:(dc.plane.opacity||4)/20*100,color:'#999'}); }
+      if(dc.botanical && dc.botanical.on!==false){ var bs={eucalyptus:'feuille',palm:'palmier',maple:'feuille',cactus:'cactus',pine:'fougere',olive:'feuille',cherry:'feuille',wheat:'fougere'}; elements.push({shape:(bs[dc.botanical.style]||'feuille'),block:'citations',corner:'top-left',x:3,y:6,size:120,opacity:(dc.botanical.opacity||3)/20*100,color:'#888'}); }
+      if(dc.stamp && dc.stamp.on!==false) elements.push({shape:'tampon',block:'gallery',corner:'top-right',x:4,y:4,size:130,opacity:(dc.stamp.opacity||4)/20*100,rotation:(dc.stamp.rotation||12),color:'#888'});
+      if(dc.relief && dc.relief.on!==false){ var rs={hills:'relief',mountains:'montagne',waves:'vagues',skyline:'relief',volcano:'montagne'}; elements.push({shape:(rs[dc.relief.style]||'relief'),block:'sponsors',corner:'bottom-center',x:0,y:0,size:200,opacity:(dc.relief.opacity||4)/20*100,color:'#888'}); }
+    }
+    if(!elements.length) return;
+
+    // ---- Résolution du conteneur cible pour un bloc donné ----
+    function targetFor(block){
+      if(!block || block==='page') return document.body;
+      var el = document.querySelector('[data-exp-block="'+block+'"]');
+      return el || null;
+    }
+    // ---- Position depuis le coin/bord d'ancrage + décalage % ----
+    function place(node, corner, x, y){
+      corner = corner || 'top-left';
+      var px = (typeof x==='number'?x:2), py = (typeof y==='number'?y:2);
+      var s = 'position:absolute;';
+      var vert = corner.indexOf('bottom')>=0 ? 'bottom' : (corner.indexOf('center')>=0 && corner.indexOf('-')<0 ? 'top' : 'top');
+      // corner formats: top-left, top-center, top-right, mid-left, center, mid-right, bottom-left, bottom-center, bottom-right
+      var parts = corner.split('-');
+      var v = parts[0], h = parts[1]||'center';
+      if(corner==='center'){ v='center'; h='center'; }
+      // vertical
+      if(v==='top') s+='top:'+py+'%;';
+      else if(v==='bottom') s+='bottom:'+py+'%;';
+      else s+='top:'+(50)+'%;';
+      // horizontal
+      if(h==='left') s+='left:'+px+'%;';
+      else if(h==='right') s+='right:'+px+'%;';
+      else s+='left:'+(50)+'%;';
+      // transforms for centered axes
+      var tx = (h==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
+      node.setAttribute('data-tx',tx); node.setAttribute('data-ty',ty);
+      return s;
+    }
+
+    var MAXW = 320; // garde-fou taille max (px)
+    elements.slice(0,12).forEach(function(elDef){
+      var shapeKey = elDef.shape || 'cercle';
+      var raw = SHAPES[shapeKey];
+      if(!raw) return;
+      var tgt = targetFor(elDef.block);
+      if(!tgt) return;
+      if(tgt!==document.body){ tgt.style.position='relative'; tgt.style.overflow='visible'; }
+
+      var color = elDef.color || '#8a8578';
+      var size = Math.min(Math.max(parseInt(elDef.size)||120, 20), MAXW);
+      var opacity = (typeof elDef.opacity==='number'?elDef.opacity:30)/100;
+      var rot = parseInt(elDef.rotation)||0;
+
+      var svg = '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">'+raw.replace(/C/g,color)+'</svg>';
+
+      var node = document.createElement('div');
+      node.setAttribute('data-decor','1');
+      var posCss = place(node, elDef.corner, elDef.x, elDef.y);
+      var tx=node.getAttribute('data-tx'), ty=node.getAttribute('data-ty');
+      node.style.cssText = posCss + 'pointer-events:none;z-index:'+(elDef.front?'50':'0')+';opacity:'+opacity+';transform:translate('+tx+','+ty+') rotate('+rot+'deg);width:'+size+'px;height:'+size+'px;line-height:0;';
+      node.innerHTML = svg;
+
+      if(tgt===document.body){
+        node.style.position='fixed';
+        tgt.appendChild(node);
+      } else {
+        tgt.appendChild(node);
+      }
+    });
+
+    console.log('[TourMaG Live] Decor OK —', elements.length, 'élément(s)');
+    }catch(e){console.error('[TourMaG Live] Decor error:',e);}
+  }, 600);
+
+  // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers)
+  if(window._fadeObsE) window._fadeObsE.disconnect();
+  window._fadeObsE = new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');window._fadeObsE.unobserve(e.target);}});
+  },{threshold:.06});
+  document.querySelectorAll('.fi').forEach(el=>window._fadeObsE.observe(el));
+
+  // Instagram embeds
+  if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
+  window._socialParseTimer = setTimeout(()=>{
+    try{if(window.instgrm&&window.instgrm.Embeds) window.instgrm.Embeds.process();}catch(e){}
+  },400);
+
+  // Init accordion clamps after DOM update
+  requestAnimationFrame(initExpClamps);
+}
+
+// Expedition toggle (simpler than live, no chevron SVG)
+window.toggleExpExpand = function(expandId, btnId, count, openLabel, closedLabel){
+  const el=document.getElementById(expandId), btn=document.getElementById(btnId);
+  if(!el||!btn) return;
+  const open=el.classList.toggle('open');
+  btn.textContent = open ? (openLabel||'▴ Réduire') : (closedLabel||`▾ Voir les ${count} entrées précédentes`);
+  if(open) requestAnimationFrame(initExpClamps);
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+
+// ===== MAP SIDE PANEL =====
+window.toggleExpGallery = function(count){
+  const el=document.getElementById('exp-gal-expand'), btn=document.getElementById('exp-gal-btn');
+  if(!el||!btn) return;
+  const open=el.classList.toggle('open');
+  btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} autres photos`;
+  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
+};
+// Initialise la carte Leaflet expédition. Extraite pour être réutilisable
+// par le flux expédition normal ET par le moteur page-builder.
+function _initExpMap(filteredEtapes, event, mod){
+  mod = mod || {};
+  if(!(filteredEtapes && filteredEtapes.length) || mod.etapes===false || !document.getElementById('exp-routemap')) return;
     if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
     if(window._expAnimFrame){ cancelAnimationFrame(window._expAnimFrame); window._expAnimFrame=null; }
 
@@ -4086,137 +4233,8 @@ function renderExpedition(data){
     const nowEtape = filteredEtapes.find(e => e.status==='now');
     const autoEtape = nowEtape || filteredEtapes[0];
     if(autoEtape) setTimeout(()=>{ openExpMapPanel(autoEtape); }, 400);
-  }
-
-  // ===== DECORATIVE ELEMENTS =====
-  if(window._decorTimer) clearTimeout(window._decorTimer);
-  document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
-  document.body.style.removeProperty('background');
-
-  window._decorTimer = setTimeout(function(){
-    // Nettoyage (au cas où un autre cycle de rendu aurait nettoyé avant nous)
-    document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
-    document.body.style.removeProperty('background');
-    try {
-    var dc = event.decor;
-    if(!dc || dc.enabled===false || mod.decor===false) return;
-
-    if(dc.bgColor) document.body.style.setProperty('background', dc.bgColor, 'important');
-
-    var SHAPES = window.DECOR_SHAPES || {};
-
-    // ---- Rétro-compatibilité : convertit l'ancien schéma en éléments si aucun elements[] ----
-    var elements = Array.isArray(dc.elements) ? dc.elements.slice() : null;
-    if(!elements){
-      elements = [];
-      if(dc.compass && dc.compass.on!==false) elements.push({shape:'boussole',block:'etapes',corner:(dc.compass.position||'top-left'),x:2,y:2,size:120,opacity:(dc.compass.opacity||4)/20*100,color:'#999'});
-      if(dc.plane && dc.plane.on!==false){ var pm={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'}; elements.push({shape:'avion',block:(pm[dc.plane.position]||'etapes'),corner:'bottom-center',x:0,y:0,size:120,opacity:(dc.plane.opacity||4)/20*100,color:'#999'}); }
-      if(dc.botanical && dc.botanical.on!==false){ var bs={eucalyptus:'feuille',palm:'palmier',maple:'feuille',cactus:'cactus',pine:'fougere',olive:'feuille',cherry:'feuille',wheat:'fougere'}; elements.push({shape:(bs[dc.botanical.style]||'feuille'),block:'citations',corner:'top-left',x:3,y:6,size:120,opacity:(dc.botanical.opacity||3)/20*100,color:'#888'}); }
-      if(dc.stamp && dc.stamp.on!==false) elements.push({shape:'tampon',block:'gallery',corner:'top-right',x:4,y:4,size:130,opacity:(dc.stamp.opacity||4)/20*100,rotation:(dc.stamp.rotation||12),color:'#888'});
-      if(dc.relief && dc.relief.on!==false){ var rs={hills:'relief',mountains:'montagne',waves:'vagues',skyline:'relief',volcano:'montagne'}; elements.push({shape:(rs[dc.relief.style]||'relief'),block:'sponsors',corner:'bottom-center',x:0,y:0,size:200,opacity:(dc.relief.opacity||4)/20*100,color:'#888'}); }
-    }
-    if(!elements.length) return;
-
-    // ---- Résolution du conteneur cible pour un bloc donné ----
-    function targetFor(block){
-      if(!block || block==='page') return document.body;
-      var el = document.querySelector('[data-exp-block="'+block+'"]');
-      return el || null;
-    }
-    // ---- Position depuis le coin/bord d'ancrage + décalage % ----
-    function place(node, corner, x, y){
-      corner = corner || 'top-left';
-      var px = (typeof x==='number'?x:2), py = (typeof y==='number'?y:2);
-      var s = 'position:absolute;';
-      var vert = corner.indexOf('bottom')>=0 ? 'bottom' : (corner.indexOf('center')>=0 && corner.indexOf('-')<0 ? 'top' : 'top');
-      // corner formats: top-left, top-center, top-right, mid-left, center, mid-right, bottom-left, bottom-center, bottom-right
-      var parts = corner.split('-');
-      var v = parts[0], h = parts[1]||'center';
-      if(corner==='center'){ v='center'; h='center'; }
-      // vertical
-      if(v==='top') s+='top:'+py+'%;';
-      else if(v==='bottom') s+='bottom:'+py+'%;';
-      else s+='top:'+(50)+'%;';
-      // horizontal
-      if(h==='left') s+='left:'+px+'%;';
-      else if(h==='right') s+='right:'+px+'%;';
-      else s+='left:'+(50)+'%;';
-      // transforms for centered axes
-      var tx = (h==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
-      node.setAttribute('data-tx',tx); node.setAttribute('data-ty',ty);
-      return s;
-    }
-
-    var MAXW = 320; // garde-fou taille max (px)
-    elements.slice(0,12).forEach(function(elDef){
-      var shapeKey = elDef.shape || 'cercle';
-      var raw = SHAPES[shapeKey];
-      if(!raw) return;
-      var tgt = targetFor(elDef.block);
-      if(!tgt) return;
-      if(tgt!==document.body){ tgt.style.position='relative'; tgt.style.overflow='visible'; }
-
-      var color = elDef.color || '#8a8578';
-      var size = Math.min(Math.max(parseInt(elDef.size)||120, 20), MAXW);
-      var opacity = (typeof elDef.opacity==='number'?elDef.opacity:30)/100;
-      var rot = parseInt(elDef.rotation)||0;
-
-      var svg = '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">'+raw.replace(/C/g,color)+'</svg>';
-
-      var node = document.createElement('div');
-      node.setAttribute('data-decor','1');
-      var posCss = place(node, elDef.corner, elDef.x, elDef.y);
-      var tx=node.getAttribute('data-tx'), ty=node.getAttribute('data-ty');
-      node.style.cssText = posCss + 'pointer-events:none;z-index:'+(elDef.front?'50':'0')+';opacity:'+opacity+';transform:translate('+tx+','+ty+') rotate('+rot+'deg);width:'+size+'px;height:'+size+'px;line-height:0;';
-      node.innerHTML = svg;
-
-      if(tgt===document.body){
-        node.style.position='fixed';
-        tgt.appendChild(node);
-      } else {
-        tgt.appendChild(node);
-      }
-    });
-
-    console.log('[TourMaG Live] Decor OK —', elements.length, 'élément(s)');
-    }catch(e){console.error('[TourMaG Live] Decor error:',e);}
-  }, 600);
-
-  // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers)
-  if(window._fadeObsE) window._fadeObsE.disconnect();
-  window._fadeObsE = new IntersectionObserver(es=>{
-    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');window._fadeObsE.unobserve(e.target);}});
-  },{threshold:.06});
-  document.querySelectorAll('.fi').forEach(el=>window._fadeObsE.observe(el));
-
-  // Instagram embeds
-  if(window._socialParseTimer) clearTimeout(window._socialParseTimer);
-  window._socialParseTimer = setTimeout(()=>{
-    try{if(window.instgrm&&window.instgrm.Embeds) window.instgrm.Embeds.process();}catch(e){}
-  },400);
-
-  // Init accordion clamps after DOM update
-  requestAnimationFrame(initExpClamps);
 }
 
-// Expedition toggle (simpler than live, no chevron SVG)
-window.toggleExpExpand = function(expandId, btnId, count, openLabel, closedLabel){
-  const el=document.getElementById(expandId), btn=document.getElementById(btnId);
-  if(!el||!btn) return;
-  const open=el.classList.toggle('open');
-  btn.textContent = open ? (openLabel||'▴ Réduire') : (closedLabel||`▾ Voir les ${count} entrées précédentes`);
-  if(open) requestAnimationFrame(initExpClamps);
-  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
-};
-
-// ===== MAP SIDE PANEL =====
-window.toggleExpGallery = function(count){
-  const el=document.getElementById('exp-gal-expand'), btn=document.getElementById('exp-gal-btn');
-  if(!el||!btn) return;
-  const open=el.classList.toggle('open');
-  btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} autres photos`;
-  if(typeof sendHeight==='function') setTimeout(sendHeight,50);
-};
 window.openExpMapPanel = function(et){
   const panel = document.getElementById('exp-map-panel');
   const content = document.getElementById('exp-map-panel-content');
@@ -4781,6 +4799,13 @@ function _cmGoTab(tok){
   if(window._rtState && typeof render==='function') render(window._rtState);
   window.scrollTo({top:0, behavior:'smooth'});
 }
+// Rend UNE fiche produit précise (par id) — utilisé par le constructeur.
+function _renderProductById(pid, event){
+  var list = Array.isArray(event.products) ? event.products : [];
+  var pr = list.find(function(p){ return p.id===pid; });
+  if(!pr) return '';
+  return _renderProduct(pr, event);
+}
 function _renderProducts(event){
   var list = Array.isArray(event.products) ? event.products.slice() : [];
   if(!list.length && event.product && (event.product.title||event.product.description||event.product.mainImage)){
@@ -4980,7 +5005,11 @@ function _bpRenderSection(sec, event, ctx){
   // même vides. Cela évite qu'une galerie/vidéo builder tombe sur le module live homonyme.
   const EDITORIAL = {text:1, image:1, gallery:1, video:1, buttons:1, separator:1, html:1};
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
-    try { inner = ctx.blockRenderers[legacyDelegate[type]]() || ''; }
+    try {
+      // Options passées aux renderers live/riches (canal, limite, fiche produit…)
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId };
+      inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
+    }
     catch(e){ inner=''; console.warn('[builder] renderer "'+type+'" a échoué', e); }
   } else {
     // --- Modules de contenu éditorial : rendus localement (socle unifié) ---
