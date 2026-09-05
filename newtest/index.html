@@ -2801,6 +2801,7 @@ function render(data){
     });
     document.getElementById('app').innerHTML = html;
     var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
+    if(typeof _bpActivateFx==='function') _bpActivateFx();
     if(typeof window._tmgResize==='function') window._tmgResize();
     _builderHandled = true;
   })();
@@ -3747,6 +3748,7 @@ function renderExpedition(data){
     // On enveloppe dans exp-dash pour hériter du style expédition
     document.getElementById('app').innerHTML = html;
     var _ubB=document.getElementById('upd-bar'); if(_ubB) _ubB.innerHTML='';
+    if(typeof _bpActivateFx==='function') _bpActivateFx();
     if(typeof window._tmgResize==='function') window._tmgResize();
     _bpHandledExp = true;
   })();
@@ -5117,6 +5119,29 @@ function _renderBuilderPage(page, event, ctx){
 
   h += '<div class="dash"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
   return h;
+}
+
+// Après injection d'une page-builder : rendre visibles les blocs à animation (.fi),
+// que les modules live/riches contiennent. Sans ça, l'IntersectionObserver du flux
+// normal (jamais atteint car le builder court-circuite) les laisserait à opacity:0
+// → "zones vides". On installe aussi un observer pour l'animation si dispo.
+function _bpActivateFx(){
+  try{
+    const nodes = document.querySelectorAll('#app .fi:not(.vis)');
+    if('IntersectionObserver' in window){
+      const obs = new IntersectionObserver(function(es){
+        es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('vis'); obs.unobserve(e.target); } });
+      }, {threshold:0.02});
+      nodes.forEach(function(el){ obs.observe(el); });
+      // Filet de sécurité : au cas où l'observer ne se déclenche pas (iframe, taille 0),
+      // on force la visibilité juste après.
+      setTimeout(function(){ document.querySelectorAll('#app .fi:not(.vis)').forEach(function(el){ el.classList.add('vis'); }); }, 300);
+    } else {
+      nodes.forEach(function(el){ el.classList.add('vis'); });
+    }
+  }catch(e){ /* en dernier recours, tout visible */
+    document.querySelectorAll('#app .fi').forEach(function(el){ el.classList.add('vis'); });
+  }
 }
 
 function _cpTextToHtml(t){
