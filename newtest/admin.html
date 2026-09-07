@@ -4250,7 +4250,7 @@ function _bpPaletteHtml(q){
     if(!items.length) return;
     h+='<div class="bpe-pal-group">'+g.group+'</div>';
     items.forEach(function(it){
-      h+='<div class="bpe-pal-item" draggable="true" ondragstart="_bpPalDragStart(event,\''+it.type+'\')" onclick="_bpAddSection(\''+it.type+'\')" title="Ajouter « '+it.name+' »">'
+      h+='<div class="bpe-pal-item" draggable="true" ondragstart="_bpPalDragStart(event,\''+it.type+'\')" title="Glissez « '+it.name+' » vers la page">'
         +'<span class="bpe-pal-ico"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#'+it.icon+'"/></svg></span>'
         +'<span>'+it.name+'</span></div>';
     });
@@ -4268,7 +4268,7 @@ function _bpCanvasHtml(p){
   if(!secs.length){
     return '<div class="bpe-empty" ondragover="_bpDzOver(event)" ondragleave="_bpDzLeave(event)" ondrop="_bpCanvasDrop(event,0)">'
       +'<div class="bpe-empty-ico">🧩</div><div class="bpe-empty-t">Cette page est vide</div>'
-      +'<div class="bpe-empty-s">Glissez un module depuis la gauche, ou cliquez sur un module pour l\'ajouter.</div></div>';
+      +'<div class="bpe-empty-s">Glissez un module depuis la palette de gauche vers cette zone pour l\'ajouter.</div></div>';
   }
   let h='<div class="bpe-dz" ondragover="_bpDzOver(event)" ondragleave="_bpDzLeave(event)" ondrop="_bpCanvasDrop(event,0)"></div>';
   secs.forEach(function(s,i){
@@ -4551,8 +4551,10 @@ function _bpContentFieldsHtml(s){
     case 'programme': case 'etapes': case 'itinerary': case 'citations':
     case 'videos': case 'interviews': case 'essential': case 'sponsors': case 'kpis': {
       const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline',sponsors:'Partenaires',kpis:'Chiffres clés'};
-      return _phaseFld
-        + '<div class="bpe-hint" style="padding:4px 0">Le contenu de « '+(_names[s.type]||s.type)+' » est alimenté dans son onglet dédié à gauche. Utilisez le sélecteur ci-dessus pour choisir quelle phase afficher.</div>';
+      var _titleFld = (s.type==='kpis'||s.type==='etapes'||s.type==='itinerary') ? '' :
+        '<div class="bpe-fld"><label>Titre de section (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Laisser vide = titre par défaut"></div>';
+      return _phaseFld + _titleFld
+        + '<div class="bpe-hint" style="padding:4px 0">Le contenu de « '+(_names[s.type]||s.type)+' » est alimenté dans son onglet dédié à gauche. Utilisez les réglages ci-dessus pour choisir la phase et personnaliser le titre.</div>';
     }
     case 'product': {
       const ev=_bpCurrentEv();
