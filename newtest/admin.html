@@ -4591,8 +4591,19 @@ function _bpContentFieldsHtml(s){
         +prods.map(function(p){return '<option value="'+p.id+'"'+((c.productId||'')===p.id?' selected':'')+'>'+_escAdm(p.title||p.name||'(sans titre)')+'</option>';}).join('')
         +'</select><div class="bpe-hint">Choisissez une fiche précise, ou laissez « Toutes » pour le comportement par affectation d\'onglets.</div></div>';
     }
-    case 'countrymap':
-      return '<div class="bpe-hint" style="padding:4px 0">Ce module affiche la carte pays configurée dans l\'onglet <b>Carte pays</b> à gauche. Continent, pays et couleurs s\'y règlent ; ils s\'appliquent partout où le module est déposé.</div>';
+    case 'countrymap': {
+      const ev=_bpCurrentEv();
+      const maps=(typeof _cmList==='function')?_cmList(ev):[];
+      if(!maps.length){
+        return '<div class="bpe-hint" style="padding:4px 0">Aucune carte pays n\'existe encore. Créez-en une dans l\'onglet <b>Carte pays</b> à gauche, puis revenez la sélectionner ici.</div>';
+      }
+      if(maps.length===1){
+        return '<div class="bpe-hint" style="padding:4px 0">Ce module affiche la carte « '+_escAdm(maps[0].title||_CM_CONTINENT_LABELS[maps[0].continent]||'Carte')+' ». Pour couvrir un autre continent (ex : Amérique centrale), créez une seconde carte dans l\'onglet Carte pays.</div>';
+      }
+      return '<div class="bpe-fld"><label>Carte à afficher</label><select onchange="_bpSetCt(\'countryMapId\',this.value)">'
+        + maps.map(function(m){ return '<option value="'+m.id+'"'+((c.countryMapId||maps[0].id)===m.id?' selected':'')+'>'+_escAdm(m.title||_CM_CONTINENT_LABELS[m.continent]||'Carte')+'</option>'; }).join('')
+        + '</select><div class="bpe-hint">Choisissez laquelle de vos cartes pays afficher à cet emplacement.</div></div>';
+    }
     default:
       return '<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié). Il s\'affichera ici à l\'emplacement choisi. Réglages détaillés à l\'étape suivante.</div>';
   }
@@ -10401,26 +10412,63 @@ async function saveProduct(){
 }
 
 // ==================== MODULE CARTE PAYS (éditeur) ====================
-var _CM_CONTINENT_LABELS = {europe:'Europe',africa:'Afrique',asia:'Asie',north_america:'Amérique du Nord',south_america:'Amérique du Sud',australia:'Océanie / Australie'};
+var _CM_CONTINENT_LABELS = {europe:'Europe',africa:'Afrique',asia:'Asie',north_america:'Amérique du Nord (inclut l\'Amérique centrale : Costa Rica, Panama…)',south_america:'Amérique du Sud',australia:'Océanie / Australie'};
+// ===== CARTES PAYS MULTIPLES =====
+var _cmActiveIdx = 0; // index de la carte en cours d'édition
+function _uidCm(){ return 'cm'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+// Renvoie la liste des cartes, en migrant l'ancienne countryMap unique si besoin.
+function _cmList(ev){
+  ev = ev || (eventsData.find(e=>e.id===currentEventId)||{});
+  if(Array.isArray(ev.countryMaps) && ev.countryMaps.length) return ev.countryMaps;
+  // Migration : ancienne carte unique → première entrée du tableau
+  if(ev.countryMap && (ev.countryMap.continent || (ev.countryMap.countries&&ev.countryMap.countries.length))){
+    return [Object.assign({id:_uidCm(), title:ev.countryMap.title||'Carte 1'}, ev.countryMap)];
+  }
+  return [];
+}
 function renderCountryMapTab(el){
   const ev = eventsData.find(e=>e.id===currentEventId)||{};
-  const cm = ev.countryMap || {};
-  const countries = cm.countries || [];
+  const maps = _cmList(ev);
   const tabList = (typeof _admTabList==='function') ? _admTabList(ev) : [];
-  let h = '<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Carte pays interactive</div>';
-  h += '<div class="page-desc">Une carte d\'un continent où seuls les pays configurés sont actifs (survol + clic). Un clic renvoie vers un onglet du dashboard ou un lien externe. Activez le module « Carte pays » dans l\'onglet Modules et placez-le dans l\'ordre des blocs.</div>';
+  if(_cmActiveIdx>=maps.length) _cmActiveIdx = Math.max(0, maps.length-1);
+  const cm = maps[_cmActiveIdx] || {};
+  const countries = cm.countries || [];
 
-  // Réglages généraux
-  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Réglages</h3>
+  let h = '<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Cartes pays interactives</div>';
+  h += '<div class="page-desc">Créez une ou plusieurs cartes (par continent). Chaque carte affiche les pays actifs configurés. Un continent = une carte : pour couvrir Amérique du Sud ET centrale, créez deux cartes. Déposez ensuite le module « Carte pays » dans le constructeur et choisissez quelle carte afficher.</div>';
+
+  // Sélecteur de carte + gestion
+  h += '<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Vos cartes</h3>';
+  if(!maps.length){
+    h += '<div class="empty"><div class="text">Aucune carte pour l\'instant</div><div class="hint">Créez votre première carte ci-dessous.</div></div>';
+  } else {
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+    maps.forEach(function(m,i){
+      const nm=(m.title||_CM_CONTINENT_LABELS[m.continent]||('Carte '+(i+1)));
+      h += '<button class="btn btn-xs '+(i===_cmActiveIdx?'btn-primary':'btn-ghost')+'" onclick="_cmSelectMap('+i+')">'+_escAdm(nm)+'</button>';
+    });
+    h += '</div>';
+  }
+  h += '<div style="display:flex;gap:8px;align-items:flex-end">'
+     + '<div class="form-row" style="flex:1;margin:0"><label class="form-label">Nom de la nouvelle carte</label><input class="form-input" id="cm-new-name" placeholder="Ex : Amérique du Sud" onkeydown="if(event.key===\'Enter\')_cmAddMap()"></div>'
+     + '<button class="btn btn-ghost btn-sm" onclick="_cmAddMap()">＋ Nouvelle carte</button>'
+     + (maps.length>1?'<button class="btn btn-danger btn-sm" onclick="_cmDeleteMap('+_cmActiveIdx+')">Supprimer cette carte</button>':'')
+     + '</div>';
+  h += '</div>';
+
+  if(!maps.length){ h += '<div class="cp-savebar"><span class="cp-savebar-hint">Créez une carte pour commencer.</span></div>'; el.innerHTML=h; return; }
+
+  // Réglages de la carte active
+  h += `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Réglages — ${_escAdm(cm.title||('Carte '+(_cmActiveIdx+1)))}</h3>
+    <div class="form-row"><label class="form-label">Nom de la carte</label><input class="form-input" id="cm-title" value="${_escAdm(cm.title||'')}" placeholder="Ex : Amérique du Sud"></div>
     <div class="form-row-inline">
-      <div class="form-row" style="max-width:260px"><label class="form-label">Continent</label><select class="form-input" id="cm-continent">
+      <div class="form-row" style="max-width:320px"><label class="form-label">Continent</label><select class="form-input" id="cm-continent">
         <option value="">— Choisir —</option>
         ${Object.keys(_CM_CONTINENT_LABELS).map(k=>`<option value="${k}"${cm.continent===k?' selected':''}>${_CM_CONTINENT_LABELS[k]}</option>`).join('')}
       </select></div>
       <div class="form-row" style="max-width:130px"><label class="form-label">Couleur des pays actifs</label><input type="color" class="form-input" id="cm-accent" value="${cm.accent||'#0C6CA1'}" style="width:56px;height:38px;padding:2px"></div>
       <div class="form-row" style="max-width:130px"><label class="form-label">Couleur pays inactifs</label><input type="color" class="form-input" id="cm-inactive" value="${cm.inactiveColor||'#E2E8F0'}" style="width:56px;height:38px;padding:2px"></div>
     </div>
-    <div class="form-row"><label class="form-label">Titre au-dessus de la carte (optionnel)</label><input class="form-input" id="cm-title" value="${_escAdm(cm.title||'')}" placeholder="Ex : Nos destinations"></div>
   </div>`;
 
   // Pays actifs
@@ -10432,9 +10480,29 @@ function renderCountryMapTab(el){
   h += '<button class="btn btn-ghost btn-sm" onclick="_cmAddCountry()">＋ Ajouter un pays</button>';
   h += '</div>';
 
-  h += '<div class="cp-savebar"><span class="cp-savebar-hint">Pensez à enregistrer.</span><button class="btn btn-primary" onclick="saveCountryMap()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la carte</button></div>';
+  h += '<div class="cp-savebar"><span class="cp-savebar-hint">Pensez à enregistrer.</span><button class="btn btn-primary" onclick="saveCountryMap()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
   el.innerHTML = h;
 }
+// Change la carte active (collecte l'actuelle d'abord)
+function _cmSelectMap(i){ _cmCollect(); _cmActiveIdx=i; renderTab(); }
+async function _cmAddMap(){
+  const ev=_cmCollectFull();
+  const inp=document.getElementById('cm-new-name');
+  const name=(inp&&inp.value||'').trim()||('Carte '+(ev.countryMaps.length+1));
+  ev.countryMaps.push({id:_uidCm(), title:name, continent:'', accent:'#0C6CA1', inactiveColor:'#E2E8F0', countries:[]});
+  _cmActiveIdx=ev.countryMaps.length-1;
+  try{ await evRef().update({countryMaps:ev.countryMaps}); toast('Carte créée'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _cmDeleteMap(i){
+  const ev=_cmCollectFull();
+  if(!confirm('Supprimer la carte « '+((ev.countryMaps[i]&&ev.countryMaps[i].title)||'')+' » ?')) return;
+  ev.countryMaps.splice(i,1);
+  _cmActiveIdx=Math.max(0,i-1);
+  try{ await evRef().update({countryMaps:ev.countryMaps}); toast('Carte supprimée'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+
 function _cmCountryRow(c,i,tabList){
   c=c||{};
   var tabOpts = tabList.map(function(it){ return '<option value="'+it.tok+'"'+((c.tab||'')===it.tok?' selected':'')+'>'+_escAdm(it.obj.name||'')+'</option>'; }).join('');
@@ -10460,27 +10528,48 @@ function _cmToggleDest(i,val){
   document.querySelectorAll('.cm-dest-tab[data-cmi="'+i+'"]').forEach(e=>e.style.display=(val==='url')?'none':'');
   document.querySelectorAll('.cm-dest-url[data-cmi="'+i+'"]').forEach(e=>e.style.display=(val==='url')?'':'none');
 }
-function _cmCollect(){
-  var ev=eventsData.find(e=>e.id===currentEventId)||{}; ev.countryMap=ev.countryMap||{};
+// Collecte l'état complet : le tableau countryMaps avec la carte active mise à jour.
+function _cmCollectFull(){
+  var ev=eventsData.find(e=>e.id===currentEventId)||{};
+  // Base : liste existante (migration incluse)
+  var maps = _cmList(ev).map(function(m){ return Object.assign({}, m); });
+  if(!maps.length){ ev.countryMaps=[]; return ev; }
+  if(_cmActiveIdx>=maps.length) _cmActiveIdx=maps.length-1;
+  var active = maps[_cmActiveIdx] || {};
+  // Pays saisis
   var arr=[];
   document.querySelectorAll('.cm-country').forEach(function(row){
     var o={}; row.querySelectorAll('[data-cmf]').forEach(function(el){ o[el.getAttribute('data-cmf')]=(el.value||'').trim(); });
     if(o.code) o.code=o.code.toLowerCase();
     arr.push(o);
   });
-  ev.countryMap.countries=arr;
+  active.countries=arr;
+  // Réglages de la carte active (s'ils sont affichés)
+  var g=function(id){var e=document.getElementById(id);return e?e.value:undefined;};
+  if(g('cm-continent')!==undefined) active.continent=g('cm-continent');
+  if(g('cm-accent')!==undefined) active.accent=g('cm-accent')||'#0C6CA1';
+  if(g('cm-inactive')!==undefined) active.inactiveColor=g('cm-inactive')||'#E2E8F0';
+  if(g('cm-title')!==undefined) active.title=g('cm-title');
+  if(!active.id) active.id=_uidCm();
+  maps[_cmActiveIdx]=active;
+  ev.countryMaps=maps;
   return ev;
 }
-async function _cmAddCountry(){ var ev=_cmCollect(); ev.countryMap.countries.push({dest:'tab'}); try{ await evRef().update({countryMap:ev.countryMap}); renderTab(); }catch(e){ toast('Erreur : '+(e.message||e),'error'); } }
-async function _cmDelCountry(i){ var ev=_cmCollect(); ev.countryMap.countries.splice(i,1); try{ await evRef().update({countryMap:ev.countryMap}); renderTab(); }catch(e){ toast('Erreur : '+(e.message||e),'error'); } }
+// Compat : renvoie ev avec countryMaps (utilisé par add/del country)
+function _cmCollect(){ return _cmCollectFull(); }
+async function _cmAddCountry(){
+  var ev=_cmCollectFull();
+  if(ev.countryMaps[_cmActiveIdx]) ev.countryMaps[_cmActiveIdx].countries.push({dest:'tab'});
+  try{ await evRef().update({countryMaps:ev.countryMaps}); renderTab(); }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _cmDelCountry(i){
+  var ev=_cmCollectFull();
+  if(ev.countryMaps[_cmActiveIdx]) ev.countryMaps[_cmActiveIdx].countries.splice(i,1);
+  try{ await evRef().update({countryMaps:ev.countryMaps}); renderTab(); }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 async function saveCountryMap(){
-  var ev=_cmCollect();
-  var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
-  ev.countryMap.continent=g('cm-continent');
-  ev.countryMap.accent=g('cm-accent')||'#0C6CA1';
-  ev.countryMap.inactiveColor=g('cm-inactive')||'#E2E8F0';
-  ev.countryMap.title=g('cm-title');
-  try{ saving(true); await evRef().update({countryMap:ev.countryMap}); toast('Carte enregistrée'); }
+  var ev=_cmCollectFull();
+  try{ saving(true); await evRef().update({countryMaps:ev.countryMaps}); toast('Carte enregistrée'); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
