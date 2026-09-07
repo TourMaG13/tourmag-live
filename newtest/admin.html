@@ -4011,20 +4011,16 @@ function editBuilderPage(id){
   renderTab();
 }
 function _bpCopyUrl(id){
-  const ev=_bpCurrentEv();
+  // On vise TOUJOURS l'index.html direct (le dashboard), pas la page hôte du CMS,
+  // sinon le paramètre bpage resterait sur la page parente sans atteindre l'iframe.
   const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
-  const base=(ev.publicUrl||'').trim()||ghBase;
-  const sep=base.includes('?')?(base.endsWith('?')||base.endsWith('&')?'':'&'):'?';
-  const url=base+sep+'event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
+  const url=ghBase+'?event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
   try{ navigator.clipboard.writeText(url); toast('Lien de la page copié'); }
   catch(e){ prompt('Copiez ce lien :', url); }
 }
 function _bpPreview(id){
-  const ev=_bpCurrentEv();
   const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
-  const base=(ev.publicUrl||'').trim()||ghBase;
-  const sep=base.includes('?')?(base.endsWith('?')||base.endsWith('&')?'':'&'):'?';
-  const url=base+sep+'event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
+  const url=ghBase+'?event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id)+'&preview=1';
   window.open(url,'_blank');
 }
 
