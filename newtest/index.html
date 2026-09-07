@@ -5202,6 +5202,14 @@ function _renderBuilderPage(page, event, ctx){
 // → "zones vides". On installe aussi un observer pour l'animation si dispo.
 function _bpActivateFx(){
   try{
+    // Repère visuel en mode aperçu : confirme qu'on voit bien une page CONSTRUCTEUR
+    if(new URLSearchParams(window.location.search).get('preview')==='1' && !document.getElementById('bp-preview-badge')){
+      var _b=document.createElement('div');
+      _b.id='bp-preview-badge';
+      _b.textContent='🧩 Page Constructeur';
+      _b.style.cssText='position:fixed;bottom:14px;left:14px;z-index:99999;background:#5B21B6;color:#fff;font:600 12px/1 system-ui,sans-serif;padding:8px 12px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;opacity:.92';
+      document.body.appendChild(_b);
+    }
     const nodes = document.querySelectorAll('#app .fi:not(.vis)');
     if('IntersectionObserver' in window){
       const obs = new IntersectionObserver(function(es){
