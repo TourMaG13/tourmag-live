@@ -3007,8 +3007,11 @@ function renderExpedition(data){
   // Filtrage paramétrable pour le builder : opts.phaseFilter = 'all' | <id phase> | absent
   function _pfOpt(raw, opts){
     if(opts && opts.phaseFilter){
+      console.log('[diag-phase] phaseFilter demandé =', JSON.stringify(opts.phaseFilter), '| phases des entrées =', (raw||[]).map(function(x){return x.phase;}));
       if(opts.phaseFilter==='all') return raw||[];
-      return (raw||[]).filter(item => !item.phase || item.phase === opts.phaseFilter);
+      var _r=(raw||[]).filter(item => !item.phase || item.phase === opts.phaseFilter);
+      console.log('[diag-phase] → '+_r.length+' entrée(s) retenue(s)');
+      return _r;
     }
     return _pf(raw);
   }
