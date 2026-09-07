@@ -4865,12 +4865,14 @@ function _cmRender(id, cfg){
   } else {
     mapName = candidates[0];
   }
+  var _hoverCol = cfg.accent && cfg.accent.indexOf('var(')!==0 ? cfg.accent : '#0C6CA1';
   var _mapOpts = {
       backgroundColor: 'transparent',
       borderColor: '#fff', borderWidth: 1,
       color: cfg.inactive,
       enableZoom: false, showTooltip: true,
-      hoverColor: false,
+      hoverColor: _hoverCol, hoverOpacity: 0.75,
+      selectedColor: false,
       onLabelShow: function(ev, label, code){
         var c = byCode[(code||'').toLowerCase()];
         if(!c){ ev.preventDefault(); return; }
@@ -4879,6 +4881,8 @@ function _cmRender(id, cfg){
       onRegionClick: function(ev, code){
         var c = byCode[(code||'').toLowerCase()];
         if(!c){ ev.preventDefault(); return; }
+        // Masquer le tooltip avant de naviguer (sinon il reste affiché)
+        try{ document.querySelectorAll('.jqvmap-label').forEach(function(l){ l.style.display='none'; }); }catch(_){}
         if(c.dest==='url' && c.url){ window.open(c.url, c.newTab===false?'_self':'_blank'); }
         else if(c.dest==='tab' && c.tab){ _cmGoTab(c.tab); }
       },
@@ -4905,14 +4909,18 @@ function _cmRender(id, cfg){
     var st=document.createElement('style');
     st.textContent = selectedRegions.map(function(c){return '#'+id+' svg [id$="_'+c+'"]{cursor:pointer}';}).join('');
     document.head.appendChild(st);
+    // Filet de sécurité : masquer l'étiquette quand la souris quitte la carte
+    var _holder=document.getElementById(id);
+    if(_holder){ _holder.addEventListener('mouseleave', function(){ try{ document.querySelectorAll('.jqvmap-label').forEach(function(l){ l.style.display='none'; }); }catch(_){} }); }
   }catch(e){ console.warn('[Carte pays] post-init', e); }
 }
 // Navigue vers un onglet (phase ou page) : "phase:<id>" ou "page:<id>"
 function _cmGoTab(tok){
   var params = new URLSearchParams(window.location.search);
-  params.delete('phase'); params.delete('page');
+  params.delete('phase'); params.delete('page'); params.delete('bpage');
   if(tok.indexOf('page:')===0) params.set('page', tok.slice(5));
   else if(tok.indexOf('phase:')===0) params.set('phase', tok.slice(6));
+  else if(tok.indexOf('builder:')===0) params.set('bpage', tok.slice(8));
   var url = window.location.pathname + '?' + params.toString();
   window.history.replaceState({}, '', url);
   if(window._rtState && typeof render==='function') render(window._rtState);
