@@ -5274,7 +5274,22 @@ function _bpRenderContentModule(sec, event, ctx){
       let gh,gmin;
       if(gs==='custom'){ gh=parseInt(ct.galH,10)||200; gmin=parseInt(ct.galMin,10)||220; }
       else { const pr=presets[gs]||presets.m; gh=pr.h; gmin=pr.min; }
-      return '<div class="bp-gallery" style="--bp-gal-h:'+gh+'px;--bp-gal-min:'+gmin+'px">'+imgs.map(function(x){return '<div class="bp-gallery-item"><img src="'+_bpEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="bp-gallery-cr">© '+_bpEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div>';
+      var _gid='bpg-'+Math.random().toString(36).slice(2,7);
+      setTimeout(function(){
+        try{
+          var g=document.getElementById(_gid); if(!g){return;}
+          var cs=getComputedStyle(g);
+          console.log('[GAL2] largeur='+g.offsetWidth+'px display='+cs.display+' width-css='+cs.width+' cols='+cs.gridTemplateColumns+' float='+cs.float+' clear='+cs.clear);
+          var sec=g.closest('.bp-section');
+          if(sec){ var scs=getComputedStyle(sec); console.log('[GAL2] section largeur='+sec.offsetWidth+'px display='+scs.display+' float='+scs.float); }
+          // Y a-t-il un élément flottant juste avant la section ?
+          var prev=sec?sec.previousElementSibling:null;
+          if(prev){ var pcs=getComputedStyle(prev); console.log('[GAL2] bloc précédent='+prev.className+' hauteur='+prev.offsetHeight+'px'); 
+            var floats=prev.querySelectorAll('*'); var nf=0; floats.forEach(function(f){ if(getComputedStyle(f).float!=='none') nf++; }); console.log('[GAL2] éléments flottants dans le bloc précédent:', nf);
+          }
+        }catch(e){console.log('[GAL2] err',e);}
+      }, 700);
+      return '<div id="'+_gid+'" class="bp-gallery" style="--bp-gal-h:'+gh+'px;--bp-gal-min:'+gmin+'px">'+imgs.map(function(x){return '<div class="bp-gallery-item"><img src="'+_bpEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="bp-gallery-cr">© '+_bpEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div>';
     }
     case 'video': {
       return (typeof _cpVideoEmbed==='function') ? _cpVideoEmbed(ct.url) : '';
