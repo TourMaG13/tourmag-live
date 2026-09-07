@@ -5203,7 +5203,8 @@ function _renderBuilderPage(page, event, ctx){
 function _bpActivateFx(){
   try{
     // Repère visuel en mode aperçu : confirme qu'on voit bien une page CONSTRUCTEUR
-    if(new URLSearchParams(window.location.search).get('preview')==='1' && !document.getElementById('bp-preview-badge')){
+    var _qp=new URLSearchParams(window.location.search);
+    if((_qp.get('preview')==='1' || _qp.get('bpage')) && !document.getElementById('bp-preview-badge')){
       var _b=document.createElement('div');
       _b.id='bp-preview-badge';
       _b.textContent='🧩 Page Constructeur';
