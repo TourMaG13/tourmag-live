@@ -2797,9 +2797,10 @@ function render(data){
         + '</div></div>';
     }
     // On rend la page-builder (onglets en tête) et on court-circuite le legacy
-    const html = tabsHtml + _renderBuilderPage(_bp, event, {
+    const html = _renderBuilderPage(_bp, event, {
       blockRenderers: blockRenderers, getZone: getZone,
-      mobileHidden: _mobileHidden, renderContentPage: _renderContentPage
+      mobileHidden: _mobileHidden, renderContentPage: _renderContentPage,
+      tabsHtml: tabsHtml
     });
     document.getElementById('app').innerHTML = html;
     var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
@@ -3144,7 +3145,14 @@ function renderExpedition(data){
     }
     let t = '<div class="phase-tabs">';
     t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, builderUrl:_bpUrl, activePhase:(activeBuilderPage?null:activePhase), activeContentPage:(activeBuilderPage?null:activeContentPage), activeBuilderPage:activeBuilderPage||null, builderPages:_bpTabs});
-    return t + '</div>' + ((activeContentPage||activeBuilderPage)?'':_mkPhaseTitle(event, activePhase, phases));
+    // Titre de phase : pour une page-builder, on affiche celui de sa phase associée (linkedPhase)
+    let _phaseTitleHtml='';
+    if(activeBuilderPage){
+      if(activeBuilderPage.linkedPhase){ _phaseTitleHtml = _mkPhaseTitle(event, activeBuilderPage.linkedPhase, phases); }
+    } else if(!activeContentPage){
+      _phaseTitleHtml = _mkPhaseTitle(event, activePhase, phases);
+    }
+    return t + '</div>' + _phaseTitleHtml;
   };
 
   _b.kpis = function(opts){
@@ -3720,11 +3728,12 @@ function renderExpedition(data){
     if(!_bpId) return;
     const _bp=_bpPagesExp.find(p=>p.id===_bpId);
     if(!_bp) return;
-    const _tabs = '<div class="exp-dash">' + _b.phaseTabs(_bp) + '</div>';
-    const html = _tabs + _renderBuilderPage(_bp, event, {
+    const _tabsHtml = '<div class="exp-dash">' + _b.phaseTabs(_bp) + '</div>';
+    const html = _renderBuilderPage(_bp, event, {
       blockRenderers: _b, getZone: getExpZone,
       mobileHidden: (Array.isArray(event.mobileHidden)?event.mobileHidden:[]),
-      renderContentPage: _renderContentPage
+      renderContentPage: _renderContentPage,
+      tabsHtml: _tabsHtml
     });
     // On enveloppe dans exp-dash pour hériter du style expédition
     document.getElementById('app').innerHTML = html;
@@ -5258,7 +5267,18 @@ function _renderBuilderPage(page, event, ctx){
   function openDash(){ if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; } }
   function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
 
-  // Les blocs main à partir de l'ancre (inclus) forment la colonne principale du groupe 2-col
+  // Onglets de navigation : insérés après le groupe d'en-tête (hero + chiffres clés),
+  // comme le dashboard normal. Sinon en tête si pas d'en-tête.
+  const _tabsHtml = ctx.tabsHtml || '';
+  let _tabsInserted = false;
+  // Déterminer l'index du dernier bloc d'en-tête consécutif (hero/kpis) depuis le début
+  let _headEndIdx = -1;
+  for(let i=0;i<sections.length;i++){
+    if(sections[i].type==='hero' || sections[i].type==='kpis'){ _headEndIdx=i; }
+    else break;
+  }
+  if(_tabsHtml && _headEndIdx<0){ h += _tabsHtml; _tabsInserted = true; } // pas d'en-tête → onglets en tête
+
   const anchorIdx = sections.findIndex(s=>s.id===anchorId && zoneOf(s)==='main');
   const mainsFromAnchor = anchorIdx>=0 ? sections.filter((s,i)=> zoneOf(s)==='main' && i>=anchorIdx) : mainSecs;
 
@@ -5268,23 +5288,26 @@ function _renderBuilderPage(page, event, ctx){
     if(z==='main'){
       if(hasTwoCol){
         if(idx < anchorIdx){
-          // bloc main avant l'ancre → pleine largeur
           openDash(); renderMainSolo(s);
         } else if(idx===anchorIdx || (anchorIdx<0 && !twoColInserted)){
-          // point d'ancrage → on sort le groupe 2-colonnes (avec tous les mains restants)
           if(!twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
         }
-        // les autres mains (après l'ancre) sont déjà dans renderTwoCol → skip
+        // insérer les onglets si on a dépassé l'en-tête
+        if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted=true; }
         return;
       } else {
-        openDash(); renderMainSolo(s); return;
+        openDash(); renderMainSolo(s);
+        if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted=true; }
+        return;
       }
     }
     if(z==='max'){ closeDash(); h+=_bpRenderSection(s,event,ctx); }
     else { openDash(); h+=_bpRenderSection(s,event,ctx); } // full
+    // Après le groupe d'en-tête (hero/kpis), insérer les onglets une seule fois
+    if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted = true; }
   });
-  // Cas : sidebar existe mais aucun bloc main (ni ancre trouvée) → sortir la sidebar seule
   if(hasTwoCol && !twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
+  if(!_tabsInserted && _tabsHtml){ closeDash(); h += _tabsHtml; _tabsInserted=true; } // sécurité
   closeDash();
 
   h += '<div class="'+CL.dash+'"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
