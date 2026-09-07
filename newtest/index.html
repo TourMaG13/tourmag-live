@@ -3780,7 +3780,7 @@ function renderExpedition(data){
     var _mapSec = (_bp.sections||[]).filter(function(s){ return s.type==='etapes'; })[0];
     if(_mapSec){
       var _mapEtapes = _etapesFor({phaseFilter: (_mapSec.content&&_mapSec.content.phaseFilter)});
-      setTimeout(function(){ try{ _initExpMap(_mapEtapes, event, mod); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
+      setTimeout(function(){ try{ _initExpMap(_mapEtapes, event, mod, accent); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
     }
     if(typeof window._tmgResize==='function') window._tmgResize();
     _bpHandledExp = true;
@@ -3828,7 +3828,7 @@ function renderExpedition(data){
   document.getElementById('app').innerHTML = h;
 
   // ===== INIT LEAFLET MAP =====
-  _initExpMap(filteredEtapes, event, mod);
+  _initExpMap(filteredEtapes, event, mod, accent);
 
   // ===== DECORATIVE ELEMENTS =====
   if(window._decorTimer) clearTimeout(window._decorTimer);
@@ -3961,7 +3961,8 @@ window.toggleExpGallery = function(count){
 };
 // Initialise la carte Leaflet expédition. Extraite pour être réutilisable
 // par le flux expédition normal ET par le moteur page-builder.
-function _initExpMap(filteredEtapes, event, mod){
+function _initExpMap(filteredEtapes, event, mod, accent){
+  accent = accent || (event && event.accentColor) || '#FF6C00';
   mod = mod || {};
   if(!(filteredEtapes && filteredEtapes.length) || mod.etapes===false || !document.getElementById('exp-routemap')) return;
     if(_expMapInstance){ _expMapInstance.remove(); _expMapInstance=null; }
