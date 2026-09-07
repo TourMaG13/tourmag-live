@@ -3456,7 +3456,7 @@ function renderExpedition(data){
   };
 
   _b._vids = function(opts){
-    const _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : _vids;
+    const _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : videos;
     if(mod._vids===false || !_vids || !_vids.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
     let o = `<section class="exp-_vids">`;
