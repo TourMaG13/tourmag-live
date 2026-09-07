@@ -3870,8 +3870,9 @@ function _bpCurrentEv(){ return eventsData.find(e=>e.id===currentEventId)||{}; }
 
 async function _bpPersist(list){
   const ev=_bpCurrentEv();
-  ev.builderPages = list;
-  await evRef().update({ builderPages: list });
+  const clean=_bpStripUndefined(list);
+  ev.builderPages = clean;
+  await evRef().update({ builderPages: clean });
 }
 
 function renderBuilderTab(el){
@@ -4088,7 +4089,7 @@ function _bpSelectedSection(){
 // Sauvegarde de la page courante dans Firestore (via le tableau complet)
 async function _bpSavePage(){
   const ev=_bpCurrentEv();
-  try{ await evRef().update({builderPages: _bpList(ev)}); }
+  try{ await evRef().update({builderPages: _bpStripUndefined(_bpList(ev))}); }
   catch(e){ toast('Erreur d\'enregistrement : '+(e.message||e),'error'); }
 }
 // Config par défaut d'une nouvelle section
@@ -4110,6 +4111,20 @@ function _bpDefaultSection(type){
 // ============================================================
 // MIGRATION — convertit une page libre / phase en page-builder
 // ============================================================
+// Supprime récursivement les valeurs undefined (Firestore les refuse).
+// Renvoie une copie nettoyée : objets et tableaux traités en profondeur.
+function _bpStripUndefined(v){
+  if(Array.isArray(v)){ return v.map(_bpStripUndefined).filter(function(x){ return x!==undefined; }); }
+  if(v && typeof v==='object'){
+    const o={};
+    Object.keys(v).forEach(function(k){
+      const cleaned=_bpStripUndefined(v[k]);
+      if(cleaned!==undefined) o[k]=cleaned;
+    });
+    return o;
+  }
+  return v;
+}
 // Convertit UN bloc de page libre (champs "à plat") en section builder
 // (format {type, zone, appearance:{title,text,bg}, content:{...}}).
 function _bpConvertBlock(b){
