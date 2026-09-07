@@ -1158,6 +1158,14 @@ body.mode-expedition .social-float{display:none}
   .exp-gallery-extra .exp-gal-item{height:150px}
   .exp-articles,.exp-videos,.exp-verbatims,.exp-interviews,.exp-gallery,.exp-sponsors,.exp-essential{padding-left:20px;padding-right:20px}
 }
+/* La galerie garde une grille 2 colonnes tant que la place le permet (utile en iframe étroit).
+   On ne passe en 1 colonne que sous 560px. */
+@media(min-width:560px) and (max-width:940px){
+  .exp-gallery-grid{grid-template-columns:2fr 1fr!important;grid-template-rows:220px calc(220px * 0.5 - 5px)!important}
+  .exp-gallery-grid .exp-gal-item:first-child{grid-row:1/3!important}
+  .exp-gallery-grid .exp-gal-item{height:auto!important}
+  .exp-gallery-extra{grid-template-columns:repeat(3,1fr)!important}
+}
 @media(max-width:860px){
   .exp-cobrand{padding:12px 16px}
   .exp-hero{grid-template-columns:1fr;min-height:auto}
@@ -2695,7 +2703,7 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event); }};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
   const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','countrymap','sponsors','contact'];
@@ -3577,7 +3585,7 @@ function renderExpedition(data){
   };
 
   _b.product = function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); };
-  _b.countrymap = function(){ if(mod.countrymap===false) return ''; return _renderCountryMap(event); };
+  _b.countrymap = function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); };
   _b.contact = function(){
     const ctRaw = event.contact;
     if(mod.contact===false || !ctRaw) return '';
@@ -4781,8 +4789,17 @@ var _CM_CONTINENTS = {
   south_america:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.south-america.js',
   australia:'https://cdnjs.cloudflare.com/ajax/libs/jqvmap/1.5.1/maps/continents/jquery.vmap.australia.js'
 };
-function _renderCountryMap(event){
-  var cm = event.countryMap;
+// Renvoie la liste des cartes pays (migre l'ancienne countryMap unique si besoin)
+function _cmMapsOf(event){
+  if(Array.isArray(event.countryMaps) && event.countryMaps.length) return event.countryMaps;
+  if(event.countryMap && event.countryMap.continent) return [Object.assign({id:'legacy'}, event.countryMap)];
+  return [];
+}
+function _renderCountryMap(event, mapId){
+  var maps = _cmMapsOf(event);
+  if(!maps.length) return '';
+  // Carte ciblée par le module builder (mapId), sinon la première
+  var cm = mapId ? (maps.find(function(m){return m.id===mapId;})||maps[0]) : maps[0];
   if(!cm || !cm.continent) return '';
   var countries = Array.isArray(cm.countries) ? cm.countries : [];
   if(!countries.length) return '';
@@ -4879,7 +4896,6 @@ function _cmRender(id, cfg){
         label.text(c.name ? (c.name + (c.info?(' — '+c.info):'')) : label.text());
       },
       onRegionClick: function(ev, code){
-        console.log('[Carte pays diag] clic région code =', JSON.stringify(code), '| trouvé dans byCode ?', !!byCode[(code||'').toLowerCase()]);
         var c = byCode[(code||'').toLowerCase()];
         if(!c){ ev.preventDefault(); return; }
         // Masquer le tooltip avant de naviguer (sinon il reste affiché)
@@ -4902,13 +4918,6 @@ function _cmRender(id, cfg){
     }catch(e){ _lastErr=e; }
   }
   if(!_ok){ _cmFail(id,'Carte indisponible'); console.warn('[Carte pays] aucun nom de carte valide parmi', _tryNames, _lastErr); return; }
-  // DIAGNOSTIC : lister les vrais identifiants de régions de la carte SVG
-  try{
-    var _ids=[];
-    document.querySelectorAll('#'+id+' svg [id]').forEach(function(el){ var _i=el.getAttribute('id'); if(_i && _i.length<=8) _ids.push(_i); });
-    console.log('[Carte pays diag] codes attendus (saisis) :', selectedRegions);
-    console.log('[Carte pays diag] identifiants réels dans la carte SVG :', _ids.slice(0,60));
-  }catch(_){}
   try{
     selectedRegions.forEach(function(code){
       try{ $('#'+id+' svg [id$="_'+code+'"], #'+id+' svg path[data-code="'+code+'"]').css('fill', colors[code]); }catch(_){}
@@ -5143,7 +5152,7 @@ function _bpRenderSection(sec, event, ctx){
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
-      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter };
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId };
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge du titre de section : si le module a un titre personnalisé dans le builder,
       // on remplace le premier titre rendu (h2 de section, ou label de carte) par celui-ci.
