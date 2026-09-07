@@ -4492,7 +4492,7 @@ function _bpWeightOpts(cur){
 // Champs de contenu spécifiques par module (essentiels en étape 2 ; détail complet en étape 3)
 function _bpPhaseFilterField(s){
   // Sélecteur de phase pour les modules filtrés par phase (live, citations, programme, etapes, itinerary, videos, interviews, essential)
-  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential'];
+  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential','hero'];
   if(FILTERABLE.indexOf(s.type)<0) return '';
   const ev=_bpCurrentEv();
   const phases=Array.isArray(ev.phases)?ev.phases:[];
@@ -4509,9 +4509,11 @@ function _bpContentFieldsHtml(s){
   const _phaseFld=_bpPhaseFilterField(s);
   switch(s.type){
     case 'hero':
-      return '<div class="bpe-fld"><label>Titre</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
-        +'<div class="bpe-fld"><label>Sous-titre</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)"></div>'
-        +'<div class="bpe-fld"><label>Image de fond (URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-heroimg" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-heroimg')+mkUploadBtn('bpct-heroimg')+'</div></div>';
+      return _phaseFld
+        +'<div class="bpe-hint" style="padding:2px 0 8px">Le bandeau reprend le hero de la phase choisie ci-dessus (titre, image, bandeau…). Les champs ci-dessous ne servent que si vous voulez un bandeau personnalisé indépendant des phases.</div>'
+        +'<div class="bpe-fld"><label>Titre (optionnel, surcharge)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
+        +'<div class="bpe-fld"><label>Sous-titre (optionnel)</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)"></div>'
+        +'<div class="bpe-fld"><label>Image de fond (URL, optionnel)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-heroimg" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-heroimg')+mkUploadBtn('bpct-heroimg')+'</div></div>';
     case 'text':
       return '<div class="bpe-fld"><label>Titre (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
         +'<div class="bpe-fld"><label>Texte</label>'+_bpRte('bpct-text', c.text)+'</div>'
