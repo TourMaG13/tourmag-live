@@ -3455,12 +3455,12 @@ function renderExpedition(data){
     return o + `</section>`;
   };
 
-  _b._vids = function(opts){
+  _b.videos = function(opts){
     const _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : videos;
-    if(mod._vids===false || !_vids || !_vids.length) return '';
+    if(mod.videos===false || !_vids || !_vids.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
-    let o = `<section class="exp-_vids">`;
-    if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-_vids"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
+    let o = `<section class="exp-videos">`;
+    if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-videos"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
       let out='';
