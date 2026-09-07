@@ -924,8 +924,8 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 /* Main layout — zone-based */
 .exp-dash{max-width:1200px;margin:0 auto;padding:0 32px;box-sizing:border-box}
 @media(max-width:768px){.exp-dash{padding:0 16px}}
-/* Les sections qui gèrent déjà leur propre largeur ne doivent pas être doublement contraintes */
-.exp-dash .exp-layout,.exp-dash .exp-essential,.exp-dash .exp-mapsec{max-width:none;padding-left:0;padding-right:0}
+/* Les sections qui gèrent déjà leur propre largeur/padding ne doivent pas être doublement contraintes */
+.exp-dash .exp-layout,.exp-dash .exp-essential,.exp-dash .exp-mapsec,.exp-dash .exp-gallery,.exp-dash .exp-videos,.exp-dash .exp-articles,.exp-dash .exp-verbatims,.exp-dash .exp-interviews,.exp-dash .exp-sponsors,.exp-dash .exp-counters,.exp-dash .exp-programme,.exp-dash .contact-block,.exp-dash .qa-exp,.exp-dash .quiz-exp{max-width:none;padding-left:0;padding-right:0;margin-left:0;margin-right:0}
 .exp-layout{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
 .exp-layout-solo{grid-template-columns:1fr}
 .exp-main-col{}
