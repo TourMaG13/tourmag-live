@@ -3452,11 +3452,12 @@ function renderExpedition(data){
     return o + `</section>`;
   };
 
-  _b.videos = function(){
-    if(mod.videos===false || !videos || !videos.length) return '';
+  _b._vids = function(opts){
+    const _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : _vids;
+    if(mod._vids===false || !_vids || !_vids.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
-    let o = `<section class="exp-videos">`;
-    if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-videos"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
+    let o = `<section class="exp-_vids">`;
+    if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-_vids"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
       let out='';
@@ -3466,7 +3467,7 @@ function renderExpedition(data){
     }
     var _vc=0;
     vSections.forEach(sec=>{
-      const sv=videos.filter(v=>v.section===sec.id); const orph=sec.id==='default'?videos.filter(v=>!v.section||!vSections.find(s=>s.id===v.section)):[];
+      const sv=_vids.filter(v=>v.section===sec.id); const orph=sec.id==='default'?_vids.filter(v=>!v.section||!vSections.find(s=>s.id===v.section)):[];
       const all=[...sv,...orph.filter(v=>!sv.find(s=>s.id===v.id))].sort((a,b)=>(a.order||0)-(b.order||0)); if(!all.length) return;
       if(sec.display==='carousel'){
         const cid='exp-vid-car-'+(_vc++);
@@ -3480,9 +3481,14 @@ function renderExpedition(data){
     return o+`</section>`;
   };
 
-  _b.gallery = function(){
+  _b.gallery = function(opts){
     const _rawGp=event.gallery||[];
-    const gp=activePhase ? _rawGp.filter(p=>!p.phase||p.phase===activePhase) : _rawGp;
+    let gp;
+    if(opts && opts.phaseFilter){
+      gp = opts.phaseFilter==='all' ? _rawGp : _rawGp.filter(p=>!p.phase||p.phase===opts.phaseFilter);
+    } else {
+      gp = activePhase ? _rawGp.filter(p=>!p.phase||p.phase===activePhase) : _rawGp;
+    }
     if(mod.gallery===false || !gp.length) return '';
     const GALLERY_VIS = 9;
     let o=`<section class="exp-gallery">`;
@@ -5076,6 +5082,7 @@ function _bpRenderSection(sec, event, ctx){
     articles:'articles', programme:'programme', journalists:'journalists',
     sponsors:'sponsors', brandnews:'brandnews', contact:'contact',
     product:'product', countrymap:'countrymap', gallery:'gallery',
+    gallerylive:'gallery',
     // Modules expédition (rendus par _b.* quand la page est en mode expédition)
     etapes:'etapes', itinerary:'itinerary', essential:'essential', reporters:'reporters'
   };
