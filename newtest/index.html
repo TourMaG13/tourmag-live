@@ -3004,6 +3004,21 @@ function renderExpedition(data){
   const interviews = _pf(_rawItw);
   const essential = _pf(_rawEss);
   const programme = _pf(_rawProg);
+  // Filtrage paramétrable pour le builder : opts.phaseFilter = 'all' | <id phase> | absent
+  function _pfOpt(raw, opts){
+    if(opts && opts.phaseFilter){
+      if(opts.phaseFilter==='all') return raw||[];
+      return (raw||[]).filter(item => !item.phase || item.phase === opts.phaseFilter);
+    }
+    return _pf(raw);
+  }
+  function _etapesFor(opts){
+    if(opts && opts.phaseFilter){
+      if(opts.phaseFilter==='all') return sortedEtapes;
+      return sortedEtapes.filter(et => !et.phase || et.phase === opts.phaseFilter);
+    }
+    return filteredEtapes;
+  }
 
   // Apply expedition mode to body
   document.body.classList.add('mode-expedition');
@@ -3259,8 +3274,9 @@ function renderExpedition(data){
     return o + `</div></section>`;
   };
 
-  _b.etapes = function(){
-    if(!filteredEtapes.length || mod.etapes===false) return '';
+  _b.etapes = function(opts){
+    const _fe = _etapesFor(opts);
+    if(!_fe.length || mod.etapes===false) return '';
     const _mt = (_activePhaseObj && _activePhaseObj.mapTitle) || exp.mapTitle || 'La route, en direct';
     const _ms = (_activePhaseObj && _activePhaseObj.mapSubtitle) || exp.mapSubtitle || "Suivez l'expédition étape par étape. Le point orange, c'est ici et maintenant.";
     const _mn = (_activePhaseObj && _activePhaseObj.mapNote) || exp.mapNote || '';
@@ -3303,9 +3319,11 @@ function renderExpedition(data){
 
   _b.live = function(opts){
     if(mod.live===false) return '';
+    // Base : entrées filtrées par phase choisie (ou phase active par défaut)
+    var _base = _pfOpt(_rawLive, opts);
+    var _pub = _base.filter(_isPublished);
     // Filtrage par canal si demandé par un module builder
-    var _pub = pubLive;
-    if(opts && opts.channel){ _pub = (live||[]).filter(function(e){ return (e.channel||'main')===opts.channel; }).filter(_isPublished); }
+    if(opts && opts.channel){ _pub = _base.filter(function(e){ return (e.channel||'main')===opts.channel; }).filter(_isPublished); }
     let o = '';
     if(event.liveShowTitle!==false){
       o += `<div class="exp-section-head exp-sec-live"><h2>${event.liveTitle||'Fil de route'}</h2><div class="rule"></div></div>`;
@@ -3330,10 +3348,10 @@ function renderExpedition(data){
         } catch(e){ return ''; }
       }
       o += `<div class="exp-feed">`;
-      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, i===0, _lineClamp); });
+      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, _fe, jrPhotoMap, i===0, _lineClamp); });
       if(extraEntries.length){
         o += `<div class="exp-expand" id="exp-feed-expand">`;
-        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, false, _lineClamp); });
+        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, _fe, jrPhotoMap, false, _lineClamp); });
         o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length},'▴ Réduire','▾ Voir les ${extraEntries.length} entrées précédentes')">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
       }
       o += `</div>`;
@@ -3362,16 +3380,17 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.itinerary = function(){
-    if(mod.etapes===false || !filteredEtapes.length) return '';
+  _b.itinerary = function(opts){
+    const _fe = _etapesFor(opts);
+    if(mod.etapes===false || !_fe.length) return '';
     let o = '';
     const EXP_ITIN_VIS = 5;
-    let nIdx = filteredEtapes.findIndex(et => et.status === 'now');
-    if(nIdx < 0) nIdx = filteredEtapes.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
+    let nIdx = _fe.findIndex(et => et.status === 'now');
+    if(nIdx < 0) nIdx = _fe.reduce((last, et, i) => et.status === 'done' ? i : last, -1);
     if(nIdx < 0) nIdx = 0;
-    const wS = Math.max(0, Math.min(nIdx - 2, filteredEtapes.length - EXP_ITIN_VIS));
-    const wE = Math.min(filteredEtapes.length, wS + EXP_ITIN_VIS);
-    const before = filteredEtapes.slice(0, wS), visible = filteredEtapes.slice(wS, wE), after = filteredEtapes.slice(wE);
+    const wS = Math.max(0, Math.min(nIdx - 2, _fe.length - EXP_ITIN_VIS));
+    const wE = Math.min(_fe.length, wS + EXP_ITIN_VIS);
+    const before = _fe.slice(0, wS), visible = _fe.slice(wS, wE), after = _fe.slice(wE);
     function mkEtapeLi(et){
       const isRoute = et.type==='route' && et.nameEnd;
       const nm = isRoute ? `${et.name} <span class="exp-route-arrow">→</span> ${et.nameEnd}` : et.name;
@@ -3386,11 +3405,12 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.programme = function(){
-    if(mod.programme===false || !programme || !programme.length) return '';
+  _b.programme = function(opts){
+    const _prog = _pfOpt(_rawProg, opts);
+    if(mod.programme===false || !_prog || !_prog.length) return '';
     const storedOrder=event.programmeDayOrder||[];
     const grouped={};const seenDays=new Set();const allDays=[];
-    programme.forEach(p=>{const d=p.day||'';if(!grouped[d])grouped[d]=[];grouped[d].push(p);if(d&&!seenDays.has(d)){seenDays.add(d);allDays.push(d);}});
+    _prog.forEach(p=>{const d=p.day||'';if(!grouped[d])grouped[d]=[];grouped[d].push(p);if(d&&!seenDays.has(d)){seenDays.add(d);allDays.push(d);}});
     const dayOrder=[...storedOrder.filter(d=>seenDays.has(d))];
     allDays.forEach(d=>{if(!dayOrder.includes(d))dayOrder.push(d);});
     if(grouped[''])dayOrder.push('');
@@ -3411,11 +3431,12 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.citations = function(){
-    if(mod.citations===false || !pubCitations.length) return '';
+  _b.citations = function(opts){
+    const _pubCit = _pfOpt(_rawCit, opts).filter(_isPublished);
+    if(mod.citations===false || !_pubCit.length) return '';
     const CIT_VIS = event.citVisibleCount || 6;
-    const visible = pubCitations.slice(0, CIT_VIS);
-    const extra = pubCitations.slice(CIT_VIS);
+    const visible = _pubCit.slice(0, CIT_VIS);
+    const extra = _pubCit.slice(CIT_VIS);
     let o = `<section class="exp-verbatims">`;
     if(event.citationsShowTitle!==false) o += `<div class="exp-section-head exp-sec-citations"><h2>${event.citationsTitle||'Verbatims'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.citationsSubtitle||'Paroles recueillies sur le terrain'}</p>`;
     o += `<div class="exp-verbatim-grid">`;
@@ -3756,10 +3777,10 @@ function renderExpedition(data){
     if(typeof _bpActivateFx==='function') _bpActivateFx();
     // Si la page-builder contient une carte (module "etapes"), on initialise Leaflet
     // exactement comme dans le flux expédition normal (init JS post-rendu).
-    var _hasMap = (_bp.sections||[]).some(function(s){ return s.type==='etapes'; });
-    if(_hasMap){
-      // L'init a besoin que le conteneur soit dans le DOM et dimensionné : on diffère d'un tick.
-      setTimeout(function(){ try{ _initExpMap(filteredEtapes, event, mod); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
+    var _mapSec = (_bp.sections||[]).filter(function(s){ return s.type==='etapes'; })[0];
+    if(_mapSec){
+      var _mapEtapes = _etapesFor({phaseFilter: (_mapSec.content&&_mapSec.content.phaseFilter)});
+      setTimeout(function(){ try{ _initExpMap(_mapEtapes, event, mod); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
     }
     if(typeof window._tmgResize==='function') window._tmgResize();
     _bpHandledExp = true;
@@ -5007,7 +5028,7 @@ function _bpRenderSection(sec, event, ctx){
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
-      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId };
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter };
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
     }
     catch(e){ inner=''; console.warn('[builder] renderer "'+type+'" a échoué', e); }
