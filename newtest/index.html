@@ -3092,6 +3092,7 @@ function renderExpedition(data){
   </header>`;
 
   // ===== HERO =====
+  const _heroSegStart = h.length;
   const _expUseBanner = !!_heroBannerImage;
   const hasHeroImage = !!_heroImage;
   const _expHeroH = _bannerH || event.hero_height;
@@ -3164,6 +3165,10 @@ function renderExpedition(data){
 
   // ===== BLOCK-BASED RENDERING =====
   const _b = {};
+  // Le hero expédition est construit inline ci-dessus ; on capture son HTML pour
+  // que le moteur page-builder puisse le rendre comme un module "hero".
+  const _heroSegHtml = h.slice(_heroSegStart);
+  _b.hero = function(){ return _heroSegHtml || ''; };
 
   _b.phaseTabs = function(activeBuilderPage){
     // Onglets « pages libres » masqués si le module est désactivé
@@ -5166,64 +5171,62 @@ function _bpRenderContentModule(sec, event, ctx){
 function _renderBuilderPage(page, event, ctx){
   const sections = Array.isArray(page.sections) ? page.sections : [];
   const zoneOf = s => (s.zone || (s.appearance&&s.appearance.zone) || 'full');
-  // Classes de colonnes selon le mode : le mode expédition a ses propres classes
-  // (.exp-layout / .exp-main-col / .exp-side-col) avec un style dédié ; le classique
-  // utilise .layout / .main-col / .side-col.
   const _isExp = (page.mode==='expedition') || (event && event.mode==='expedition');
   const CL = _isExp
     ? { dash:'exp-dash', layout:'exp-layout', solo:'exp-layout exp-layout-solo', main:'exp-main-col', side:'exp-side-col' }
     : { dash:'dash', layout:'layout', solo:'layout', main:'main-col', side:'side-col' };
   let h='';
 
+  const mainSecs = sections.filter(s=>zoneOf(s)==='main');
   const sideSecs = sections.filter(s=>zoneOf(s)==='side');
-  let sideRendered=false, inDash=false, mainBuf=[];
+  const hasTwoCol = mainSecs.length && sideSecs.length;
 
-  function renderMainBuf(){
-    if(!mainBuf.length){
-      if(!sideRendered && sideSecs.length && inDash){
-        h+='<div class="'+CL.layout+'"><div class="'+CL.main+'"></div><div class="'+CL.side+'">';
-        sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-        h+='</div></div>';
-        sideRendered=true;
-      }
-      return;
-    }
-    if(!sideRendered && sideSecs.length){
-      h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
-      mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-      h+='</div><div class="'+CL.side+'">';
-      sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-      h+='</div></div>';
-      sideRendered=true;
-    } else {
-      // Sections principales sans sidebar : en expédition on enveloppe en solo pour le confinement
-      if(_isExp){
-        h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">';
-        mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-        h+='</div></div>';
-      } else {
-        mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-      }
-    }
-    mainBuf=[];
+  // Position d'insertion du groupe 2-colonnes : à l'emplacement du 1er bloc main
+  // (ou du 1er bloc side si aucun main). Les blocs full/max restent seuls, dans l'ordre.
+  let twoColInserted = false;
+  const firstMainIdx = sections.findIndex(s=>{ const z=zoneOf(s); return z==='main' || z==='side'; });
+
+  function renderTwoCol(){
+    // Groupe main + side côte à côte
+    h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
+    mainSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+    h+='</div><div class="'+CL.side+'">';
+    sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+    h+='</div></div>';
   }
-  function closeDash(){ renderMainBuf(); if(inDash){ h+='</div>'; inDash=false; } }
+  function renderMainSolo(s){
+    if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
+    else { h+=_bpRenderSection(s,event,ctx); }
+  }
 
-  sections.forEach(s=>{
+  let inDash=false;
+  function openDash(){ if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; } }
+  function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
+
+  sections.forEach((s,idx)=>{
     const z=zoneOf(s);
-    if(z==='side') return; // rendus dans la sidebar
-    if(z==='max'){
-      closeDash();
+    // Le groupe 2-colonnes s'insère à la position du 1er bloc main/side
+    if((z==='main'||z==='side')){
+      if(hasTwoCol){
+        if(!twoColInserted && idx===firstMainIdx){ openDash(); renderTwoCol(); twoColInserted=true; }
+        // les autres main/side sont déjà inclus dans renderTwoCol → on saute
+        return;
+      } else {
+        // Pas de vraie 2-colonnes (que des main, ou que des side) → chacun pleine largeur
+        openDash();
+        if(z==='side'){ // side sans main → on le rend simplement dans une colonne
+          if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
+          else h+=_bpRenderSection(s,event,ctx);
+        } else {
+          renderMainSolo(s);
+        }
+        return;
+      }
+    }
+    if(z==='max'){ closeDash(); h+=_bpRenderSection(s,event,ctx); }
+    else { // full
+      openDash();
       h+=_bpRenderSection(s,event,ctx);
-    } else if(z==='full'){
-      if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; }
-      renderMainBuf();
-      // En expédition, une section pleine largeur est enveloppée en solo pour garder le cadre
-      if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
-      else { h+=_bpRenderSection(s,event,ctx); }
-    } else { // main
-      if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; }
-      mainBuf.push(s);
     }
   });
   closeDash();
