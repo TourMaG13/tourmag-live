@@ -10438,20 +10438,20 @@ function _cmCountryRow(c,i,tabList){
   c=c||{};
   var tabOpts = tabList.map(function(it){ return '<option value="'+it.tok+'"'+((c.tab||'')===it.tok?' selected':'')+'>'+_escAdm(it.obj.name||'')+'</option>'; }).join('');
   return `<div class="cm-country" data-cmi="${i}">
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:110px"><label class="form-label">Code pays</label><input class="form-input" data-cmf="code" value="${_escAdm(c.code||'')}" placeholder="fr" style="text-transform:lowercase"></div>
-      <div class="form-row"><label class="form-label">Nom affiché</label><input class="form-input" data-cmf="name" value="${_escAdm(c.name||'')}" placeholder="France"></div>
-      <div class="form-row" style="max-width:110px"><label class="form-label">Couleur</label><input type="color" class="form-input" data-cmf="color" value="${c.color||'#0C6CA1'}" style="width:50px;height:38px;padding:2px"></div>
-      <button class="btn btn-danger btn-xs" onclick="_cmDelCountry(${i})" style="margin-bottom:2px">✕</button>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div class="form-row" style="max-width:110px;margin:0"><label class="form-label">Code pays</label><input class="form-input" data-cmf="code" value="${_escAdm(c.code||'')}" placeholder="fr" style="text-transform:lowercase"></div>
+      <div class="form-row" style="flex:1;min-width:160px;margin:0"><label class="form-label">Nom affiché</label><input class="form-input" data-cmf="name" value="${_escAdm(c.name||'')}" placeholder="France"></div>
+      <div class="form-row" style="max-width:80px;margin:0"><label class="form-label">Couleur</label><input type="color" class="form-input" data-cmf="color" value="${c.color||'#0C6CA1'}" style="width:50px;height:38px;padding:2px"></div>
+      <button class="btn btn-danger btn-xs" onclick="_cmDelCountry(${i})" title="Supprimer ce pays" style="flex:0 0 auto;width:38px;height:38px;padding:0;display:inline-flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div class="form-row"><label class="form-label">Info au survol (optionnel)</label><input class="form-input" data-cmf="info" value="${_escAdm(c.info||'')}" placeholder="Ex : 3 séjours disponibles"></div>
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:180px"><label class="form-label">Au clic</label><select class="form-input" data-cmf="dest" onchange="_cmToggleDest(${i},this.value)">
+    <div class="form-row" style="margin-top:10px"><label class="form-label">Info au survol (optionnel)</label><input class="form-input" data-cmf="info" value="${_escAdm(c.info||'')}" placeholder="Ex : 3 séjours disponibles"></div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:4px">
+      <div class="form-row" style="max-width:180px;margin:0"><label class="form-label">Au clic</label><select class="form-input" data-cmf="dest" onchange="_cmToggleDest(${i},this.value)">
         <option value="tab"${(c.dest||'tab')==='tab'?' selected':''}>Ouvrir un onglet</option>
         <option value="url"${c.dest==='url'?' selected':''}>Ouvrir un lien externe</option>
       </select></div>
-      <div class="form-row cm-dest-tab" data-cmi="${i}" style="${(c.dest==='url')?'display:none':''}"><label class="form-label">Onglet cible</label><select class="form-input" data-cmf="tab"><option value="">— Choisir —</option>${tabOpts}</select></div>
-      <div class="form-row cm-dest-url" data-cmi="${i}" style="flex:1;${(c.dest==='url')?'':'display:none'}"><label class="form-label">Lien (URL)</label><input class="form-input" data-cmf="url" value="${_escAdm(c.url||'')}" placeholder="https://…"></div>
+      <div class="form-row cm-dest-tab" data-cmi="${i}" style="flex:1;min-width:200px;margin:0;${(c.dest==='url')?'display:none':''}"><label class="form-label">Onglet cible</label><select class="form-input" data-cmf="tab"><option value="">— Choisir —</option>${tabOpts}</select></div>
+      <div class="form-row cm-dest-url" data-cmi="${i}" style="flex:1;min-width:200px;margin:0;${(c.dest==='url')?'':'display:none'}"><label class="form-label">Lien (URL)</label><input class="form-input" data-cmf="url" value="${_escAdm(c.url||'')}" placeholder="https://…"></div>
     </div>
   </div>`;
 }
