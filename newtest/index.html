@@ -922,7 +922,10 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 @media(max-width:768px){.exp-contact{padding:0 0 32px;overflow:hidden;box-sizing:border-box;max-width:100%}.exp-contact .exp-section-head{overflow:hidden;min-width:0;max-width:100%}.exp-contact .exp-section-head h2{white-space:normal!important;font-size:20px;line-height:1.3;min-width:0;flex-shrink:1;word-break:break-word}.exp-contact-card{flex-direction:column;text-align:center;padding:20px 14px;gap:14px;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box}.exp-contact-body{width:100%;max-width:100%;min-width:0;overflow:hidden;box-sizing:border-box}.exp-contact-actions{justify-content:center;width:100%;flex-direction:column;align-items:stretch;gap:8px;box-sizing:border-box}.exp-contact-btn{max-width:100%;overflow:hidden;justify-content:center;padding:10px 14px;font-size:10.5px;box-sizing:border-box}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}.exp-contact-name{font-size:18px;word-break:break-word}.exp-contact-photo,.exp-contact-photo-ph{width:64px;height:64px}}
 
 /* Main layout — zone-based */
-.exp-dash{}
+.exp-dash{max-width:1200px;margin:0 auto;padding:0 32px;box-sizing:border-box}
+@media(max-width:768px){.exp-dash{padding:0 16px}}
+/* Les sections qui gèrent déjà leur propre largeur ne doivent pas être doublement contraintes */
+.exp-dash .exp-layout,.exp-dash .exp-essential,.exp-dash .exp-mapsec{max-width:none;padding-left:0;padding-right:0}
 .exp-layout{display:grid;grid-template-columns:1fr 340px;gap:56px;max-width:1200px;margin:0 auto;padding:64px 32px}
 .exp-layout-solo{grid-template-columns:1fr}
 .exp-main-col{}
@@ -5248,73 +5251,69 @@ function _renderBuilderPage(page, event, ctx){
     : { dash:'dash', layout:'layout', solo:'layout', main:'main-col', side:'side-col' };
   let h='';
 
-  const mainSecs = sections.filter(s=>zoneOf(s)==='main');
+  let inDash=false;
+  function openDash(){ if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; } }
+  function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
+  function renderSolo(s){ openDash(); h+=_bpRenderSection(s,event,ctx); }
+
+  // Onglets : insérés après le groupe d'en-tête (hero + chiffres clés), sinon en tête.
+  const _tabsHtml = ctx.tabsHtml || '';
+  let _tabsInserted = false;
+  let _headEndIdx = -1;
+  for(let i=0;i<sections.length;i++){
+    if(sections[i].type==='hero' || sections[i].type==='kpis') _headEndIdx=i; else break;
+  }
+  if(_tabsHtml && _headEndIdx<0){ h += _tabsHtml; _tabsInserted = true; }
+
+  // On repère la seule zone 2-colonnes : le bloc "main" désigné par l'ancre (ou le 1er
+  // bloc main), avec TOUS les blocs "side" de la page rendus à sa droite. Les autres
+  // blocs "main" (s'il y en a) sont traités comme pleine largeur, à leur place.
   const sideSecs = sections.filter(s=>zoneOf(s)==='side');
+  const mainSecs = sections.filter(s=>zoneOf(s)==='main');
   const hasTwoCol = mainSecs.length && sideSecs.length;
+  // Le bloc principal de la zone 2-col : l'ancre si valide, sinon le 1er main
+  let anchorMain = null;
+  if(hasTwoCol){
+    anchorMain = mainSecs.find(s=>s.id===page.sidebarAnchor) || mainSecs[0];
+  }
 
-  // Ancre : id du bloc "main" à partir duquel la zone 2-colonnes démarre.
-  // Par défaut : le 1er bloc main. Les blocs main AVANT l'ancre sont pleine largeur.
-  const anchorId = page.sidebarAnchor || (mainSecs[0] && mainSecs[0].id) || null;
-
-  let twoColInserted = false;
-
-  function renderTwoCol(fromAnchorMains){
+  function renderTwoCol(mainBlock){
+    openDash();
     h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
-    fromAnchorMains.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+    if(mainBlock) h+=_bpRenderSection(mainBlock,event,ctx);
     h+='</div><div class="'+CL.side+'">';
     sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
     h+='</div></div>';
   }
-  function renderMainSolo(s){
-    if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
-    else { h+=_bpRenderSection(s,event,ctx); }
-  }
 
-  let inDash=false;
-  function openDash(){ if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; } }
-  function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
-
-  // Onglets de navigation : insérés après le groupe d'en-tête (hero + chiffres clés),
-  // comme le dashboard normal. Sinon en tête si pas d'en-tête.
-  const _tabsHtml = ctx.tabsHtml || '';
-  let _tabsInserted = false;
-  // Déterminer l'index du dernier bloc d'en-tête consécutif (hero/kpis) depuis le début
-  let _headEndIdx = -1;
-  for(let i=0;i<sections.length;i++){
-    if(sections[i].type==='hero' || sections[i].type==='kpis'){ _headEndIdx=i; }
-    else break;
-  }
-  if(_tabsHtml && _headEndIdx<0){ h += _tabsHtml; _tabsInserted = true; } // pas d'en-tête → onglets en tête
-
-  const anchorIdx = sections.findIndex(s=>s.id===anchorId && zoneOf(s)==='main');
-  const mainsFromAnchor = anchorIdx>=0 ? sections.filter((s,i)=> zoneOf(s)==='main' && i>=anchorIdx) : mainSecs;
-
+  // Parcours dans l'ORDRE EXACT — c'est la clé pour préserver la disposition.
   sections.forEach((s,idx)=>{
     const z=zoneOf(s);
-    if(z==='side') return; // rendus dans la 2-col
+    // insérer les onglets juste après le groupe d'en-tête
+    const _emitTabsIfDue = ()=>{ if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted=true; } };
+
+    if(z==='side'){
+      // Les side sont rendus DANS la zone 2-col (à côté de l'ancre). On les saute ici,
+      // sauf s'il n'y a pas de bloc main du tout → on les rend alors pleine largeur.
+      if(!hasTwoCol){ renderSolo(s); _emitTabsIfDue(); }
+      return;
+    }
     if(z==='main'){
-      if(hasTwoCol){
-        if(idx < anchorIdx){
-          openDash(); renderMainSolo(s);
-        } else if(idx===anchorIdx || (anchorIdx<0 && !twoColInserted)){
-          if(!twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
-        }
-        // insérer les onglets si on a dépassé l'en-tête
-        if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted=true; }
-        return;
+      if(hasTwoCol && s===anchorMain){
+        renderTwoCol(s);   // le bloc ancre + toute la sidebar, à la position de l'ancre
       } else {
-        openDash(); renderMainSolo(s);
-        if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted=true; }
-        return;
+        renderSolo(s);     // les autres blocs "main" → pleine largeur, à leur place
       }
+      _emitTabsIfDue();
+      return;
     }
     if(z==='max'){ closeDash(); h+=_bpRenderSection(s,event,ctx); }
-    else { openDash(); h+=_bpRenderSection(s,event,ctx); } // full
-    // Après le groupe d'en-tête (hero/kpis), insérer les onglets une seule fois
-    if(!_tabsInserted && _tabsHtml && idx>=_headEndIdx){ closeDash(); h += _tabsHtml; _tabsInserted = true; }
+    else { renderSolo(s); } // full
+    _emitTabsIfDue();
   });
-  if(hasTwoCol && !twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
-  if(!_tabsInserted && _tabsHtml){ closeDash(); h += _tabsHtml; _tabsInserted=true; } // sécurité
+
+  // Sécurités
+  if(!_tabsInserted && _tabsHtml){ closeDash(); h += _tabsHtml; }
   closeDash();
 
   h += '<div class="'+CL.dash+'"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
