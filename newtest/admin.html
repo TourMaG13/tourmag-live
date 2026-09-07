@@ -4049,6 +4049,7 @@ var BP_CATALOG = [
     {type:'quiz',       name:'Quiz / Sondage',     icon:'ti-quiz',       nature:'live', mode:'both'},
     {type:'questions',  name:'Questions du public',icon:'ti-qa',         nature:'live', mode:'both'},
     {type:'videos',     name:'Vidéos (module)',    icon:'ti-videos',     nature:'live', mode:'both'},
+    {type:'gallerylive',name:'Galerie (module live)',icon:'ti-gallery',  nature:'live', mode:'both'},
     {type:'articles',   name:'Articles liés',      icon:'ti-articles',   nature:'live', mode:'both'},
   ]},
   {group:'Modules riches', items:[
@@ -4101,6 +4102,7 @@ function _bpDefaultSection(type){
   if(type==='kpis'||type==='citations'||type==='programme'||type==='sponsors'||type==='contact'||type==='questions'||type==='quiz'||type==='interviews'||type==='videos'||type==='articles'||type==='journalists'||type==='countrymap'||type==='product'||type==='essential'||type==='brandnews'){ s.zone='full'; }
   if(type==='itinerary'){ s.zone='side'; }
   if(type==='etapes'){ s.zone='full'; }
+  if(type==='gallerylive'){ s.zone='full'; }
   return s;
 }
 
@@ -4312,6 +4314,7 @@ function _bpSectionPreview(s){
       let cells='';for(let k=0;k<n;k++)cells+='<div class="bpe-ph" style="height:60px"></div>';
       return '<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:6px">'+cells+'</div>';
     }
+    case 'gallerylive': return '<div class="bpe-ph" style="height:90px">🖼 Galerie (module live — source partagée)</div>';
     case 'video': return '<div class="bpe-ph" style="height:130px">▶ Vidéo</div>';
     case 'buttons': return '<span style="display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:600;padding:8px 18px;border-radius:7px">'+_escAdm((c.buttons&&c.buttons[0]&&c.buttons[0].label)||'Bouton')+'</span>';
     case 'separator': return '<div style="border-top:'+(c.line?'1px solid var(--border)':'1px dashed var(--border)')+';margin:6px 0"></div>';
@@ -4492,7 +4495,7 @@ function _bpWeightOpts(cur){
 // Champs de contenu spécifiques par module (essentiels en étape 2 ; détail complet en étape 3)
 function _bpPhaseFilterField(s){
   // Sélecteur de phase pour les modules filtrés par phase (live, citations, programme, etapes, itinerary, videos, interviews, essential)
-  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential','hero','sponsors','kpis'];
+  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential','hero','sponsors','kpis','gallerylive'];
   if(FILTERABLE.indexOf(s.type)<0) return '';
   const ev=_bpCurrentEv();
   const phases=Array.isArray(ev.phases)?ev.phases:[];
@@ -4549,8 +4552,8 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Nombre d\'entrées affichées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>';
     }
     case 'programme': case 'etapes': case 'itinerary': case 'citations':
-    case 'videos': case 'interviews': case 'essential': case 'sponsors': case 'kpis': {
-      const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline',sponsors:'Partenaires',kpis:'Chiffres clés'};
+    case 'videos': case 'interviews': case 'essential': case 'sponsors': case 'kpis': case 'gallerylive': {
+      const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline',sponsors:'Partenaires',kpis:'Chiffres clés',gallerylive:'Galerie (module live)'};
       var _titleFld = (s.type==='kpis'||s.type==='etapes'||s.type==='itinerary') ? '' :
         '<div class="bpe-fld"><label>Titre de section (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Laisser vide = titre par défaut"></div>';
       return _phaseFld + _titleFld
