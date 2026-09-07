@@ -3007,11 +3007,8 @@ function renderExpedition(data){
   // Filtrage paramétrable pour le builder : opts.phaseFilter = 'all' | <id phase> | absent
   function _pfOpt(raw, opts){
     if(opts && opts.phaseFilter){
-      console.log('[diag-phase] phaseFilter demandé =', JSON.stringify(opts.phaseFilter), '| phases des entrées =', (raw||[]).map(function(x){return x.phase;}));
       if(opts.phaseFilter==='all') return raw||[];
-      var _r=(raw||[]).filter(item => !item.phase || item.phase === opts.phaseFilter);
-      console.log('[diag-phase] → '+_r.length+' entrée(s) retenue(s)');
-      return _r;
+      return (raw||[]).filter(item => !item.phase || item.phase === opts.phaseFilter);
     }
     return _pf(raw);
   }
@@ -3351,10 +3348,10 @@ function renderExpedition(data){
         } catch(e){ return ''; }
       }
       o += `<div class="exp-feed">`;
-      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, _fe, jrPhotoMap, i===0, _lineClamp); });
+      visEntries.forEach((entry,i) => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, i===0, _lineClamp); });
       if(extraEntries.length){
         o += `<div class="exp-expand" id="exp-feed-expand">`;
-        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, _fe, jrPhotoMap, false, _lineClamp); });
+        extraEntries.forEach(entry => { o += dayHeader(entry) + mkExpEntry(entry, filteredEtapes, jrPhotoMap, false, _lineClamp); });
         o += `</div><button class="exp-voir-plus" id="exp-feed-btn" onclick="toggleExpExpand('exp-feed-expand','exp-feed-btn',${extraEntries.length},'▴ Réduire','▾ Voir les ${extraEntries.length} entrées précédentes')">▾ Voir les ${extraEntries.length} entrées précédentes</button>`;
       }
       o += `</div>`;
