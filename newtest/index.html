@@ -4836,22 +4836,36 @@ function _cmRender(id, cfg){
   var colors = {}; selectedRegions.forEach(function(code){ colors[code] = byCode[code].color || cfg.accent; });
   // Détecte le nom de carte réellement enregistré par le fichier jqvmap chargé
   var mapName = cfg.continent;
-  try{
-    var maps = ($.fn.vectorMap && $.fn.vectorMap('getMapObject')) ? null : null; // placeholder
-  }catch(_){}
-  // jqvmap enregistre les cartes sous des noms comme 'europe_en', 'africa_en'… ou parfois sans suffixe.
-  var candidates = [cfg.continent+'_en', cfg.continent, cfg.continent.replace('_','-')+'_en', cfg.continent.replace('_','-')];
-  // On tente d'identifier via l'objet global des cartes si dispo
-  var registered = (window.jQuery && jQuery.fn.vectorMap && jQuery.fn.vectorMap.maps) ? jQuery.fn.vectorMap.maps : null;
+  // jqvmap enregistre les cartes dans jQuery.fn.vmap.maps (selon les versions :
+  // vectorMap.maps ou vmap.maps). Les noms ont souvent un suffixe _en, avec _ ou -.
+  var candidates = [
+    cfg.continent+'_en', cfg.continent,
+    cfg.continent.replace(/_/g,'-')+'_en', cfg.continent.replace(/_/g,'-'),
+    cfg.continent.replace(/_/g,'')+'_en', cfg.continent.replace(/_/g,'')
+  ];
+  // Récupère la liste réelle des cartes enregistrées, quelle que soit la version.
+  var registered = null;
+  try {
+    if(window.jQuery && jQuery.fn){
+      if(jQuery.fn.vmap && jQuery.fn.vmap.maps) registered = jQuery.fn.vmap.maps;
+      else if(jQuery.fn.vectorMap && jQuery.fn.vectorMap.maps) registered = jQuery.fn.vectorMap.maps;
+    }
+  } catch(_){}
   if(registered){
-    for(var i=0;i<candidates.length;i++){ if(registered[candidates[i]]){ mapName=candidates[i]; break; } }
-    if(!registered[mapName]){ var keys=Object.keys(registered); if(keys.length) mapName=keys[keys.length-1]; }
+    var picked=null;
+    for(var i=0;i<candidates.length;i++){ if(registered[candidates[i]]){ picked=candidates[i]; break; } }
+    // Sinon : n'importe quelle carte dont le nom contient le continent (underscore ou tiret)
+    if(!picked){
+      var base=cfg.continent.replace(/[_-]/g,'');
+      var keys=Object.keys(registered);
+      for(var k=0;k<keys.length;k++){ if(keys[k].replace(/[_-]/g,'').indexOf(base)===0){ picked=keys[k]; break; } }
+      if(!picked && keys.length) picked=keys[keys.length-1];
+    }
+    mapName = picked || candidates[0];
   } else {
     mapName = candidates[0];
   }
-  try{
-    $('#'+id).vectorMap({
-      map: mapName,
+  var _mapOpts = {
       backgroundColor: 'transparent',
       borderColor: '#fff', borderWidth: 1,
       color: cfg.inactive,
@@ -4869,7 +4883,21 @@ function _cmRender(id, cfg){
         else if(c.dest==='tab' && c.tab){ _cmGoTab(c.tab); }
       },
       colors: colors
-    });
+  };
+  // On essaie mapName puis tous les candidats jusqu'à ce qu'un fonctionne (le plugin
+  // lève une erreur "Invalid map parameter" quand le nom ne correspond pas au fichier).
+  var _tryNames = [mapName].concat(candidates).filter(function(v,i,a){return a.indexOf(v)===i;});
+  var _ok=false, _lastErr=null;
+  for(var _n=0;_n<_tryNames.length;_n++){
+    try{
+      $('#'+id).empty();
+      _mapOpts.map = _tryNames[_n];
+      $('#'+id).vectorMap(_mapOpts);
+      _ok=true; break;
+    }catch(e){ _lastErr=e; }
+  }
+  if(!_ok){ _cmFail(id,'Carte indisponible'); console.warn('[Carte pays] aucun nom de carte valide parmi', _tryNames, _lastErr); return; }
+  try{
     selectedRegions.forEach(function(code){
       try{ $('#'+id+' svg [id$="_'+code+'"], #'+id+' svg path[data-code="'+code+'"]').css('fill', colors[code]); }catch(_){}
     });
@@ -4877,7 +4905,7 @@ function _cmRender(id, cfg){
     var st=document.createElement('style');
     st.textContent = selectedRegions.map(function(c){return '#'+id+' svg [id$="_'+c+'"]{cursor:pointer}';}).join('');
     document.head.appendChild(st);
-  }catch(e){ _cmFail(id,'Carte indisponible'); console.warn('[Carte pays] init', e); }
+  }catch(e){ console.warn('[Carte pays] post-init', e); }
 }
 // Navigue vers un onglet (phase ou page) : "phase:<id>" ou "page:<id>"
 function _cmGoTab(tok){
