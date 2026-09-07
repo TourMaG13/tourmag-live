@@ -4879,6 +4879,7 @@ function _cmRender(id, cfg){
         label.text(c.name ? (c.name + (c.info?(' — '+c.info):'')) : label.text());
       },
       onRegionClick: function(ev, code){
+        console.log('[Carte pays diag] clic région code =', JSON.stringify(code), '| trouvé dans byCode ?', !!byCode[(code||'').toLowerCase()]);
         var c = byCode[(code||'').toLowerCase()];
         if(!c){ ev.preventDefault(); return; }
         // Masquer le tooltip avant de naviguer (sinon il reste affiché)
@@ -4901,6 +4902,13 @@ function _cmRender(id, cfg){
     }catch(e){ _lastErr=e; }
   }
   if(!_ok){ _cmFail(id,'Carte indisponible'); console.warn('[Carte pays] aucun nom de carte valide parmi', _tryNames, _lastErr); return; }
+  // DIAGNOSTIC : lister les vrais identifiants de régions de la carte SVG
+  try{
+    var _ids=[];
+    document.querySelectorAll('#'+id+' svg [id]').forEach(function(el){ var _i=el.getAttribute('id'); if(_i && _i.length<=8) _ids.push(_i); });
+    console.log('[Carte pays diag] codes attendus (saisis) :', selectedRegions);
+    console.log('[Carte pays diag] identifiants réels dans la carte SVG :', _ids.slice(0,60));
+  }catch(_){}
   try{
     selectedRegions.forEach(function(code){
       try{ $('#'+id+' svg [id$="_'+code+'"], #'+id+' svg path[data-code="'+code+'"]').css('fill', colors[code]); }catch(_){}
