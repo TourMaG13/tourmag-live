@@ -4020,7 +4020,7 @@ function _bpCopyUrl(id){
 }
 function _bpPreview(id){
   const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
-  const url=ghBase+'?event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id)+'&preview=1';
+  const url=ghBase+'?event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
   window.open(url,'_blank');
 }
 
