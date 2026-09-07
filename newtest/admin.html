@@ -4490,8 +4490,23 @@ function _bpWeightOpts(cur){
 }
 
 // Champs de contenu spécifiques par module (essentiels en étape 2 ; détail complet en étape 3)
+function _bpPhaseFilterField(s){
+  // Sélecteur de phase pour les modules filtrés par phase (live, citations, programme, etapes, itinerary, videos, interviews, essential)
+  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential'];
+  if(FILTERABLE.indexOf(s.type)<0) return '';
+  const ev=_bpCurrentEv();
+  const phases=Array.isArray(ev.phases)?ev.phases:[];
+  if(!phases.length) return ''; // pas de phases → rien à filtrer
+  const c=s.content||{};
+  const cur=c.phaseFilter||'active';
+  let opts='<option value="active"'+(cur==='active'?' selected':'')+'>Phase active (par défaut)</option>';
+  opts+='<option value="all"'+(cur==='all'?' selected':'')+'>Toutes les phases</option>';
+  phases.forEach(function(p){ opts+='<option value="'+p.id+'"'+(cur===p.id?' selected':'')+'>'+_escAdm(p.name||'')+'</option>'; });
+  return '<div class="bpe-fld"><label>Contenu à afficher (phase)</label><select onchange="_bpSetCt(\'phaseFilter\',this.value===\'active\'?\'\':this.value)">'+opts+'</select><div class="bpe-hint">Choisissez quelle phase ce module affiche : une phase précise, toutes, ou celle active par défaut.</div></div>';
+}
 function _bpContentFieldsHtml(s){
   const c=s.content||{};
+  const _phaseFld=_bpPhaseFilterField(s);
   switch(s.type){
     case 'hero':
       return '<div class="bpe-fld"><label>Titre</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
@@ -4526,9 +4541,16 @@ function _bpContentFieldsHtml(s){
     case 'live':{
       const ev=_bpCurrentEv();
       const chans=(ev.liveChannels&&ev.liveChannels.length)?ev.liveChannels:[{id:'main',name:'Principal'}];
-      return '<div class="bpe-fld"><label>Titre affiché</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
-        +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live (étape suivante). Par défaut : Principal.</div></div>'
+      return _phaseFld
+        +'<div class="bpe-fld"><label>Titre affiché</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
+        +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live. Par défaut : Principal.</div></div>'
         +'<div class="bpe-fld"><label>Nombre d\'entrées affichées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>';
+    }
+    case 'programme': case 'etapes': case 'itinerary': case 'citations':
+    case 'videos': case 'interviews': case 'essential': {
+      const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline'};
+      return _phaseFld
+        + '<div class="bpe-hint" style="padding:4px 0">Le contenu de « '+(_names[s.type]||s.type)+' » est alimenté dans son onglet dédié à gauche. Utilisez le sélecteur ci-dessus pour choisir quelle phase afficher.</div>';
     }
     case 'product': {
       const ev=_bpCurrentEv();
