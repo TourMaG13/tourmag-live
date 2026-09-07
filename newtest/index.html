@@ -3066,19 +3066,25 @@ function renderExpedition(data){
   });
 
   // Counters: use only KPIs configured in admin
-  const counters = [];
-  const _phaseKpis = (event.kpis||[]).filter(k => !activePhase || !k.phase || k.phase === activePhase);
-  if(_phaseKpis.length) _phaseKpis.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(k=>{
-    if(k.type==='countdown'){
-      const td = k.targetDate || '';
-      if(!td){ return; }
-      const target = new Date(td); target.setHours(0,0,0,0);
-      const diff = Math.ceil((target - _today)/(1000*60*60*24));
-      if(diff > 0) counters.push({value:'J\u2011'+diff, label:k.label||'Avant le départ', isCountdown:true, color:k.color||''});
-    } else {
-      counters.push({value:k.value||'', label:k.label||''});
-    }
-  });
+  // Construit les compteurs KPI pour une phase donnée (réutilisable par le builder).
+  function _buildCounters(phaseId){
+    const out=[];
+    const useActive = (phaseId===undefined);
+    const pid = useActive ? activePhase : (phaseId==='all' ? null : phaseId);
+    const src=(event.kpis||[]).filter(k => !pid || !k.phase || k.phase===pid);
+    if(src.length) src.slice().sort((a,b)=>(a.order||0)-(b.order||0)).forEach(k=>{
+      if(k.type==='countdown'){
+        const td=k.targetDate||''; if(!td) return;
+        const target=new Date(td); target.setHours(0,0,0,0);
+        const diff=Math.ceil((target-_today)/(1000*60*60*24));
+        if(diff>0) out.push({value:'J\u2011'+diff, label:k.label||'Avant le départ', isCountdown:true, color:k.color||''});
+      } else {
+        out.push({value:k.value||'', label:k.label||''});
+      }
+    });
+    return out;
+  }
+  const counters = _buildCounters(); // phase active par défaut
 
   document.documentElement.style.setProperty('--exp-counter-cols', Math.min(counters.length, 4));
 
@@ -3141,10 +3147,11 @@ function renderExpedition(data){
     return t + '</div>' + ((activeContentPage||activeBuilderPage)?'':_mkPhaseTitle(event, activePhase, phases));
   };
 
-  _b.kpis = function(){
-    if(mod.kpis===false || !counters.length) return '';
+  _b.kpis = function(opts){
+    const _c = (opts && opts.phaseFilter) ? _buildCounters(opts.phaseFilter) : counters;
+    if(mod.kpis===false || !_c.length) return '';
     let o = `<section class="exp-counters">`;
-    counters.forEach(c => {
+    _c.forEach(c => {
       const cdCls = c.isCountdown ? ' exp-counter-countdown' : '';
       const cdStyle = (c.isCountdown && c.color) ? ` style="--cd-color:${c.color}"` : '';
       o += `<div class="exp-counter${cdCls}"${cdStyle}><div class="exp-counter-num">${c.value}</div><div class="exp-counter-label">${c.label}</div></div>`;
@@ -3535,9 +3542,13 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.sponsors = function(){
+  _b.sponsors = function(opts){
     let sp=(event.sponsors||[]).slice();
-    if(activePhase && phases.length) sp = sp.filter(s => !s.phase || s.phase === activePhase);
+    if(opts && opts.phaseFilter){
+      if(opts.phaseFilter!=='all') sp = sp.filter(s => !s.phase || s.phase === opts.phaseFilter);
+    } else if(activePhase && phases.length){
+      sp = sp.filter(s => !s.phase || s.phase === activePhase);
+    }
     sp.sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
     let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p><div class="exp-sponsors-grid">`;
@@ -5213,15 +5224,15 @@ function _renderBuilderPage(page, event, ctx){
   const sideSecs = sections.filter(s=>zoneOf(s)==='side');
   const hasTwoCol = mainSecs.length && sideSecs.length;
 
-  // Position d'insertion du groupe 2-colonnes : à l'emplacement du 1er bloc main
-  // (ou du 1er bloc side si aucun main). Les blocs full/max restent seuls, dans l'ordre.
-  let twoColInserted = false;
-  const firstMainIdx = sections.findIndex(s=>{ const z=zoneOf(s); return z==='main' || z==='side'; });
+  // Ancre : id du bloc "main" à partir duquel la zone 2-colonnes démarre.
+  // Par défaut : le 1er bloc main. Les blocs main AVANT l'ancre sont pleine largeur.
+  const anchorId = page.sidebarAnchor || (mainSecs[0] && mainSecs[0].id) || null;
 
-  function renderTwoCol(){
-    // Groupe main + side côte à côte
+  let twoColInserted = false;
+
+  function renderTwoCol(fromAnchorMains){
     h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
-    mainSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+    fromAnchorMains.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
     h+='</div><div class="'+CL.side+'">';
     sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
     h+='</div></div>';
@@ -5235,32 +5246,33 @@ function _renderBuilderPage(page, event, ctx){
   function openDash(){ if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; } }
   function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
 
+  // Les blocs main à partir de l'ancre (inclus) forment la colonne principale du groupe 2-col
+  const anchorIdx = sections.findIndex(s=>s.id===anchorId && zoneOf(s)==='main');
+  const mainsFromAnchor = anchorIdx>=0 ? sections.filter((s,i)=> zoneOf(s)==='main' && i>=anchorIdx) : mainSecs;
+
   sections.forEach((s,idx)=>{
     const z=zoneOf(s);
-    // Le groupe 2-colonnes s'insère à la position du 1er bloc main/side
-    if((z==='main'||z==='side')){
+    if(z==='side') return; // rendus dans la 2-col
+    if(z==='main'){
       if(hasTwoCol){
-        if(!twoColInserted && idx===firstMainIdx){ openDash(); renderTwoCol(); twoColInserted=true; }
-        // les autres main/side sont déjà inclus dans renderTwoCol → on saute
+        if(idx < anchorIdx){
+          // bloc main avant l'ancre → pleine largeur
+          openDash(); renderMainSolo(s);
+        } else if(idx===anchorIdx || (anchorIdx<0 && !twoColInserted)){
+          // point d'ancrage → on sort le groupe 2-colonnes (avec tous les mains restants)
+          if(!twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
+        }
+        // les autres mains (après l'ancre) sont déjà dans renderTwoCol → skip
         return;
       } else {
-        // Pas de vraie 2-colonnes (que des main, ou que des side) → chacun pleine largeur
-        openDash();
-        if(z==='side'){ // side sans main → on le rend simplement dans une colonne
-          if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
-          else h+=_bpRenderSection(s,event,ctx);
-        } else {
-          renderMainSolo(s);
-        }
-        return;
+        openDash(); renderMainSolo(s); return;
       }
     }
     if(z==='max'){ closeDash(); h+=_bpRenderSection(s,event,ctx); }
-    else { // full
-      openDash();
-      h+=_bpRenderSection(s,event,ctx);
-    }
+    else { openDash(); h+=_bpRenderSection(s,event,ctx); } // full
   });
+  // Cas : sidebar existe mais aucun bloc main (ni ancre trouvée) → sortir la sidebar seule
+  if(hasTwoCol && !twoColInserted){ openDash(); renderTwoCol(mainsFromAnchor); twoColInserted=true; }
   closeDash();
 
   h += '<div class="'+CL.dash+'"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
