@@ -5166,17 +5166,22 @@ function _bpRenderContentModule(sec, event, ctx){
 function _renderBuilderPage(page, event, ctx){
   const sections = Array.isArray(page.sections) ? page.sections : [];
   const zoneOf = s => (s.zone || (s.appearance&&s.appearance.zone) || 'full');
+  // Classes de colonnes selon le mode : le mode expédition a ses propres classes
+  // (.exp-layout / .exp-main-col / .exp-side-col) avec un style dédié ; le classique
+  // utilise .layout / .main-col / .side-col.
+  const _isExp = (page.mode==='expedition') || (event && event.mode==='expedition');
+  const CL = _isExp
+    ? { dash:'exp-dash', layout:'exp-layout', solo:'exp-layout exp-layout-solo', main:'exp-main-col', side:'exp-side-col' }
+    : { dash:'dash', layout:'layout', solo:'layout', main:'main-col', side:'side-col' };
   let h='';
 
   const sideSecs = sections.filter(s=>zoneOf(s)==='side');
   let sideRendered=false, inDash=false, mainBuf=[];
 
   function renderMainBuf(){
-    // Vide le buffer "colonne principale" ; insère la sidebar au premier flush si besoin.
     if(!mainBuf.length){
-      // Cas limite : sidebar existe mais aucune section "main" → on la sort quand même une fois.
       if(!sideRendered && sideSecs.length && inDash){
-        h+='<div class="layout"><div class="main-col"></div><div class="side-col">';
+        h+='<div class="'+CL.layout+'"><div class="'+CL.main+'"></div><div class="'+CL.side+'">';
         sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
         h+='</div></div>';
         sideRendered=true;
@@ -5184,14 +5189,21 @@ function _renderBuilderPage(page, event, ctx){
       return;
     }
     if(!sideRendered && sideSecs.length){
-      h+='<div class="layout"><div class="main-col">';
+      h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
       mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
-      h+='</div><div class="side-col">';
+      h+='</div><div class="'+CL.side+'">';
       sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
       h+='</div></div>';
       sideRendered=true;
     } else {
-      mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+      // Sections principales sans sidebar : en expédition on enveloppe en solo pour le confinement
+      if(_isExp){
+        h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">';
+        mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+        h+='</div></div>';
+      } else {
+        mainBuf.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
+      }
     }
     mainBuf=[];
   }
@@ -5204,17 +5216,19 @@ function _renderBuilderPage(page, event, ctx){
       closeDash();
       h+=_bpRenderSection(s,event,ctx);
     } else if(z==='full'){
-      if(!inDash){ h+='<div class="dash">'; inDash=true; }
+      if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; }
       renderMainBuf();
-      h+=_bpRenderSection(s,event,ctx);
+      // En expédition, une section pleine largeur est enveloppée en solo pour garder le cadre
+      if(_isExp){ h+='<div class="'+CL.solo+'"><div class="'+CL.main+'">'+_bpRenderSection(s,event,ctx)+'</div></div>'; }
+      else { h+=_bpRenderSection(s,event,ctx); }
     } else { // main
-      if(!inDash){ h+='<div class="dash">'; inDash=true; }
+      if(!inDash){ h+='<div class="'+CL.dash+'">'; inDash=true; }
       mainBuf.push(s);
     }
   });
   closeDash();
 
-  h += '<div class="dash"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
+  h += '<div class="'+CL.dash+'"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
   return h;
 }
 
