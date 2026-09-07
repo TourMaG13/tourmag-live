@@ -3091,84 +3091,20 @@ function renderExpedition(data){
     ${event.status==='live' ? `<div class="exp-live-pill"><span class="exp-live-dot"></span>${exp.liveLabel||'En direct'}</div>` : ''}
   </header>`;
 
-  // ===== HERO =====
-  const _heroSegStart = h.length;
-  const _expUseBanner = !!_heroBannerImage;
-  const hasHeroImage = !!_heroImage;
-  const _expHeroH = _bannerH || event.hero_height;
-  const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
-  if(_expUseBanner){
-    const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
-    h += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
-    if(_heroBannerText){
-      h += `<div class="exp-hero-banner-overlay"><div class="exp-hero-banner-inner">`;
-      if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
-      if(_heroLogo) h += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
-      if(_heroEyebrow) h += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
-      h += `<h1>${_heroTitle}</h1>`;
-      if(_heroSubtitle) h += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
-      const _bm=[];
-      if(_heroLocation) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
-      if(_heroDates) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
-      if(_bm.length) h += `<div class="exp-hero-meta-row">${_bm.join('')}</div>`;
-      h += _heroBtn;
-      h += `</div></div>`;
-    }
-    h += `</section>`;
-  } else {
-  h += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  h += `<div class="exp-hero-text">`;
-
-  // Badge row (live + label)
-  h += `<div class="exp-hero-badge-row">`;
-  if(event.status==='live') h += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
-  h += `</div>`;
-
-  if(_heroLogo) h += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
-  if(_heroEyebrow) h += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
-  h += `<h1>${_heroTitle}</h1>`;
-  if(_heroSubtitle) h += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
-
-  // Meta row (location + dates)
-  const metaItems = [];
-  if(_heroLocation) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
-  if(_heroDates) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
-  if(metaItems.length) h += `<div class="exp-hero-meta-row">${metaItems.join('')}</div>`;
-  h += _heroBtn;
-
-  // Hero tags
-  const heroTags = event.heroTags || [];
-  if(heroTags.length){
-    h += `<div class="exp-hero-tags">`;
-    heroTags.filter(t=>t&&t.name).forEach(t => {
-      const c = t.color || '';
-      const style = t.link
-        ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c||'rgba(255,255,255,.3)'};background:${c?c+'30':'rgba(255,255,255,.06)'}"`
-        : '';
-      h += `<span class="exp-hero-tag"${style}>${t.name}</span>`;
-    });
-    h += `</div>`;
-  }
-
-  h += `</div>`; // close .exp-hero-text
-
-  // Photo side
-  if(hasHeroImage){
-    h += `<div class="exp-hero-photo">`;
-    h += `<img src="${_heroImage}" alt="" onerror="this.parentElement.remove()">`;
-    if(_heroPhotoCredit) h += `<span class="exp-hero-credit">© ${_heroPhotoCredit}</span>`;
-    h += `</div>`;
-  }
-
-  h += `</section>`;
-  } // fin else (héro split expédition)
+  // ===== HERO ===== (généré via fonction réutilisable, par phase)
+  h += _buildExpHero(_activePhaseObj, event, exp, accent);
 
 
   // ===== BLOCK-BASED RENDERING =====
   const _b = {};
-  // Le hero expédition est construit inline ci-dessus ; on capture son HTML pour
-  // que le moteur page-builder puisse le rendre comme un module "hero".
-  const _heroSegHtml = h.slice(_heroSegStart);
-  _b.hero = function(){ return _heroSegHtml || ''; };
+  // Le hero peut afficher le bandeau d'une phase choisie (opts.phaseFilter) ou la phase active.
+  _b.hero = function(opts){
+    let _hp = _activePhaseObj; // défaut : phase active
+    if(opts && opts.phaseFilter && opts.phaseFilter!=='all' && opts.phaseFilter!=='active'){
+      _hp = (phases||[]).find(p=>p.id===opts.phaseFilter) || _activePhaseObj;
+    }
+    return _buildExpHero(_hp, event, exp, accent);
+  };
 
   _b.phaseTabs = function(activeBuilderPage){
     // Onglets « pages libres » masqués si le module est désactivé
@@ -3964,6 +3900,102 @@ window.toggleExpGallery = function(count){
   btn.textContent = open ? '▴ Réduire' : `▾ Voir les ${count} autres photos`;
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
+// Génère le HTML du hero expédition pour une phase donnée (réutilisable par le builder).
+// phaseObj = objet phase (ou null pour les valeurs événement). Retourne une chaîne HTML.
+function _buildExpHero(phaseObj, event, exp, accent){
+  event = event || {}; exp = exp || {}; accent = accent || event.accentColor || '#FF6C00';
+  const _ph = phaseObj || {};
+  const _heroTitle      = _ph.heroTitle      || event.title    || '';
+  const _heroSubtitle   = _ph.heroSubtitle   || event.subtitle || '';
+  const _heroImage      = _ph.heroImage      || event.hero_image || '';
+  const _heroLogo       = _ph.heroLogo       || event.logo_url || '';
+  const _heroLocation   = _ph.heroLocation   || event.location || '';
+  const _heroDates      = _ph.heroDates      || event.dates    || '';
+  const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
+  const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
+  const _heroBtn = (event.heroButtonUrl && event.heroButtonUrl.trim())
+    ? `<a class="hero-btn exp-hero-btn" href="${event.heroButtonUrl.trim()}" target="_blank" rel="noopener" style="${event.heroButtonColor?`background:${event.heroButtonColor}`:''}">${(event.heroButtonLabel||'En savoir plus').trim()}</a>`
+    : '';
+  const _pbMode = (_ph && _ph.bannerMode) || 'inherit';
+  const _evBanner = event.heroBannerEnabled ? (event.heroBannerImage||'') : '';
+  let _heroBannerImage='', _heroBannerText=false;
+  if(_pbMode==='own'){ _heroBannerImage=_ph.heroBannerImage||''; _heroBannerText=!!_ph.heroBannerText; }
+  else if(_pbMode==='off'){ _heroBannerImage=''; }
+  else { _heroBannerImage=_evBanner; _heroBannerText=!!event.heroBannerText; }
+  const _bannerH = (_ph && _ph.bannerHeight) ? _ph.bannerHeight : (event.hero_height||'');
+  let H='';
+  
+  const _expUseBanner = !!_heroBannerImage;
+  const hasHeroImage = !!_heroImage;
+  const _expHeroH = _bannerH || event.hero_height;
+  const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
+  if(_expUseBanner){
+    const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
+    H += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
+    if(_heroBannerText){
+      H += `<div class="exp-hero-banner-overlay"><div class="exp-hero-banner-inner">`;
+      if(event.status==='live') H += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
+      if(_heroLogo) H += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
+      if(_heroEyebrow) H += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
+      H += `<h1>${_heroTitle}</h1>`;
+      if(_heroSubtitle) H += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
+      const _bm=[];
+      if(_heroLocation) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
+      if(_heroDates) _bm.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
+      if(_bm.length) H += `<div class="exp-hero-meta-row">${_bm.join('')}</div>`;
+      H += _heroBtn;
+      H += `</div></div>`;
+    }
+    H += `</section>`;
+  } else {
+  H += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  H += `<div class="exp-hero-text">`;
+
+  // Badge row (live + label)
+  H += `<div class="exp-hero-badge-row">`;
+  if(event.status==='live') H += `<span class="exp-hero-badge-live">${exp.liveLabel||'En direct'}</span>`;
+  H += `</div>`;
+
+  if(_heroLogo) H += `<img src="${_heroLogo}" alt="" class="exp-hero-logo" onerror="this.remove()">`;
+  if(_heroEyebrow) H += `<div class="exp-hero-eyebrow">${_heroEyebrow}</div>`;
+  H += `<h1>${_heroTitle}</h1>`;
+  if(_heroSubtitle) H += `<p class="exp-hero-subtitle">${_heroSubtitle}</p>`;
+
+  // Meta row (location + dates)
+  const metaItems = [];
+  if(_heroLocation) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${_heroLocation}</span>`);
+  if(_heroDates) metaItems.push(`<span class="exp-hero-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${_heroDates}</span>`);
+  if(metaItems.length) H += `<div class="exp-hero-meta-row">${metaItems.join('')}</div>`;
+  H += _heroBtn;
+
+  // Hero tags
+  const heroTags = event.heroTags || [];
+  if(heroTags.length){
+    H += `<div class="exp-hero-tags">`;
+    heroTags.filter(t=>t&&t.name).forEach(t => {
+      const c = t.color || '';
+      const style = t.link
+        ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer;border-color:${c||'rgba(255,255,255,.3)'};background:${c?c+'30':'rgba(255,255,255,.06)'}"`
+        : '';
+      H += `<span class="exp-hero-tag"${style}>${t.name}</span>`;
+    });
+    H += `</div>`;
+  }
+
+  H += `</div>`; // close .exp-hero-text
+
+  // Photo side
+  if(hasHeroImage){
+    H += `<div class="exp-hero-photo">`;
+    H += `<img src="${_heroImage}" alt="" onerror="this.parentElement.remove()">`;
+    if(_heroPhotoCredit) H += `<span class="exp-hero-credit">© ${_heroPhotoCredit}</span>`;
+    H += `</div>`;
+  }
+
+  H += `</section>`;
+  } // fin else (héro split expédition)
+  return H;
+}
+
 // Initialise la carte Leaflet expédition. Extraite pour être réutilisable
 // par le flux expédition normal ET par le moteur page-builder.
 function _initExpMap(filteredEtapes, event, mod, accent){
