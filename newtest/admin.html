@@ -1763,6 +1763,9 @@ function goToTab(tab){
 document.querySelectorAll('.sidebar-item').forEach(item=>{
   item.addEventListener('click',()=>{
     const tab=item.dataset.tab;if(!tab)return;
+    // Quitter le Constructeur : on referme l'éditeur (sinon _uiBusy reste vrai et
+    // bloque tous les rafraîchissements des autres onglets).
+    if(tab!=='builder'){ if(typeof _bpEditId!=='undefined') _bpEditId=null; if(typeof _bpSelSection!=='undefined') _bpSelSection=null; }
     currentTab=tab;
     document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
@@ -1770,6 +1773,7 @@ document.querySelectorAll('.sidebar-item').forEach(item=>{
     closeMobileMenu();
     renderTab();
     if(typeof updateBadges==='function') updateBadges();
+    if(typeof _flushDeferredRender==='function') _flushDeferredRender();
   });
 });
 
@@ -1903,11 +1907,27 @@ function scheduleRender(){
     renderPending=null;
     // Ne pas reconstruire l'onglet pendant qu'un panneau/une fenêtre est ouvert :
     // cela viderait le contexte en cours (upload, édition). On diffère le rendu.
-    if(_uiBusy()){ _renderDeferred=true; return; }
+    if(_uiBusy()){ _renderDeferred=true; _armDeferredRetry(); return; }
     if(typeof applyTabVisibility==='function') applyTabVisibility();
     renderTab();
     if(typeof _previewTouch==='function') _previewTouch();
   },50);
+}
+// Filet de sécurité : tant qu'un rendu est en attente à cause de _uiBusy, on réessaie
+// périodiquement de le rejouer dès que l'UI se libère (évite d'avoir à rafraîchir la page).
+var _deferredRetryTimer=null;
+function _armDeferredRetry(){
+  if(_deferredRetryTimer) return;
+  _deferredRetryTimer=setInterval(function(){
+    if(!_renderDeferred){ clearInterval(_deferredRetryTimer); _deferredRetryTimer=null; return; }
+    if(!_uiBusy()){
+      _renderDeferred=false;
+      clearInterval(_deferredRetryTimer); _deferredRetryTimer=null;
+      if(typeof applyTabVisibility==='function') applyTabVisibility();
+      renderTab();
+      if(typeof _previewTouch==='function') _previewTouch();
+    }
+  }, 400);
 }
 // À rappeler à la fermeture d'un panneau/fenêtre : applique le rendu différé s'il y en a un.
 function _flushDeferredRender(){
@@ -4464,7 +4484,7 @@ function _bpAppearanceHtml(s){
     +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'title\',\'style\',this.value)"><option value=""'+(!t.style?' selected':'')+'>Normal</option><option value="italic"'+(t.style==='italic'?' selected':'')+'>Italique</option></select></div>'
     +'</div>';
   h+='<div class="bpe-fld"><label>Alignement du titre</label><div class="bpe-seg">'
-    +['left','center','right'].map(function(a){return '<button class="'+((t.align||'left')===a?'on':'')+'" onclick="_bpSetApRole(\'title\',\'align\',\''+a+'\')">'+({left:'Gauche',center:'Centré',right:'Droite'}[a])+'</button>';}).join('')
+    +['left','center','right'].map(function(a){return '<button class="'+((t.align||'left')===a?'on':'')+'" onclick="_bpSetApRole(\'title\',\'align\',\''+a+'\');_bpRefreshCfg()">'+({left:'Gauche',center:'Centré',right:'Droite'}[a])+'</button>';}).join('')
     +'</div></div>';
   // ---- TEXTE / CORPS (tous les modules) ----
   const tx=ap.text||{};
@@ -4532,7 +4552,7 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld-row"><div class="bpe-fld"><label>Largeur</label><input type="text" value="'+_escAdm(c.width||'')+'" onchange="_bpSetCt(\'width\',this.value)" placeholder="60% ou 400px"></div>'
         +'<div class="bpe-fld"><label>Alignement</label><select onchange="_bpSetCt(\'align\',this.value)">'+['center','left','right'].map(function(a){return '<option value="'+a+'"'+((c.align||'center')===a?' selected':'')+'>'+({center:'Centré',left:'Gauche',right:'Droite'}[a])+'</option>';}).join('')+'</select></div></div>';
     case 'gallery':
-      return '<div class="bpe-fld"><label>Taille des vignettes</label><div class="bpe-seg">'+['s','m','l'].map(function(z){return '<button class="'+((c.galSize||'m')===z?'on':'')+'" onclick="_bpSetCt(\'galSize\',\''+z+'\')">'+({s:'Petites',m:'Moyennes',l:'Grandes'}[z])+'</button>';}).join('')+'</div></div>'
+      return '<div class="bpe-fld"><label>Taille des vignettes</label><div class="bpe-seg">'+['s','m','l'].map(function(z){return '<button class="'+((c.galSize||'m')===z?'on':'')+'" onclick="_bpSetCt(\'galSize\',\''+z+'\');_bpRefreshCfg()">'+({s:'Petites',m:'Moyennes',l:'Grandes'}[z])+'</button>';}).join('')+'</div></div>'
         +_bpGalleryEditorHtml(s);
     case 'video':
       return '<div class="bpe-fld"><label>Lien vidéo</label><input type="text" value="'+_escAdm(c.url||'')+'" onchange="_bpSetCt(\'url\',this.value)" placeholder="YouTube, Vimeo ou .mp4"></div>';
