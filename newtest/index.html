@@ -158,7 +158,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Enveloppe de bloc : neutre pour la mise en page (n'affecte ni la grille ni le flex) */
 .blk-wrap{display:contents}
 /* ==================== PAGE BUILDER (bp-*) ==================== */
-.bp-section{margin-bottom:28px}
+.bp-section{margin-bottom:28px;clear:both}
+/* Sécurité : aucune section ne doit se coincer à côté d'un float d'habillage précédent */
+.bp-section::before{content:"";display:table;clear:both}
 .bp-section:last-child{margin-bottom:0}
 .bp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);margin:0 0 14px;line-height:1.25}
 .bp-text{font-size:16px;line-height:1.75;color:#334155}
