@@ -3150,7 +3150,10 @@ function renderExpedition(data){
   _b.kpis = function(opts){
     const _c = (opts && opts.phaseFilter) ? _buildCounters(opts.phaseFilter) : counters;
     if(mod.kpis===false || !_c.length) return '';
-    let o = `<section class="exp-counters">`;
+    // Nombre de colonnes en fonction du nombre réel de compteurs affichés (inline,
+    // pour ne pas dépendre de la variable globale figée sur la phase active).
+    const _cols = Math.min(_c.length, 4);
+    let o = `<section class="exp-counters" style="--exp-counter-cols:${_cols};grid-template-columns:repeat(${_cols},1fr)">`;
     _c.forEach(c => {
       const cdCls = c.isCountdown ? ' exp-counter-countdown' : '';
       const cdStyle = (c.isCountdown && c.color) ? ` style="--cd-color:${c.color}"` : '';
@@ -5079,6 +5082,15 @@ function _bpRenderSection(sec, event, ctx){
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
       const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter };
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
+      // Surcharge du titre de section : si le module a un titre personnalisé dans le builder,
+      // on remplace le premier titre rendu (h2 de section, ou label de carte) par celui-ci.
+      if(inner && ct.title && type!=='hero'){
+        var _t = _bpEsc(ct.title);
+        var _done = false;
+        inner = inner.replace(/(<div class="exp-section-head[^"]*">\s*<h2>)([\s\S]*?)(<\/h2>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
+        if(!_done) inner = inner.replace(/(<h2>)([\s\S]*?)(<\/h2>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
+        if(!_done) inner = inner.replace(/(<div class="exp-card-label">)([\s\S]*?)(<\/div>)/, function(m,a,b,c){ return a+_t+c; });
+      }
     }
     catch(e){ inner=''; console.warn('[builder] renderer "'+type+'" a échoué', e); }
   } else {
