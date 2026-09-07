@@ -8048,6 +8048,7 @@ function editVideo(id){
       <div class="form-row"><label class="form-label">Type</label><select class="form-input" id="m-vid-type"><option value="video"${v.type==='video'?' selected':''}>Vidéo (16:9)</option><option value="short"${v.type==='short'?' selected':''}>Short/Reel (9:16)</option></select></div>
       <div class="form-row"><label class="form-label">Section</label><select class="form-input" id="m-vid-section">${secOpts}</select></div>
     </div>
+    ${mkPhaseSelect('m-vid-phase', v.phase||'')}
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveVideoEdit('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>`);
 }
 async function saveVideoEdit(id){
@@ -8055,7 +8056,8 @@ async function saveVideoEdit(id){
   const updateData={
     caption:document.getElementById('m-vid-caption').value.trim(),
     type:document.getElementById('m-vid-type').value,
-    section:document.getElementById('m-vid-section').value
+    section:document.getElementById('m-vid-section').value,
+    phase:document.getElementById('m-vid-phase')?document.getElementById('m-vid-phase').value:''
   };
   const thumbInput=document.getElementById('m-vid-thumb');
   if(thumbInput) updateData.thumbnail=thumbInput.value.trim();
