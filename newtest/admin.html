@@ -4640,6 +4640,15 @@ function _bpPagePropsHtml(){
   h+='<div class="bpe-fld"><label>Couleur de l\'onglet</label><input type="color" value="'+(p.color||'#7C3AED')+'" onchange="_bpSetPage(\'color\',this.value)"></div>';
   h+='<div class="bpe-toggle"><span>Visible dans la navigation</span><label class="sw"><input type="checkbox" '+(nav.visible!==false?'checked':'')+' onchange="_bpSetNav(\'visible\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
   h+='<div class="bpe-toggle"><span>Onglet cliquable</span><label class="sw"><input type="checkbox" '+(nav.clickable!==false?'checked':'')+' onchange="_bpSetNav(\'clickable\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  // Phase associée à la page : affiche son titre + sous-titre de phase sous les onglets
+  const _phases=Array.isArray(_bpCurrentEv().phases)?_bpCurrentEv().phases:[];
+  if(_phases.length){
+    const curP=p.linkedPhase||'';
+    h+='<div class="bpe-fld" style="margin-top:12px"><label>Phase associée à la page</label><select onchange="_bpSetPage(\'linkedPhase\',this.value)">';
+    h+='<option value=""'+(!curP?' selected':'')+'>Aucune (pas de titre de phase)</option>';
+    _phases.forEach(function(ph){ h+='<option value="'+ph.id+'"'+(curP===ph.id?' selected':'')+'>'+_escAdm(ph.name||'')+'</option>'; });
+    h+='</select><div class="bpe-hint">Affiche le titre et le sous-titre de cette phase sous les onglets (comme le dashboard classique).</div></div>';
+  }
   // Ancrage de la sidebar : à côté de quel bloc « colonne principale » la sidebar se place
   const mainSecs=(p.sections||[]).filter(s=>(s.zone||'full')==='main');
   const sideSecs=(p.sections||[]).filter(s=>(s.zone||'full')==='side');
