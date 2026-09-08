@@ -185,6 +185,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-wrap-right{float:right;margin-left:22px}
 .bp-txt-body::after{content:"";display:block;clear:both}
 .bp-galgrid{display:grid;width:100%;grid-template-columns:repeat(auto-fill,minmax(var(--bp-gal-min,160px),1fr));gap:10px}
+/* Étirer : les vignettes s'élargissent pour remplir toute la largeur (pas de trou à droite) */
+.bp-galgrid-stretch{grid-template-columns:repeat(auto-fit,minmax(var(--bp-gal-min,160px),1fr))}
+/* Centrer : colonnes de largeur fixe, groupe centré (utile quand peu de photos) */
+.bp-galgrid-center{grid-template-columns:repeat(auto-fill,var(--bp-gal-min,160px));justify-content:center}
 .bp-gallery-item{position:relative}
 .bp-gallery-item img{width:100%;height:var(--bp-gal-h,160px);object-fit:cover;border-radius:10px;display:block}
 .bp-gallery-cr{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 7px;border-radius:5px;font-style:italic;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -5143,6 +5147,7 @@ function _bpSectionStyle(ap){
   let s='';
   if(ap.bg && ap.bg.on) s+='background:'+(ap.bg.color||'#F1F5F9')+';padding:20px 22px;border-radius:12px;';
   if(ap.pad!=null && ap.pad!=='') s+='margin-bottom:'+parseInt(ap.pad,10)+'px;';
+  if(ap.padTop!=null && ap.padTop!=='') s+='margin-top:'+parseInt(ap.padTop,10)+'px;';
   if(ap.accent) s+='--pr-accent:'+ap.accent+';--acc:'+ap.accent+';';
   return s;
 }
@@ -5295,7 +5300,14 @@ function _bpRenderContentModule(sec, event, ctx){
       let gh,gmin;
       if(gs==='custom'){ gh=parseInt(ct.galH,10)||200; gmin=parseInt(ct.galMin,10)||220; }
       else { const pr=presets[gs]||presets.m; gh=pr.h; gmin=pr.min; }
-      return '<div class="bp-galgrid" style="--bp-gal-h:'+gh+'px;--bp-gal-min:'+gmin+'px">'+imgs.map(function(x){return '<div class="bp-gallery-item"><img src="'+_bpEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="bp-gallery-cr">© '+_bpEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div>';
+      // Options : étirer (remplir la largeur) et/ou centrer
+      var _stretch = ct.galStretch===true;
+      var _center = ct.galCenter===true;
+      var _gridStyle = '--bp-gal-h:'+gh+'px;--bp-gal-min:'+gmin+'px;';
+      var _cls = 'bp-galgrid';
+      if(_stretch){ _cls+=' bp-galgrid-stretch'; }       // auto-fit : les vignettes s'élargissent
+      if(_center && !_stretch){ _cls+=' bp-galgrid-center'; } // centré : colonnes fixes centrées
+      return '<div class="'+_cls+'" style="'+_gridStyle+'">'+imgs.map(function(x){return '<div class="bp-gallery-item"><img src="'+_bpEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="bp-gallery-cr">© '+_bpEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div>';
     }
     case 'video': {
       return (typeof _cpVideoEmbed==='function') ? _cpVideoEmbed(ct.url) : '';
@@ -5402,15 +5414,6 @@ function _renderBuilderPage(page, event, ctx){
 // → "zones vides". On installe aussi un observer pour l'animation si dispo.
 function _bpActivateFx(){
   try{
-    // Repère visuel en mode aperçu : confirme qu'on voit bien une page CONSTRUCTEUR
-    var _qp=new URLSearchParams(window.location.search);
-    if((_qp.get('preview')==='1' || _qp.get('bpage')) && !document.getElementById('bp-preview-badge')){
-      var _b=document.createElement('div');
-      _b.id='bp-preview-badge';
-      _b.textContent='🧩 Page Constructeur';
-      _b.style.cssText='position:fixed;bottom:14px;left:14px;z-index:99999;background:#5B21B6;color:#fff;font:600 12px/1 system-ui,sans-serif;padding:8px 12px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;opacity:.92';
-      document.body.appendChild(_b);
-    }
     const nodes = document.querySelectorAll('#app .fi:not(.vis)');
     if('IntersectionObserver' in window){
       const obs = new IntersectionObserver(function(es){
