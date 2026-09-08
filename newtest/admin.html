@@ -4473,9 +4473,12 @@ function _bpConfigHtml(){
 
   return '<div class="bpe-cfg-head"><div class="bpe-cfg-h-ico"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#'+meta.icon+'"/></svg></div>'
     +'<div><div class="bpe-cfg-h-t">'+_escAdm(meta.name)+'</div><div class="bpe-cfg-h-s">Réglages du module</div></div>'
-    +'<button class="bpe-cfg-close" onclick="_bpSelSection=null;_renderBuilderEditor(document.getElementById(\'admin-main\'))">×</button></div>'
+    +'<button class="bpe-cfg-close" onclick="_bpDeselect()" title="Fermer et revenir aux propriétés de la page">×</button></div>'
+    +'<div style="padding:8px 14px;border-bottom:1px solid var(--border)"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="_bpDeselect()">⚙ Propriétés de la page</button></div>'
     +'<div class="bpe-cfg-body">'+body+'</div>';
 }
+// Désélectionne le bloc courant → réaffiche les propriétés de la page
+function _bpDeselect(){ _bpSelSection=null; _renderBuilderEditor(document.getElementById('admin-main')); }
 
 // Socle d'apparence unifié : couleurs + fond + espacement (+ titre/texte si pertinent)
 function _bpAppearanceHtml(s){
@@ -4519,8 +4522,11 @@ function _bpAppearanceHtml(s){
     +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetApRole(\'text\',\'weight\',this.value)">'+_bpWeightOpts(tx.weight)+'</select></div>'
     +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'text\',\'style\',this.value)"><option value=""'+(!tx.style?' selected':'')+'>Normal</option><option value="italic"'+(tx.style==='italic'?' selected':'')+'>Italique</option></select></div>'
     +'</div>';
-  // Espacement sous le bloc (commun)
-  h+='<div class="bpe-fld"><label>Espacement sous le bloc (px)</label><input type="number" value="'+(ap.pad!=null?ap.pad:'')+'" placeholder="28" onchange="_bpSetAp(\'pad\',this.value)"></div>';
+  // Espacement au-dessus + sous le bloc (commun)
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(ap.padTop!=null?ap.padTop:'')+'" placeholder="0" onchange="_bpSetAp(\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(ap.pad!=null?ap.pad:'')+'" placeholder="28" onchange="_bpSetAp(\'pad\',this.value)"></div>'
+    +'</div>';
   // Note pour les modules live/riches : l'apparence s'applique par-dessus leurs réglages d'origine
   if(!['text','image','gallery','video','buttons','separator','html','hero'].includes(s.type)){
     h+='<div class="bpe-hint" style="margin-top:6px">Ces réglages s\'appliquent par-dessus l\'apparence d\'origine du module. Laissez vide pour conserver son style habituel.</div>';
@@ -4574,6 +4580,9 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Alignement</label><select onchange="_bpSetCt(\'align\',this.value)">'+['center','left','right'].map(function(a){return '<option value="'+a+'"'+((c.align||'center')===a?' selected':'')+'>'+({center:'Centré',left:'Gauche',right:'Droite'}[a])+'</option>';}).join('')+'</select></div></div>';
     case 'gallery':
       return '<div class="bpe-fld"><label>Taille des vignettes</label><div class="bpe-seg">'+['s','m','l'].map(function(z){return '<button class="'+((c.galSize||'m')===z?'on':'')+'" onclick="_bpSetCt(\'galSize\',\''+z+'\');_bpRefreshCfg()">'+({s:'Petites',m:'Moyennes',l:'Grandes'}[z])+'</button>';}).join('')+'</div></div>'
+        +'<div class="bpe-toggle"><span>Étirer les vignettes (remplir la largeur)</span><label class="sw"><input type="checkbox" '+(c.galStretch?'checked':'')+' onchange="_bpSetCt(\'galStretch\',this.checked);_bpRefreshCfg()"><span class="tr"></span><span class="kn"></span></label></div>'
+        +(c.galStretch?'':'<div class="bpe-toggle"><span>Centrer la galerie</span><label class="sw"><input type="checkbox" '+(c.galCenter?'checked':'')+' onchange="_bpSetCt(\'galCenter\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>')
+        +'<div class="bpe-hint">« Étirer » : les vignettes s\'élargissent pour occuper toute la largeur, sans trou. « Centrer » : garde la taille des vignettes mais centre le groupe (utile avec peu de photos).</div>'
         +_bpGalleryEditorHtml(s);
     case 'video':
       return '<div class="bpe-fld"><label>Lien vidéo</label><input type="text" value="'+_escAdm(c.url||'')+'" onchange="_bpSetCt(\'url\',this.value)" placeholder="YouTube, Vimeo ou .mp4"></div>';
@@ -4731,7 +4740,7 @@ var _bpSaveTimer=null;
 function _bpSavePageDebounced(){ clearTimeout(_bpSaveTimer); _bpSaveTimer=setTimeout(function(){ _bpSavePage(); },600); }
 
 function _bpSetZone(z){ const s=_bpSelectedSection(); if(!s)return; s.zone=z; _bpAfterSet(true); _bpRefreshCfg(); }
-function _bpSetAp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; if(key==='pad'){ s.appearance.pad=(val===''?'':parseInt(val,10)); } else { s.appearance[key]=val; } _bpAfterSet(true); }
+function _bpSetAp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; if(key==='pad'||key==='padTop'){ s.appearance[key]=(val===''?'':parseInt(val,10)); } else { s.appearance[key]=val; } _bpAfterSet(true); }
 function _bpSetApRole(role,prop,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance[role]=s.appearance[role]||{}; s.appearance[role][prop]=(prop==='size'?(val===''?'':parseInt(val,10)):val); _bpAfterSet(true); }
 function _bpSetBg(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance.bg=s.appearance.bg||{}; s.appearance.bg[key]=val; _bpAfterSet(true); if(key==='on') _bpRefreshCfg(); }
 function _bpSetCt(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; if(key==='height'||key==='limit'){ s.content[key]=(val===''?'':parseInt(val,10)); } else { s.content[key]=val; } _bpAfterSet(true); }
