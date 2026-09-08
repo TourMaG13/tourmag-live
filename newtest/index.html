@@ -273,9 +273,11 @@ img{display:block}a{text-decoration:none}
 .hero-title{font-family:'Josefin Sans';font-size:38px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:10px}
 .hero-subtitle-text{font-family:'Playfair Display';font-style:italic;font-size:15px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:18px;padding-left:14px;border-left:3px solid var(--acc)}
 .hero-meta-row{display:flex;gap:16px;flex-wrap:wrap}
-.hero-btn{display:inline-block;margin-top:16px;padding:11px 24px;background:var(--acc,#E8842C);color:#fff;font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s;box-shadow:0 4px 14px rgba(0,0,0,.18)}
-.hero-btn:hover{filter:brightness(1.08)}
-.exp-hero-btn{margin-top:18px;border-radius:2px;letter-spacing:.04em}
+.hero-btn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;width:auto;max-width:max-content;margin-top:18px;padding:13px 28px;background:var(--acc,#E8842C);color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:10px;transition:transform .15s,box-shadow .15s,filter .15s;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+.hero-btn:hover{filter:brightness(1.06);transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.hero-btn::after{content:"→";font-size:15px;transition:transform .15s}
+.hero-btn:hover::after{transform:translateX(3px)}
+.exp-hero-btn{margin-top:20px;border-radius:6px;letter-spacing:.02em;text-transform:uppercase;font-size:12.5px;padding:14px 30px}
 .hero-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.5)}
 .hero-meta-item svg{width:14px;height:14px;stroke:rgba(255,255,255,.4)}
 .hero-tag{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);color:#fff;background:rgba(255,255,255,.1);transition:all .15s;display:inline-block}
@@ -2818,6 +2820,7 @@ function render(data){
     document.getElementById('app').innerHTML = html;
     var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
     if(typeof _bpActivateFx==='function') _bpActivateFx();
+    if(typeof _applyDecor==='function'){ try{ _applyDecor(event, (event.modules||{})); }catch(e){} }
     if(typeof window._tmgResize==='function') window._tmgResize();
     _builderHandled = true;
   })();
@@ -3758,6 +3761,7 @@ function renderExpedition(data){
     document.getElementById('app').innerHTML = html;
     var _ubB=document.getElementById('upd-bar'); if(_ubB) _ubB.innerHTML='';
     if(typeof _bpActivateFx==='function') _bpActivateFx();
+    if(typeof _applyDecor==='function'){ try{ _applyDecor(event, (event.modules||{})); }catch(e){} }
     // Si la page-builder contient une carte (module "etapes"), on initialise Leaflet
     // exactement comme dans le flux expédition normal (init JS post-rendu).
     var _mapSec = (_bp.sections||[]).filter(function(s){ return s.type==='etapes'; })[0];
@@ -3814,98 +3818,7 @@ function renderExpedition(data){
   _initExpMap(filteredEtapes, event, mod, accent);
 
   // ===== DECORATIVE ELEMENTS =====
-  if(window._decorTimer) clearTimeout(window._decorTimer);
-  document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
-  document.body.style.removeProperty('background');
-
-  window._decorTimer = setTimeout(function(){
-    // Nettoyage (au cas où un autre cycle de rendu aurait nettoyé avant nous)
-    document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
-    document.body.style.removeProperty('background');
-    try {
-    var dc = event.decor;
-    if(!dc || dc.enabled===false || mod.decor===false) return;
-
-    if(dc.bgColor) document.body.style.setProperty('background', dc.bgColor, 'important');
-
-    var SHAPES = window.DECOR_SHAPES || {};
-
-    // ---- Rétro-compatibilité : convertit l'ancien schéma en éléments si aucun elements[] ----
-    var elements = Array.isArray(dc.elements) ? dc.elements.slice() : null;
-    if(!elements){
-      elements = [];
-      if(dc.compass && dc.compass.on!==false) elements.push({shape:'boussole',block:'etapes',corner:(dc.compass.position||'top-left'),x:2,y:2,size:120,opacity:(dc.compass.opacity||4)/20*100,color:'#999'});
-      if(dc.plane && dc.plane.on!==false){ var pm={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'}; elements.push({shape:'avion',block:(pm[dc.plane.position]||'etapes'),corner:'bottom-center',x:0,y:0,size:120,opacity:(dc.plane.opacity||4)/20*100,color:'#999'}); }
-      if(dc.botanical && dc.botanical.on!==false){ var bs={eucalyptus:'feuille',palm:'palmier',maple:'feuille',cactus:'cactus',pine:'fougere',olive:'feuille',cherry:'feuille',wheat:'fougere'}; elements.push({shape:(bs[dc.botanical.style]||'feuille'),block:'citations',corner:'top-left',x:3,y:6,size:120,opacity:(dc.botanical.opacity||3)/20*100,color:'#888'}); }
-      if(dc.stamp && dc.stamp.on!==false) elements.push({shape:'tampon',block:'gallery',corner:'top-right',x:4,y:4,size:130,opacity:(dc.stamp.opacity||4)/20*100,rotation:(dc.stamp.rotation||12),color:'#888'});
-      if(dc.relief && dc.relief.on!==false){ var rs={hills:'relief',mountains:'montagne',waves:'vagues',skyline:'relief',volcano:'montagne'}; elements.push({shape:(rs[dc.relief.style]||'relief'),block:'sponsors',corner:'bottom-center',x:0,y:0,size:200,opacity:(dc.relief.opacity||4)/20*100,color:'#888'}); }
-    }
-    if(!elements.length) return;
-
-    // ---- Résolution du conteneur cible pour un bloc donné ----
-    function targetFor(block){
-      if(!block || block==='page') return document.body;
-      var el = document.querySelector('[data-exp-block="'+block+'"]');
-      return el || null;
-    }
-    // ---- Position depuis le coin/bord d'ancrage + décalage % ----
-    function place(node, corner, x, y){
-      corner = corner || 'top-left';
-      var px = (typeof x==='number'?x:2), py = (typeof y==='number'?y:2);
-      var s = 'position:absolute;';
-      var vert = corner.indexOf('bottom')>=0 ? 'bottom' : (corner.indexOf('center')>=0 && corner.indexOf('-')<0 ? 'top' : 'top');
-      // corner formats: top-left, top-center, top-right, mid-left, center, mid-right, bottom-left, bottom-center, bottom-right
-      var parts = corner.split('-');
-      var v = parts[0], h = parts[1]||'center';
-      if(corner==='center'){ v='center'; h='center'; }
-      // vertical
-      if(v==='top') s+='top:'+py+'%;';
-      else if(v==='bottom') s+='bottom:'+py+'%;';
-      else s+='top:'+(50)+'%;';
-      // horizontal
-      if(h==='left') s+='left:'+px+'%;';
-      else if(h==='right') s+='right:'+px+'%;';
-      else s+='left:'+(50)+'%;';
-      // transforms for centered axes
-      var tx = (h==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
-      node.setAttribute('data-tx',tx); node.setAttribute('data-ty',ty);
-      return s;
-    }
-
-    var MAXW = 320; // garde-fou taille max (px)
-    elements.slice(0,12).forEach(function(elDef){
-      var shapeKey = elDef.shape || 'cercle';
-      var raw = SHAPES[shapeKey];
-      if(!raw) return;
-      var tgt = targetFor(elDef.block);
-      if(!tgt) return;
-      if(tgt!==document.body){ tgt.style.position='relative'; tgt.style.overflow='visible'; }
-
-      var color = elDef.color || '#8a8578';
-      var size = Math.min(Math.max(parseInt(elDef.size)||120, 20), MAXW);
-      var opacity = (typeof elDef.opacity==='number'?elDef.opacity:30)/100;
-      var rot = parseInt(elDef.rotation)||0;
-
-      var svg = '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">'+raw.replace(/C/g,color)+'</svg>';
-
-      var node = document.createElement('div');
-      node.setAttribute('data-decor','1');
-      var posCss = place(node, elDef.corner, elDef.x, elDef.y);
-      var tx=node.getAttribute('data-tx'), ty=node.getAttribute('data-ty');
-      node.style.cssText = posCss + 'pointer-events:none;z-index:'+(elDef.front?'50':'0')+';opacity:'+opacity+';transform:translate('+tx+','+ty+') rotate('+rot+'deg);width:'+size+'px;height:'+size+'px;line-height:0;';
-      node.innerHTML = svg;
-
-      if(tgt===document.body){
-        node.style.position='fixed';
-        tgt.appendChild(node);
-      } else {
-        tgt.appendChild(node);
-      }
-    });
-
-    console.log('[TourMaG Live] Decor OK —', elements.length, 'élément(s)');
-    }catch(e){console.error('[TourMaG Live] Decor error:',e);}
-  }, 600);
+  _applyDecor(event, mod);
 
   // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers)
   if(window._fadeObsE) window._fadeObsE.disconnect();
@@ -4036,6 +3949,103 @@ function _buildExpHero(phaseObj, event, exp, accent){
   H += `</section>`;
   } // fin else (héro split expédition)
   return H;
+}
+
+// Applique les éléments décoratifs (réutilisable : flux expédition + page-builder)
+function _applyDecor(event, mod){
+  mod = mod || (event.modules||{});
+    if(window._decorTimer) clearTimeout(window._decorTimer);
+    document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
+    document.body.style.removeProperty('background');
+
+    window._decorTimer = setTimeout(function(){
+      // Nettoyage (au cas où un autre cycle de rendu aurait nettoyé avant nous)
+      document.querySelectorAll('[data-decor]').forEach(function(el){ el.remove(); });
+      document.body.style.removeProperty('background');
+      try {
+      var dc = event.decor;
+      if(!dc || dc.enabled===false || mod.decor===false) return;
+
+      if(dc.bgColor) document.body.style.setProperty('background', dc.bgColor, 'important');
+
+      var SHAPES = window.DECOR_SHAPES || {};
+
+      // ---- Rétro-compatibilité : convertit l'ancien schéma en éléments si aucun elements[] ----
+      var elements = Array.isArray(dc.elements) ? dc.elements.slice() : null;
+      if(!elements){
+        elements = [];
+        if(dc.compass && dc.compass.on!==false) elements.push({shape:'boussole',block:'etapes',corner:(dc.compass.position||'top-left'),x:2,y:2,size:120,opacity:(dc.compass.opacity||4)/20*100,color:'#999'});
+        if(dc.plane && dc.plane.on!==false){ var pm={'after-map':'etapes','after-live':'live','after-citations':'citations','after-gallery':'gallery'}; elements.push({shape:'avion',block:(pm[dc.plane.position]||'etapes'),corner:'bottom-center',x:0,y:0,size:120,opacity:(dc.plane.opacity||4)/20*100,color:'#999'}); }
+        if(dc.botanical && dc.botanical.on!==false){ var bs={eucalyptus:'feuille',palm:'palmier',maple:'feuille',cactus:'cactus',pine:'fougere',olive:'feuille',cherry:'feuille',wheat:'fougere'}; elements.push({shape:(bs[dc.botanical.style]||'feuille'),block:'citations',corner:'top-left',x:3,y:6,size:120,opacity:(dc.botanical.opacity||3)/20*100,color:'#888'}); }
+        if(dc.stamp && dc.stamp.on!==false) elements.push({shape:'tampon',block:'gallery',corner:'top-right',x:4,y:4,size:130,opacity:(dc.stamp.opacity||4)/20*100,rotation:(dc.stamp.rotation||12),color:'#888'});
+        if(dc.relief && dc.relief.on!==false){ var rs={hills:'relief',mountains:'montagne',waves:'vagues',skyline:'relief',volcano:'montagne'}; elements.push({shape:(rs[dc.relief.style]||'relief'),block:'sponsors',corner:'bottom-center',x:0,y:0,size:200,opacity:(dc.relief.opacity||4)/20*100,color:'#888'}); }
+      }
+      if(!elements.length) return;
+
+      // ---- Résolution du conteneur cible pour un bloc donné ----
+      function targetFor(block){
+        if(!block || block==='page') return document.body;
+        var el = document.querySelector('[data-exp-block="'+block+'"]');
+        return el || null;
+      }
+      // ---- Position depuis le coin/bord d'ancrage + décalage % ----
+      function place(node, corner, x, y){
+        corner = corner || 'top-left';
+        var px = (typeof x==='number'?x:2), py = (typeof y==='number'?y:2);
+        var s = 'position:absolute;';
+        var vert = corner.indexOf('bottom')>=0 ? 'bottom' : (corner.indexOf('center')>=0 && corner.indexOf('-')<0 ? 'top' : 'top');
+        // corner formats: top-left, top-center, top-right, mid-left, center, mid-right, bottom-left, bottom-center, bottom-right
+        var parts = corner.split('-');
+        var v = parts[0], h = parts[1]||'center';
+        if(corner==='center'){ v='center'; h='center'; }
+        // vertical
+        if(v==='top') s+='top:'+py+'%;';
+        else if(v==='bottom') s+='bottom:'+py+'%;';
+        else s+='top:'+(50)+'%;';
+        // horizontal
+        if(h==='left') s+='left:'+px+'%;';
+        else if(h==='right') s+='right:'+px+'%;';
+        else s+='left:'+(50)+'%;';
+        // transforms for centered axes
+        var tx = (h==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
+        node.setAttribute('data-tx',tx); node.setAttribute('data-ty',ty);
+        return s;
+      }
+
+      var MAXW = 320; // garde-fou taille max (px)
+      elements.slice(0,12).forEach(function(elDef){
+        var shapeKey = elDef.shape || 'cercle';
+        var raw = SHAPES[shapeKey];
+        if(!raw) return;
+        var tgt = targetFor(elDef.block);
+        if(!tgt) return;
+        if(tgt!==document.body){ tgt.style.position='relative'; tgt.style.overflow='visible'; }
+
+        var color = elDef.color || '#8a8578';
+        var size = Math.min(Math.max(parseInt(elDef.size)||120, 20), MAXW);
+        var opacity = (typeof elDef.opacity==='number'?elDef.opacity:30)/100;
+        var rot = parseInt(elDef.rotation)||0;
+
+        var svg = '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">'+raw.replace(/C/g,color)+'</svg>';
+
+        var node = document.createElement('div');
+        node.setAttribute('data-decor','1');
+        var posCss = place(node, elDef.corner, elDef.x, elDef.y);
+        var tx=node.getAttribute('data-tx'), ty=node.getAttribute('data-ty');
+        node.style.cssText = posCss + 'pointer-events:none;z-index:'+(elDef.front?'50':'0')+';opacity:'+opacity+';transform:translate('+tx+','+ty+') rotate('+rot+'deg);width:'+size+'px;height:'+size+'px;line-height:0;';
+        node.innerHTML = svg;
+
+        if(tgt===document.body){
+          node.style.position='fixed';
+          tgt.appendChild(node);
+        } else {
+          tgt.appendChild(node);
+        }
+      });
+
+      console.log('[TourMaG Live] Decor OK —', elements.length, 'élément(s)');
+      }catch(e){console.error('[TourMaG Live] Decor error:',e);}
+    }, 600);
 }
 
 // Initialise la carte Leaflet expédition. Extraite pour être réutilisable
@@ -5185,7 +5195,7 @@ function _bpRenderSection(sec, event, ctx){
     overrideCss = _bpModuleOverrideCss(secId, ap);
   }
   const idAttr = secId ? ' id="'+secId+'"' : '';
-  return '<div class="bp-section bp-'+type+'"'+idAttr+st+' data-bp-type="'+type+'">'+overrideCss+inner+'</div>';
+  return '<div class="bp-section bp-'+type+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'">'+overrideCss+inner+'</div>';
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
