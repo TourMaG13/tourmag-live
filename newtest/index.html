@@ -40,7 +40,7 @@
 <style>
 :root{--pri:#0F2B3C;--acc:#E8842C;--acc2:#D4731D;--blue:#0C6CA1;--green:#059669;--orange:#EA580C;--red:#DC2626;--amber:#D97706;--violet:#7C3AED;--cyan:#0891B2;--bg:#FFFFFF;--card:#FFF;--text:#111827;--text2:#4B5563;--text3:#9CA3AF;--border:#E5E7EB;--rl:16px;--shadow:0 2px 16px rgba(0,0,0,.06);--hero-bg1:#0B2636;--hero-bg2:#0F3D52;--live:#DC2626;--exp-accent:#FF6C00}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 /* ==================== PAGES LIBRES (front) ==================== */
 .cp-page{max-width:1100px;margin:0 auto;padding:8px 24px 40px}
 /* ==================== MODULE CARTE PAYS ==================== */
@@ -158,13 +158,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Enveloppe de bloc : neutre pour la mise en page (n'affecte ni la grille ni le flex) */
 .blk-wrap{display:contents}
 /* ==================== PAGE BUILDER (bp-*) ==================== */
-.bp-section{margin-bottom:28px;clear:both;position:relative;overflow:hidden}
-/* La carte Leaflet a besoin de déborder (popups, contrôles) */
-.bp-section.bp-etapes,.bp-section.bp-countrymap{overflow:visible}
-/* Le contenu du bloc passe au-dessus des éléments décoratifs */
-.bp-section > *:not([data-decor]){position:relative;z-index:1}
-/* Les éléments décoratifs restent en arrière-plan, confinés au bloc */
-.bp-section > [data-decor]{z-index:0}
+.bp-section{margin-bottom:28px;clear:both;position:relative}
+/* Décor dans les marges : masqué sur écrans étroits (pas de place dans la marge) */
+@media(max-width:1300px){ [data-decor][data-margin="1"]{display:none} }
 /* Sécurité : aucune section ne doit se coincer à côté d'un float d'habillage précédent */
 .bp-section::before{content:"";display:table;clear:both}
 .bp-section:last-child{margin-bottom:0}
@@ -3999,21 +3995,27 @@ function _applyDecor(event, mod){
         corner = corner || 'top-left';
         var px = (typeof x==='number'?x:2), py = (typeof y==='number'?y:2);
         var s = 'position:absolute;';
-        var vert = corner.indexOf('bottom')>=0 ? 'bottom' : (corner.indexOf('center')>=0 && corner.indexOf('-')<0 ? 'top' : 'top');
-        // corner formats: top-left, top-center, top-right, mid-left, center, mid-right, bottom-left, bottom-center, bottom-right
         var parts = corner.split('-');
         var v = parts[0], h = parts[1]||'center';
         if(corner==='center'){ v='center'; h='center'; }
-        // vertical
+        // vertical (inchangé)
         if(v==='top') s+='top:'+py+'%;';
         else if(v==='bottom') s+='bottom:'+py+'%;';
-        else s+='top:'+(50)+'%;';
-        // horizontal
-        if(h==='left') s+='left:'+px+'%;';
-        else if(h==='right') s+='right:'+px+'%;';
-        else s+='left:'+(50)+'%;';
-        // transforms for centered axes
-        var tx = (h==='center')?'-50%':'0', ty=(v==='center')?'-50%':'0';
+        else s+='top:50%;';
+        // horizontal : les éléments ancrés à gauche/droite sont poussés DANS LA MARGE
+        // extérieure du bloc (dans le vide à côté du contenu), pas sur le contenu.
+        var tx='0', ty=(v==='center')?'-50%':'0';
+        if(h==='left'){
+          s+='left:0;';
+          tx='calc(-100% - '+(8 + px*4)+'px)';
+          node.setAttribute('data-margin','1');
+        } else if(h==='right'){
+          s+='right:0;';
+          tx='calc(100% + '+(8 + px*4)+'px)';
+          node.setAttribute('data-margin','1');
+        } else {
+          s+='left:50%;'; tx='-50%';
+        }
         node.setAttribute('data-tx',tx); node.setAttribute('data-ty',ty);
         return s;
       }
