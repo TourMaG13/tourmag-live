@@ -2093,7 +2093,7 @@ function render(data){
       return '?'+params.toString();
     }
     let t = '<div class="dash"><div class="phase-tabs">';
-    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:phaseUrl, pageUrl:pageUrl, builderUrl:builderUrl, activePhase:activePhase, activeContentPage:activeContentPage, activeBuilderPage:null, builderPages:_bpTabs});
+    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:phaseUrl, pageUrl:pageUrl, builderUrl:builderUrl, activePhase:activePhase, activeContentPage:activeContentPage, activeBuilderPage:null, builderPages:_bpTabs, hideLegacy:event.hideLegacyTabs});
     t += '</div>' + (activeContentPage?'':_mkPhaseTitle(event, activePhase, phases)) + '</div>';
     return t;
   }
@@ -2809,7 +2809,7 @@ function render(data){
       tabsHtml = '<div class="dash"><div class="phase-tabs">'
         + _renderTabItems(phases, _cpTabs2, event.tabOrder, {
             phaseUrl:(s)=>_mkUrl('phase',s), pageUrl:(p)=>_mkUrl('page',p), builderUrl:(b)=>_mkUrl('builder',b),
-            activePhase:null, activeContentPage:null, activeBuilderPage:_bp, builderPages:_bpTabs2
+            activePhase:null, activeContentPage:null, activeBuilderPage:_bp, builderPages:_bpTabs2, hideLegacy:event.hideLegacyTabs
           })
         + '</div></div>';
     }
@@ -3162,7 +3162,7 @@ function renderExpedition(data){
       return '?'+params.toString();
     }
     let t = '<div class="phase-tabs">';
-    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, builderUrl:_bpUrl, activePhase:(activeBuilderPage?null:activePhase), activeContentPage:(activeBuilderPage?null:activeContentPage), activeBuilderPage:activeBuilderPage||null, builderPages:_bpTabs});
+    t += _renderTabItems(phases, _cpTabs, event.tabOrder, {phaseUrl:_ptUrl, pageUrl:_pgUrl, builderUrl:_bpUrl, activePhase:(activeBuilderPage?null:activePhase), activeContentPage:(activeBuilderPage?null:activeContentPage), activeBuilderPage:activeBuilderPage||null, builderPages:_bpTabs, hideLegacy:event.hideLegacyTabs});
     // Titre de phase : pour une page-builder, on affiche celui de sa phase associée (linkedPhase)
     let _phaseTitleHtml='';
     if(activeBuilderPage){
@@ -4672,7 +4672,7 @@ function _cpTabStyle(p, baseColor){
 // Rend les onglets avec regroupement en menus déroulants (parentTab).
 // ctx: {phaseUrl, pageUrl, activePhase, activeContentPage}
 function _renderTabItems(phases, contentPages, tabOrder, ctx){
-  const flat = _buildTabList(phases, contentPages, tabOrder, ctx.builderPages); // ordre complet
+  const flat = _buildTabList(phases, contentPages, tabOrder, ctx.builderPages, ctx.hideLegacy); // ordre complet
   // Règle (nouveau système) : pas d'onglets s'il n'y a qu'une seule destination au total.
   // Appliquée seulement si des pages-builder existent, pour ne pas changer le legacy.
   const _hasBuilder = ctx.builderPages && ctx.builderPages.length;
@@ -4726,7 +4726,10 @@ function _renderTabItems(phases, contentPages, tabOrder, ctx){
   return t;
 }
 // Rend les onglets avec regroupement en menus déroulants (parentTab).
-function _buildTabList(phases, contentPages, tabOrder, builderPages){
+function _buildTabList(phases, contentPages, tabOrder, builderPages, hideLegacy){
+  // Si "hideLegacy" : on ignore complètement les phases et pages libres (ancien dashboard),
+  // seules les pages-builder apparaissent dans la navigation.
+  if(hideLegacy){ phases=[]; contentPages=[]; }
   const byPhase={}; (phases||[]).forEach(p=>byPhase[p.id]=p);
   const byPage={}; (contentPages||[]).forEach(p=>byPage[p.id]=p);
   // Pages-builder visibles dans la navigation (nav.visible !== false)
