@@ -158,7 +158,13 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* Enveloppe de bloc : neutre pour la mise en page (n'affecte ni la grille ni le flex) */
 .blk-wrap{display:contents}
 /* ==================== PAGE BUILDER (bp-*) ==================== */
-.bp-section{margin-bottom:28px;clear:both}
+.bp-section{margin-bottom:28px;clear:both;position:relative;overflow:hidden}
+/* La carte Leaflet a besoin de déborder (popups, contrôles) */
+.bp-section.bp-etapes,.bp-section.bp-countrymap{overflow:visible}
+/* Le contenu du bloc passe au-dessus des éléments décoratifs */
+.bp-section > *:not([data-decor]){position:relative;z-index:1}
+/* Les éléments décoratifs restent en arrière-plan, confinés au bloc */
+.bp-section > [data-decor]{z-index:0}
 /* Sécurité : aucune section ne doit se coincer à côté d'un float d'habillage précédent */
 .bp-section::before{content:"";display:table;clear:both}
 .bp-section:last-child{margin-bottom:0}
