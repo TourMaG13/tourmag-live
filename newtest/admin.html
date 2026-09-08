@@ -3916,6 +3916,16 @@ function renderBuilderTab(el){
     +'Cliquez sur <b>Ouvrir</b> pour composer une page : ajoutez des modules depuis la palette, glissez-les pour les réordonner, configurez-les dans le panneau de droite.'
     +'</div></div></div>';
 
+  // Interrupteur : masquer l'ancien dashboard (phases + pages libres) de la navigation
+  const _hideLegacy = ev.hideLegacyTabs===true;
+  const _homeSet = !!ev.builderHome;
+  h+='<div class="admin-card" style="border-color:'+(_hideLegacy?'#BBF7D0':'#E7EBF1')+'">'
+    +'<div class="bpe-toggle" style="padding:0"><span style="font-size:14px;font-weight:600">Masquer l\'ancien dashboard (phases + pages libres)</span>'
+    +'<label class="sw"><input type="checkbox" '+(_hideLegacy?'checked':'')+' onchange="_bpToggleHideLegacy(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
+    +'<div style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.5">Quand c\'est activé, seuls vos onglets « Constructeur » apparaissent dans la navigation. Vos phases et pages libres ne sont pas supprimées (leur contenu reste dans l\'admin), elles sont juste retirées de la barre du dashboard. Réversible à tout moment.'
+    + (_hideLegacy && !_homeSet ? '<br><b style="color:#B45309">⚠️ Définissez une page d\'accueil (bouton 🏠) sinon le dashboard sera vide par défaut.</b>' : '')
+    +'</div></div>';
+
   // Création rapide
   h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-add"/></svg> Nouvelle page</h3>'
     +'<div style="display:flex;gap:8px;align-items:flex-end">'
@@ -3995,6 +4005,16 @@ async function _bpSetHome(id){
   try{
     await evRef().update({ builderHome: newHome });
     toast(newHome ? 'Page définie comme accueil' : 'Accueil classique rétabli');
+    renderTab();
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// Masquer / réafficher l'ancien dashboard (phases + pages libres) dans la navigation
+async function _bpToggleHideLegacy(on){
+  const ev=_bpCurrentEv();
+  ev.hideLegacyTabs = !!on;
+  try{
+    await evRef().update({ hideLegacyTabs: !!on });
+    toast(on ? 'Ancien dashboard masqué' : 'Ancien dashboard réaffiché');
     renderTab();
   }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
