@@ -4697,6 +4697,14 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live. Par défaut : Principal.</div></div>'
         +'<div class="bpe-fld"><label>Nombre d\'entrées affichées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>';
     }
+    case 'journalists': {
+      const ev=_bpCurrentEv();
+      const jrs=Array.isArray(journalistsGlobalData)?journalistsGlobalData:[];
+      let opts='<option value="">Tous les journalistes</option>';
+      jrs.forEach(function(j){ opts+='<option value="'+(j.id||'')+'"'+((c.journalistId||'')===(j.id||'')?' selected':'')+'>'+_escAdm(j.name||'(sans nom)')+'</option>'; });
+      return _phaseFld
+        +'<div class="bpe-fld"><label>Journaliste à afficher</label><select onchange="_bpSetCt(\'journalistId\',this.value)">'+opts+'</select><div class="bpe-hint">Choisissez un journaliste précis pour cette page, ou « Tous » pour les afficher tous. Les journalistes s\'alimentent dans l\'onglet Journalistes.</div></div>';
+    }
     case 'programme': case 'etapes': case 'itinerary': case 'citations':
     case 'videos': case 'interviews': case 'essential': case 'sponsors': case 'kpis': case 'gallerylive': {
       const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline',sponsors:'Partenaires',kpis:'Chiffres clés',gallerylive:'Galerie (module live)'};
