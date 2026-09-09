@@ -985,7 +985,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-entry .verbatim{font-family:'Libre Caslon Text',serif;font-style:italic;font-size:17.5px;line-height:1.55;color:var(--exp-ink);border-left:2px solid var(--exp-accent);padding-left:18px;margin:14px 0;display:block}
 .exp-entry-photo{margin-top:16px;border:none;overflow:visible;background:#fff;padding:6px 6px 28px;box-shadow:2px 3px 12px rgba(0,0,0,.1),-1px -1px 4px rgba(0,0,0,.03);transform:rotate(-0.8deg);transition:transform .3s}
 .exp-entry-photo:hover{transform:rotate(0deg)}
-.exp-entry-photo img{width:100%;height:280px;object-fit:cover;filter:saturate(1.04);display:block}
+.exp-entry-photo img{width:100%;height:280px;object-fit:cover;filter:saturate(1.04);display:block;margin:0 auto}
 .exp-entry-photo figcaption{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--exp-grey);padding:10px 4px 0;display:flex;justify-content:space-between;background:none}
 .exp-entry-km{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--exp-grey);margin-top:8px}
 .exp-entry-clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--exp-clamp,none)}
@@ -1023,6 +1023,9 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-prog-status.active{background:var(--exp-accent);color:#fff;border-color:var(--exp-accent)}
 .exp-prog-status.past{opacity:.5}
 .exp-card-socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.exp-reporter-meta{flex:1;min-width:0}
+.exp-reporter-social-inline{margin-left:auto;flex-shrink:0}
+.exp-reporter-social-inline a{display:inline-flex;align-items:center;justify-content:center;color:var(--exp-accent,#0C6CA1)}
 .exp-card-socials a{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--exp-grey);text-decoration:none;padding:4px 10px;border:1px solid var(--exp-line);border-radius:4px;transition:all .15s}
 .exp-card-socials a:hover{border-color:var(--exp-accent);color:var(--exp-accent)}
 
@@ -3356,19 +3359,28 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.reporters = function(){
+  _b.reporters = function(opts){
     if(mod.journalists===false) return '';
     const allReporters = journalists||[];
-    const reporters = activePhase ? allReporters.filter(r => !r.phase || r.phase === activePhase) : allReporters;
+    let reporters;
+    if(opts && opts.journalistId){
+      reporters = allReporters.filter(r => (r.id||'')===opts.journalistId);
+    } else if(opts && opts.phaseFilter){
+      reporters = opts.phaseFilter==='all' ? allReporters : allReporters.filter(r => !r.phase || r.phase===opts.phaseFilter);
+    } else {
+      reporters = activePhase ? allReporters.filter(r => !r.phase || r.phase === activePhase) : allReporters;
+    }
     if(!reporters.length) return '';
     let o = '';
     reporters.forEach(reporter => {
-      o += `<div class="exp-card"><div class="exp-card-label exp-card-label-reporters">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div></div>${(reporter.bio && reporter.showBio!==false) ? `<p>${reporter.bio}</p>` : ''}`;
       const socials = [];
       if(reporter.twitter){const tw=reporter.twitter.startsWith('http')?reporter.twitter:'https://x.com/'+reporter.twitter.replace('@','');socials.push(`<a href="${tw}" target="_blank" rel="noopener" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`);}
       if(reporter.linkedin) socials.push(`<a href="${reporter.linkedin}" target="_blank" rel="noopener" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>`);
       if(reporter.instagram){const ig=reporter.instagram.startsWith('http')?reporter.instagram:'https://instagram.com/'+reporter.instagram.replace('@','');socials.push(`<a href="${ig}" target="_blank" rel="noopener" title="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>`);}
-      if(socials.length) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
+      // Un seul réseau → inline à côté du nom (gain de place) ; plusieurs → bloc dédié dessous
+      const socialsInline = (socials.length===1) ? `<div class="exp-reporter-social-inline">${socials[0]}</div>` : '';
+      o += `<div class="exp-card"><div class="exp-card-label exp-card-label-reporters">${reporters.length>1?'Reporter':'Votre reporter'}</div><div class="exp-reporter">${reporter.photoUrl ? `<img src="${reporter.photoUrl}" alt="" onerror="this.remove()">` : ''}<div class="exp-reporter-meta"><div class="exp-reporter-name">${reporter.name||''}</div>${reporter.role ? `<div class="exp-reporter-role">${reporter.role}</div>` : ''}</div>${socialsInline}</div>${(reporter.bio && reporter.showBio!==false) ? `<p>${reporter.bio}</p>` : ''}`;
+      if(socials.length>1) o += `<div class="exp-card-socials">${socials.join('')}</div>`;
       if(reporter.profileUrl) o += `<div style="margin-top:10px"><a href="${reporter.profileUrl}" target="_blank" style="font-size:12px;color:var(--exp-accent);font-weight:600;text-decoration:none">Voir ses articles sur TourMaG →</a></div>`;
       o += `</div>`;
     });
@@ -5237,7 +5249,7 @@ function _bpRenderSection(sec, event, ctx){
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
-      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId };
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId };
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge du titre de section : si le module a un titre personnalisé dans le builder,
       // on remplace le premier titre rendu (h2 de section, ou label de carte) par celui-ci.
@@ -5326,12 +5338,13 @@ function _bpRenderContentModule(sec, event, ctx){
         // Titre présenté comme un titre de module (classique ou expédition)
         var _isExpMode = (event && event.mode==='expedition');
         var _accent = (ap.accent) || '';
+        var _h2sty = titleStyle ? ' style="'+titleStyle+'"' : '';
         if(_isExpMode){
-          titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2>'+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
+          titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
             + (ct.subtitle ? '<p class="exp-section-sub">'+_bpEsc(ct.subtitle)+'</p>' : '');
         } else {
           titleHtml = '<div class="sec-title"'+(_accent?' style="--sec-rule:'+_accent+'"':'')+'>'
-            + '<h2>'+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
+            + '<h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
             + (ct.subtitle ? '<p>'+_bpEsc(ct.subtitle)+'</p>' : '')
             + '</div>';
         }
@@ -5513,7 +5526,9 @@ function _cpTextToHtml(t){
 }
 
 window._submitQuestion = async function(){
-  const eventId = window._eventIdForQuestions;
+  let eventId = window._eventIdForQuestions;
+  // Filet : si le module est rendu par le builder sans init, on récupère l'event depuis l'URL
+  if(!eventId){ try{ eventId = new URLSearchParams(window.location.search).get('event'); }catch(e){} }
   const txtEl = document.getElementById('qa-text');
   const nameEl = document.getElementById('qa-name');
   const note = document.getElementById('qa-note');
@@ -5543,7 +5558,7 @@ window._submitQuestion = async function(){
     if(note){ note.textContent='✓ Merci ! Votre question a été transmise et sera publiée après validation.'; note.className='qa-note qa-ok'; }
   }catch(e){
     if(note){ note.textContent='Une erreur est survenue. Réessayez dans un instant.'; note.className='qa-note qa-err'; }
-    console.warn('Question non envoyée :', e.message);
+    console.warn('[Question diag] échec envoi :', e && e.code, e && e.message, '| eventId=', eventId, '| uid=', uid, '| phase=', window._activePhase);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='Envoyer'; }
   }
