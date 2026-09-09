@@ -11225,6 +11225,36 @@ function _initEncartPreviewResize(){
 }
 
 // Force le rechargement d'un iframe d'aperçu (après enregistrement de la config).
+// Largeur de l'encart widget : met à jour le snippet affiché (sans enregistrer)
+function _widgetWidthValue(){
+  const mode=document.getElementById('w-width-mode');
+  if(!mode) return '100%';
+  if(mode.value==='100%') return '100%';
+  const px=parseInt((document.getElementById('w-width-px')||{}).value,10)||380;
+  return px+'px';
+}
+function _updateWidgetSnippet(iframeId){
+  // Affiche/masque le champ px
+  const mode=document.getElementById('w-width-mode');
+  const pxRow=document.getElementById('w-width-px-row');
+  if(pxRow) pxRow.style.display=(mode&&mode.value==='px')?'':'none';
+  const w=_widgetWidthValue();
+  const ta=document.getElementById('embed-widget');
+  if(ta){
+    // remplacer la largeur dans le snippet (première occurrence de width:...;max-width)
+    ta.value=ta.value.replace(/width:[^;]+;max-width:100%/, 'width:'+w+';max-width:100%');
+  }
+  // ajuster l'aperçu
+  const prev=document.getElementById('prev-wc');
+  if(prev){ prev.style.maxWidth=(w==='100%'?'none':w); prev.style.marginLeft='auto'; prev.style.marginRight='auto'; }
+}
+async function _saveWidgetWidth(){
+  const w=_widgetWidthValue();
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  ev.widgetWidth=w;
+  try{ await evRef().update({widgetWidth:w}); toast('Largeur enregistrée'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function refreshEncartPreview(id,url){
   const f=document.getElementById(id);
   if(!f) return;
@@ -11263,12 +11293,68 @@ async function saveWidgetExpConfig(){
 }
 
 /* ---- CLASSIQUE WIDGET ---- */
+var _wPreset = 0; // 0 = encart principal (widgetConfig), 1..N = widgetPresets[n-1]
+function _wUidPreset(){ return 'wp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function _wSelectPreset(i){ _wPreset=i; renderTab(); }
+async function _wAddPreset(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const inp=document.getElementById('w-new-preset-name');
+  const name=(inp&&inp.value||'').trim()||('Encart '+((ev.widgetPresets||[]).length+2));
+  const presets=Array.isArray(ev.widgetPresets)?ev.widgetPresets.slice():[];
+  // Le nouveau preset démarre avec une copie de la config actuellement active
+  const baseCfg = (_wPreset===0)?(ev.widgetConfig||{}):((presets[_wPreset-1]&&presets[_wPreset-1].config)||{});
+  presets.push({id:_wUidPreset(), name:name, config:JSON.parse(JSON.stringify(baseCfg))});
+  ev.widgetPresets=presets; _wPreset=presets.length;
+  try{ await evRef().update({widgetPresets:presets}); toast('Encart créé'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _wDeletePreset(){
+  if(_wPreset===0) return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const presets=Array.isArray(ev.widgetPresets)?ev.widgetPresets.slice():[];
+  const p=presets[_wPreset-1];
+  if(!confirm('Supprimer l\'encart « '+((p&&p.name)||'')+' » ?')) return;
+  presets.splice(_wPreset-1,1); ev.widgetPresets=presets; _wPreset=0;
+  try{ await evRef().update({widgetPresets:presets}); toast('Encart supprimé'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _wRenamePreset(name){
+  if(_wPreset===0) return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const presets=Array.isArray(ev.widgetPresets)?ev.widgetPresets.slice():[];
+  if(presets[_wPreset-1]){ presets[_wPreset-1].name=(name||'').trim()||presets[_wPreset-1].name; }
+  ev.widgetPresets=presets;
+  try{ await evRef().update({widgetPresets:presets}); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
+  // ---- Presets d'encart (multi-encarts) ----
+  const presets = Array.isArray(ev.widgetPresets) ? ev.widgetPresets : [];
+  if(_wPreset > presets.length) _wPreset = 0;
+  // _wPreset : 0 = encart principal (widgetConfig), 1..N = presets[_wPreset-1]
+  const activeCfg = (_wPreset===0) ? (ev.widgetConfig||{}) : ((presets[_wPreset-1]&&presets[_wPreset-1].config)||{});
+  const activePresetId = (_wPreset===0) ? '' : (presets[_wPreset-1]&&presets[_wPreset-1].id)||'';
+  // URL du widget pour l'aperçu/snippet, avec le preset actif
+  const widgetUrlP = widgetUrl + (activePresetId?('&preset='+activePresetId):'');
 
   let h=`<div class="page-title">Intégration sur votre site</div><div class="page-desc">Paramétrez le widget compact et intégrez la page live sur TourMaG.com.</div>
 
+  <div class="admin-card" style="border-color:#DDD6FE"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Vos encarts</h3>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Créez plusieurs encarts avec des contenus et apparences différents. Chacun génère son propre code d'intégration.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn btn-xs ${_wPreset===0?'btn-primary':'btn-ghost'}" onclick="_wSelectPreset(0)">Encart principal</button>
+      ${presets.map((p,i)=>`<button class="btn btn-xs ${_wPreset===i+1?'btn-primary':'btn-ghost'}" onclick="_wSelectPreset(${i+1})">${_escAdm(p.name||('Encart '+(i+2)))}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div class="form-row" style="flex:1;max-width:280px;margin:0"><label class="form-label">Nom du nouvel encart</label><input class="form-input" id="w-new-preset-name" placeholder="Ex : Encart page d'accueil" onkeydown="if(event.key==='Enter')_wAddPreset()"></div>
+      <button class="btn btn-ghost btn-sm" onclick="_wAddPreset()">＋ Nouvel encart</button>
+      ${_wPreset>0?'<button class="btn btn-danger btn-sm" onclick="_wDeletePreset()">Supprimer cet encart</button>':''}
+    </div>
+    ${_wPreset>0?`<div class="form-row" style="max-width:280px;margin-top:10px"><label class="form-label">Nom de cet encart</label><input class="form-input" id="w-preset-name" value="${_escAdm((presets[_wPreset-1]||{}).name||'')}" onchange="_wRenamePreset(this.value)"></div>`:''}
+  </div>
+
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-wrench"/></svg> Configuration générale</h3>
-    <div class="form-row"><label class="form-label">URL du bouton « Accéder au Live »</label><input class="form-input" id="w-cta-url" value="${(ev.widgetCtaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages par défaut.</div></div>
+    <div class="form-row"><label class="form-label">URL du bouton « Accéder au Live »</label><input class="form-input" id="w-cta-url" value="${(activeCfg.ctaUrl||ev.widgetCtaUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/votre-article.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Si vide, le lien pointera vers la page live GitHub Pages par défaut.</div></div>
 
     <div class="form-row" style="margin-top:14px"><label class="form-label">📷 URL du serveur d'upload d'images</label>
       <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:12px">
@@ -11279,7 +11365,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-sliders"/></svg> Paramétrage du widget compact</h3>
 
     ${(function(){
-      const cfg=ev.widgetConfig||{};
+      const cfg=activeCfg;
       const LABELS={header:'En-tête (logo, titre, bouton Live)',flash:'Dernière info (flash)',mid:'Essentiel + Citations',live:'Fil en direct (3 dernières)',articles:'Derniers articles (3)',timeline:'Frise / Timeline',footer:'Zone personnalisable (bas)'};
       const DEF=['header','flash','mid','live','articles','timeline','footer'];
       let order=(cfg.order&&cfg.order.length)?cfg.order.slice():DEF.slice();
@@ -11372,9 +11458,22 @@ window.addEventListener('message',function(e){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Option 2 — Widget encart compact (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Encart compact pour la homepage, identique au widget du dashboard crise. Auto-resize via postMessage.</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px"><label class="form-label" style="margin:0">👁 Aperçu <span style="font-weight:400;color:var(--text3);font-size:11px">(reflète la dernière configuration enregistrée)</span></label><button class="btn btn-ghost btn-xs" onclick="refreshEncartPreview('prev-wc','${widgetUrl}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-refresh"/></svg> Rafraîchir</button></div>
-    <div style="background:#f1f5f9;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden"><iframe src="${widgetUrl}" id="prev-wc" allow="web-share; clipboard-write" style="width:100%;border:none;min-height:280px;border-radius:10px;overflow:hidden;display:block"></iframe></div>
-    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrl}" style="width:100%;border:none;min-height:280px" id="${iframeId}-w" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
+    <div class="form-row-inline" style="margin-bottom:10px">
+      <div class="form-row" style="max-width:220px"><label class="form-label">Largeur de l'encart</label>
+        <select class="form-input" id="w-width-mode" onchange="_updateWidgetSnippet('${iframeId}')">
+          <option value="100%"${(ev.widgetWidth||'100%')==='100%'?' selected':''}>Pleine largeur (100%)</option>
+          <option value="px"${(ev.widgetWidth&&ev.widgetWidth!=='100%')?' selected':''}>Largeur fixe (px)</option>
+        </select>
+      </div>
+      <div class="form-row" style="max-width:150px;${(ev.widgetWidth&&ev.widgetWidth!=='100%')?'':'display:none'}" id="w-width-px-row">
+        <label class="form-label">Largeur (px)</label>
+        <input type="number" class="form-input" id="w-width-px" value="${(ev.widgetWidth&&ev.widgetWidth!=='100%')?parseInt(ev.widgetWidth):380}" min="200" max="1200" step="10" oninput="_updateWidgetSnippet('${iframeId}')" style="width:110px">
+      </div>
+      <div class="form-row" style="align-self:flex-end"><button class="btn btn-ghost btn-sm" onclick="_saveWidgetWidth()">💾 Enregistrer la largeur</button></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px"><label class="form-label" style="margin:0">👁 Aperçu <span style="font-weight:400;color:var(--text3);font-size:11px">(reflète la dernière configuration enregistrée)</span></label><button class="btn btn-ghost btn-xs" onclick="refreshEncartPreview('prev-wc','${widgetUrlP}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-refresh"/></svg> Rafraîchir</button></div>
+    <div style="background:#f1f5f9;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden"><iframe src="${widgetUrlP}" id="prev-wc" allow="web-share; clipboard-write" style="width:100%;border:none;min-height:280px;border-radius:10px;overflow:hidden;display:block"></iframe></div>
+    <div style="position:relative"><textarea class="form-input" rows="6" id="embed-widget" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe src="${widgetUrlP}" style="width:${ev.widgetWidth||'100%'};max-width:100%;border:none;min-height:280px" id="${iframeId}-w" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 window.addEventListener('message',function(e){
   if(e.data&amp;&amp;(e.data.type==='tourmag-live-resize'||e.data.type==='setHeight')){
@@ -11432,7 +11531,19 @@ async function saveWidgetConfig(){
     widgetFooterColor:document.getElementById('w-footer-color').value,
     widgetFooterLayout:document.getElementById('w-footer-layout').value
   };
-  if(widgetConfig) upd.widgetConfig=widgetConfig;
+  if(widgetConfig){
+    // Le CTA propre à l'encart (peut différer par preset)
+    widgetConfig.ctaUrl=document.getElementById('w-cta-url').value.trim();
+    if(_wPreset===0){
+      upd.widgetConfig=widgetConfig;
+    } else {
+      // Sauver dans le preset actif
+      const ev0=eventsData.find(e=>e.id===currentEventId)||{};
+      const presets=Array.isArray(ev0.widgetPresets)?ev0.widgetPresets.slice():[];
+      if(presets[_wPreset-1]){ presets[_wPreset-1].config=widgetConfig; }
+      upd.widgetPresets=presets;
+    }
+  }
   await evRef().update(upd);
   toast('Configuration enregistrée');
   setTimeout(function(){
