@@ -204,14 +204,20 @@ function renderEncart(data, forceRender){
   if(essTimer){clearInterval(essTimer);essTimer=null;}
   if(citTimer){clearInterval(citTimer);citTimer=null;}
 
-  // CTA URL: use event.widgetCtaUrl, fallback to ?cta= param, then default
+  // CTA URL: preset > event.widgetCtaUrl > ?cta= > défaut (calculé après lecture du preset ci-dessous)
   const paramCta=new URLSearchParams(window.location.search).get('cta');
   const eventId=new URLSearchParams(window.location.search).get('event')||'';
-  const ctaUrl=event.widgetCtaUrl||paramCta||('index.html?event='+eventId);
-  const liveUrl=ctaUrl;
 
   // --- CONFIG D'APPARENCE + MODULES ---
-  const cfg=event.widgetConfig||{};
+  // Multi-encarts : ?preset=ID charge event.widgetPresets[ID], sinon widgetConfig (défaut, rétrocompatible)
+  const presetId=new URLSearchParams(window.location.search).get('preset')||'';
+  let cfg=event.widgetConfig||{};
+  if(presetId && event.widgetPresets && Array.isArray(event.widgetPresets)){
+    const _p=event.widgetPresets.find(p=>p && p.id===presetId);
+    if(_p && _p.config) cfg=_p.config;
+  }
+  const ctaUrl=(cfg.ctaUrl)||event.widgetCtaUrl||paramCta||('index.html?event='+eventId);
+  const liveUrl=ctaUrl;
   const erEl=document.querySelector('.er')||document.getElementById('encart');
   // Applique les variables d'apparence sur le conteneur racine
   const rootStyle=document.getElementById('encart');
