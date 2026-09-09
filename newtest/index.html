@@ -185,6 +185,19 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-wrap-right{float:right;margin-left:22px}
 .bp-txt-body::after{content:"";display:block;clear:both}
 .bp-galgrid{display:grid;width:100%;grid-template-columns:repeat(auto-fill,minmax(var(--bp-gal-min,160px),1fr));gap:10px}
+/* ==================== BRAND NEWS ARCHIVES ==================== */
+.bn-archives{margin-top:12px}
+.bn-arch-toggle{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--bn-accent,#0C6CA1);color:var(--bn-accent,#0C6CA1);font:600 12.5px/1 'Poppins',sans-serif;padding:8px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+.bn-arch-toggle:hover{background:var(--bn-accent,#0C6CA1);color:#fff}
+.bn-arch-caret{font-size:11px}
+.bn-arch-list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.bn-arch-item{display:flex;gap:10px;align-items:center;text-decoration:none;padding:8px;border:1px solid #E7EBF1;border-radius:8px;transition:border-color .15s,background .15s}
+.bn-arch-item:hover{border-color:#CBD5E1;background:#F8FAFC}
+.bn-arch-img{flex:0 0 56px;width:56px;height:56px;border-radius:6px;overflow:hidden;background:#E2E8F0}
+.bn-arch-img img{width:100%;height:100%;object-fit:cover;display:block}
+.bn-arch-body{flex:1;min-width:0}
+.bn-arch-title{display:block;font-size:13px;font-weight:600;color:#0F172A;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bn-arch-date{display:block;font-size:11px;color:#94A3B8;margin-top:3px}
 /* Étirer : les vignettes s'élargissent pour remplir toute la largeur (pas de trou à droite) */
 .bp-galgrid-stretch{grid-template-columns:repeat(auto-fit,minmax(var(--bp-gal-min,160px),1fr))}
 /* Centrer : colonnes de largeur fixe, groupe centré (utile quand peu de photos) */
@@ -2689,6 +2702,7 @@ function render(data){
     let o = `<div class="bn-card" onclick="window.open('${a.link}','_blank')">`;
     if(a.image) o += `<div class="bn-card-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
     o += `<div class="bn-card-body"><div class="bn-card-badge"${badgeCss?` style="${badgeCss}"`:''}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div><div class="bn-card-title"${titleCss?` style="${titleCss}"`:''}>${a.title||''}</div><div class="bn-card-cta"${ctaCss?` style="${ctaCss}"`:''}>Lire l'article →</div></div></div>`;
+    o += _bnArchivesHtml(bnArticles.slice(1), bn, st);
     return o;
   }
 
@@ -3578,6 +3592,8 @@ function renderExpedition(data){
     o += `<div class="exp-bn-side-title"${titleCss?` style="${titleCss}"`:''}>${a.title||''}</div>`;
     o += `<div class="exp-bn-side-read"${readCss}>Lire l'article →</div>`;
     o += `</div>`;
+    // Archives : les articles précédents (hors ceux masqués), dépliables
+    o += _bnArchivesHtml(bnArticles.slice(1), bn, st);
     return o;
   };
 
@@ -5127,6 +5143,47 @@ function _renderContentPage(page){
 //   accent, textColor, bg:{on,color}, pad, zone
 // ============================================================
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Génère les archives Brand News (articles précédents), dépliables via un bouton.
+// bn.hiddenArchives = liste des liens d'articles à NE PAS afficher dans les archives.
+function _bnArchivesHtml(prevArticles, bn, st){
+  if(!bn || bn.showArchives===false) return '';
+  var hidden = Array.isArray(bn.hiddenArchives) ? bn.hiddenArchives : [];
+  var arch = (prevArticles||[]).filter(function(a){ return a && a.link && hidden.indexOf(a.link)<0; });
+  if(!arch.length) return '';
+  var accent = (st && st.accent) ? st.accent : '#0C6CA1';
+  var _id = 'bnarch-'+Math.random().toString(36).slice(2,7);
+  var o = '<div class="bn-archives">';
+  o += '<button type="button" class="bn-arch-toggle" style="--bn-accent:'+accent+'" onclick="_bnToggleArch(\''+_id+'\',this)">Voir les précédents ('+arch.length+') <span class="bn-arch-caret">▾</span></button>';
+  o += '<div class="bn-arch-list" id="'+_id+'" style="display:none">';
+  arch.forEach(function(a){
+    var d = _bnFmtDate(a.date || a.imported_at || a.pubDate);
+    o += '<a class="bn-arch-item" href="'+_bpEsc(a.link)+'" target="_blank" rel="noopener">'
+       + (a.image ? '<span class="bn-arch-img"><img src="'+_bpEsc(a.image)+'" alt="" onerror="this.parentElement.style.display=\'none\'"></span>' : '')
+       + '<span class="bn-arch-body"><span class="bn-arch-title">'+_bpEsc(a.title||'')+'</span>'
+       + (d ? '<span class="bn-arch-date">'+_bpEsc(d)+'</span>' : '')
+       + '</span></a>';
+  });
+  o += '</div></div>';
+  return o;
+}
+function _bnFmtDate(v){
+  if(!v) return '';
+  try{
+    var dt = (v && v.toDate) ? v.toDate() : new Date(v);
+    if(isNaN(dt)) return '';
+    var mois=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    return dt.getDate()+' '+mois[dt.getMonth()]+' '+dt.getFullYear();
+  }catch(e){ return ''; }
+}
+window._bnToggleArch = function(id, btn){
+  var el=document.getElementById(id); if(!el) return;
+  var open = el.style.display!=='none';
+  el.style.display = open ? 'none' : '';
+  if(btn){ btn.classList.toggle('open', !open); var c=btn.querySelector('.bn-arch-caret'); if(c) c.textContent = open?'▾':'▴'; }
+  if(typeof window._tmgResize==='function') window._tmgResize();
+};
+
 
 // Construit le style CSS inline d'un rôle (title/text/ui) depuis le socle unifié
 function _bpRoleStyle(role){
