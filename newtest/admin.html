@@ -3974,12 +3974,14 @@ function renderBuilderTab(el){
       const secLabel = nbSec ? (nbSec+' module'+(nbSec>1?'s':'')) : 'Vide';
       const dot = p.color || '#7C3AED';
       const isHome = (p.id===homeId);
-      h+='<div class="cp-row">'
+      const isVisible = !(p.nav && p.nav.visible===false);
+      h+='<div class="cp-row"'+(isVisible?'':' style="opacity:.6"')+'>'
         +'<span class="cp-dot" style="background:'+dot+'"></span>'
-        +'<div class="cp-info"><div class="cp-name">'+_escAdm(p.name||'(sans nom)')+(isHome?' <span class="bp-home-badge">🏠 Accueil</span>':'')+'</div><div class="cp-meta">'+secLabel+'</div></div>'
+        +'<div class="cp-info"><div class="cp-name">'+_escAdm(p.name||'(sans nom)')+(isHome?' <span class="bp-home-badge">🏠 Accueil</span>':'')+(isVisible?'':' <span class="bp-home-badge" style="background:#FEF3C7;color:#92400E">👁 Masquée</span>')+'</div><div class="cp-meta">'+secLabel+'</div></div>'
         +'<div class="cp-actions">'
         +(i>0?'<button class="btn btn-ghost btn-xs" onclick="_bpMove('+i+',-1)" title="Monter">▲</button>':'')
         +(i<list.length-1?'<button class="btn btn-ghost btn-xs" onclick="_bpMove('+i+',1)" title="Descendre">▼</button>':'')
+        +'<button class="btn '+(isVisible?'btn-ghost':'btn-primary')+' btn-xs" onclick="_bpToggleVisible(\''+p.id+'\')" title="'+(isVisible?'Masquer cet onglet de la navigation':'Afficher cet onglet dans la navigation')+'">'+(isVisible?'👁':'🚫')+'</button>'
         +'<button class="btn '+(isHome?'btn-primary':'btn-ghost')+' btn-xs" onclick="_bpSetHome(\''+p.id+'\')" title="'+(isHome?'Page d\'accueil (cliquer pour retirer)':'Définir comme page d\'accueil')+'">'+(isHome?'🏠':'⌂')+'</button>'
         +'<button class="btn btn-ghost btn-xs" onclick="_bpCopyUrl(\''+p.id+'\')" title="Copier le lien de la page"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-link"/></svg></button>'
         +'<button class="btn btn-ghost btn-xs" onclick="_bpPreview(\''+p.id+'\')" title="Aperçu"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg></button>'
@@ -4024,6 +4026,16 @@ async function _bpMove(idx,dir){
   const j=idx+dir; if(j<0||j>=list.length) return;
   const t=list[idx]; list[idx]=list[j]; list[j]=t;
   try{ await _bpPersist(list); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// Afficher / masquer une page-builder dans la navigation (depuis la liste)
+async function _bpToggleVisible(id){
+  const ev=_bpCurrentEv(); const list=_bpList(ev).slice();
+  const p=list.find(x=>x.id===id); if(!p) return;
+  p.nav=p.nav||{};
+  const wasVisible = !(p.nav.visible===false);
+  p.nav.visible = !wasVisible; // bascule
+  try{ await _bpPersist(list); toast(wasVisible?'Onglet masqué':'Onglet affiché'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Définir / retirer la page d'accueil (opt-in : tant qu'aucune n'est définie, l'accueil classique reste)
@@ -4646,6 +4658,10 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Image de fond (URL, optionnel)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-heroimg" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-heroimg')+mkUploadBtn('bpct-heroimg')+'</div></div>';
     case 'text':
       return '<div class="bpe-fld"><label>Titre (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
+        +'<div class="bpe-fld"><label>Style du titre</label><div class="bpe-seg">'
+          +[['simple','Titre simple'],['section','Titre de section (comme les modules)']].map(function(o){return '<button class="'+((c.titleStyle||'simple')===o[0]?'on':'')+'" onclick="_bpSetCt(\'titleStyle\',\''+o[0]+'\');_bpRefreshCfg()">'+o[1]+'</button>';}).join('')
+          +'</div><div class="bpe-hint">« Titre de section » reprend la présentation des modules (VERBATIMS, Itinéraire…) : titre stylé + trait + sous-titre.</div></div>'
+        +((c.titleStyle==='section')?'<div class="bpe-fld"><label>Sous-titre (optionnel)</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="Ex : Ce qu\'ils ont dit"></div>':'')
         +'<div class="bpe-fld"><label>Texte</label>'+_bpRte('bpct-text', c.text)+'</div>'
         +'<div class="bpe-fld"><label>Image (optionnelle, URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-img" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-img')+mkUploadBtn('bpct-img')+'</div></div>'
         +'<div class="bpe-fld"><label>Position de l\'image</label><select onchange="_bpSetCt(\'imagePos\',this.value)">'
