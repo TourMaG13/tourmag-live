@@ -1918,6 +1918,7 @@ function render(data){
     let _typoStyle = document.getElementById('typo-overrides');
     if(!_typoStyle){ _typoStyle=document.createElement('style'); _typoStyle.id='typo-overrides'; document.head.appendChild(_typoStyle); }
     _typoStyle.textContent = _typoCSS;
+    console.log('%c[TourMaG Live] BUILD 2026-01-img-v2','background:#0C6CA1;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold');
     console.log('[TourMaG Live] TYPO(zones) mode=%s cssLen=%d', event.mode||'live', _typoCSS.length);
   } catch(_e){ console.error('[TourMaG Live] Typo engine error:', _e); }
 
@@ -2241,7 +2242,7 @@ function render(data){
     const avatarHtml = jrPhoto
       ? `<img class="live-avatar${isFirst?' live-avatar-first':''}" src="${jrPhoto}" alt="" onerror="this.className='live-dot'">`
       : `<div class="live-dot"></div>`;
-    return `<div class="live-entry" id="live-${e.id||''}"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-fit:${e.image_fit||'cover'};object-position:${e.image_position||'center center'}${e.image_width?`;max-width:${e.image_width}px`:''}" onerror="this.parentElement.remove()" onload="try{console.log('[img-live diag] fit=',this.style.objectFit,'maxW=',this.style.maxWidth||'(aucune)','| champs entry: fit=${e.image_fit||'ABSENT'} width=${e.image_width||'ABSENT'}','| largeur réelle=',this.offsetWidth+'px | conteneur=',this.parentElement.offsetWidth+'px')}catch(_){}"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}${mkShareButton(e)}</div></div></div>`;
+    return `<div class="live-entry" id="live-${e.id||''}"><div class="live-time-col">${avatarHtml}</div><div class="live-content"><div class="live-content-head"><span class="live-tag" ${tc?`style="background:${tc}20;color:${tc}"`:''}>${e.tag||''}</span><span class="live-timestamp">${fmtTime(e.time)}</span><span class="live-journalist">${e.journalist||''}</span></div>${e.title?`<div class="live-title">${e.title}</div>`:''}<div class="live-text">${e.text}${e.url?` <a href="${e.url}" target="_blank" style="color:var(--acc);font-size:11px;font-weight:600;text-decoration:none">→ Lire la suite</a>`:''}</div>${e.image?`<div class="live-img"${e.image_width?` style="max-width:${e.image_width}px;margin-left:auto;margin-right:auto"`:''}><img src="${e.image}" alt="" style="height:${e.image_height||190}px;object-fit:${e.image_fit||'cover'};object-position:${e.image_position||'center center'}" onerror="this.parentElement.remove()"></div>`:''}<div class="live-actions">${mkLikeButton(e.id, e.likeCount)}${mkShareButton(e)}</div></div></div>`;
   }
 
   function mkLive(opts){
@@ -4464,8 +4465,8 @@ function mkExpEntry(entry, etapes, jrPhotoMap, isLatest, lineClamp){
   }
 
   if(entry.image){
-    o += `<figure class="exp-entry-photo">
-      <img src="${entry.image}" alt="" style="height:${entry.image_height||280}px;object-fit:${entry.image_fit||'cover'};object-position:${entry.image_position||'center center'}${entry.image_width?`;max-width:${entry.image_width}px`:''}" onerror="this.parentElement.remove()">
+    o += `<figure class="exp-entry-photo"${entry.image_width?` style="max-width:${entry.image_width}px;margin-left:auto;margin-right:auto"`:''}>
+      <img src="${entry.image}" alt="" style="height:${entry.image_height||280}px;object-fit:${entry.image_fit||'cover'};object-position:${entry.image_position||'center center'}" onerror="this.parentElement.remove()">
       <figcaption>
         <span>${entry.image_caption||''}</span>
         <span>${entry.image_credit ? '© '+entry.image_credit : ''}</span>
