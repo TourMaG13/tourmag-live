@@ -3905,7 +3905,7 @@ function _buildExpHero(phaseObj, event, exp, accent){
   const _expUseBanner = !!_heroBannerImage;
   const hasHeroImage = !!_heroImage;
   const _expHeroH = _bannerH || event.hero_height;
-  const _expHeroAttr = _expHeroH ? ` data-h="1"` : '';
+  const _expHeroAttr = _expHeroH ? ` data-h="1" style="--exp-hero-h:${parseInt(_expHeroH,10)}px"` : '';
   if(_expUseBanner){
     const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
     H += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
@@ -5320,7 +5320,24 @@ function _bpRenderContentModule(sec, event, ctx){
     case 'text': {
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
       if(!ct.title && !ct.text && !ct.image) return '';
-      const titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
+      var _titleStyleKind = ct.titleStyle || 'simple';
+      var titleHtml = '';
+      if(ct.title && _titleStyleKind==='section'){
+        // Titre présenté comme un titre de module (classique ou expédition)
+        var _isExpMode = (event && event.mode==='expedition');
+        var _accent = (ap.accent) || '';
+        if(_isExpMode){
+          titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2>'+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
+            + (ct.subtitle ? '<p class="exp-section-sub">'+_bpEsc(ct.subtitle)+'</p>' : '');
+        } else {
+          titleHtml = '<div class="sec-title"'+(_accent?' style="--sec-rule:'+_accent+'"':'')+'>'
+            + '<h2>'+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
+            + (ct.subtitle ? '<p>'+_bpEsc(ct.subtitle)+'</p>' : '')
+            + '</div>';
+        }
+      } else {
+        titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
+      }
       const textHtml  = ct.text ? '<div class="bp-text"'+(textStyle?' style="'+textStyle+'"':'')+'>'+ct.text+'</div>' : '';
       // image + habillage (réutilise la logique des blocs de contenu)
       const pos = ct.imagePos || 'none';
