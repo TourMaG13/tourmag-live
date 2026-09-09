@@ -6741,6 +6741,7 @@ function renderArticles(el){
     </div>
     ${ev.brandNews?.rssUrl?`<div style="margin-top:12px;padding:10px;background:#F0FDF4;border-radius:8px;font-size:12px;color:#166534"><strong>✅ Flux configuré :</strong> ${ev.brandNews.rssUrl}<br>Période : ${ev.brandNews.startDate||'—'} → ${ev.brandNews.endDate||'—'}</div>`:''}
   </div>
+  ${_bnArchivesAdminCard(ev)}
 
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length})</h3>`;
@@ -6816,11 +6817,15 @@ async function saveArtSettings(){
 async function saveBrandNews(){
   saving(true);
   const rssUrl=document.getElementById('bn-rss-url').value.trim();
+  const ev0=eventsData.find(e=>e.id===currentEventId)||{};
   const brandNews={
     rssUrl,
     startDate:document.getElementById('bn-start').value,
     endDate:document.getElementById('bn-end').value,
     label:document.getElementById('bn-label').value.trim(),
+    // Réglages d'archives : préservés (gérés par leurs propres boutons)
+    showArchives: (ev0.brandNews && ev0.brandNews.showArchives===false) ? false : true,
+    hiddenArchives: (ev0.brandNews && Array.isArray(ev0.brandNews.hiddenArchives)) ? ev0.brandNews.hiddenArchives : [],
     style:{
       accent:document.getElementById('bn-accent')?.value||'',
       titleColor:document.getElementById('bn-title-color')?.value||'',
@@ -6842,6 +6847,60 @@ async function saveBrandNews(){
   rssFeeds=feeds;
   await evRef().update({brandNews,rssFeeds:feeds});
   toast('Brand News configuré');
+}
+
+// ===== ARCHIVES BRAND NEWS (admin) =====
+// Renvoie les articles du flux Brand News, triés du plus récent au plus ancien.
+function _bnFeedArticles(ev){
+  var url = ev.brandNews && ev.brandNews.rssUrl;
+  if(!url) return [];
+  return (articlesData||[]).filter(function(a){ return a.brandnews_feed===url || a.rss_feed===url; })
+    .sort(function(a,b){ return (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()); });
+}
+function _bnArchivesAdminCard(ev){
+  if(!(ev.brandNews && ev.brandNews.rssUrl)) return '';
+  var arts = _bnFeedArticles(ev);
+  if(arts.length<=1){
+    return '<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Archives Brand News</h3><div style="font-size:12px;color:var(--text3)">Dès qu\'un deuxième article arrive dans ce flux, il apparaîtra ici en archive. Le plus récent est toujours affiché en grand ; les précédents forment les archives.</div></div>';
+  }
+  var showArch = !(ev.brandNews.showArchives===false);
+  var hidden = Array.isArray(ev.brandNews.hiddenArchives)?ev.brandNews.hiddenArchives:[];
+  var h = '<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Archives Brand News</h3>';
+  h += '<div class="bpe-toggle" style="padding:4px 0"><span style="font-size:13px">Afficher les archives (bouton « Voir les précédents »)</span><label class="sw"><input type="checkbox" '+(showArch?'checked':'')+' onchange="_bnToggleShowArchives(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin:6px 0 12px">Le plus récent (en haut) est toujours affiché en grand. Cochez « Masquer » pour retirer un article des archives.</div>';
+  h += '<div class="cp-list">';
+  arts.forEach(function(a,i){
+    var isLatest = (i===0);
+    var isHidden = hidden.indexOf(a.link)>=0;
+    var d = a.date || a.imported_at || '';
+    h += '<div class="cp-row" style="'+(isHidden?'opacity:.5':'')+'">'
+      + '<div class="cp-info"><div class="cp-name" style="font-size:13px">'+_escAdm(a.title||'(sans titre)')+(isLatest?' <span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 7px;border-radius:5px;margin-left:6px">EN GRAND</span>':'')+'</div>'
+      + '<div class="cp-meta" style="font-size:11px">'+_escAdm((''+d).slice(0,10))+'</div></div>'
+      + '<div class="cp-actions">'
+      + (isLatest ? '<span style="font-size:11px;color:var(--text3)">Toujours affiché</span>'
+                  : '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" '+(isHidden?'checked':'')+' onchange="_bnToggleHiddenArchive(\''+encodeURIComponent(a.link)+'\',this.checked)"> Masquer</label>')
+      + '</div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+async function _bnToggleShowArchives(on){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  ev.brandNews=ev.brandNews||{}; ev.brandNews.showArchives=!!on;
+  try{ await evRef().update({'brandNews.showArchives':!!on}); toast(on?'Archives affichées':'Archives masquées'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _bnToggleHiddenArchive(linkEnc, hide){
+  const link=decodeURIComponent(linkEnc);
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  ev.brandNews=ev.brandNews||{};
+  var hidden=Array.isArray(ev.brandNews.hiddenArchives)?ev.brandNews.hiddenArchives.slice():[];
+  var idx=hidden.indexOf(link);
+  if(hide && idx<0) hidden.push(link);
+  else if(!hide && idx>=0) hidden.splice(idx,1);
+  ev.brandNews.hiddenArchives=hidden;
+  try{ await evRef().update({'brandNews.hiddenArchives':hidden}); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 // --- RSS ---
