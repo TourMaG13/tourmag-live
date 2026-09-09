@@ -6129,10 +6129,17 @@ function renderLive(el){
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="live-image" style="flex:1" oninput="toggleLiveImgOpts()">${mkMediaPickerBtn('live-image')}${mkUploadBtn('live-image')}</div></div>
     <div id="live-img-opts" style="display:none">
       <div class="form-row-inline" style="margin-top:4px">
-        <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="live-imgpos" onchange="updateLiveImgPreview()"><option value="center center">center center</option><option value="center top" selected>center top</option><option value="center bottom">center bottom</option><option value="left center">left center</option><option value="right center">right center</option></select></div>
-        <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="live-imgheight" value="200" min="80" max="500" step="10" oninput="updateLiveImgPreview()"></div>
+        <div class="form-row"><label class="form-label">Ajustement</label><select class="form-input" id="live-imgfit" onchange="updateLiveImgPreview()">
+          <option value="cover" selected>Couvrir (remplit, recadre)</option>
+          <option value="contain">Contenir (image entière visible)</option>
+        </select></div>
+        <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="live-imgpos" onchange="updateLiveImgPreview()"><option value="center center">Centré</option><option value="center top" selected>Haut</option><option value="center bottom">Bas</option><option value="left center">Gauche</option><option value="right center">Droite</option></select></div>
       </div>
-      <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img id="live-imgpreview" src="" style="width:100%;height:200px;object-fit:cover;object-position:center top;display:block" onerror="this.style.display='none'"></div>
+      <div class="form-row-inline">
+        <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="live-imgheight" value="200" min="60" max="700" step="10" oninput="updateLiveImgPreview()"></div>
+        <div class="form-row"><label class="form-label">Largeur max (px, optionnel)</label><input type="number" class="form-input" id="live-imgwidth" min="80" max="1200" step="10" placeholder="Pleine largeur" oninput="updateLiveImgPreview()"></div>
+      </div>
+      <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:#F1F5F9"><img id="live-imgpreview" src="" style="width:100%;height:200px;object-fit:cover;object-position:center top;display:block" onerror="this.style.display='none'"></div>
       <div class="form-row-inline" style="margin-top:8px">
         <div class="form-row"><label class="form-label">Légende photo</label><input class="form-input" id="live-imgcaption" placeholder="Description de la photo"></div>
         <div class="form-row"><label class="form-label">Crédit © photo</label><input class="form-input" id="live-imgcredit" placeholder="Nom du photographe"></div>
@@ -6210,9 +6217,13 @@ window.updateLiveImgPreview=function(){
   const prev=document.getElementById('live-imgpreview');
   const posEl=document.getElementById('live-imgpos');
   const hEl=document.getElementById('live-imgheight');
+  const fitEl=document.getElementById('live-imgfit');
+  const wEl=document.getElementById('live-imgwidth');
   if(!prev)return;
   if(posEl) prev.style.objectPosition=posEl.value;
-  if(hEl) prev.style.height=hEl.value+'px';
+  if(hEl) prev.style.height=(parseInt(hEl.value,10)||200)+'px';
+  if(fitEl) prev.style.objectFit=fitEl.value;
+  if(wEl){ var w=parseInt(wEl.value,10); prev.style.maxWidth=w?w+'px':'none'; prev.style.margin=w?'0 auto':'0'; }
 };
 async function addLive(){
   if(!_liveQuill || _liveQuill.getText().trim().length===0){toast('Texte requis','error');return;}
@@ -6235,6 +6246,8 @@ async function addLive(){
   if(image){
     doc.image_position=document.getElementById('live-imgpos')?.value||'center top';
     doc.image_height=parseInt(document.getElementById('live-imgheight')?.value)||200;
+    doc.image_fit=document.getElementById('live-imgfit')?.value||'cover';
+    doc.image_width=parseInt(document.getElementById('live-imgwidth')?.value)||'';
     doc.image_caption=document.getElementById('live-imgcaption')?.value?.trim()||'';
     doc.image_credit=document.getElementById('live-imgcredit')?.value?.trim()||'';
   }
@@ -6268,10 +6281,14 @@ function editLive(id){
     ${mkPhaseSelect('m-live-phase',e.phase||'')}
     <div class="form-row" style="max-width:300px"><label class="form-label">🕐 Programmer la publication</label><input type="datetime-local" class="form-input" id="m-live-scheduled" value="${schedVal}"><div style="font-size:10px;color:var(--text3);margin-top:3px">Vider = publication immédiate</div></div>
     ${e.image?`<div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Ajustement</label><select class="form-input" id="m-live-imgfit"><option value="cover"${(e.image_fit||'cover')==='cover'?' selected':''}>Couvrir (remplit, recadre)</option><option value="contain"${e.image_fit==='contain'?' selected':''}>Contenir (image entière)</option></select></div>
       <div class="form-row"><label class="form-label">Position de l'image</label><select class="form-input" id="m-live-imgpos">${posOpts}</select></div>
-      <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="80" max="500" step="10"></div>
     </div>
-    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:cover;object-position:${e.image_position||'center center'};display:block" id="m-live-imgpreview" onerror="this.style.display='none'"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="m-live-imgheight" value="${e.image_height||200}" min="60" max="700" step="10"></div>
+      <div class="form-row"><label class="form-label">Largeur max (px, optionnel)</label><input type="number" class="form-input" id="m-live-imgwidth" value="${e.image_width||''}" min="80" max="1200" step="10" placeholder="Pleine largeur"></div>
+    </div>
+    <div style="margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:#F1F5F9"><img src="${e.image}" style="width:100%;height:${e.image_height||200}px;object-fit:${e.image_fit||'cover'};object-position:${e.image_position||'center center'};display:block${e.image_width?';max-width:'+e.image_width+'px;margin:0 auto':''}" id="m-live-imgpreview" onerror="this.style.display='none'"></div>
     <div class="form-row-inline" style="margin-top:8px">
       <div class="form-row"><label class="form-label">Légende photo</label><input class="form-input" id="m-live-imgcaption" value="${(e.image_caption||'').replace(/"/g,'&quot;')}"></div>
       <div class="form-row"><label class="form-label">Crédit © photo</label><input class="form-input" id="m-live-imgcredit" value="${(e.image_credit||'').replace(/"/g,'&quot;')}"></div>
@@ -6285,9 +6302,13 @@ function editLive(id){
   setTimeout(()=>{
     const posEl=document.getElementById('m-live-imgpos');
     const hEl=document.getElementById('m-live-imgheight');
+    const fitEl=document.getElementById('m-live-imgfit');
+    const wEl=document.getElementById('m-live-imgwidth');
     const prevEl=document.getElementById('m-live-imgpreview');
     if(posEl&&prevEl) posEl.onchange=function(){prevEl.style.objectPosition=this.value;};
-    if(hEl&&prevEl) hEl.oninput=function(){prevEl.style.height=this.value+'px';};
+    if(hEl&&prevEl) hEl.oninput=function(){prevEl.style.height=(parseInt(this.value,10)||200)+'px';};
+    if(fitEl&&prevEl) fitEl.onchange=function(){prevEl.style.objectFit=this.value;};
+    if(wEl&&prevEl) wEl.oninput=function(){var w=parseInt(this.value,10);prevEl.style.maxWidth=w?w+'px':'none';prevEl.style.margin=w?'0 auto':'0';};
     const edEl=document.getElementById('m-live-text-editor');
     if(edEl){
       window._modalQuill=new Quill(edEl,{theme:'snow',modules:{toolbar:_quillToolbar},placeholder:'Texte…'});
@@ -6312,6 +6333,10 @@ async function saveLiveEdit(id){
   if(posEl) update.image_position=posEl.value;
   const hEl=document.getElementById('m-live-imgheight');
   if(hEl) update.image_height=parseInt(hEl.value)||200;
+  const fitEl=document.getElementById('m-live-imgfit');
+  if(fitEl) update.image_fit=fitEl.value;
+  const wEl=document.getElementById('m-live-imgwidth');
+  if(wEl) update.image_width=parseInt(wEl.value)||firebase.firestore.FieldValue.delete();
   const capEl=document.getElementById('m-live-imgcaption');
   if(capEl) update.image_caption=capEl.value.trim();
   const credEl=document.getElementById('m-live-imgcredit');
