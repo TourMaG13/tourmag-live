@@ -753,8 +753,8 @@ img{display:block}a{text-decoration:none}
 .jr-hd .ct{font-family:'Josefin Sans';font-size:var(--jr-title-size,14px)!important;font-weight:700}
 .jr-card{padding:14px;border-bottom:1px solid var(--border)}.jr-card:last-child{border-bottom:none}
 .jr-top{display:flex;align-items:center;gap:12px;margin-bottom:5px}
-.jr-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
-.jr-avatar-placeholder{width:46px;height:46px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border)}
+.jr-avatar{width:var(--jr-photo-size,46px);height:var(--jr-photo-size,46px);border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);background:#F1F5F9}
+.jr-avatar-placeholder{width:var(--jr-photo-size,46px);height:var(--jr-photo-size,46px);border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border)}
 .jr-name{font-family:'Josefin Sans';font-size:var(--jr-ns,13px);font-weight:700;color:var(--text);line-height:1.3}
 .jr-role{font-size:var(--jr-rs,10px);color:var(--acc);font-weight:600;margin-top:1px}
 .jr-bio{font-size:12.5px;line-height:1.55;color:var(--text2);margin-bottom:6px}
@@ -1005,7 +1005,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-card{border:1px solid var(--exp-line);padding:26px}
 .exp-card-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:var(--exp-accent);padding:5px 12px;display:inline-block;margin-bottom:16px;font-weight:600}
 .exp-reporter{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.exp-reporter img{width:52px;height:52px;border-radius:6px;object-fit:cover}
+.exp-reporter img{width:var(--jr-photo-size,52px);height:var(--jr-photo-size,52px);border-radius:6px;object-fit:cover}
 .exp-reporter-name{font-family:'Libre Caslon Display',serif;font-size:var(--jr-ns,21px)}
 .exp-reporter-role{font-size:var(--jr-rs,12.5px);color:var(--exp-grey);margin-top:3px;line-height:1.4}
 .exp-card p{font-size:var(--jr-rs,13.5px);line-height:1.6;color:#333}
@@ -2030,6 +2030,7 @@ function render(data){
   if(event.sectionRuleColor)  document.documentElement.style.setProperty('--sec-rule', event.sectionRuleColor);
   // Taille du logo hero (mode classique)
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||56)+'px');
+  document.documentElement.style.setProperty('--jr-photo-size', (event.journalistPhotoSize||52)+'px');
   document.documentElement.style.setProperty('--logo-align', ({left:'flex-start',center:'center',right:'flex-end'})[event.logoAlign]||'flex-start');
   // Override with per-phase colors
   const _activePhaseObj = activePhase ? phases.find(p => p.id === activePhase) : null;
@@ -3067,6 +3068,7 @@ function renderExpedition(data){
   document.documentElement.style.setProperty('--exp-accent', accent);
   document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
+  document.documentElement.style.setProperty('--jr-photo-size', (event.journalistPhotoSize||52)+'px');
   document.documentElement.style.setProperty('--logo-align', ({left:'flex-start',center:'center',right:'flex-end'})[event.logoAlign]||'flex-start');
   document.documentElement.style.setProperty('--exp-hero-h', ((_bannerH||event.hero_height)||420)+'px');
   document.documentElement.style.setProperty('--hero-photo-mobile-h', (parseInt(event.heroPhotoMobileH,10)>0 ? event.heroPhotoMobileH+'px' : 'min(600px,75vh)'));
