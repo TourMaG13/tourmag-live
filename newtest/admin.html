@@ -1939,7 +1939,13 @@ function _uiBusy(){
   // L'éditeur du constructeur est un contexte d'édition : ne pas le reconstruire
   // sous un snapshot Firestore, sinon on écrase la saisie en cours (contenteditable).
   var builderEditing = (typeof _bpEditId!=='undefined' && _bpEditId);
-  return !!(panelOpen || modalOpen || builderEditing);
+  // Formulaire du fil live en cours de remplissage (image ajoutée, texte saisi) :
+  // ne pas reconstruire l'onglet sous un snapshot (ex. ajout auto à la médiathèque),
+  // sinon les options d'image et la saisie disparaissent.
+  var liveImg=document.getElementById('live-image');
+  var liveTextEditing = false;
+  try{ liveTextEditing = !!(liveImg && liveImg.value && liveImg.value.trim() && liveImg.value.indexOf('⏳')<0); }catch(e){}
+  return !!(panelOpen || modalOpen || builderEditing || liveTextEditing);
 }
 function scheduleRender(){
   if(renderPending) clearTimeout(renderPending);
