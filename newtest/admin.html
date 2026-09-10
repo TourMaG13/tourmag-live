@@ -3275,6 +3275,7 @@ function renderApparence(el){
     heroInner += '<div style="margin-bottom:12px;padding:10px 12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:12px;color:#1E40AF;line-height:1.5">ℹ️ Cet événement a <strong>'+(ev.phases||[]).length+' phase(s)</strong>. Les réglages ci-dessous sont les <strong>valeurs par défaut</strong> ; chaque phase peut les remplacer dans l\'onglet <strong>Phases / Temps forts</strong>. Si une phase surcharge un réglage, c\'est la valeur de la phase qui s\'affiche pour cette phase.</div>';
   }
   heroInner += '<div class="form-row"><label class="form-label">Image hero</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="app-hero-image" value="'+(ev.hero_image||'')+'" style="flex:1" placeholder="Photo affichée à droite du hero">'+mkMediaPickerBtn('app-hero-image')+mkUploadBtn('app-hero-image')+'</div></div>';
+  heroInner += '<div class="form-row"><label class="form-label">Crédit © de la photo hero (optionnel)</label><input class="form-input" id="app-hero-credit" value="'+((ev.heroPhotoCredit||'').replace(/"/g,'&quot;'))+'" placeholder="Ex : Depositphotos, nom du photographe…"></div>';
   if(!isExp){
     heroInner += '<div class="form-row"><label class="form-label">Label du badge</label><input class="form-input" id="app-hero-badge" value="'+((ev.heroBadgeLabel!=null?ev.heroBadgeLabel:'Dossier spécial TourMaG')).replace(/"/g,'&quot;')+'" placeholder="Dossier spécial TourMaG"><div style="font-size:10px;color:var(--text3);margin-top:2px">Petit libellé affiché en haut du hero (à côté de « EN DIRECT »).</div></div>';
   }
@@ -3609,6 +3610,7 @@ async function saveHeroSettings(){
   const _gv=function(id){var e=document.getElementById(id);return e?e.value:undefined;};
   const ud={
     hero_image:document.getElementById('app-hero-image').value.trim(),
+    heroPhotoCredit:(document.getElementById('app-hero-credit')?document.getElementById('app-hero-credit').value.trim():''),
     hero_height:parseInt(document.getElementById('app-hero-height').value)||(_isExp?420:460),
     heroPhotoMobileH:(parseInt((document.getElementById('app-hero-photo-mobile-h')||{}).value,10)||'')
   };
