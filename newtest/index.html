@@ -865,6 +865,8 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-banner-inner .exp-hero-subtitle{color:rgba(255,255,255,.9)}
 .exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block;animation:heroImgFade .5s ease}
 .exp-hero-credit{position:absolute;bottom:12px;right:14px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,.7);background:rgba(17,17,17,.5);padding:4px 8px}
+.hero-split-image,.hero-banner{position:relative}
+.hero-photo-credit{position:absolute;bottom:10px;right:12px;z-index:2;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.75);background:rgba(17,17,17,.45);padding:3px 8px;border-radius:3px}
 
 /* Counters */
 .exp-counters{display:grid;grid-template-columns:repeat(var(--exp-counter-cols,4),1fr);border-bottom:1px solid var(--exp-line)}
@@ -2045,6 +2047,7 @@ function render(data){
   const _heroTitle    = _ph.heroTitle    || event.title    || '';
   const _heroSubtitle = _ph.heroSubtitle || event.subtitle || '';
   const _heroImage    = _ph.heroImage    || event.hero_image || '';
+  const _heroPhotoCredit = _ph.heroPhotoCredit || event.heroPhotoCredit || '';
   const _heroLogo     = _ph.heroLogo     || event.logo_url || '';
   const _heroLocation = _ph.heroLocation || event.location || '';
   const _heroDates    = _ph.heroDates    || event.dates    || '';
@@ -2132,7 +2135,7 @@ function render(data){
     if(useBanner){
       // Image bandeau pleine largeur (remplace les 2 colonnes) — hauteur propre possible
       const _bStyle = _bannerH ? `style="--hero-h:${_bannerH}px"` : (hh?`style="--hero-h:${hh}px"`:'');
-      o += `<div class="hero-banner fi" ${_bStyle}><img class="hero-banner-img" src="${_heroBannerImage}" alt="">`;
+      o += `<div class="hero-banner fi" ${_bStyle}><img class="hero-banner-img" src="${_heroBannerImage}" alt="">${_heroPhotoCredit?`<span class="hero-photo-credit">© ${_heroPhotoCredit}</span>`:''}`;
       if(_heroBannerText){
         o += `<div class="hero-banner-overlay"><div class="hero-banner-inner">`;
         o += `<div class="hero-badge-row">${event.status==='live'?'<span class="bdg-live">EN DIRECT</span>':''}<span class="bdg-event">${event.heroBadgeLabel||'Dossier spécial TourMaG'}</span></div>`;
@@ -2167,7 +2170,7 @@ function render(data){
       _split += `</div>`;
     }
     _split += `</div>`;
-    if(hasImage) _split += `<div class="hero-split-image"><img src="${_heroImage}" alt="" onerror="this.parentElement.remove()"></div>`;
+    if(hasImage) _split += `<div class="hero-split-image"><img src="${_heroImage}" alt="" onerror="this.parentElement.remove()">${_heroPhotoCredit?`<span class="hero-photo-credit">© ${_heroPhotoCredit}</span>`:''}</div>`;
     _split += `</div>`;
     o = _split;
     }
