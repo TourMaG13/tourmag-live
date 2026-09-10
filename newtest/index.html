@@ -774,7 +774,11 @@ img{display:block}a{text-decoration:none}
 .sponsors-block{text-align:center;padding:32px;background:var(--card);border:1.5px solid var(--border);border-radius:18px;margin:40px auto;max-width:680px}
 .sponsors-block h3{font-family:'Josefin Sans';font-size:16px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
 .sponsors-block p{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
-.sponsors-logos{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+.sponsors-logos{display:flex;align-items:flex-start;justify-content:center;gap:32px;flex-wrap:wrap}
+.sponsors-group{margin-top:18px}
+.sponsors-group-title{text-align:center;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc,#E8842C);margin-bottom:14px;position:relative}
+.sponsor-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sponsor-caption{font-size:11px;color:#64748B;text-align:center;max-width:140px;line-height:1.3}
 .sponsors-logos img{height:var(--sp-logo-h,30px);opacity:var(--sp-logo-opacity,.4);filter:var(--sp-logo-filter,grayscale(100%));transition:all .2s}
 /* ===== Bloc Contact (mode classique) ===== */
 .contact-block{max-width:1200px;margin:40px auto;padding:0 28px;box-sizing:border-box;width:100%}
@@ -2561,7 +2565,9 @@ function render(data){
       const url=typeof p==='string'?p:p.url||'';
       const cap=typeof p==='object'?p.caption||'':'';
       const cr=typeof p==='object'?p.copyright||'':'';
-      return `<div style="position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
+      const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
+      const _hSty = ph_h?` style="height:${ph_h}px"`:'';
+      return `<div style="position:relative;overflow:hidden;border-radius:14px"${_hSty}><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
     }
     if(photos.length >= 3){
       o += `<div class="gallery-grid fi" style="--gal-h:${galH}px">`;
@@ -2586,17 +2592,38 @@ function render(data){
     let _sp = event.sponsors.slice();
     if(activePhase && phases.length) _sp = _sp.filter(s => !s.phase || s.phase === activePhase);
     if(!_sp.length) return '';
-    let o = `<div class="sponsors-block fi"><h3>${event.sponsorsTitle||'Soutien & Partenaires'}</h3><p>${event.sponsorsSubtitle||'Cette couverture est réalisée avec le soutien de nos partenaires'}</p><div class="sponsors-logos">`;
-    _sp.sort((a,b)=>(a.order||0)-(b.order||0)).forEach(s => {
+    _sp.sort((a,b)=>(a.order||0)-(b.order||0));
+    function spItem(s){
       var _spKey = (s.name||'sponsor').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40) || 'sponsor';
+      let it='';
+      const cap = s.caption ? `<div class="sponsor-caption">${s.caption}</div>` : '';
       if(s.logo_url){
         const link = s.url ? ` onclick="window.open('${s.url}','_blank')" style="cursor:pointer"` : '';
-        o += `<img src="${s.logo_url}" alt="${s.name||''}"${link} data-zone="sponsor_${_spKey}" onerror="this.remove()">`;
+        it = `<div class="sponsor-item"><img src="${s.logo_url}" alt="${s.name||''}"${link} data-zone="sponsor_${_spKey}" onerror="this.parentElement.remove()">${cap}</div>`;
       } else if(s.name){
-        o += `<span style="font-family:'Josefin Sans';font-size:18px;font-weight:700;color:#CBD5E1;letter-spacing:1px">${s.name}</span>`;
+        it = `<div class="sponsor-item"><span style="font-family:'Josefin Sans';font-size:18px;font-weight:700;color:#CBD5E1;letter-spacing:1px">${s.name}</span>${cap}</div>`;
       }
-    });
-    o += `</div></div>`;
+      return it;
+    }
+    let o = `<div class="sponsors-block fi"><h3>${event.sponsorsTitle||'Soutien & Partenaires'}</h3><p>${event.sponsorsSubtitle||'Cette couverture est réalisée avec le soutien de nos partenaires'}</p>`;
+    // Regrouper par catégorie (dans l'ordre d'apparition). Les sans-catégorie forment un groupe neutre.
+    const hasCats = _sp.some(s=>s.category);
+    if(hasCats){
+      const groups=[]; const idx={};
+      _sp.forEach(s=>{ const c=s.category||''; if(!(c in idx)){ idx[c]=groups.length; groups.push({cat:c,items:[]}); } groups[idx[c]].items.push(s); });
+      groups.forEach(g=>{
+        o += `<div class="sponsors-group">`;
+        if(g.cat) o += `<div class="sponsors-group-title">${g.cat}</div>`;
+        o += `<div class="sponsors-logos">`;
+        g.items.forEach(s=>{ o += spItem(s); });
+        o += `</div></div>`;
+      });
+    } else {
+      o += `<div class="sponsors-logos">`;
+      _sp.forEach(s=>{ o += spItem(s); });
+      o += `</div>`;
+    }
+    o += `</div>`;
     return o;
   }
 
@@ -3626,9 +3653,30 @@ function renderExpedition(data){
     }
     sp.sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
-    let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p><div class="exp-sponsors-grid">`;
-    sp.forEach(s=>{ if(s.logo_url){const cl=s.url?` onclick="window.open('${s.url}','_blank')"`:'';o+=`<img src="${s.logo_url}" alt="${s.name||''}"${cl} onerror="this.remove()">`;}else if(s.name)o+=`<span>${s.name}</span>`; });
-    return o+`</div></section>`;
+    let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p>`;
+    function _expSpItem(s){
+      const cap=s.caption?`<div class="sponsor-caption">${s.caption}</div>`:'';
+      if(s.logo_url){const cl=s.url?` onclick="window.open('${s.url}','_blank')" style="cursor:pointer"`:'';return `<div class="sponsor-item"><img src="${s.logo_url}" alt="${s.name||''}"${cl} onerror="this.parentElement.remove()">${cap}</div>`;}
+      if(s.name) return `<div class="sponsor-item"><span>${s.name}</span>${cap}</div>`;
+      return '';
+    }
+    const _hasCats=sp.some(s=>s.category);
+    if(_hasCats){
+      const groups=[]; const gi={};
+      sp.forEach(s=>{ const c=s.category||''; if(!(c in gi)){ gi[c]=groups.length; groups.push({cat:c,items:[]}); } groups[gi[c]].items.push(s); });
+      groups.forEach(g=>{
+        o+=`<div class="sponsors-group">`;
+        if(g.cat) o+=`<div class="sponsors-group-title">${g.cat}</div>`;
+        o+=`<div class="exp-sponsors-grid">`;
+        g.items.forEach(s=>{ o+=_expSpItem(s); });
+        o+=`</div></div>`;
+      });
+    } else {
+      o+=`<div class="exp-sponsors-grid">`;
+      sp.forEach(s=>{ o+=_expSpItem(s); });
+      o+=`</div>`;
+    }
+    return o+`</section>`;
   };
 
   _b.product = function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); };
