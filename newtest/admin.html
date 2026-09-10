@@ -1325,7 +1325,13 @@ async function uploadImageTo(targetInputId){
       const resp=await fetch(url,{method:'POST',body:fd});
       const data=await resp.json();
       if(data.error){toast('Erreur: '+data.error,'error');if(target){target.value='';target.disabled=false;}return;}
-      if(target){target.value=data.url;target.disabled=false;target.dispatchEvent(new Event('input'));}
+      if(target){
+        target.value=data.url;target.disabled=false;
+        target.dispatchEvent(new Event('input',{bubbles:true}));
+        // Filet : déclenche explicitement l'affichage des options d'image du fil live
+        if(targetInputId==='live-image' && typeof toggleLiveImgOpts==='function'){ toggleLiveImgOpts(); }
+        if(targetInputId==='m-live-image' && typeof toggleMLiveImgOpts==='function'){ toggleMLiveImgOpts(); }
+      }
       // Auto-add to media library
       try{await subCol('media').add({url:data.url,name:file.name||'upload',created_at:firebase.firestore.FieldValue.serverTimestamp()});}catch(em){console.warn('Media auto-save failed',em);}
       toast('Image uploadée + ajoutée à la médiathèque');
@@ -1405,13 +1411,17 @@ function pickMediaItem(idx){
     window._savedModalHtml=null;
     setTimeout(()=>{
       const target=document.getElementById(targetId);
-      if(target){target.value=url;target.dispatchEvent(new Event('input'));}
+      if(target){target.value=url;target.dispatchEvent(new Event('input',{bubbles:true}));
+        if(targetId==='live-image' && typeof toggleLiveImgOpts==='function'){ toggleLiveImgOpts(); }
+      }
       toast('Image sélectionnée');
     },50);
   } else {
     closeModal();
     const target=document.getElementById(targetId);
-    if(target){target.value=url;target.dispatchEvent(new Event('input'));}
+    if(target){target.value=url;target.dispatchEvent(new Event('input',{bubbles:true}));
+      if(targetId==='live-image' && typeof toggleLiveImgOpts==='function'){ toggleLiveImgOpts(); }
+    }
     toast('Image sélectionnée');
   }
 }
@@ -8330,6 +8340,14 @@ async function moveVideo(id,secId,dir){
 
 // ==================== JOURNALISTES (répertoire global + assignation événement) ====================
 
+async function _saveJrPhotoSize(){
+  const el=document.getElementById('jr-photo-size'); if(!el) return;
+  const size=parseInt(el.value,10)||52;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  ev.journalistPhotoSize=size;
+  try{ await evRef().update({journalistPhotoSize:size}); toast('Taille des photos enregistrée'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function renderJournalistes(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const eventJournalists=ev.eventJournalists||[];
@@ -8342,6 +8360,17 @@ function renderJournalistes(el){
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-reporters"/></svg>Journalistes</div><div class="page-desc">Gérez le répertoire global de journalistes et assignez-les à cet événement.</div>
 
   `+moduleConfigBlock('journalistes')+`
+
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Apparence</h3>
+    <div class="form-row" style="max-width:360px"><label class="form-label">Taille des photos de journalistes</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input type="range" id="jr-photo-size" min="40" max="140" step="2" value="${ev.journalistPhotoSize||52}" oninput="document.getElementById('jr-photo-size-val').textContent=this.value+'px'" style="flex:1">
+        <span id="jr-photo-size-val" style="font-size:13px;font-weight:600;min-width:52px">${ev.journalistPhotoSize||52}px</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">S'applique à toutes les photos de journalistes sur le dashboard (classique et expédition).</div>
+      <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="_saveJrPhotoSize()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>
+    </div>
+  </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-pin"/></svg> Assignés à cet événement (${assignedList.length})</h3>`;
   if(!currentEventId) h+=`<div class="empty"><div class="text">Sélectionnez un événement</div></div>`;
