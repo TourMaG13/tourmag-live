@@ -10835,12 +10835,24 @@ function renderGallery(el){
 
   `+moduleConfigBlock('gallery')+`
 
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Taille des photos</h3>
+    <div class="form-row" style="max-width:420px"><label class="form-label">Hauteur des vignettes (globale)</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input type="range" id="gal-global-h" min="120" max="420" step="10" value="${ev.galleryHeight||280}" oninput="document.getElementById('gal-global-h-val').textContent=this.value+'px'" style="flex:1">
+        <span id="gal-global-h-val" style="font-size:13px;font-weight:600;min-width:56px">${ev.galleryHeight||280}px</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">S'applique à toutes les photos, sauf celles ayant une hauteur individuelle ci-dessous.</div>
+      <div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="_saveGalleryHeight()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la taille</button></div>
+    </div>
+  </div>
+
   <div class="admin-card"><h3>Photos</h3><div id="gallery-list">`;
   photos.forEach((p,i)=>{
     const url=typeof p==='string'?p:p.url||'';
     const caption=typeof p==='object'?p.caption||'':'';
     const copyright=typeof p==='object'?p.copyright||'':'';
     const phase=typeof p==='object'?p.phase||'':'';
+    const ph_h=typeof p==='object'?(p.height||''):'';
     const _gph=getPhases();
     const _gphSel=_gph.length?'<select class="form-input" data-gal-phase="'+i+'" style="width:auto;min-width:90px;font-size:10px;padding:3px 6px"><option value="">Toutes</option>'+_gph.map(ph=>'<option value="'+ph.id+'"'+(phase===ph.id?' selected':'')+'>'+ph.name+'</option>').join('')+'</select>':'';
     h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px" data-gal-row>
@@ -10849,6 +10861,7 @@ function renderGallery(el){
       <input class="form-input" value="${url.replace(/"/g,'&quot;')}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'">
       <input class="form-input" value="${caption.replace(/"/g,'&quot;')}" placeholder="Légende" style="width:120px" data-gal-cap="${i}">
       <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:80px;font-size:11px" data-gal-cr="${i}">
+      <input class="form-input" type="number" value="${ph_h}" placeholder="Haut. px" title="Hauteur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-h="${i}" min="80" max="600" step="10">
       ${_gphSel}
       <button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>
     </div>`;
@@ -10960,16 +10973,28 @@ window.moveGalRow = function(row, dir){
   saveGallery();
 };
 async function saveGallery(){
-  const urls=document.querySelectorAll('[data-gal-url]');
-  const caps=document.querySelectorAll('[data-gal-cap]');
-  const crs=document.querySelectorAll('[data-gal-cr]');
+  const rows=document.querySelectorAll('[data-gal-row]');
   const gallery=[];
-  urls.forEach((u,i)=>{
-    if(u.value.trim()) gallery.push({url:u.value.trim(),caption:caps[i]?.value.trim()||'',copyright:crs[i]?.value.trim()||'',phase:document.querySelector(`[data-gal-phase="${i}"]`)?.value||''});
+  rows.forEach(row=>{
+    const u=row.querySelector('[data-gal-url]'); if(!u||!u.value.trim()) return;
+    const cap=row.querySelector('[data-gal-cap]');
+    const cr=row.querySelector('[data-gal-cr]');
+    const hh=row.querySelector('[data-gal-h]');
+    const ph=row.querySelector('[data-gal-phase]');
+    const obj={url:u.value.trim(),caption:cap?cap.value.trim():'',copyright:cr?cr.value.trim():'',phase:ph?ph.value:''};
+    const hv=hh?parseInt(hh.value,10):0;
+    if(hv) obj.height=hv;
+    gallery.push(obj);
   });
   saving(true);
   try{ await evRef().update({gallery}); toast('Galerie enregistrée ('+gallery.length+' photos)'); }
   catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveGallery error:',e); }
+}
+async function _saveGalleryHeight(){
+  const el=document.getElementById('gal-global-h'); if(!el) return;
+  const h=parseInt(el.value,10)||280;
+  try{ await evRef().update({galleryHeight:h}); toast('Taille des photos enregistrée'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 async function saveGalSettings(){
@@ -11019,20 +11044,33 @@ function renderSponsors(el){
   el.innerHTML=h;
 }
 function addSponsor(){
+  const _cats=_sponsorCategories();
   openModal(`<h3>Nouveau partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Catégorie / libellé de groupe (optionnel)</label><input class="form-input" id="m-sp-category" placeholder="Ex : Soutien, Partenaire, Financeur…" list="sp-cat-list"><datalist id="sp-cat-list">${_cats.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">').join('')}</datalist><div style="font-size:10px;color:var(--text3);margin-top:3px">Les logos ayant le même libellé sont regroupés ensemble sur le dashboard.</div></div>
+    <div class="form-row"><label class="form-label">Texte sous le logo (optionnel)</label><input class="form-input" id="m-sp-caption" placeholder="Ex : Financeur officiel"></div>
     <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
     ${mkPhaseSelect('m-sp-phase','',{})}
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${((eventsData.find(e=>e.id===currentEventId)?.sponsors||[]).length+1)*10}" style="width:80px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveSponsor()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Ajouter</button></div>`);
 }
+// Liste des catégories déjà utilisées (pour l'autocomplétion)
+function _sponsorCategories(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const set={};
+  (ev.sponsors||[]).forEach(s=>{ if(s.category) set[s.category]=1; });
+  return Object.keys(set);
+}
 function editSponsor(idx){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const s=(ev.sponsors||[])[idx];if(!s)return;
+  const _cats=_sponsorCategories();
   openModal(`<h3>Modifier le partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
+    <div class="form-row"><label class="form-label">Catégorie / libellé de groupe (optionnel)</label><input class="form-input" id="m-sp-category" value="${(s.category||'').replace(/"/g,'&quot;')}" placeholder="Ex : Soutien, Partenaire, Financeur…" list="sp-cat-list"><datalist id="sp-cat-list">${_cats.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">').join('')}</datalist></div>
+    <div class="form-row"><label class="form-label">Texte sous le logo (optionnel)</label><input class="form-input" id="m-sp-caption" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="Ex : Financeur officiel"></div>
     <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
     ${mkPhaseSelect('m-sp-phase',s.phase||'',{})}
     <div class="form-row"><label class="form-label">Ordre</label><input type="number" class="form-input" id="m-sp-order" value="${s.order||0}" style="width:80px"></div>
@@ -11041,7 +11079,7 @@ function editSponsor(idx){
 async function saveSponsor(editIdx){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sponsors=[...(ev.sponsors||[])];
-  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),phase:document.getElementById('m-sp-phase')?.value||'',order:parseInt(document.getElementById('m-sp-order').value)||0};
+  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),phase:document.getElementById('m-sp-phase')?.value||'',order:parseInt(document.getElementById('m-sp-order').value)||0,category:(document.getElementById('m-sp-category')?.value||'').trim(),caption:(document.getElementById('m-sp-caption')?.value||'').trim()};
   if(editIdx!==undefined&&editIdx!==null) sponsors[editIdx]=data;
   else sponsors.push(data);
   saving(true);
