@@ -11442,11 +11442,15 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
     ${(function(){
       const cfg=activeCfg;
-      const LABELS={header:'En-tête (logo, titre, bouton Live)',flash:'Dernière info (flash)',mid:'Essentiel + Citations',live:'Fil en direct (3 dernières)',articles:'Derniers articles (3)',timeline:'Frise / Timeline',footer:'Zone personnalisable (bas)'};
-      const DEF=['header','flash','mid','live','articles','timeline','footer'];
+      const LABELS={header:'En-tête (logo, titre, bouton Live)',flash:'Dernière info (flash)',essential:'Essentiel (à retenir)',citations:'Citations',kpis:'Chiffres clés',gallery:'Galerie photos',reporters:'Reporters sur place',live:'Fil en direct',articles:'Derniers articles (3)',timeline:'Frise / Timeline',footer:'Zone personnalisable (bas)'};
+      const DEF=['header','flash','essential','citations','kpis','gallery','reporters','live','articles','timeline','footer'];
       let order=(cfg.order&&cfg.order.length)?cfg.order.slice():DEF.slice();
+      // Migration : ancien module fusionné "mid" -> essentiel + citations à la même position
+      const _midIdx=order.indexOf('mid');
+      if(_midIdx>=0) order.splice(_midIdx,1,'essential','citations');
       DEF.forEach(k=>{ if(!order.includes(k)) order.push(k); });
-      const off=cfg.off||[];
+      let off=(cfg.off||[]).slice();
+      if(off.includes('mid')){ off=off.filter(k=>k!=='mid'); if(!off.includes('essential'))off.push('essential'); if(!off.includes('citations'))off.push('citations'); }
       const accent=cfg.accent||'#E8842C';
       const bg=cfg.bg||'';
       const textColor=cfg.textColor||'';
@@ -11500,6 +11504,37 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
       <div style="font-size:10px;color:var(--text3);margin-top:6px">Si aucun texte ni bouton n'est renseigné, la zone ne s'affiche pas.</div>
     </div>
     <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveWidgetConfig()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la configuration</button></div>
+  </div>
+
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg> Chiffres clés du widget</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">Chiffres libres affichés par le module « Chiffres clés » (max 4). Communs à tous les encarts de l'événement.</p>
+    <div id="w-kpi-list">${(function(){
+      const kpis=Array.isArray(ev.widgetKpis)?ev.widgetKpis:[];
+      if(!kpis.length) return '<div style="font-size:12px;color:var(--text3);margin-bottom:8px" id="w-kpi-empty">Aucun chiffre pour le moment.</div>';
+      return kpis.map(k=>`<div class="w-kpi-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input class="form-input" data-kpi-val placeholder="Valeur (ex: 3 200)" value="${(k.value||'').replace(/"/g,'&quot;')}" style="width:140px">
+        <input class="form-input" data-kpi-lbl placeholder="Libellé (ex: Visiteurs)" value="${(k.label||'').replace(/"/g,'&quot;')}" style="flex:1">
+        <button class="btn btn-danger btn-xs" onclick="this.closest('.w-kpi-row').remove()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>
+      </div>`).join('');
+    })()}</div>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="wKpiAddRow()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-plus"/></svg> Ajouter un chiffre</button></div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveWidgetKpis()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les chiffres</button></div>
+  </div>
+
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg> Fil en direct — mode d'affichage</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">S'applique au module « Fil en direct » de tous les encarts de l'événement.</p>
+    <div class="form-row" style="max-width:420px"><label class="form-label">Mode</label>
+      <select class="form-input" id="w-live-mode" onchange="document.getElementById('w-live-teaser-opts').style.display=this.value==='teaser'?'block':'none'">
+        <option value="full"${(ev.liveMode||'full')==='full'?' selected':''}>Complet — affiche le contenu (pour du live gratuit)</option>
+        <option value="teaser"${ev.liveMode==='teaser'?' selected':''}>Teaser flouté — aperçu masqué + cadenas (contenu abonnés)</option>
+      </select>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">En mode teaser, le texte est tronqué avant l'envoi : aucun contenu lisible n'atteint le navigateur.</div>
+    </div>
+    <div id="w-live-teaser-opts" style="display:${ev.liveMode==='teaser'?'block':'none'};margin-top:10px">
+      <div class="form-row"><label class="form-label">Message du cadenas</label><input class="form-input" id="w-live-lock-label" value="${(ev.liveLockLabel||'').replace(/"/g,'&quot;')}" placeholder="Suivez le fil en direct, réservé aux abonnés"></div>
+      <div class="form-row" style="max-width:280px"><label class="form-label">Libellé du bouton</label><input class="form-input" id="w-live-lock-cta" value="${(ev.liveLockCta||'').replace(/"/g,'&quot;')}" placeholder="Accéder au direct"></div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveWidgetLiveMode()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le mode</button></div>
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
@@ -11622,6 +11657,49 @@ async function saveWidgetConfig(){
   }
   await evRef().update(upd);
   toast('Configuration enregistrée');
+  setTimeout(function(){
+    const w=document.getElementById('prev-wc');
+    if(w){ const base=w.src.split('&_ap=')[0].split('?_ap=')[0]; w.src=base+(base.indexOf('?')>=0?'&':'?')+'_ap='+Date.now(); }
+  }, 900);
+}
+
+function wKpiAddRow(){
+  const list=document.getElementById('w-kpi-list');
+  if(!list) return;
+  const empty=document.getElementById('w-kpi-empty'); if(empty) empty.remove();
+  if(list.querySelectorAll('.w-kpi-row').length>=4){ toast('4 chiffres maximum','error'); return; }
+  const row=document.createElement('div');
+  row.className='w-kpi-row';
+  row.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
+  row.innerHTML='<input class="form-input" data-kpi-val placeholder="Valeur (ex: 3 200)" style="width:140px"><input class="form-input" data-kpi-lbl placeholder="Libellé (ex: Visiteurs)" style="flex:1"><button class="btn btn-danger btn-xs" onclick="this.closest(\'.w-kpi-row\').remove()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>';
+  list.appendChild(row);
+}
+
+async function saveWidgetKpis(){
+  saving(true);
+  const rows=[...document.querySelectorAll('#w-kpi-list .w-kpi-row')];
+  const kpis=rows.map(r=>({
+    value:(r.querySelector('[data-kpi-val]')?.value||'').trim(),
+    label:(r.querySelector('[data-kpi-lbl]')?.value||'').trim()
+  })).filter(k=>k.value||k.label).slice(0,4);
+  await evRef().update({widgetKpis:kpis});
+  toast('Chiffres enregistrés');
+  setTimeout(function(){
+    const w=document.getElementById('prev-wc');
+    if(w){ const base=w.src.split('&_ap=')[0].split('?_ap=')[0]; w.src=base+(base.indexOf('?')>=0?'&':'?')+'_ap='+Date.now(); }
+  }, 900);
+}
+
+async function saveWidgetLiveMode(){
+  saving(true);
+  const mode=document.getElementById('w-live-mode')?.value||'full';
+  const upd={
+    liveMode:mode,
+    liveLockLabel:(document.getElementById('w-live-lock-label')?.value||'').trim(),
+    liveLockCta:(document.getElementById('w-live-lock-cta')?.value||'').trim()
+  };
+  await evRef().update(upd);
+  toast('Mode du fil live enregistré');
   setTimeout(function(){
     const w=document.getElementById('prev-wc');
     if(w){ const base=w.src.split('&_ap=')[0].split('?_ap=')[0]; w.src=base+(base.indexOf('?')>=0?'&':'?')+'_ap='+Date.now(); }
