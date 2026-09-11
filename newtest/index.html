@@ -1914,6 +1914,31 @@ function _mkPhaseTitle(event, activePhase, phases){
 
 </script>
 <script>
+function _loadIntroFont(name){
+  if(!name) return;
+  try{
+    window._introFontsLoaded = window._introFontsLoaded || {};
+    if(window._introFontsLoaded[name]) return;
+    window._introFontsLoaded[name]=1;
+    var l=document.createElement('link'); l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(name)+':wght@300;400;500;600;700&display=swap';
+    document.head.appendChild(l);
+  }catch(e){}
+}
+// Construit le style CSS d'un texte libre (intro/sous-titre) à partir d'un objet {text,font,size,align,color}
+function _ctTextStyle(cfg, defColor, defSize){
+  const legacyMap={sans:'Poppins',serif:'Georgia',mono:'IBM Plex Mono',display:'Josefin Sans'};
+  let fontName=(cfg&&cfg.font)||'';
+  if(legacyMap[fontName]) fontName=legacyMap[fontName];
+  const genericSerif=['Georgia','Playfair Display','Lora','Source Serif 4','Merriweather','Crimson Text','Libre Baskerville','EB Garamond'];
+  const generic=fontName==='IBM Plex Mono'?'monospace':(genericSerif.indexOf(fontName)>=0?'serif':'sans-serif');
+  const ff=fontName?`'${fontName}',${generic}`:"'Poppins',sans-serif";
+  if(fontName && fontName!=='Georgia') _loadIntroFont(fontName);
+  const sz=parseInt(cfg&&cfg.size)||defSize;
+  const al=(cfg&&cfg.align)||'center';
+  const col=(cfg&&cfg.color)||defColor;
+  return `font-family:${ff};font-size:${sz}px;text-align:${al};color:${col};line-height:1.6`;
+}
 function render(data){
   const {event,essential:_rawEss,live:_rawLive,rubriques,citations:_rawCit,articles:_rawArt,programme:_rawProg,timeline,videos:_rawVid,journalists,interviews:_rawItw,etapes,questions:_rawQuestions} = data;
 
@@ -2699,14 +2724,16 @@ function render(data){
     // Texte libre au-dessus du bloc contact
     const _intro=ctRaw.intro;
     if(_intro && (_intro.text||'').trim()){
-      const _fontMap={sans:"'Poppins',sans-serif",serif:"Georgia,'Times New Roman',serif",mono:"'IBM Plex Mono',monospace",display:"'Josefin Sans',sans-serif"};
-      const _ff=_fontMap[_intro.font]||_fontMap.sans;
-      const _sz=parseInt(_intro.size)||18;
-      const _al=_intro.align||'center';
-      const _col=_intro.color||'var(--text2,#475569)';
-      o += `<div class="contact-intro" style="font-family:${_ff};font-size:${_sz}px;text-align:${_al};color:${_col};line-height:1.6;max-width:760px;margin:0 auto 26px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+      o += `<div class="contact-intro" style="${_ctTextStyle(_intro,'var(--text2,#475569)',18)};max-width:760px;margin:0 auto 26px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
     }
-    o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div><p>${ctRaw.subtitle||'Contactez l’équipe'}</p></div>`;
+    // Sous-titre du bloc : personnalisable si ctRaw.subtitleStyle, sinon style standard
+    const _subTxt=(ctRaw.subtitle!==undefined&&ctRaw.subtitle!=='')?ctRaw.subtitle:'Contactez l’équipe';
+    const _subSt=ctRaw.subtitleStyle;
+    const _subCustom=_subSt&&(_subSt.font||_subSt.size||_subSt.color);
+    const _subHtml=_subCustom
+      ? `<p style="${_ctTextStyle(_subSt,'var(--text3)',13)}">${_subTxt}</p>`
+      : `<p>${_subTxt}</p>`;
+    o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div>${_subHtml}</div>`;
     o += `<div class="contact-cards">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
     o += `</div>`;
@@ -3767,14 +3794,19 @@ function renderExpedition(data){
 
     let o = `<section class="exp-contact"><div class="exp-section-head exp-sec-contact"><h2>` +
       `${ctRaw.title||'Contact'}</h2><div class="rule"></div></div>`;
+    // Sous-titre du bloc (expédition)
+    const _subTxt=(ctRaw.subtitle!==undefined&&ctRaw.subtitle!=='')?ctRaw.subtitle:'';
+    if(_subTxt){
+      const _subSt=ctRaw.subtitleStyle;
+      if(_subSt&&(_subSt.font||_subSt.size||_subSt.color)){
+        o += `<p class="exp-section-sub" style="${_ctTextStyle(_subSt,'var(--exp-grey)',15.5)}">${_subTxt}</p>`;
+      } else {
+        o += `<p class="exp-section-sub">${_subTxt}</p>`;
+      }
+    }
     const _intro=ctRaw.intro;
     if(_intro && (_intro.text||'').trim()){
-      const _fontMap={sans:"'Poppins',sans-serif",serif:"Georgia,'Times New Roman',serif",mono:"'IBM Plex Mono',monospace",display:"'Josefin Sans',sans-serif"};
-      const _ff=_fontMap[_intro.font]||_fontMap.sans;
-      const _sz=parseInt(_intro.size)||18;
-      const _al=_intro.align||'center';
-      const _col=_intro.color||'var(--exp-grey,#6E6B66)';
-      o += `<div class="contact-intro" style="font-family:${_ff};font-size:${_sz}px;text-align:${_al};color:${_col};line-height:1.6;max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+      o += `<div class="contact-intro" style="${_ctTextStyle(_intro,'var(--exp-grey,#6E6B66)',18)};max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
     }
     o += `<div class="exp-contact-list" style="display:flex;flex-direction:column;gap:16px">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
