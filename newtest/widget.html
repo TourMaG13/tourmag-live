@@ -44,11 +44,11 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er-pair-col:last-child .er-live-block{margin-left:6px}
 
 /* ESSENTIEL CAROUSEL */
-.er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;position:relative;border-left:3px solid #3B82F6}
+.er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;position:relative;border-left:5px solid #3B82F6}
 .er-ess-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .er-ess-label{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35)}
 .er-ess-pag{font-family:'IBM Plex Mono';font-size:9px;color:rgba(255,255,255,.3)}
-.er-ess-tag{font-family:'Josefin Sans';font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:3px;display:inline-block;margin-bottom:6px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.er-ess-tag{font-family:'Josefin Sans';font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:6px;background:rgba(255,255,255,.18);color:#fff}
 .er-ess-text{font-size:calc(11px * var(--er-fs));line-height:1.6;color:rgba(255,255,255,.75)}
 .er-ess-text strong{color:#fff;font-weight:700}
 .er-ess-dots{display:flex;gap:4px;margin-top:10px}
@@ -210,6 +210,14 @@ var _citPts=[];
 var _tagColors={};
 const REP_PH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 window.repAvatarFallback=function(img){ const d=document.createElement('div'); d.className='er-rep-av-ph'; d.innerHTML=REP_PH_SVG; img.replaceWith(d); };
+// Renvoie une couleur de texte lisible (foncé/clair) selon la luminance d'un fond hex
+function _readableOn(hex){
+  const m=String(hex).replace('#','');
+  if(m.length<6) return '#fff';
+  const r=parseInt(m.slice(0,2),16),g=parseInt(m.slice(2,4),16),b=parseInt(m.slice(4,6),16);
+  const lum=(0.299*r+0.587*g+0.114*b)/255;
+  return lum>0.6?'#1a1a2e':'#fff';
+}
 var _rendered=false; // track if initial render is done
 var _lastStructureKey=''; // track if structure changed
 
@@ -560,7 +568,7 @@ function showEss(idx, pts){
   if(!tag||!text||!pts[idx])return;
   const p=pts[idx];
   const bc=_tagColors[(p.tag||'').toUpperCase()]||'#3B82F6';
-  tag.innerHTML=`<span class="er-ess-tag" style="${bc!=='#3B82F6'?'background:'+bc+'20;color:'+bc:''}">${p.tag}</span>`;
+  tag.innerHTML=p.tag?`<span class="er-ess-tag" style="background:${bc};color:${_readableOn(bc)}">${p.tag}</span>`:'';
   text.innerHTML=p.text;
   if(pag) pag.textContent=`${idx+1}/${pts.length}`;
   if(ess) ess.style.borderLeftColor=bc;
