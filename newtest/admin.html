@@ -11020,6 +11020,7 @@ function renderSponsors(el){
     <div class="form-row-inline" style="margin-top:6px">
       <div class="form-row" style="max-width:200px"><label class="form-label">Taille des logos (px)</label><input type="number" class="form-input" id="sp-logo-size" value="${ev.sponsorsLogoSize||''}" min="16" max="120" placeholder="${(ev.mode==='expedition')?36:30}" style="width:90px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = taille par défaut.</div></div>
       <div class="form-row" style="max-width:260px"><label class="form-label">Affichage</label><label class="form-label" style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="sp-logo-color" ${ev.sponsorsLogoColor?'checked':''}> Logos en couleur (désactive le noir &amp; blanc)</label></div>
+      <div class="form-row" style="max-width:200px"><label class="form-label">Partenaires par ligne</label><select class="form-input" id="sp-per-row" style="width:130px"><option value="0"${!ev.sponsorsPerRow?' selected':''}>Auto</option>${[2,3,4,5,6].map(n=>`<option value="${n}"${(ev.sponsorsPerRow==n)?' selected':''}>${n} par ligne</option>`).join('')}</select><div style="font-size:10px;color:var(--text3);margin-top:2px">Sur desktop. S'adapte automatiquement sur mobile.</div></div>
     </div>
   </div>
   <div class="admin-card"><h3>Logos partenaires</h3>
@@ -11032,6 +11033,7 @@ function renderSponsors(el){
         <div style="font-weight:600;font-size:14px">${s.name||'Sans nom'}</div>
         ${s.url?`<div style="font-size:11px;color:var(--text3)">${s.url}</div>`:''}
         ${(function(){var ph=getPhases().find(p=>p.id===s.phase);return ph?`<div style="font-size:10px;color:var(--text3);margin-top:2px">🔀 ${ph.name}</div>`:'';})()}
+        ${s.logoHeight?`<div style="font-size:10px;color:var(--text3);margin-top:2px">↕ Logo ${parseInt(s.logoHeight)}px</div>`:''}
       </div>
       <div class="list-item-actions">
         <button class="btn btn-ghost btn-xs" onclick="editSponsor(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
@@ -11048,6 +11050,7 @@ function addSponsor(){
   openModal(`<h3>Nouveau partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" placeholder="Nom du partenaire"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" style="flex:1" placeholder="https://...">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
+    <div class="form-row" style="max-width:220px"><label class="form-label">Hauteur du logo (px, optionnel)</label><input type="number" class="form-input" id="m-sp-logo-h" min="16" max="160" placeholder="Taille par défaut" style="width:150px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = taille globale de la config.</div></div>
     <div class="form-row"><label class="form-label">Catégorie / libellé de groupe (optionnel)</label><input class="form-input" id="m-sp-category" placeholder="Ex : Soutien, Partenaire, Financeur…" list="sp-cat-list"><datalist id="sp-cat-list">${_cats.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">').join('')}</datalist><div style="font-size:10px;color:var(--text3);margin-top:3px">Les logos ayant le même libellé sont regroupés ensemble sur le dashboard.</div></div>
     <div class="form-row"><label class="form-label">Texte sous le logo (optionnel)</label><input class="form-input" id="m-sp-caption" placeholder="Ex : Financeur officiel"></div>
     <div class="form-row"><label class="form-label">Site web (URL, optionnel)</label><input class="form-input" id="m-sp-url" placeholder="https://www.partenaire.com"></div>
@@ -11069,6 +11072,7 @@ function editSponsor(idx){
   openModal(`<h3>Modifier le partenaire</h3>
     <div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="m-sp-name" value="${(s.name||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-sp-logo" value="${s.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-sp-logo')}${mkUploadBtn('m-sp-logo')}</div></div>
+    <div class="form-row" style="max-width:220px"><label class="form-label">Hauteur du logo (px, optionnel)</label><input type="number" class="form-input" id="m-sp-logo-h" value="${s.logoHeight||''}" min="16" max="160" placeholder="Taille par défaut" style="width:150px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = taille globale de la config.</div></div>
     <div class="form-row"><label class="form-label">Catégorie / libellé de groupe (optionnel)</label><input class="form-input" id="m-sp-category" value="${(s.category||'').replace(/"/g,'&quot;')}" placeholder="Ex : Soutien, Partenaire, Financeur…" list="sp-cat-list"><datalist id="sp-cat-list">${_cats.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">').join('')}</datalist></div>
     <div class="form-row"><label class="form-label">Texte sous le logo (optionnel)</label><input class="form-input" id="m-sp-caption" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="Ex : Financeur officiel"></div>
     <div class="form-row"><label class="form-label">Site web (URL)</label><input class="form-input" id="m-sp-url" value="${s.url||''}"></div>
@@ -11079,7 +11083,7 @@ function editSponsor(idx){
 async function saveSponsor(editIdx){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sponsors=[...(ev.sponsors||[])];
-  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),phase:document.getElementById('m-sp-phase')?.value||'',order:parseInt(document.getElementById('m-sp-order').value)||0,category:(document.getElementById('m-sp-category')?.value||'').trim(),caption:(document.getElementById('m-sp-caption')?.value||'').trim()};
+  const data={name:document.getElementById('m-sp-name').value.trim(),logo_url:document.getElementById('m-sp-logo').value.trim(),url:document.getElementById('m-sp-url').value.trim(),phase:document.getElementById('m-sp-phase')?.value||'',order:parseInt(document.getElementById('m-sp-order').value)||0,category:(document.getElementById('m-sp-category')?.value||'').trim(),caption:(document.getElementById('m-sp-caption')?.value||'').trim(),logoHeight:(parseInt(document.getElementById('m-sp-logo-h')?.value,10)||'')};
   if(editIdx!==undefined&&editIdx!==null) sponsors[editIdx]=data;
   else sponsors.push(data);
   saving(true);
@@ -11099,7 +11103,9 @@ async function saveSponsorsConfig(){
   var _sz=document.getElementById('sp-logo-size');
   var _szVal=(_sz&&_sz.value!=='')?(parseInt(_sz.value,10)||''):'';
   var _col=document.getElementById('sp-logo-color');
-  try{ await evRef().update({sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim(),sponsorsLogoSize:_szVal,sponsorsLogoColor:_col?_col.checked:false}); toast('Configuration enregistrée'); }
+  var _pr=document.getElementById('sp-per-row');
+  var _prVal=_pr?(parseInt(_pr.value,10)||0):0;
+  try{ await evRef().update({sponsorsTitle:document.getElementById('sp-title').value.trim(),sponsorsSubtitle:document.getElementById('sp-sub').value.trim(),sponsorsLogoSize:_szVal,sponsorsLogoColor:_col?_col.checked:false,sponsorsPerRow:_prVal}); toast('Configuration enregistrée'); }
   catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
