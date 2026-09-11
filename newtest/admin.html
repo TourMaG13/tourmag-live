@@ -4111,11 +4111,14 @@ function editBuilderPage(id){
   renderTab();
 }
 function _bpCopyUrl(id){
-  // On vise TOUJOURS l'index.html direct (le dashboard), pas la page hôte du CMS,
-  // sinon le paramètre bpage resterait sur la page parente sans atteindre l'iframe.
+  // Base = URL publique du site (iframe) si renseignée, sinon l'adresse GitHub Pages directe.
+  // Le code d'embed relaie le paramètre vers l'iframe, donc un lien vers votre domaine fonctionne.
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const ghBase=window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html';
-  const url=ghBase+'?event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
-  try{ navigator.clipboard.writeText(url); toast('Lien de la page copié'); }
+  const base=(ev.publicUrl||'').trim()||ghBase;
+  const sep=base.includes('?')?(base.endsWith('?')||base.endsWith('&')?'':'&'):'?';
+  const url=base+sep+'event='+encodeURIComponent(currentEventId)+'&bpage='+encodeURIComponent(id);
+  try{ navigator.clipboard.writeText(url); toast((ev.publicUrl||'').trim()?'Lien de la page copié':'Lien copié (adresse GitHub — définissez l\'URL publique pour pointer vers votre site)'); }
   catch(e){ prompt('Copiez ce lien :', url); }
 }
 function _bpPreview(id){
@@ -11288,7 +11291,7 @@ window.addEventListener('message',function(e){
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Page complète (iframe)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page expédition complète dans un iframe avec auto-resize.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code>, <code>?lock=</code>, <code>?page=</code> et <code>?bpage=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase et par onglet (pointant vers votre domaine) fonctionneront.</p>
     <div style="position:relative"><textarea class="form-input" rows="14" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 (function(){
@@ -11296,7 +11299,7 @@ window.addEventListener('message',function(e){
   // Recopie phase / lock (et event si absent) depuis l'URL de CETTE page vers l'iframe
   var here=new URLSearchParams(window.location.search);
   var u=new URL(base, window.location.href);
-  ['phase','lock'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
+  ['phase','lock','page','bpage'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
   if(!u.searchParams.get('event') && here.get('event')) u.searchParams.set('event', here.get('event'));
   document.getElementById('${iframeId}').src=u.toString();
 })();
@@ -11612,14 +11615,14 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code> et <code>?lock=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase (pointant vers votre domaine) fonctionneront.</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code>, <code>?lock=</code>, <code>?page=</code> et <code>?bpage=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase et par onglet (pointant vers votre domaine) fonctionneront.</p>
     <div style="position:relative"><textarea class="form-input" rows="16" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 (function(){
   var base="${frontUrl}";
   var here=new URLSearchParams(window.location.search);
   var u=new URL(base, window.location.href);
-  ['phase','lock'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
+  ['phase','lock','page','bpage'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
   if(!u.searchParams.get('event') && here.get('event')) u.searchParams.set('event', here.get('event'));
   document.getElementById('${iframeId}').src=u.toString();
 })();
