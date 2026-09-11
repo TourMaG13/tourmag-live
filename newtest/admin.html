@@ -9814,12 +9814,22 @@ function renderContact(el){
     <div style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addContactPerson()">＋ Ajouter un contact</button></div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les contacts</button></div>
   </div>
-  ${(function(){ const it=ct.intro||{}; return `<div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg> Texte libre au-dessus du bloc contact</h3>
+  ${(function(){ const it=ct.intro||{}; const su=ct.subtitleStyle||{}; const alignOpts=(a)=>`<option value="left"${a==='left'?' selected':''}>Gauche</option><option value="center"${(a||'center')==='center'?' selected':''}>Centré</option><option value="right"${a==='right'?' selected':''}>Droite</option><option value="justify"${a==='justify'?' selected':''}>Justifié</option>`; return `<div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg> Sous-titre &amp; texte libre du bloc contact</h3>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Sous-titre (sous le titre « Contact »)</div>
+    <div class="form-group"><label class="form-label">Texte du sous-titre</label><input class="form-input" id="ct-subtitle" value="${(ct.subtitle||'').replace(/"/g,'&quot;')}" placeholder="Ex : Contactez l'équipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Vide = « Contactez l'équipe » (classique) / rien (expédition).</div></div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Police</label><select class="form-input" id="ct-sub-font">${_fontOpts(su.font||'')}</select></div>
+      <div class="form-group"><label class="form-label">Taille (px)</label><input type="number" class="form-input" id="ct-sub-size" value="${su.size||''}" min="10" max="40" placeholder="13" style="width:90px"></div>
+      <div class="form-group"><label class="form-label">Alignement</label><select class="form-input" id="ct-sub-align">${alignOpts(su.align)}</select></div>
+      <div class="form-group"><label class="form-label">Couleur</label><div style="display:flex;gap:6px"><input type="color" id="ct-sub-color" value="${su.color||'#94A3B8'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-sub-color-txt" value="${(su.color||'').replace(/"/g,'&quot;')}" placeholder="défaut" style="flex:1;font-size:12px"></div></div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin:14px 0 10px"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Texte libre (au-dessus des cartes de contact)</div>
     <div class="form-group"><label class="form-label">Texte (optionnel)</label><textarea class="form-input" id="ct-intro-text" rows="3" placeholder="Ex : Une question sur le salon ? Notre équipe vous répond.">${(it.text||'').replace(/</g,'&lt;')}</textarea><div style="font-size:10px;color:var(--text3);margin-top:3px">Laissez vide pour ne rien afficher. Les retours à la ligne sont conservés.</div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
-      <div class="form-group"><label class="form-label">Police</label><select class="form-input" id="ct-intro-font"><option value="sans"${(it.font||'sans')==='sans'?' selected':''}>Sans (Poppins)</option><option value="serif"${it.font==='serif'?' selected':''}>Serif (Georgia)</option><option value="mono"${it.font==='mono'?' selected':''}>Mono</option><option value="display"${it.font==='display'?' selected':''}>Titre (Josefin)</option></select></div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Police</label><select class="form-input" id="ct-intro-font">${_fontOpts(it.font||'')}</select></div>
       <div class="form-group"><label class="form-label">Taille (px)</label><input type="number" class="form-input" id="ct-intro-size" value="${it.size||18}" min="11" max="48" style="width:90px"></div>
-      <div class="form-group"><label class="form-label">Alignement</label><select class="form-input" id="ct-intro-align"><option value="left"${it.align==='left'?' selected':''}>Gauche</option><option value="center"${(it.align||'center')==='center'?' selected':''}>Centré</option><option value="right"${it.align==='right'?' selected':''}>Droite</option></select></div>
+      <div class="form-group"><label class="form-label">Alignement</label><select class="form-input" id="ct-intro-align">${alignOpts(it.align)}</select></div>
       <div class="form-group"><label class="form-label">Couleur</label><div style="display:flex;gap:6px"><input type="color" id="ct-intro-color" value="${it.color||'#475569'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-intro-color-txt" value="${(it.color||'').replace(/"/g,'&quot;')}" placeholder="#475569" style="flex:1;font-size:12px"></div></div>
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>
@@ -9848,8 +9858,11 @@ function renderContact(el){
     if(picker&&txt){picker.addEventListener('input',()=>{txt.value=picker.value;updateCtPreview()});txt.addEventListener('input',()=>{if(txt.value.match(/^#[0-9a-fA-F]{6}$/))picker.value=txt.value;updateCtPreview()});}
   });
   document.getElementById('ct-bg-image')?.addEventListener('input',updateCtPreview);
-  // Sync intro color picker ↔ text
-  (function(){const pk=document.getElementById('ct-intro-color'),tx=document.getElementById('ct-intro-color-txt');if(pk&&tx){pk.addEventListener('input',()=>{tx.value=pk.value;});tx.addEventListener('input',()=>{if(tx.value.match(/^#[0-9a-fA-F]{6}$/))pk.value=tx.value;});}})();
+  // Sync color pickers ↔ text (sous-titre + texte libre)
+  [['ct-sub-color','ct-sub-color-txt'],['ct-intro-color','ct-intro-color-txt']].forEach(([pid,tid])=>{
+    const pk=document.getElementById(pid),tx=document.getElementById(tid);
+    if(pk&&tx){pk.addEventListener('input',()=>{tx.value=pk.value;});tx.addEventListener('input',()=>{if(tx.value.match(/^#[0-9a-fA-F]{6}$/))pk.value=tx.value;});}
+  });
 }
 function updateCtPreview(){
   const p=document.getElementById('ct-preview');if(!p)return;
@@ -9927,9 +9940,16 @@ async function saveContact(){
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
     role_color:document.getElementById('ct-role-color-txt')?.value.trim()||'',
     btn_color:document.getElementById('ct-btn-color-txt')?.value.trim()||'',
+    subtitle:(document.getElementById('ct-subtitle')?.value||'').trim(),
+    subtitleStyle:{
+      font:document.getElementById('ct-sub-font')?.value||'',
+      size:parseInt(document.getElementById('ct-sub-size')?.value)||'',
+      align:document.getElementById('ct-sub-align')?.value||'center',
+      color:(document.getElementById('ct-sub-color-txt')?.value||'').trim()
+    },
     intro:{
       text:(document.getElementById('ct-intro-text')?.value||'').trim(),
-      font:document.getElementById('ct-intro-font')?.value||'sans',
+      font:document.getElementById('ct-intro-font')?.value||'',
       size:parseInt(document.getElementById('ct-intro-size')?.value)||18,
       align:document.getElementById('ct-intro-align')?.value||'center',
       color:(document.getElementById('ct-intro-color-txt')?.value||'').trim()||(document.getElementById('ct-intro-color')?.value||'')
