@@ -146,6 +146,10 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er-live-lock-badge svg{width:14px;height:14px;stroke:var(--er-accent)}
 .er-live-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--er-accent);color:#fff;font-family:'Josefin Sans';font-size:12px;font-weight:700;border-radius:8px;text-decoration:none;letter-spacing:.3px}
 .er-live-cta:hover{filter:brightness(1.08)}
+.er-live-offer{display:flex;flex-direction:column;align-items:center;gap:7px;margin-top:2px}
+.er-live-offer-prompt{font-size:calc(11px * var(--er-fs));color:rgba(255,255,255,.6)}
+.er-live-offer-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:transparent;color:#fff;border:1.5px solid var(--er-accent);font-family:'Josefin Sans';font-size:12px;font-weight:700;border-radius:8px;text-decoration:none;letter-spacing:.3px;transition:background .15s,color .15s}
+.er-live-offer-btn:hover{background:var(--er-accent);color:#fff}
 
 @media(max-width:560px){
   .er-h{flex-direction:column;align-items:flex-start;gap:8px}
@@ -237,7 +241,9 @@ function getStructureKey(data){
     data.event?.logo_url||'',
     data.event?.liveMode||'',
     data.event?.liveLockLabel||'',
-    data.event?.liveLockCta||'',
+    data.event?.liveOfferPrompt||'',
+    data.event?.liveOfferCta||'',
+    data.event?.liveOfferUrl||'',
     JSON.stringify(data.event?.widgetKpis||[]),
     JSON.stringify(data.event?.widgetPresets||[]),
     JSON.stringify(data.event?.widgetConfig||{})
@@ -419,12 +425,13 @@ function renderEncart(data, forceRender){
       });
       s+=`</div>`;
       const lockLabel=event.liveLockLabel||'Suivez le fil en direct, réservé aux abonnés';
-      const lockCta=event.liveLockCta||'Accéder au direct';
-      // Évite le double bouton : si l'en-tête (avec son CTA) est affiché, le teaser ne montre que le message.
-      const headerShown=isOn('header') && order.includes('header') && (event.title||event.logo_url);
+      const offerPrompt=event.liveOfferPrompt||'Pas encore abonné ?';
+      const offerCta=event.liveOfferCta||'Découvrez l\'ensemble de nos offres';
+      const offerUrl=(event.liveOfferUrl||'').trim();
+      // Le bouton "Accéder au direct" reste celui de l'en-tête ; le cadenas ne porte que l'invitation à s'abonner.
       s+=`<div class="er-live-lock">
         <span class="er-live-lock-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${lockLabel}</span>
-        ${headerShown?'':`<a class="er-live-cta" href="${liveUrl}" target="_blank">${lockCta} →</a>`}
+        ${offerUrl?`<div class="er-live-offer"><span class="er-live-offer-prompt">${offerPrompt}</span><a class="er-live-offer-btn" href="${offerUrl}" target="_blank">${offerCta} →</a></div>`:''}
       </div>`;
     } else {
       items.forEach(it=>{
