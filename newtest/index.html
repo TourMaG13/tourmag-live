@@ -2057,7 +2057,8 @@ function render(data){
   }
   const live = _pf(_rawLive);
   const citations = _pf(_rawCit);
-  const articles = _pf(_rawArt);
+  const _hiddenArts = Array.isArray(event.hiddenArticles) ? event.hiddenArticles : [];
+  const articles = _pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0);
   const videos = _pf(_rawVid);
   const interviews = _pf(_rawItw);
   const programme = _pf(_rawProg);
@@ -3132,7 +3133,8 @@ function renderExpedition(data){
   }
   const live = _pf(_rawLive);
   const citations = _pf(_rawCit);
-  const articles = _pf(_rawArt);
+  const _hiddenArts = Array.isArray(event.hiddenArticles) ? event.hiddenArticles : [];
+  const articles = _pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0);
   const videos = _pf(_rawVid);
   const interviews = _pf(_rawItw);
   const essential = _pf(_rawEss);
