@@ -781,7 +781,11 @@ img{display:block}a{text-decoration:none}
 .sponsors-group{margin-top:18px}
 .sponsors-group-title{text-align:center;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--acc,#E8842C);margin-bottom:14px;position:relative}
 .sponsor-item{display:flex;flex-direction:column;align-items:center;gap:8px}
-.sponsors-logos.sp-grid .sponsor-item{width:100%}
+/* En grille : zone logo à hauteur constante -> les légendes s'alignent toutes au même niveau */
+.sponsors-logos.sp-grid .sponsor-item,.exp-sponsors-grid.sp-grid .sponsor-item{width:100%}
+.sponsors-logos.sp-grid .sponsor-item img,.exp-sponsors-grid.sp-grid .sponsor-item img{align-self:center}
+.sponsors-logos.sp-grid .sponsor-item,.exp-sponsors-grid.sp-grid .sponsor-item{display:grid;grid-template-rows:minmax(var(--sp-logo-row,64px),auto) auto;justify-items:center;gap:10px}
+.sponsors-logos.sp-grid .sponsor-item>img,.sponsors-logos.sp-grid .sponsor-item>span,.exp-sponsors-grid.sp-grid .sponsor-item>img,.exp-sponsors-grid.sp-grid .sponsor-item>span{align-self:center}
 .sponsor-caption{font-size:12px;color:#64748B;text-align:center;max-width:140px;line-height:1.4}
 .sponsors-logos.sp-grid .sponsor-caption,.exp-sponsors-grid.sp-grid .sponsor-caption{max-width:100%;width:100%}
 @media(max-width:720px){.sponsors-logos.sp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -803,6 +807,7 @@ img{display:block}a{text-decoration:none}
 .contact-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;font-size:12.5px;font-weight:600;border:1.5px solid var(--_ct-btn-color,var(--acc));color:var(--_ct-btn-color,var(--acc));background:transparent;border-radius:100px;text-decoration:none;transition:all .18s;white-space:nowrap}
 .contact-btn:hover{background:var(--_ct-btn-color,var(--acc));color:#fff}
 .contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.contact-btn span{overflow:hidden;text-overflow:ellipsis;max-width:220px}
 .contact-btn-book{background:var(--_ct-btn-color,var(--acc));color:#fff}
 .contact-btn-book:hover{opacity:.88}
 .contact-book-global{text-align:center;margin-top:20px}
@@ -956,6 +961,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-btn:hover{background:var(--_ct-btn-color,var(--exp-ink))}
 .exp-contact-btn:hover span{color:var(--_ct-bg,var(--exp-stone))}
 .exp-contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;max-width:220px}
 .exp-contact-btn:hover svg{stroke:var(--_ct-bg,var(--exp-stone))}
 @media(max-width:768px){.exp-contact{padding:0 0 32px;overflow:hidden;box-sizing:border-box;max-width:100%}.exp-contact .exp-section-head{overflow:hidden;min-width:0;max-width:100%}.exp-contact .exp-section-head h2{white-space:normal!important;font-size:20px;line-height:1.3;min-width:0;flex-shrink:1;word-break:break-word}.exp-contact-card{flex-direction:column;text-align:center;padding:20px 14px;gap:14px;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box}.exp-contact-body{width:100%;max-width:100%;min-width:0;overflow:hidden;box-sizing:border-box}.exp-contact-actions{justify-content:center;width:100%;flex-direction:column;align-items:stretch;gap:8px;box-sizing:border-box}.exp-contact-btn{max-width:100%;overflow:hidden;justify-content:center;padding:10px 14px;font-size:10.5px;box-sizing:border-box}.exp-contact-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}.exp-contact-name{font-size:18px;word-break:break-word}.exp-contact-photo,.exp-contact-photo-ph{width:64px;height:64px}}
 
@@ -1150,7 +1156,6 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-sponsors-grid img{height:var(--sp-logo-h,36px);opacity:var(--sp-logo-opacity,.4);filter:var(--sp-logo-filter,grayscale(100%));transition:all .3s;cursor:pointer}
 .exp-sponsors-grid img:hover{opacity:.9;filter:none}
 .exp-sponsors-grid.sp-grid{display:grid;grid-template-columns:repeat(var(--sp-cols,3),minmax(0,1fr));gap:32px 24px;justify-items:center;align-items:start}
-.exp-sponsors-grid.sp-grid .sponsor-item{width:100%}
 @media(max-width:720px){.exp-sponsors-grid.sp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:440px){.exp-sponsors-grid.sp-grid{grid-template-columns:1fr}}
 .exp-sponsors-grid span{font-family:'Archivo',sans-serif;font-size:16px;font-weight:700;color:var(--exp-grey);letter-spacing:.5px}
@@ -2684,13 +2689,23 @@ function render(data){
       c += `<div class="contact-card-actions">`;
       if(p.email) c += `<a class="contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
       if(p.phone) c += `<a class="contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
-      if(p.website) c += `<a class="contact-btn" href="${p.website}" target="_blank" rel="noopener">${svgWeb}<span>${p.website.replace(/^https?:\/\//,'')}</span></a>`;
+      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl; try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } c += `<a class="contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="contact-btn contact-btn-book" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
       return c;
     }
 
     let o = `<div id="section-contact" class="contact-block fi">`;
+    // Texte libre au-dessus du bloc contact
+    const _intro=ctRaw.intro;
+    if(_intro && (_intro.text||'').trim()){
+      const _fontMap={sans:"'Poppins',sans-serif",serif:"Georgia,'Times New Roman',serif",mono:"'IBM Plex Mono',monospace",display:"'Josefin Sans',sans-serif"};
+      const _ff=_fontMap[_intro.font]||_fontMap.sans;
+      const _sz=parseInt(_intro.size)||18;
+      const _al=_intro.align||'center';
+      const _col=_intro.color||'var(--text2,#475569)';
+      o += `<div class="contact-intro" style="font-family:${_ff};font-size:${_sz}px;text-align:${_al};color:${_col};line-height:1.6;max-width:760px;margin:0 auto 26px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+    }
     o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div><p>${ctRaw.subtitle||'Contactez l’équipe'}</p></div>`;
     o += `<div class="contact-cards">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
@@ -3744,7 +3759,7 @@ function renderExpedition(data){
       c += `<div class="exp-contact-actions">`;
       if(p.email) c += `<a class="exp-contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
       if(p.phone) c += `<a class="exp-contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
-      if(p.website) c += `<a class="exp-contact-btn" href="${p.website}" target="_blank" rel="noopener">${svgWeb}<span>${p.website.replace(/^https?:\/\//,'')}</span></a>`;
+      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl; try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } c += `<a class="exp-contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="exp-contact-btn" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
       return c;
@@ -3752,6 +3767,15 @@ function renderExpedition(data){
 
     let o = `<section class="exp-contact"><div class="exp-section-head exp-sec-contact"><h2>` +
       `${ctRaw.title||'Contact'}</h2><div class="rule"></div></div>`;
+    const _intro=ctRaw.intro;
+    if(_intro && (_intro.text||'').trim()){
+      const _fontMap={sans:"'Poppins',sans-serif",serif:"Georgia,'Times New Roman',serif",mono:"'IBM Plex Mono',monospace",display:"'Josefin Sans',sans-serif"};
+      const _ff=_fontMap[_intro.font]||_fontMap.sans;
+      const _sz=parseInt(_intro.size)||18;
+      const _al=_intro.align||'center';
+      const _col=_intro.color||'var(--exp-grey,#6E6B66)';
+      o += `<div class="contact-intro" style="font-family:${_ff};font-size:${_sz}px;text-align:${_al};color:${_col};line-height:1.6;max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+    }
     o += `<div class="exp-contact-list" style="display:flex;flex-direction:column;gap:16px">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
     o += `</div>`;
