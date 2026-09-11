@@ -11537,7 +11537,14 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
     </div>
     <div id="w-live-teaser-opts" style="display:${ev.liveMode==='teaser'?'block':'none'};margin-top:10px">
       <div class="form-row"><label class="form-label">Message du cadenas</label><input class="form-input" id="w-live-lock-label" value="${(ev.liveLockLabel||'').replace(/"/g,'&quot;')}" placeholder="Suivez le fil en direct, réservé aux abonnés"></div>
-      <div class="form-row" style="max-width:280px"><label class="form-label">Libellé du bouton</label><input class="form-input" id="w-live-lock-cta" value="${(ev.liveLockCta||'').replace(/"/g,'&quot;')}" placeholder="Accéder au direct"></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Invitation à s'abonner (le bouton « Accéder au direct » reste celui de l'en-tête)</div>
+        <div class="form-row-inline">
+          <div class="form-row" style="max-width:220px"><label class="form-label">Accroche</label><input class="form-input" id="w-live-offer-prompt" value="${(ev.liveOfferPrompt||'').replace(/"/g,'&quot;')}" placeholder="Pas encore abonné ?"></div>
+          <div class="form-row"><label class="form-label">Libellé du bouton offre</label><input class="form-input" id="w-live-offer-cta" value="${(ev.liveOfferCta||'').replace(/"/g,'&quot;')}" placeholder="Découvrez l'ensemble de nos offres"></div>
+        </div>
+        <div class="form-row"><label class="form-label">URL de la page offres</label><input class="form-input" id="w-live-offer-url" value="${(ev.liveOfferUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.tourmag.com/nos-offres"><div style="font-size:10px;color:var(--text3);margin-top:3px">Si vide, l'invitation « Pas encore abonné ? » ne s'affiche pas.</div></div>
+      </div>
     </div>
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveWidgetLiveMode()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le mode</button></div>
   </div>
@@ -11703,7 +11710,9 @@ async function saveWidgetLiveMode(){
   const upd={
     liveMode:mode,
     liveLockLabel:(document.getElementById('w-live-lock-label')?.value||'').trim(),
-    liveLockCta:(document.getElementById('w-live-lock-cta')?.value||'').trim()
+    liveOfferPrompt:(document.getElementById('w-live-offer-prompt')?.value||'').trim(),
+    liveOfferCta:(document.getElementById('w-live-offer-cta')?.value||'').trim(),
+    liveOfferUrl:(document.getElementById('w-live-offer-url')?.value||'').trim()
   };
   await evRef().update(upd);
   toast('Mode du fil live enregistré');
