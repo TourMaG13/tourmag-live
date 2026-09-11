@@ -2048,7 +2048,10 @@ function render(data){
   const activeContentPage = contentPages.find(p => p.id === urlPage) || null;
   window._activeContentPageId = activeContentPage ? activeContentPage.id : '';
   const _urlPhaseEff = _urlPhaseRaw;
-  const activePhase = (phases.find(p => p.id === _urlPhaseEff)) ? _urlPhaseEff : (phases.length ? phases[0].id : '');
+  // Résout la phase par id (rétrocompat), par slug stocké, ou par slug calculé depuis le nom
+  const _slugP = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const _matchPhase = (val) => phases.find(p => p.id === val) || phases.find(p => (p.slug||'') === val) || phases.find(p => _slugP(p.name) === val);
+  const activePhase = (_matchPhase(_urlPhaseEff) ? _matchPhase(_urlPhaseEff).id : (phases.length ? phases[0].id : ''));
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
   function _pf(arr){
@@ -3092,7 +3095,9 @@ function renderExpedition(data){
     else if(event.defaultTab.indexOf('phase:')===0) _urlPhaseRaw = event.defaultTab.slice(6);
   }
   const urlPhase = _urlPhaseRaw;
-  const activePhase = (phases.find(p => p.id === urlPhase)) ? urlPhase : (phases.length ? phases[0].id : '');
+  const _slugPE = (s) => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const _matchPhaseExp = (val) => phases.find(p => p.id === val) || phases.find(p => (p.slug||'') === val) || phases.find(p => _slugPE(p.name) === val);
+  const activePhase = (_matchPhaseExp(urlPhase) ? _matchPhaseExp(urlPhase).id : (phases.length ? phases[0].id : ''));
   window._activePhase = activePhase;
   window._eventTitleForShare = (event&&event.title)?event.title:'Live TourMaG';
   // ===== PAGES LIBRES (mode expédition) =====
