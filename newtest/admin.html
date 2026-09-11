@@ -5219,8 +5219,10 @@ function renderPhases(el){
       ${_urlWarn}
       <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Pour chaque phase, deux liens directs :<br>• <strong>Lien normal</strong> — ouvre la phase, le visiteur peut cliquer sur les autres onglets.<br>• <strong>Lien verrouillé</strong> — ouvre la phase et <strong>masque les onglets de phase</strong> (le visiteur reste sur cette phase uniquement).</div>`;
     phases.forEach((p)=>{
-      const _u=_buildPhaseUrl(p.id,false);
-      const _ul=_buildPhaseUrl(p.id,true);
+      // slug à jour si dispo, sinon calculé depuis le nom, sinon id historique
+      const _pRef = (p.slug||'').trim() || _slugify(p.name||'') || p.id;
+      const _u=_buildPhaseUrl(_pRef,false);
+      const _ul=_buildPhaseUrl(_pRef,true);
       const _uJs=_u.replace(/'/g,"\\'");
       const _ulJs=_ul.replace(/'/g,"\\'");
       h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
