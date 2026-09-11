@@ -33,6 +33,13 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 /* MID: ESSENTIEL + CITATION */
 .er-mid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 24px;position:relative;z-index:2}
 .er-mid.er-mid-solo{grid-template-columns:1fr}
+/* --- Modules côte à côte (grouper avec le suivant) --- */
+.er-pair{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
+.er-pair-col{min-width:0}
+/* Les modules gardent leur padding interne ; on réduit le padding latéral opposé pour un rendu jointif */
+.er-pair-col>*{height:100%}
+.er-pair-col:first-child .er-mid,.er-pair-col:first-child .er-mod,.er-pair-col:first-child .er-kpis,.er-pair-col:first-child .er-modblk,.er-pair-col:first-child .er-frise{padding-right:8px}
+.er-pair-col:last-child .er-mid,.er-pair-col:last-child .er-mod,.er-pair-col:last-child .er-kpis,.er-pair-col:last-child .er-modblk,.er-pair-col:last-child .er-frise{padding-left:8px}
 
 /* ESSENTIEL CAROUSEL */
 .er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;position:relative;border-left:3px solid #3B82F6}
@@ -99,6 +106,9 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er-kpi-val{font-family:'Josefin Sans';font-weight:700;font-size:calc(22px * var(--er-fs));color:var(--er-accent);line-height:1.1}
 .er-kpi-lbl{font-size:calc(10px * var(--er-fs));color:rgba(255,255,255,.55);margin-top:4px;letter-spacing:.3px}
 /* --- Galerie --- */
+.er-modblk{padding:14px 24px 4px;position:relative;z-index:2}
+.er-modblk .er-mod-label{padding:0}
+.er-modblk .er-gal,.er-modblk .er-rep{padding:0;margin-top:8px}
 .er-gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 24px;position:relative;z-index:2}
 .er-gal-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:rgba(255,255,255,.06);text-decoration:none;display:block}
 .er-gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
@@ -126,6 +136,8 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
   .er-h{flex-direction:column;align-items:flex-start;gap:8px}
   .er-cta{width:100%;justify-content:center}
   .er-mid{grid-template-columns:1fr}
+  .er-pair{grid-template-columns:1fr}
+  .er-pair-col:first-child .er-mid,.er-pair-col:first-child .er-mod,.er-pair-col:first-child .er-kpis,.er-pair-col:first-child .er-modblk,.er-pair-col:first-child .er-frise,.er-pair-col:last-child .er-mid,.er-pair-col:last-child .er-mod,.er-pair-col:last-child .er-kpis,.er-pair-col:last-child .er-modblk,.er-pair-col:last-child .er-frise{padding-left:24px;padding-right:24px}
   .er-gal{grid-template-columns:repeat(2,1fr)}
   .er-frise{grid-template-columns:1fr;gap:8px}
   .er-frise::before{display:none}
@@ -181,6 +193,8 @@ let essIdx=0, essTimer=null, citIdx=0, citTimer=null;
 var _essPts=[];
 var _citPts=[];
 var _tagColors={};
+const REP_PH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+window.repAvatarFallback=function(img){ const d=document.createElement('div'); d.className='er-rep-av-ph'; d.innerHTML=REP_PH_SVG; img.replaceWith(d); };
 var _rendered=false; // track if initial render is done
 var _lastStructureKey=''; // track if structure changed
 
@@ -331,26 +345,27 @@ function renderEncart(data, forceRender){
     const raw=event.gallery||[];
     const photos=raw.map(p=>typeof p==='string'?{url:p}:p).filter(p=>p&&p.url).slice(0,6);
     if(!photos.length) return '';
-    let s=`<div class="er-mod" style="padding-bottom:0"><div class="er-mod-label" style="padding:0 24px">En images</div></div><div class="er-gal">`;
+    let s=`<div class="er-modblk"><div class="er-mod-label">En images</div><div class="er-gal">`;
     photos.forEach(p=>{
       const cap=p.caption?`<div class="er-gal-cap">${p.caption}${p.copyright?` <span style="opacity:.7">© ${p.copyright}</span>`:''}</div>`:'';
       s+=`<a class="er-gal-item" href="${ctaUrl}" target="_blank"><img src="${p.url}" alt="" loading="lazy" onerror="this.closest('.er-gal-item').remove()">${cap}</a>`;
     });
-    s+=`</div>`;
+    s+=`</div></div>`;
     return s;
   }
   function modReporters(){
     const reps=(data.reporters||[]).slice(0,8);
     if(!reps.length) return '';
-    const phIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-    let s=`<div class="er-mod" style="padding-bottom:0"><div class="er-mod-label" style="padding:0 24px">Nos reporters sur place</div></div><div class="er-rep">`;
+    let s=`<div class="er-modblk"><div class="er-mod-label">Nos reporters sur place</div><div class="er-rep">`;
     reps.forEach(r=>{
-      const av=r.photoUrl?`<img class="er-rep-av" src="${r.photoUrl}" alt="" onerror="this.outerHTML='<div class=\\'er-rep-av-ph\\'>${phIcon.replace(/'/g,'&#39;')}</div>'">`:`<div class="er-rep-av-ph">${phIcon}</div>`;
+      const av=r.photoUrl
+        ? `<img class="er-rep-av" src="${r.photoUrl}" alt="" onerror="repAvatarFallback(this)">`
+        : `<div class="er-rep-av-ph">${REP_PH_SVG}</div>`;
       const inner=`${av}<div class="er-rep-body"><div class="er-rep-name">${r.name||''}</div>${r.role?`<div class="er-rep-role">${r.role}</div>`:''}</div>`;
       if(r.profileUrl) s+=`<a class="er-rep-card" href="${r.profileUrl}" target="_blank">${inner}</a>`;
       else s+=`<div class="er-rep-card">${inner}</div>`;
     });
-    s+=`</div>`;
+    s+=`</div></div>`;
     return s;
   }
   function modTimeline(){
@@ -381,9 +396,11 @@ function renderEncart(data, forceRender){
       s+=`</div>`;
       const lockLabel=event.liveLockLabel||'Suivez le fil en direct, réservé aux abonnés';
       const lockCta=event.liveLockCta||'Accéder au direct';
+      // Évite le double bouton : si l'en-tête (avec son CTA) est affiché, le teaser ne montre que le message.
+      const headerShown=isOn('header') && order.includes('header') && (event.title||event.logo_url);
       s+=`<div class="er-live-lock">
         <span class="er-live-lock-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${lockLabel}</span>
-        <a class="er-live-cta" href="${liveUrl}" target="_blank">${lockCta} →</a>
+        ${headerShown?'':`<a class="er-live-cta" href="${liveUrl}" target="_blank">${lockCta} →</a>`}
       </div>`;
     } else {
       items.forEach(it=>{
@@ -423,8 +440,21 @@ function renderEncart(data, forceRender){
   }
   const MODS={header:modHeader,flash:modFlash,essential:modEssential,citations:modCitations,kpis:modKpis,gallery:modGallery,reporters:modReporters,timeline:modTimeline,live:modLive,articles:modArticles,footer:modFooter};
 
+  const pair=cfg.pair||[];
+  // Liste des modules visibles, dans l'ordre, avec leur HTML (on ignore ceux qui rendent vide)
+  const visible=[];
+  order.forEach(k=>{ if(isOn(k) && MODS[k]){ const html=MODS[k](); if(html) visible.push({k,html}); } });
   let h='';
-  order.forEach(k=>{ if(isOn(k) && MODS[k]) h+=MODS[k](); });
+  for(let i=0;i<visible.length;i++){
+    const cur=visible[i], next=visible[i+1];
+    // "Grouper avec le suivant" : cur.k marqué dans pair ET il existe un module visible suivant
+    if(pair.includes(cur.k) && next){
+      h+=`<div class="er-pair"><div class="er-pair-col">${cur.html}</div><div class="er-pair-col">${next.html}</div></div>`;
+      i++; // consomme le suivant
+    } else {
+      h+=cur.html;
+    }
+  }
 
   // Garde-fou : l'encart doit toujours mener au live. Si ni header ni footer-bouton visibles, on ajoute un CTA discret.
   const headerOn=isOn('header') && order.includes('header');
