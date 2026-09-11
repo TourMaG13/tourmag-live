@@ -32,6 +32,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 
 /* MID: ESSENTIEL + CITATION */
 .er-mid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 24px;position:relative;z-index:2}
+.er-mid.er-mid-solo{grid-template-columns:1fr}
 
 /* ESSENTIEL CAROUSEL */
 .er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;position:relative;border-left:3px solid #3B82F6}
@@ -92,11 +93,40 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .lay-btn-only .er-footer-btn{width:100%;padding:12px 24px;font-size:14px}
 .lay-col .er-footer-btn,.lay-center .er-footer-btn{align-self:flex-start}
 .lay-center .er-footer-btn{align-self:center}
+/* --- KPIs libres --- */
+.er-kpis{display:grid;gap:10px;padding:14px 24px;position:relative;z-index:2}
+.er-kpi{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;text-align:center}
+.er-kpi-val{font-family:'Josefin Sans';font-weight:700;font-size:calc(22px * var(--er-fs));color:var(--er-accent);line-height:1.1}
+.er-kpi-lbl{font-size:calc(10px * var(--er-fs));color:rgba(255,255,255,.55);margin-top:4px;letter-spacing:.3px}
+/* --- Galerie --- */
+.er-gal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 24px;position:relative;z-index:2}
+.er-gal-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:rgba(255,255,255,.06);text-decoration:none;display:block}
+.er-gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.er-gal-item:hover img{transform:scale(1.05)}
+.er-gal-cap{position:absolute;left:0;right:0;bottom:0;padding:12px 8px 5px;font-size:calc(9px * var(--er-fs));color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75));line-height:1.3}
+/* --- Reporters (trombinoscope) --- */
+.er-rep{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding:14px 24px;position:relative;z-index:2}
+.er-rep-card{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 10px;text-decoration:none}
+.er-rep-card:hover{background:rgba(255,255,255,.09)}
+.er-rep-av{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.08)}
+.er-rep-av-ph{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
+.er-rep-body{min-width:0}
+.er-rep-name{font-size:calc(12px * var(--er-fs));font-weight:600;color:var(--er-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.er-rep-role{font-size:calc(9.5px * var(--er-fs));color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* --- Fil live : teaser flouté --- */
+.er-live-teaser{position:relative}
+.er-live-teaser .er-litem{pointer-events:none;user-select:none;filter:blur(4.5px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%)}
+.er-live-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;background:linear-gradient(transparent,rgba(27,27,47,.35))}
+.er-live-lock-badge{display:inline-flex;align-items:center;gap:6px;font-size:calc(11px * var(--er-fs));font-weight:600;color:rgba(255,255,255,.9)}
+.er-live-lock-badge svg{width:14px;height:14px;stroke:var(--er-accent)}
+.er-live-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--er-accent);color:#fff;font-family:'Josefin Sans';font-size:12px;font-weight:700;border-radius:8px;text-decoration:none;letter-spacing:.3px}
+.er-live-cta:hover{filter:brightness(1.08)}
 
 @media(max-width:560px){
   .er-h{flex-direction:column;align-items:flex-start;gap:8px}
   .er-cta{width:100%;justify-content:center}
   .er-mid{grid-template-columns:1fr}
+  .er-gal{grid-template-columns:repeat(2,1fr)}
   .er-frise{grid-template-columns:1fr;gap:8px}
   .er-frise::before{display:none}
   .er-fe{flex-direction:row;gap:10px;align-items:flex-start}
@@ -162,16 +192,24 @@ function getStructureKey(data){
     (data.timeline||[]).length,
     (data.live||[]).length,
     (data.articles||[]).length,
+    (data.reporters||[]).length,
+    (data.event?.gallery||[]).length,
     data.event?.flash_text||'',
     data.event?.widgetFooterText||'',
     data.event?.widgetFooterBtnLabel||'',
     data.event?.logo_url||'',
+    data.event?.liveMode||'',
+    data.event?.liveLockLabel||'',
+    data.event?.liveLockCta||'',
+    JSON.stringify(data.event?.widgetKpis||[]),
+    JSON.stringify(data.event?.widgetPresets||[]),
     JSON.stringify(data.event?.widgetConfig||{})
   ].join('|');
 }
 
 function renderEncart(data, forceRender){
   const {event,essential,citations,timeline,live,articles}=data;
+  data.reporters=data.reporters||[];
   _essPts=essential||[];
   _citPts=citations||[];
   // Build dynamic tag colors from event.tags (overrides static TAG_BORDERS)
@@ -228,12 +266,16 @@ function renderEncart(data, forceRender){
   const fs=fsMap[cfg.textSize]||1;
 
   // Ordre par défaut si non configuré (rétro-compatible avec l'ancien encart)
-  const DEFAULT_ORDER=['header','flash','mid','live','articles','timeline','footer'];
-  const order=(cfg.order&&cfg.order.length)?cfg.order.slice():DEFAULT_ORDER.slice();
+  const DEFAULT_ORDER=['header','flash','essential','citations','kpis','gallery','reporters','live','articles','timeline','footer'];
+  let order=(cfg.order&&cfg.order.length)?cfg.order.slice():DEFAULT_ORDER.slice();
+  // Migration : l'ancien module fusionné "mid" devient essentiel + citations, à la même position
+  const _midIdx=order.indexOf('mid');
+  if(_midIdx>=0) order.splice(_midIdx,1,'essential','citations');
   // Ajoute les modules manquants (nouveaux) à la fin pour les events déjà configurés
   DEFAULT_ORDER.forEach(k=>{ if(!order.includes(k)) order.push(k); });
   const off=cfg.off||[];
-  const isOn=k=>!off.includes(k);
+  // Un "off" hérité sur "mid" désactive les deux sous-modules
+  const isOn=k=>{ if(off.includes(k)) return false; if((k==='essential'||k==='citations') && off.includes('mid')) return false; return true; };
 
   // --- FABRIQUES DE MODULES ---
   function modHeader(){
@@ -247,29 +289,67 @@ function renderEncart(data, forceRender){
     if(!event.flash_text) return '';
     return `<div class="er-flash"><span class="er-flash-badge">DERNIÈRE INFO</span><span class="er-flash-text">${event.flash_text}</span></div>`;
   }
-  function modMid(){
-    const hasEss=essential&&essential.length, hasCit=citations&&citations.length;
-    if(!hasEss && !hasCit) return '';
-    let s=`<div class="er-mid">`;
-    if(hasEss){
-      const bc=_tagColors[(essential[0].tag||'').toUpperCase()]||'#3B82F6';
-      s+=`<div class="er-ess" id="er-ess" style="border-left-color:${bc}">`;
-      s+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
-      s+=`<div id="er-ess-tag"></div><div class="er-ess-text" id="er-ess-text"></div>`;
-      s+=`<div class="er-ess-dots" id="er-ess-dots">`;
-      essential.forEach((_,i)=>{ s+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goEss(${i})"></div>`; });
+  function modEssential(){
+    const hasEss=essential&&essential.length;
+    if(!hasEss) return '';
+    let s=`<div class="er-mid er-mid-solo">`;
+    const bc=_tagColors[(essential[0].tag||'').toUpperCase()]||'#3B82F6';
+    s+=`<div class="er-ess" id="er-ess" style="border-left-color:${bc}">`;
+    s+=`<div class="er-ess-head"><span class="er-ess-label">L'essentiel</span><span class="er-ess-pag" id="er-ess-pag">1/${essential.length}</span></div>`;
+    s+=`<div id="er-ess-tag"></div><div class="er-ess-text" id="er-ess-text"></div>`;
+    s+=`<div class="er-ess-dots" id="er-ess-dots">`;
+    essential.forEach((_,i)=>{ s+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goEss(${i})"></div>`; });
+    s+=`</div></div></div>`;
+    return s;
+  }
+  function modCitations(){
+    const hasCit=citations&&citations.length;
+    if(!hasCit) return '';
+    let s=`<div class="er-mid er-mid-solo">`;
+    s+=`<div class="er-cit" id="er-cit"><div class="er-cit-inner"><div class="er-cit-media" id="er-cit-media"></div>`;
+    s+=`<div class="er-cit-body"><div class="er-cit-name" id="er-cit-name"></div><div class="er-cit-role" id="er-cit-role"></div><div class="er-cit-text" id="er-cit-text"></div></div></div>`;
+    if(citations.length>1){
+      s+=`<div class="er-cit-nav"><span class="er-cit-pag" id="er-cit-pag">1/${citations.length}</span><div class="er-ess-dots" id="er-cit-dots">`;
+      citations.forEach((_,i)=>{ s+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goCit(${i})"></div>`; });
       s+=`</div></div>`;
     }
-    if(hasCit){
-      s+=`<div class="er-cit" id="er-cit"><div class="er-cit-inner"><div class="er-cit-media" id="er-cit-media"></div>`;
-      s+=`<div class="er-cit-body"><div class="er-cit-name" id="er-cit-name"></div><div class="er-cit-role" id="er-cit-role"></div><div class="er-cit-text" id="er-cit-text"></div></div></div>`;
-      if(citations.length>1){
-        s+=`<div class="er-cit-nav"><span class="er-cit-pag" id="er-cit-pag">1/${citations.length}</span><div class="er-ess-dots" id="er-cit-dots">`;
-        citations.forEach((_,i)=>{ s+=`<div class="er-ess-dot${i===0?' active':''}" onclick="goCit(${i})"></div>`; });
-        s+=`</div></div>`;
-      }
-      s+=`</div>`;
-    }
+    s+=`</div></div>`;
+    return s;
+  }
+  function modKpis(){
+    const kpis=(event.widgetKpis||[]).filter(k=>k&&(k.value||k.label));
+    if(!kpis.length) return '';
+    const n=Math.min(kpis.length,4);
+    let s=`<div class="er-kpis" style="grid-template-columns:repeat(${n},1fr)">`;
+    kpis.slice(0,4).forEach(k=>{
+      s+=`<div class="er-kpi"><div class="er-kpi-val">${k.value||''}</div><div class="er-kpi-lbl">${k.label||''}</div></div>`;
+    });
+    s+=`</div>`;
+    return s;
+  }
+  function modGallery(){
+    const raw=event.gallery||[];
+    const photos=raw.map(p=>typeof p==='string'?{url:p}:p).filter(p=>p&&p.url).slice(0,6);
+    if(!photos.length) return '';
+    let s=`<div class="er-mod" style="padding-bottom:0"><div class="er-mod-label" style="padding:0 24px">En images</div></div><div class="er-gal">`;
+    photos.forEach(p=>{
+      const cap=p.caption?`<div class="er-gal-cap">${p.caption}${p.copyright?` <span style="opacity:.7">© ${p.copyright}</span>`:''}</div>`:'';
+      s+=`<a class="er-gal-item" href="${ctaUrl}" target="_blank"><img src="${p.url}" alt="" loading="lazy" onerror="this.closest('.er-gal-item').remove()">${cap}</a>`;
+    });
+    s+=`</div>`;
+    return s;
+  }
+  function modReporters(){
+    const reps=(data.reporters||[]).slice(0,8);
+    if(!reps.length) return '';
+    const phIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    let s=`<div class="er-mod" style="padding-bottom:0"><div class="er-mod-label" style="padding:0 24px">Nos reporters sur place</div></div><div class="er-rep">`;
+    reps.forEach(r=>{
+      const av=r.photoUrl?`<img class="er-rep-av" src="${r.photoUrl}" alt="" onerror="this.outerHTML='<div class=\\'er-rep-av-ph\\'>${phIcon.replace(/'/g,'&#39;')}</div>'">`:`<div class="er-rep-av-ph">${phIcon}</div>`;
+      const inner=`${av}<div class="er-rep-body"><div class="er-rep-name">${r.name||''}</div>${r.role?`<div class="er-rep-role">${r.role}</div>`:''}</div>`;
+      if(r.profileUrl) s+=`<a class="er-rep-card" href="${r.profileUrl}" target="_blank">${inner}</a>`;
+      else s+=`<div class="er-rep-card">${inner}</div>`;
+    });
     s+=`</div>`;
     return s;
   }
@@ -284,14 +364,34 @@ function renderEncart(data, forceRender){
     return s;
   }
   function modLive(){
-    const items=(live||[]).slice(0,3);
+    const teaser=(event.liveMode==='teaser');
+    const items=(live||[]).slice(0,teaser?2:3);
     if(!items.length) return '';
+    const esc=t=>String(t).replace(/</g,'&lt;');
+    // En mode teaser, on tronque le texte AVANT injection : rien d'exploitable n'atteint le DOM.
+    const trunc=t=>{ const plain=String(t).replace(/<[^>]*>/g,''); return plain.length>70?plain.slice(0,70)+'…':plain; };
     let s=`<div class="er-mod"><div class="er-mod-label">En direct</div>`;
-    items.forEach(it=>{
-      const time=_wFmtTime(it.time||it.hour||it.created_at);
-      const txt=it.text||it.content||'';
-      s+=`<a class="er-litem" href="${liveUrl}" target="_blank">${time?`<div class="er-litem-body"><div class="er-litem-time">${time}</div><div class="er-litem-text">${txt}</div></div>`:`<div class="er-litem-body"><div class="er-litem-text">${txt}</div></div>`}</a>`;
-    });
+    if(teaser){
+      s+=`<div class="er-live-teaser" aria-hidden="true">`;
+      items.forEach(it=>{
+        const time=_wFmtTime(it.time||it.hour||it.created_at);
+        const txt=esc(trunc(it.text||it.content||''));
+        s+=`<div class="er-litem">${time?`<div class="er-litem-body"><div class="er-litem-time">${time}</div><div class="er-litem-text">${txt}</div></div>`:`<div class="er-litem-body"><div class="er-litem-text">${txt}</div></div>`}</div>`;
+      });
+      s+=`</div>`;
+      const lockLabel=event.liveLockLabel||'Suivez le fil en direct, réservé aux abonnés';
+      const lockCta=event.liveLockCta||'Accéder au direct';
+      s+=`<div class="er-live-lock">
+        <span class="er-live-lock-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${lockLabel}</span>
+        <a class="er-live-cta" href="${liveUrl}" target="_blank">${lockCta} →</a>
+      </div>`;
+    } else {
+      items.forEach(it=>{
+        const time=_wFmtTime(it.time||it.hour||it.created_at);
+        const txt=it.text||it.content||'';
+        s+=`<a class="er-litem" href="${liveUrl}" target="_blank">${time?`<div class="er-litem-body"><div class="er-litem-time">${time}</div><div class="er-litem-text">${txt}</div></div>`:`<div class="er-litem-body"><div class="er-litem-text">${txt}</div></div>`}</a>`;
+      });
+    }
     s+=`</div>`;
     return s;
   }
@@ -321,7 +421,7 @@ function renderEncart(data, forceRender){
     s+=`</div>`;
     return s;
   }
-  const MODS={header:modHeader,flash:modFlash,mid:modMid,timeline:modTimeline,live:modLive,articles:modArticles,footer:modFooter};
+  const MODS={header:modHeader,flash:modFlash,essential:modEssential,citations:modCitations,kpis:modKpis,gallery:modGallery,reporters:modReporters,timeline:modTimeline,live:modLive,articles:modArticles,footer:modFooter};
 
   let h='';
   order.forEach(k=>{ if(isOn(k) && MODS[k]) h+=MODS[k](); });
@@ -475,30 +575,39 @@ async function init(){
   try{
     const ec=db.collection('events').doc(eventId);
     // Initial load
-    const [evS,esS,ciS,tlS,lvS,arS]=await Promise.all([
+    const [evS,esS,ciS,tlS,lvS,arS,jrS]=await Promise.all([
       ec.get(),
       ec.collection('essential').get(),
       ec.collection('citations').get(),
       ec.collection('timeline').get(),
       ec.collection('live').get(),
-      ec.collection('articles').get()
+      ec.collection('articles').get(),
+      db.collection('journalists').get().catch(()=>null)
     ]);
     if(!evS.exists){document.getElementById('encart').innerHTML='<div class="er-loading">Événement introuvable</div>';return;}
-    function toArr(snap){const a=[];snap.forEach(d=>a.push(d.data()));return a;}
+    function toArr(snap){const a=[];snap.forEach(d=>a.push({id:d.id,...d.data()}));return a;}
+    // Résout les reporters de l'event depuis le répertoire global journalists
+    let _journalists=jrS?toArr(jrS):[];
+    function resolveReporters(evData){
+      const ej=(evData.eventJournalists||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));
+      return ej.map(x=>_journalists.find(j=>j.id===x.globalId)).filter(Boolean);
+    }
     const state={
       event:evS.data(),
       essential:toArr(esS).sort((a,b)=>(a.order||0)-(b.order||0)),
       citations:toArr(ciS).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;}),
       timeline:toArr(tlS).sort((a,b)=>(a.order||0)-(b.order||0)),
       live:toArr(lvS).sort((a,b)=>_wTs(b.time)-_wTs(a.time)),
-      articles:toArr(arS).sort((a,b)=>_wTs(b.created_at||b.date)-_wTs(a.created_at||a.date))
+      articles:toArr(arS).sort((a,b)=>_wTs(b.created_at||b.date)-_wTs(a.created_at||a.date)),
+      reporters:resolveReporters(evS.data())
     };
     renderEncart(state, true);
 
     // Real-time listeners — update widget when data changes
     // Skip first snapshot fire (already loaded above)
-    let skipEv=true,skipEs=true,skipCi=true,skipTl=true,skipLv=true,skipAr=true;
-    ec.onSnapshot(snap=>{if(skipEv){skipEv=false;return;}if(snap.exists){state.event=snap.data();renderEncart(state);}});
+    let skipEv=true,skipEs=true,skipCi=true,skipTl=true,skipLv=true,skipAr=true,skipJr=true;
+    ec.onSnapshot(snap=>{if(skipEv){skipEv=false;return;}if(snap.exists){state.event=snap.data();state.reporters=resolveReporters(state.event);renderEncart(state);}});
+    db.collection('journalists').onSnapshot(snap=>{if(skipJr){skipJr=false;return;}_journalists=toArr(snap);state.reporters=resolveReporters(state.event);renderEncart(state);},()=>{});
     ec.collection('essential').onSnapshot(snap=>{if(skipEs){skipEs=false;return;}state.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
     ec.collection('citations').onSnapshot(snap=>{if(skipCi){skipCi=false;return;}state.citations=toArr(snap).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;});renderEncart(state);});
     ec.collection('timeline').onSnapshot(snap=>{if(skipTl){skipTl=false;return;}state.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
