@@ -7014,18 +7014,17 @@ function _bnArchivesAdminCard(ev){
   var hidden = Array.isArray(ev.brandNews.hiddenArchives)?ev.brandNews.hiddenArchives:[];
   var h = '<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Archives Brand News</h3>';
   h += '<div class="bpe-toggle" style="padding:4px 0"><span style="font-size:13px">Afficher les archives (bouton « Voir les précédents »)</span><label class="sw"><input type="checkbox" '+(showArch?'checked':'')+' onchange="_bnToggleShowArchives(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin:6px 0 12px">Le plus récent (en haut) est toujours affiché en grand. Cochez « Masquer » pour retirer un article des archives.</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin:6px 0 12px">Le plus récent non masqué est affiché en grand ; les autres passent en archives. Cochez « Masquer » pour retirer définitivement un article (il reste masqué même après réimport du flux).</div>';
   h += '<div class="cp-list">';
   arts.forEach(function(a,i){
     var isLatest = (i===0);
     var isHidden = hidden.indexOf(a.link)>=0;
     var d = a.date || a.imported_at || '';
     h += '<div class="cp-row" style="'+(isHidden?'opacity:.5':'')+'">'
-      + '<div class="cp-info"><div class="cp-name" style="font-size:13px">'+_escAdm(a.title||'(sans titre)')+(isLatest?' <span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 7px;border-radius:5px;margin-left:6px">EN GRAND</span>':'')+'</div>'
+      + '<div class="cp-info"><div class="cp-name" style="font-size:13px">'+_escAdm(a.title||'(sans titre)')+((isLatest&&!isHidden)?' <span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 7px;border-radius:5px;margin-left:6px">EN GRAND</span>':'')+'</div>'
       + '<div class="cp-meta" style="font-size:11px">'+_escAdm((''+d).slice(0,10))+'</div></div>'
       + '<div class="cp-actions">'
-      + (isLatest ? '<span style="font-size:11px;color:var(--text3)">Toujours affiché</span>'
-                  : '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" '+(isHidden?'checked':'')+' onchange="_bnToggleHiddenArchive(\''+encodeURIComponent(a.link)+'\',this.checked)"> Masquer</label>')
+      + '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" '+(isHidden?'checked':'')+' onchange="_bnToggleHiddenArchive(\''+encodeURIComponent(a.link)+'\',this.checked)"> Masquer</label>'
       + '</div></div>';
   });
   h += '</div></div>';
@@ -9770,7 +9769,7 @@ function _normalizeContact(raw){
     const hasSolo = ct.name||ct.role||ct.photo_url||ct.message||ct.email||ct.phone||ct.website;
     ct.people = hasSolo ? [{
       name:ct.name||'', role:ct.role||'', photo_url:ct.photo_url||'', message:ct.message||'',
-      email:ct.email||'', phone:ct.phone||'', website:ct.website||'', booking_url:ct.booking_url||''
+      email:ct.email||'', phone:ct.phone||'', website:ct.website||'', website_label:ct.website_label||'', booking_url:ct.booking_url||''
     }] : [];
   }
   return ct;
@@ -9797,7 +9796,8 @@ function _ctPersonRow(p, i){
       <div class="form-group" style="margin:0"><label class="form-label">Téléphone</label><input class="form-input" data-ctp="phone" value="${(p.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="form-group" style="margin:0"><label class="form-label">Site web</label><input class="form-input" data-ctp="website" value="${(p.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Site web (URL)</label><input class="form-input" data-ctp="website" value="${(p.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Texte affiché (optionnel)</label><input class="form-input" data-ctp="website_label" value="${(p.website_label||'').replace(/"/g,'&quot;')}" placeholder="Ex : Voir le profil, Notre site…"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = le domaine s'affiche automatiquement.</div></div>
       <div class="form-group" style="margin:0"><label class="form-label">📅 Lien de prise de RDV</label><input class="form-input" data-ctp="booking_url" value="${(p.booking_url||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/..."></div>
     </div>
   </div>`;
@@ -9882,7 +9882,7 @@ function _readContactPeople(){
   const people=[];
   rows.forEach(row=>{
     const g=(k)=>{const el=row.querySelector('[data-ctp="'+k+'"]');return el?el.value.trim():'';};
-    const p={name:g('name'),role:g('role'),photo_url:g('photo_url'),message:g('message'),email:g('email'),phone:g('phone'),website:g('website'),booking_url:g('booking_url')};
+    const p={name:g('name'),role:g('role'),photo_url:g('photo_url'),message:g('message'),email:g('email'),phone:g('phone'),website:g('website'),website_label:g('website_label'),booking_url:g('booking_url')};
     // On ignore les cartes entièrement vides
     if(Object.values(p).some(v=>v)) people.push(p);
   });
@@ -9959,7 +9959,7 @@ async function saveContact(){
   const first=people[0]||{};
   contact.name=first.name||''; contact.role=first.role||''; contact.photo_url=first.photo_url||'';
   contact.message=first.message||''; contact.email=first.email||''; contact.phone=first.phone||'';
-  contact.website=first.website||''; contact.booking_url=first.booking_url||'';
+  contact.website=first.website||''; contact.website_label=first.website_label||''; contact.booking_url=first.booking_url||'';
   await evRef().update({contact});
   if(ev) ev.contact=contact;
   toast('Contact enregistré');
