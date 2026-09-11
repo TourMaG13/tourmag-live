@@ -6893,20 +6893,27 @@ function renderArticles(el){
   <!-- HISTORIQUE -->
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length})</h3>`;
   if(!articlesData.length) h+=!_loadedCols.articles ? _skel(3) : `<div class="empty"><div class="icon">📰</div><div class="text">Aucun article</div><div class="hint">Importez un flux RSS ou ajoutez un article manuellement.</div></div>`;
-  else articlesData.forEach(a=>{
+  else{
+    const _ev0=eventsData.find(e=>e.id===currentEventId)||{};
+    const _hidden=Array.isArray(_ev0.hiddenArticles)?_ev0.hiddenArticles:[];
+    articlesData.forEach(a=>{
     const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
-    h+=`<div class="list-item">
+    const isHidden=a.link&&_hidden.indexOf(a.link)>=0;
+    const hiddenBadge=isHidden?'<span style="font-size:8px;background:#FEE2E2;color:#B91C1C;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">MASQUÉ</span>':'';
+    h+=`<div class="list-item" style="${isHidden?'opacity:.55':''}">
       ${a.image?`<div style="flex-shrink:0;width:56px;height:56px;border-radius:6px;overflow:hidden;background:#F1F5F9"><img src="${a.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='📰'"></div>`:''}
       <div class="list-item-content">
-        <div class="list-item-text"><strong>${a.title}</strong>${source}</div>
+        <div class="list-item-text"><strong>${a.title}</strong>${source}${hiddenBadge}</div>
         <div class="list-item-meta">${a.author||''} · ${a.date||''}${a.link&&a.link!=='#'?` · <a href="${a.link}" target="_blank" style="color:var(--blue)">Lire</a>`:''}</div>
       </div>
       <div class="list-item-actions">
+        ${a.link&&a.link!=='#'?`<button class="btn btn-ghost btn-xs" title="${isHidden?'Réafficher':'Masquer (persiste au réimport)'}" onclick="toggleHideArticle('${encodeURIComponent(a.link)}',${isHidden?'false':'true'})">${isHidden?'👁️‍🗨️ Réafficher':'🚫 Masquer'}</button>`:''}
         <button class="btn btn-ghost btn-xs" onclick="editArticle('${a.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
         <button class="btn btn-danger btn-xs" onclick="deleteArticle('${a.id}')">✕</button>
       </div>
     </div>`;
-  });
+    });
+  }
   h+=`</div>`; el.innerHTML=h;
 }
 
@@ -6948,6 +6955,16 @@ async function saveArticleEdit(id){
   closeModal();toast('Modifié');
 }
 async function deleteArticle(id){if(!confirm('Supprimer cet article ?'))return;saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');}
+async function toggleHideArticle(encLink, hide){
+  const link=decodeURIComponent(encLink);
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let hidden=Array.isArray(ev.hiddenArticles)?ev.hiddenArticles.slice():[];
+  if(hide){ if(hidden.indexOf(link)<0) hidden.push(link); }
+  else { hidden=hidden.filter(l=>l!==link); }
+  ev.hiddenArticles=hidden; // maj locale immédiate
+  try{ await evRef().update({hiddenArticles:hidden}); toast(hide?'Article masqué':'Article réaffiché'); renderTab(); }
+  catch(e){ toast('Erreur','error'); }
+}
 async function saveArtSettings(){
   saving(true);
   await evRef().update({
