@@ -40,6 +40,8 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er-pair-col>*{height:100%}
 .er-pair-col:first-child .er-mid,.er-pair-col:first-child .er-mod,.er-pair-col:first-child .er-kpis,.er-pair-col:first-child .er-modblk,.er-pair-col:first-child .er-frise{padding-right:8px}
 .er-pair-col:last-child .er-mid,.er-pair-col:last-child .er-mod,.er-pair-col:last-child .er-kpis,.er-pair-col:last-child .er-modblk,.er-pair-col:last-child .er-frise{padding-left:8px}
+.er-pair-col:first-child .er-live-block{margin-right:6px}
+.er-pair-col:last-child .er-live-block{margin-left:6px}
 
 /* ESSENTIEL CAROUSEL */
 .er-ess{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 18px;position:relative;border-left:3px solid #3B82F6}
@@ -124,7 +126,20 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0}
 .er-rep-name{font-size:calc(12px * var(--er-fs));font-weight:600;color:var(--er-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .er-rep-role{font-size:calc(9.5px * var(--er-fs));color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* --- Fil live : teaser flouté --- */
+.er-live-block{margin:12px 24px;padding:14px 18px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.18);border-left:3px solid #DC2626;border-radius:12px}
+.er-live-block .er-litem{border-bottom-color:rgba(255,255,255,.08)}
+.er-live-label{display:flex;align-items:center;gap:7px;color:#F87171!important}
+.er-live-pulse{width:8px;height:8px;border-radius:50%;background:#DC2626;flex-shrink:0;box-shadow:0 0 0 0 rgba(220,38,38,.6);animation:er-live-ping 1.8s infinite}
+@keyframes er-live-ping{0%{box-shadow:0 0 0 0 rgba(220,38,38,.55)}70%{box-shadow:0 0 0 7px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
 .er-live-teaser{position:relative}
+/* --- Cartes contrastées (option) : renforce le fond/bordure des modules pour casser l'uniformité --- */
+.er.er-contrast .er-ess,.er.er-contrast .er-cit,.er.er-contrast .er-kpi,.er.er-contrast .er-rep-card{background:rgba(0,0,0,.22);border-color:rgba(255,255,255,.14)}
+.er.er-contrast .er-mod{background:rgba(0,0,0,.14);border-radius:12px;margin:12px 24px;padding:14px 18px}
+.er.er-contrast .er-modblk{background:rgba(0,0,0,.14);border-radius:12px;margin:12px 24px;padding:14px 18px}
+.er.er-contrast .er-litem{border-bottom-color:rgba(255,255,255,.12)}
+.er.er-contrast .er-flash{background:rgba(220,38,38,.2)}
+/* En mode contrasté, les modules ont déjà une marge : on annule le padding latéral hérité des paires */
+.er.er-contrast .er-pair-col .er-mod,.er.er-contrast .er-pair-col .er-modblk{margin-left:0;margin-right:0}
 .er-live-teaser .er-litem{pointer-events:none;user-select:none;filter:blur(4.5px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%)}
 .er-live-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;background:linear-gradient(transparent,rgba(27,27,47,.35))}
 .er-live-lock-badge{display:inline-flex;align-items:center;gap:6px;font-size:calc(11px * var(--er-fs));font-weight:600;color:rgba(255,255,255,.9)}
@@ -385,7 +400,8 @@ function renderEncart(data, forceRender){
     const esc=t=>String(t).replace(/</g,'&lt;');
     // En mode teaser, on tronque le texte AVANT injection : rien d'exploitable n'atteint le DOM.
     const trunc=t=>{ const plain=String(t).replace(/<[^>]*>/g,''); return plain.length>70?plain.slice(0,70)+'…':plain; };
-    let s=`<div class="er-mod"><div class="er-mod-label">En direct</div>`;
+    const liveLabel=`<div class="er-mod-label er-live-label"><span class="er-live-pulse"></span>En direct</div>`;
+    let s=`<div class="er-mod er-live-block">${liveLabel}`;
     if(teaser){
       s+=`<div class="er-live-teaser" aria-hidden="true">`;
       items.forEach(it=>{
@@ -470,6 +486,7 @@ function renderEncart(data, forceRender){
     rootStyle.style.setProperty('--er-fs',fs);
     if(bg){ rootStyle.style.setProperty('--er-bg1',bg); rootStyle.style.setProperty('--er-bg2',bg); }
     if(textColor){ rootStyle.style.setProperty('--er-text',textColor); }
+    rootStyle.classList.toggle('er-contrast', !!cfg.contrast);
   }
 
   // After rendering, measure max heights then lock everything
