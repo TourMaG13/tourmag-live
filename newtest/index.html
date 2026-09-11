@@ -2714,7 +2714,7 @@ function render(data){
       c += `<div class="contact-card-actions">`;
       if(p.email) c += `<a class="contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
       if(p.phone) c += `<a class="contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
-      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl; try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } c += `<a class="contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
+      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl=(p.website_label||'').trim(); if(!_lbl){ try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } } c += `<a class="contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="contact-btn contact-btn-book" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
       return c;
@@ -2782,8 +2782,10 @@ function render(data){
     if(bn.startDate && today < bn.startDate) return '';
     if(bn.endDate && today > bn.endDate) return '';
     const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
-    if(!bnArticles.length) return '';
-    const a = bnArticles[0];
+    const _bnHiddenC = Array.isArray(bn.hiddenArchives) ? bn.hiddenArchives : [];
+    const bnVisible = _bnHiddenC.length ? bnArticles.filter(a => !a.link || _bnHiddenC.indexOf(a.link)<0) : bnArticles;
+    if(!bnVisible.length) return '';
+    const a = bnVisible[0];
     const label = bn.label || 'Brand News';
     const st = bn.style || {};
     const badgeCss = st.accent ? `background:${st.accent}` : '';
@@ -2796,7 +2798,7 @@ function render(data){
     let o = `<div class="bn-card" onclick="window.open('${a.link}','_blank')">`;
     if(a.image) o += `<div class="bn-card-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`;
     o += `<div class="bn-card-body"><div class="bn-card-badge"${badgeCss?` style="${badgeCss}"`:''}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg> ${label}</div><div class="bn-card-title"${titleCss?` style="${titleCss}"`:''}>${a.title||''}</div><div class="bn-card-cta"${ctaCss?` style="${ctaCss}"`:''}>Lire l'article →</div></div></div>`;
-    o += _bnArchivesHtml(bnArticles.slice(1), bn, st);
+    o += _bnArchivesHtml(bnVisible.slice(1), bn, st);
     return o;
   }
 
@@ -3679,8 +3681,10 @@ function renderExpedition(data){
     if(bn.startDate && today < bn.startDate) return '';
     if(bn.endDate && today > bn.endDate) return '';
     const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
-    if(!bnArticles.length) return '';
-    const a = bnArticles[0];
+    const _bnHiddenE = Array.isArray(bn.hiddenArchives) ? bn.hiddenArchives : [];
+    const bnVisible = _bnHiddenE.length ? bnArticles.filter(a => !a.link || _bnHiddenE.indexOf(a.link)<0) : bnArticles;
+    if(!bnVisible.length) return '';
+    const a = bnVisible[0];
     const label = bn.label || 'Brand News';
     const st = bn.style || {};
     const badgeCss = st.accent ? ` style="background:${st.accent}"` : '';
@@ -3697,7 +3701,7 @@ function renderExpedition(data){
     o += `<div class="exp-bn-side-read"${readCss}>Lire l'article →</div>`;
     o += `</div>`;
     // Archives : les articles précédents (hors ceux masqués), dépliables
-    o += _bnArchivesHtml(bnArticles.slice(1), bn, st);
+    o += _bnArchivesHtml(bnVisible.slice(1), bn, st);
     return o;
   };
 
@@ -3786,7 +3790,7 @@ function renderExpedition(data){
       c += `<div class="exp-contact-actions">`;
       if(p.email) c += `<a class="exp-contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
       if(p.phone) c += `<a class="exp-contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
-      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl; try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } c += `<a class="exp-contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
+      if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl=(p.website_label||'').trim(); if(!_lbl){ try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } } c += `<a class="exp-contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="exp-contact-btn" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
       return c;
