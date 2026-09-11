@@ -11479,6 +11479,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
           <div class="form-row" style="max-width:170px"><label class="form-label">Couleur du texte</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="w-cfg-text-on" ${textColor?'checked':''} onchange="document.getElementById('w-cfg-text').disabled=!this.checked"><input type="color" id="w-cfg-text" value="${textColor||'#ffffff'}" ${textColor?'':'disabled'} style="width:36px;height:30px;border:none;cursor:pointer;border-radius:6px"></div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = blanc par défaut</div></div>
           <div class="form-row" style="max-width:150px"><label class="form-label">Taille du texte</label><select class="form-input" id="w-cfg-textsize"><option value="small"${textSize==='small'?' selected':''}>Petit</option><option value="medium"${textSize==='medium'?' selected':''}>Moyen</option><option value="large"${textSize==='large'?' selected':''}>Grand</option></select></div>
           <div class="form-row" style="max-width:170px"><label class="form-label">Nombre d'articles affichés</label><select class="form-input" id="w-cfg-artcount"><option value="1"${(cfg.articlesCount||3)==1?' selected':''}>1 article</option><option value="2"${(cfg.articlesCount||3)==2?' selected':''}>2 articles</option><option value="3"${(cfg.articlesCount||3)==3?' selected':''}>3 articles</option></select></div>
+          <div class="form-row" style="max-width:220px"><label class="form-label">Cartes contrastées</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px;color:var(--text2)"><input type="checkbox" id="w-cfg-contrast" ${cfg.contrast?'checked':''}> Détacher les blocs du fond</label><div style="font-size:10px;color:var(--text3);margin-top:2px">Recommandé avec un fond de couleur uni.</div></div>
         </div>
       </div>
       <div style="margin-bottom:8px"><label class="form-label" style="margin-bottom:8px;display:block">🧩 Modules (glisser l'ordre avec ▲▼, cocher pour afficher)</label>
@@ -11635,7 +11636,8 @@ async function saveWidgetConfig(){
       bg:document.getElementById('w-cfg-bg-on')?.checked?(document.getElementById('w-cfg-bg')?.value||''):'',
       textColor:document.getElementById('w-cfg-text-on')?.checked?(document.getElementById('w-cfg-text')?.value||''):'',
       textSize:document.getElementById('w-cfg-textsize')?.value||'medium',
-      articlesCount:parseInt(document.getElementById('w-cfg-artcount')?.value)||3
+      articlesCount:parseInt(document.getElementById('w-cfg-artcount')?.value)||3,
+      contrast:!!document.getElementById('w-cfg-contrast')?.checked
     };
   }
   const upd={
