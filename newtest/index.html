@@ -5679,15 +5679,22 @@ window._submitQuestion = async function(){
     if(Date.now()-last < 30000){ if(note){ note.textContent='Merci de patienter quelques instants avant de reposer une question.'; note.className='qa-note qa-err'; } return; }
   }catch(e){}
   const uid = await _likeAuthReady; // réutilise l'auth anonyme des likes
+  // Utilise impérativement l'instance authentifiée (app secondaire). Si l'auth publique
+  // n'est pas prête, on ne tente pas d'écrire sur l'instance par défaut (non authentifiée),
+  // ce qui provoquerait un permission-denied.
+  if(!uid || !window._pubDb){
+    if(note){ note.textContent='Connexion en cours, réessayez dans un instant.'; note.className='qa-note qa-err'; }
+    return;
+  }
   const btn = document.querySelector('.qa-submit');
   if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
   try{
-    await db.collection('events').doc(eventId).collection('questions').add({
+    await window._pubDb.collection('events').doc(eventId).collection('questions').add({
       text: text.slice(0,500),
       name: name.slice(0,60),
       status: 'pending',
       phase: window._activePhase || '',
-      uid: uid || null,
+      uid: uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     try{ localStorage.setItem('tmg_q_last_'+eventId, String(Date.now())); }catch(e){}
