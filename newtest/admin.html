@@ -4759,7 +4759,8 @@ function _bpContentFieldsHtml(s){
         + '</select><div class="bpe-hint">Choisissez laquelle de vos cartes pays afficher à cet emplacement.</div></div>';
     }
     default:
-      return '<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié). Il s\'affichera ici à l\'emplacement choisi. Réglages détaillés à l\'étape suivante.</div>';
+      return _phaseFld
+        +'<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié). Il s\'affichera ici à l\'emplacement choisi. Réglages détaillés à l\'étape suivante.</div>';
   }
 }
 
