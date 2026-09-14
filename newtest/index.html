@@ -4951,8 +4951,6 @@ function _renderCpHero(hero, color){
 // Enveloppe le contenu de phase dans une boîte repliable (dépliée par défaut).
 function _wrapPhaseContent(inner){
   return '<div class="phase-content-box" id="phaseContentBox">'
-    + '<div class="dash"><button type="button" class="phase-content-toggle" onclick="_togglePhaseContent()" aria-expanded="true">'
-    + '<span class="pct-label">Masquer la présentation</span><span class="pct-chevron">▲</span></button></div>'
     + '<div class="phase-content-body">' + inner + '</div>'
     + '</div>';
 }
