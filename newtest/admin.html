@@ -5194,6 +5194,59 @@ function renderPhases(el){
     });
     h+=`</div>`;
 
+    // ===== Liens par onglet (tous types : phase / page / builder) =====
+    (function(){
+      const _gh = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html?event=' + encodeURIComponent(currentEventId);
+      const _pub = (ev.publicUrl||'').trim();
+      // Base commune : URL publique si définie, sinon adresse GitHub Pages
+      const _base = _pub || _gh;
+      const _hasEvent = /[?&]event=/.test(_base);
+      function _mk(param, val){
+        const parts=[];
+        if(!_hasEvent) parts.push('event='+encodeURIComponent(currentEventId));
+        parts.push(param+'='+encodeURIComponent(val));
+        const sep = _base.includes('?') ? (_base.endsWith('?')||_base.endsWith('&')?'':'&') : '?';
+        return _base+sep+parts.join('&');
+      }
+      // Rassemble tous les onglets, dans l'ordre : phases, pages de contenu, pages builder
+      const _tabs=[];
+      getPhases().forEach(p=>{
+        const ref=(p.slug||'').trim() || _slugify(p.name||'') || p.id;
+        _tabs.push({ kind:'Phase', color:p.color||'#6366F1', name:p.name||'(phase)', url:_mk('phase',ref) });
+      });
+      (ev.contentPages||[]).forEach(p=>{
+        _tabs.push({ kind:'Page', color:'#0EA5E9', name:p.name||p.title||'(page)', url:_mk('page',p.id) });
+      });
+      (Array.isArray(ev.builderPages)?ev.builderPages:[]).forEach(p=>{
+        _tabs.push({ kind:'Onglet', color:p.color||'#8B5CF6', name:p.name||'(onglet)', url:_mk('bpage',p.id) });
+      });
+
+      const _warn = _pub ? '' : '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin-bottom:12px">⚠️ Aucune <strong>URL publique</strong> définie : ces liens pointent vers l\'adresse GitHub. Renseignez l\'URL de votre site dans les <a href="#" onclick="event.preventDefault();modifyEvent(currentEventId)" style="color:#92400E;font-weight:700;text-decoration:underline">réglages de l\'événement</a> pour des liens vers votre page.</div>';
+
+      h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> 🔗 Liens par onglet</h3>
+        ${_warn}
+        <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Le lien direct de <strong>chaque onglet</strong> de votre dashboard, quel que soit son type. Copiez celui de l\'onglet sur lequel vous voulez renvoyer vos visiteurs — il ouvre exactement cet onglet, avec sa mise en page.</div>`;
+      if(!_tabs.length){
+        h+=`<div style="font-size:12px;color:var(--text3)">Aucun onglet pour le moment.</div>`;
+      }
+      _tabs.forEach(t=>{
+        const _u=t.url, _uJs=_u.replace(/'/g,"\\'");
+        const _kindColor = t.kind==='Phase' ? '#6366F1' : (t.kind==='Page' ? '#0EA5E9' : '#8B5CF6');
+        h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="width:12px;height:12px;border-radius:3px;background:${t.color};flex-shrink:0"></div>
+          <div class="list-item-content" style="flex:1;min-width:180px">
+            <div class="list-item-text"><strong>${t.name}</strong> <span style="font-size:9px;font-weight:700;color:${_kindColor};background:${_kindColor}18;padding:1px 7px;border-radius:10px;margin-left:4px;text-transform:uppercase;letter-spacing:.5px">${t.kind}</span></div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">
+              <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_u}</code>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_uJs}');toast('Lien copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
+              <a class="btn btn-ghost btn-xs" href="${_u}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
+            </div>
+          </div>
+        </div>`;
+      });
+      h+=`</div>`;
+    })();
+
     // ===== Liens d'accès par phase =====
     // Base GitHub déduite de l'emplacement réel de l'admin (fallback si pas d'URL publique).
     const _ghBase = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html?event=' + encodeURIComponent(currentEventId);
