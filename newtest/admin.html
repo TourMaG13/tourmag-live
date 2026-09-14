@@ -4655,7 +4655,7 @@ function _bpWeightOpts(cur){
 // Champs de contenu spécifiques par module (essentiels en étape 2 ; détail complet en étape 3)
 function _bpPhaseFilterField(s){
   // Sélecteur de phase pour les modules filtrés par phase (live, citations, programme, etapes, itinerary, videos, interviews, essential)
-  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential','hero','sponsors','kpis','gallerylive'];
+  const FILTERABLE=['live','citations','programme','etapes','itinerary','videos','interviews','essential','hero','sponsors','kpis','gallerylive','reporters'];
   if(FILTERABLE.indexOf(s.type)<0) return '';
   const ev=_bpCurrentEv();
   const phases=Array.isArray(ev.phases)?ev.phases:[];
