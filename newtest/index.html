@@ -141,6 +141,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-gallery-item img{width:100%;height:var(--cp-gal-h,160px);object-fit:cover;border-radius:10px;display:block}
 .cp-gallery-cr{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 7px;border-radius:5px;font-style:italic;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cp-video{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.cp-video.cp-video-short{aspect-ratio:9/16;max-width:340px;margin:0 auto}
 .cp-video iframe,.cp-video video{position:absolute;inset:0;width:100%;height:100%;border:0}
 .cp-btns{display:flex;gap:12px;flex-wrap:wrap}
 .cp-btns-center{justify-content:center}.cp-btns-right{justify-content:flex-end}
@@ -541,15 +542,15 @@ img{display:block}a{text-decoration:none}
 .live-img{margin-top:10px;border-radius:10px;overflow:hidden}
 .live-img img{width:100%;display:block;object-fit:cover}
 .expand-wrap{display:none}.expand-wrap.open{display:block}
-.voir-plus-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;font-size:11px;font-weight:600;color:var(--acc2);cursor:pointer;transition:color .15s;border:none;background:none;width:100%;font-family:'Poppins'}
-.voir-plus-btn:hover{color:var(--acc)}
-.voir-plus-btn svg{width:14px;height:14px;transition:transform .2s}
+.voir-plus-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 20px;font-size:12.5px;font-weight:600;color:var(--acc);cursor:pointer;transition:all .15s;border:1px solid rgba(232,132,44,.28);background:rgba(232,132,44,.08);width:auto;border-radius:22px;font-family:'Poppins';margin:6px auto 0}
+.voir-plus-btn:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
+.voir-plus-btn svg{width:15px;height:15px;transition:transform .2s}
 .voir-plus-btn.open-state svg{transform:rotate(180deg)}
 /* Legacy toggle */
 .live-expand{display:none}.live-expand.open{display:block}
-.voir-plus-live{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;font-size:11px;font-weight:600;color:var(--acc2);cursor:pointer;transition:color .15s;margin-top:-8px}
-.voir-plus-live:hover{color:var(--acc)}
-.voir-plus-live svg{width:14px;height:14px;transition:transform .2s}
+.voir-plus-live{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 20px;font-size:12.5px;font-weight:600;color:var(--acc);cursor:pointer;transition:all .15s;margin:4px auto 0;background:rgba(232,132,44,.08);border:1px solid rgba(232,132,44,.28);border-radius:22px}
+.voir-plus-live:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
+.voir-plus-live svg{width:15px;height:15px;transition:transform .2s}
 .voir-plus-live.open-state svg{transform:rotate(180deg)}
 @media(max-width:768px){.live-entry{gap:10px}.live-time-col{width:30px}.live-avatar{width:30px;height:30px}}
 
@@ -2317,7 +2318,7 @@ function render(data){
       o += `<div class="expand-wrap" id="live-expand">`;
       ext.forEach(e => { o += mkLiveEntry(e, false); });
       o += `</div>`;
-      o += `<button class="voir-plus-btn" id="live-btn" onclick="toggleExpand('live-expand','live-btn',${ext.length},'Réduire','Voir les ${ext.length} entrées précédentes')">Voir les ${ext.length} entrées précédentes ${_chevSvg}</button>`;
+      o += `<div style="text-align:center"><button class="voir-plus-btn" id="live-btn" onclick="toggleExpand('live-expand','live-btn',${ext.length},'Réduire','Voir les ${ext.length} entrées précédentes')">Voir les ${ext.length} entrées précédentes ${_chevSvg}</button></div>`;
     }
     o += `</div>`;
     return o;
@@ -4934,8 +4935,11 @@ function _buildTabList(phases, contentPages, tabOrder, builderPages, hideLegacy)
 function _cpVideoEmbed(url){
   if(!url) return '';
   url=url.trim();
+  // Short YouTube (format vertical) : youtube.com/shorts/ID
+  var ytShort=url.match(/youtube\.com\/shorts\/([\w-]{11})/);
+  if(ytShort) return '<div class="cp-video cp-video-short"><iframe src="https://www.youtube.com/embed/'+ytShort[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
   var yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
-  if(yt) return '<div class="cp-video"><iframe src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
+  if(yt) return '<div class="cp-video"><iframe src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
   var vm=url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if(vm) return '<div class="cp-video"><iframe src="https://player.vimeo.com/video/'+vm[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
   if(/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return '<div class="cp-video"><video src="'+url+'" controls preload="metadata"></video></div>';
