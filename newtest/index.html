@@ -4928,10 +4928,13 @@ function _buildTabList(phases, contentPages, tabOrder, builderPages, hideLegacy)
   // Si "hideLegacy" : on ignore complètement les phases et pages libres (ancien dashboard),
   // seules les pages-builder apparaissent dans la navigation.
   if(hideLegacy){ phases=[]; contentPages=[]; }
+  // Onglets masqués manuellement (navHidden) : retirés de la navigation, quel que soit leur type
+  phases=(phases||[]).filter(p=>!p.navHidden);
+  contentPages=(contentPages||[]).filter(p=>!p.navHidden);
   const byPhase={}; (phases||[]).forEach(p=>byPhase[p.id]=p);
   const byPage={}; (contentPages||[]).forEach(p=>byPage[p.id]=p);
-  // Pages-builder visibles dans la navigation (nav.visible !== false)
-  const bp=(builderPages||[]).filter(p=>!p.nav || p.nav.visible!==false);
+  // Pages-builder visibles dans la navigation (nav.visible !== false ET pas navHidden)
+  const bp=(builderPages||[]).filter(p=>(!p.nav || p.nav.visible!==false) && !p.navHidden);
   const byBuilder={}; bp.forEach(p=>byBuilder[p.id]=p);
   const out=[]; const seen={};
   (tabOrder||[]).forEach(tok=>{
