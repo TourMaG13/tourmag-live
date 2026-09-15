@@ -130,6 +130,11 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-textimg .cp-txt-media{flex:0 0 42%;max-width:42%}
 .cp-textimg .cp-txt-body{flex:1;min-width:0}
 .cp-img-right{flex-direction:row-reverse}
+/* Vidéo côte à côte avec le texte (bloc texte) */
+.cp-textvid{display:flex;gap:26px;align-items:flex-start}
+.cp-textvid .cp-txt-media-vid{flex:0 0 46%;max-width:46%}
+.cp-textvid .cp-txt-body{flex:1;min-width:0}
+.cp-vid-right{flex-direction:row-reverse}
 /* Habillage : le texte entoure l'image (float) */
 .cp-wrap-media{margin:0 0 12px;max-width:50%}
 .cp-wrap-media img{width:100%;border-radius:12px;display:block}
@@ -150,6 +155,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-hr{border:none;border-top:1px solid #E2E8F0;margin:0}
 @media(max-width:680px){
   .cp-textimg{flex-direction:column}
+  .cp-textvid{flex-direction:column}
+  .cp-textvid .cp-txt-media-vid{flex:none;max-width:100%;margin-bottom:14px}
   .cp-textimg .cp-txt-media{flex:none;max-width:100%;margin-bottom:14px}
   .cp-img-right{flex-direction:column}
   .cp-wrap-media{float:none;max-width:100%;margin:0 0 14px}
@@ -5238,27 +5245,42 @@ function _renderContentPage(page){
       if(b.textSize) txtStyle+='font-size:'+parseInt(b.textSize,10)+'px;';
       if(b.lineHeight) txtStyle+='line-height:'+b.lineHeight+';';
       var textHtml = b.text ? '<div class="cp-text"'+(txtStyle?' style="'+txtStyle+'"':'')+'>'+b.text+'</div>' : '';
+      // Média vidéo optionnel du bloc texte (indépendant de l'image)
+      var vpos = b.videoPos || 'none';
+      var vidHtml = b.video ? '<div class="cp-media-wrap">'+((typeof _cpVideoEmbed==='function')?_cpVideoEmbed(b.video):'')+(b.videoCredit?'<div class="cp-credit">© '+_qEsc(b.videoCredit)+'</div>':'')+'</div>' : '';
       // Styles du bloc : fond, police, espacement propre
       var blkStyle='';
       if(b.bgOn) blkStyle += 'background:'+(b.bg||'#F1F5F9')+';padding:20px 22px;border-radius:12px;';
       if(b.font) blkStyle += "font-family:'"+b.font+"',sans-serif;";
       if(b.pad!=null && b.pad!=='') blkStyle += 'margin-bottom:'+parseInt(b.pad,10)+'px;';
       var st = blkStyle ? ' style="'+blkStyle+'"' : '';
+      // 1) Compose le corps texte + vidéo selon la position de la vidéo (indépendante de l'image)
+      var body;
+      if(vidHtml && (vpos==='left'||vpos==='right')){
+        body = '<div class="cp-textvid cp-vid-'+vpos+'"><div class="cp-txt-media cp-txt-media-vid">'+vidHtml+'</div><div class="cp-txt-body">'+textHtml+'</div></div>';
+      } else if(vidHtml && vpos==='top'){
+        body = '<div class="cp-txt-media-vid" style="margin-bottom:14px">'+vidHtml+'</div><div class="cp-txt-body">'+textHtml+'</div>';
+      } else if(vidHtml && vpos==='bottom'){
+        body = '<div class="cp-txt-body">'+textHtml+'</div><div class="cp-txt-media-vid" style="margin-top:14px">'+vidHtml+'</div>';
+      } else {
+        body = '<div class="cp-txt-body">'+textHtml+'</div>';
+      }
+      // 2) Applique l'image autour de l'ensemble (titre + corps)
       if(imgHtml && (pos==='wrap-left'||pos==='wrap-right')){
-        // Habillage : l'image flotte, le texte l'entoure
         var side = pos==='wrap-left' ? 'cp-wrap-left' : 'cp-wrap-right';
         var wStyle = b.imageWidth ? ' style="max-width:'+_qEsc(b.imageWidth)+'"' : '';
         var floatMedia = '<div class="cp-wrap-media '+side+'"'+wStyle+'><img src="'+_qEsc(b.image)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+imgCreditHtml+'</div>';
-        o += '<div class="cp-block"'+st+'>'+titleHtml+'<div class="cp-txt-body">'+floatMedia+textHtml+'</div></div>';
+        // En habillage image, la vidéo (si présente) s'affiche sous le texte habillé
+        var vidBelow = vidHtml ? '<div class="cp-txt-media-vid" style="clear:both;margin-top:14px">'+vidHtml+'</div>' : '';
+        o += '<div class="cp-block"'+st+'>'+titleHtml+'<div class="cp-txt-body">'+floatMedia+textHtml+'</div>'+vidBelow+'</div>';
       } else if(imgHtml && (pos==='left'||pos==='right')){
-        // Titre pleine largeur EN HAUT, puis image + texte côte à côte en dessous
-        o += '<div class="cp-block"'+st+'>'+titleHtml+'<div class="cp-textimg cp-img-'+pos+'"><div class="cp-txt-media">'+imgHtml+'</div><div class="cp-txt-body">'+textHtml+'</div></div></div>';
+        o += '<div class="cp-block"'+st+'>'+titleHtml+'<div class="cp-textimg cp-img-'+pos+'"><div class="cp-txt-media">'+imgHtml+'</div>'+body+'</div></div>';
       } else if(imgHtml && pos==='top'){
-        o += '<div class="cp-block"'+st+'>'+imgHtml+'<div class="cp-txt-body">'+titleHtml+textHtml+'</div></div>';
+        o += '<div class="cp-block"'+st+'>'+imgHtml+titleHtml+body+'</div>';
       } else if(imgHtml && pos==='bottom'){
-        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+titleHtml+textHtml+'</div>'+imgHtml+'</div>';
+        o += '<div class="cp-block"'+st+'>'+titleHtml+body+imgHtml+'</div>';
       } else {
-        o += '<div class="cp-block"'+st+'><div class="cp-txt-body">'+titleHtml+textHtml+'</div></div>';
+        o += '<div class="cp-block"'+st+'>'+titleHtml+body+'</div>';
       }
     } else if(b.type==='html'){
       if(b.html) o += '<div class="cp-block cp-html">'+b.html+'</div>';
