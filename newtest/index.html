@@ -187,6 +187,11 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-textimg .bp-txt-media img{width:100%;border-radius:12px;display:block}
 .bp-textimg .bp-txt-body{flex:1;min-width:0}
 .bp-img-right{flex-direction:row-reverse}
+.bp-textvid{display:flex;gap:26px;align-items:flex-start}
+.bp-textvid .bp-txt-media-vid{flex:0 0 46%;max-width:46%}
+.bp-textvid .bp-txt-body{flex:1;min-width:0}
+.bp-vid-right{flex-direction:row-reverse}
+.bp-media-vid{width:100%}
 .bp-wrap-media{margin:0 0 12px;max-width:50%}
 .bp-wrap-media img{width:100%;border-radius:12px;display:block}
 .bp-wrap-left{float:left;margin-right:22px}
@@ -219,6 +224,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-hr{border:none;border-top:1px solid #E2E8F0;margin:0}
 @media(max-width:680px){
   .bp-textimg{flex-direction:column}
+  .bp-textvid{flex-direction:column}
+  .bp-textvid .bp-txt-media-vid{flex:none;max-width:100%;margin-bottom:14px}
   .bp-textimg .bp-txt-media{flex:none;max-width:100%;margin-bottom:14px}
   .bp-img-right{flex-direction:column}
   .bp-wrap-media{float:none;max-width:100%;margin:0 0 14px}
@@ -5506,7 +5513,7 @@ function _bpRenderContentModule(sec, event, ctx){
   switch(sec.type){
     case 'text': {
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
-      if(!ct.title && !ct.text && !ct.image) return '';
+      if(!ct.title && !ct.text && !ct.image && !ct.video) return '';
       var _titleStyleKind = ct.titleStyle || 'simple';
       var titleHtml = '';
       if(ct.title && _titleStyleKind==='section'){
@@ -5527,6 +5534,21 @@ function _bpRenderContentModule(sec, event, ctx){
         titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
       }
       const textHtml  = ct.text ? '<div class="bp-text"'+(textStyle?' style="'+textStyle+'"':'')+'>'+ct.text+'</div>' : '';
+      // Vidéo optionnelle (indépendante de l'image)
+      const vpos = ct.videoPos || 'none';
+      const vidCredit = ct.videoCredit ? '<div class="bp-credit">© '+_bpEsc(ct.videoCredit)+'</div>' : '';
+      const vidHtml = ct.video ? '<div class="bp-media-vid">'+((typeof _cpVideoEmbed==='function')?_cpVideoEmbed(ct.video):'')+vidCredit+'</div>' : '';
+      // Corps = texte + vidéo selon la position de la vidéo
+      var bpBody;
+      if(vidHtml && (vpos==='left'||vpos==='right')){
+        bpBody = '<div class="bp-textvid bp-vid-'+vpos+'"><div class="bp-txt-media-vid">'+vidHtml+'</div><div class="bp-txt-body">'+textHtml+'</div></div>';
+      } else if(vidHtml && vpos==='top'){
+        bpBody = '<div class="bp-txt-media-vid" style="margin-bottom:14px">'+vidHtml+'</div><div class="bp-txt-body">'+textHtml+'</div>';
+      } else if(vidHtml && vpos==='bottom'){
+        bpBody = '<div class="bp-txt-body">'+textHtml+'</div><div class="bp-txt-media-vid" style="margin-top:14px">'+vidHtml+'</div>';
+      } else {
+        bpBody = '<div class="bp-txt-body">'+textHtml+'</div>';
+      }
       // image + habillage (réutilise la logique des blocs de contenu)
       const pos = ct.imagePos || 'none';
       const credit = ct.imageCredit ? '<div class="bp-credit">© '+_bpEsc(ct.imageCredit)+'</div>' : '';
@@ -5534,16 +5556,17 @@ function _bpRenderContentModule(sec, event, ctx){
         const side = pos==='wrap-left'?'bp-wrap-left':'bp-wrap-right';
         const w = ct.imageWidth ? ' style="max-width:'+_bpEsc(ct.imageWidth)+'"' : '';
         const media = '<div class="bp-wrap-media '+side+'"'+w+'><img src="'+_bpEsc(ct.image)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+credit+'</div>';
-        return titleHtml+'<div class="bp-txt-body">'+media+textHtml+'</div>';
+        const vidBelow = vidHtml ? '<div class="bp-txt-media-vid" style="clear:both;margin-top:14px">'+vidHtml+'</div>' : '';
+        return titleHtml+'<div class="bp-txt-body">'+media+textHtml+'</div>'+vidBelow;
       }
       if(ct.image && (pos==='left'||pos==='right')){
         const media = '<div class="bp-txt-media"><img src="'+_bpEsc(ct.image)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+credit+'</div>';
-        return titleHtml+'<div class="bp-textimg bp-img-'+pos+'">'+media+'<div class="bp-txt-body">'+textHtml+'</div></div>';
+        return titleHtml+'<div class="bp-textimg bp-img-'+pos+'">'+media+bpBody+'</div>';
       }
       const media = ct.image ? '<div class="bp-media"><img src="'+_bpEsc(ct.image)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+credit+'</div>' : '';
-      if(ct.image && pos==='top') return media+'<div class="bp-txt-body">'+titleHtml+textHtml+'</div>';
-      if(ct.image && pos==='bottom') return '<div class="bp-txt-body">'+titleHtml+textHtml+'</div>'+media;
-      return '<div class="bp-txt-body">'+titleHtml+textHtml+'</div>';
+      if(ct.image && pos==='top') return media+titleHtml+bpBody;
+      if(ct.image && pos==='bottom') return titleHtml+bpBody+media;
+      return titleHtml+bpBody;
     }
     case 'image': {
       if(!ct.image) return '';
