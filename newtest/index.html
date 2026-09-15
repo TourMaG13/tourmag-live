@@ -5810,12 +5810,12 @@ async function _loadQuizVotes(eventId){
       _refreshQuizResults();
     }catch(e){ console.warn('[TourMaG Live] quiz tally error:', e.message); }
   };
-  // Chargement initial
+  // Chargement initial des résultats
   window._loadQuizTally();
-  // Rafraîchissement périodique léger (toutes les 20 s) pour voir arriver les votes des autres,
-  // sans connexion permanente. clearInterval si on recharge.
-  if(window._quizPollTimer) clearInterval(window._quizPollTimer);
-  window._quizPollTimer = setInterval(()=>{ if(!document.hidden) window._loadQuizTally(); }, 20000);
+  // Plus de rafraîchissement périodique : les résultats se mettent à jour uniquement
+  // quand le visiteur vote (voir _loadQuizTally() appelé après l'enregistrement du vote).
+  // Cela évite des relectures Firestore en boucle pour chaque visiteur.
+  if(window._quizPollTimer){ clearInterval(window._quizPollTimer); window._quizPollTimer=null; }
 }
 
 window._quizSelect = function(quizId, qId, optId, mode){
@@ -6234,7 +6234,8 @@ async function init(){
   _trackVisit(eventId); // Statistiques de consultation (filtrées des robots)
   _loadUserLikes(eventId); // #5 — charge les likes de cet appareil (asynchrone, non bloquant)
   window._eventIdForQuestions = eventId; // Q&A — cible des soumissions
-  if(!window._DIAG.noquiz) _loadQuizVotes(eventId); // Quiz — agrégation des votes en temps réel
+  // Le chargement des votes de quiz est déplacé après lecture des quiz actifs (voir plus bas) :
+  // inutile de lire quizVotes s'il n'y a aucun quiz actif sur l'événement.
   const ec=db.collection('events').doc(eventId);
   const [evS,esS,liS,ruS,ciS,arS,prS,tlS,viS,iwS,etS,qS,qzS] = await Promise.all([
     ec.get(),
@@ -6273,6 +6274,8 @@ async function init(){
   const et=toArr(etS).sort((a,b)=>(a.order||0)-(b.order||0));
   const qu=toArr(qS).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));
   window._quizzes = toArr(qzS).sort((a,b)=>(a.order||0)-(b.order||0));
+  // Ne lit les votes que s'il existe au moins un quiz actif : sinon zéro lecture de quizVotes.
+  if(!window._DIAG.noquiz && window._quizzes.length){ window._quizPollLoaded=true; _loadQuizVotes(eventId); }
   const jr=resolveJournalists(ev,_allGlobalJournalists);
   render({event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu});
 
@@ -6282,21 +6285,16 @@ async function init(){
 
   if(!window._DIAG.norealtime){
   ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
-  ec.collection('rubriques').onSnapshot(snap=>{rtState.rubriques=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
-  ec.collection('articles').onSnapshot(snap=>{rtState.articles=toArr(snap).sort((a,b)=>tsVal(b.created_at||b.date)-tsVal(a.created_at||a.date));rtRender();});
+  // Contenus figés pendant le live : chargés une fois au démarrage (voir les .get() plus haut),
+  // plus d'écoute permanente pour économiser les lectures Firestore.
+  // rubriques, essential, programme, timeline, etapes, articles, journalists → lecture unique.
   ec.collection('citations').onSnapshot(snap=>{rtState.citations=toArr(snap).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));rtRender();});
-  ec.collection('essential').onSnapshot(snap=>{rtState.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
-  ec.collection('programme').onSnapshot(snap=>{rtState.programme=toArr(snap).sort((a,b)=>(a.day||'').localeCompare(b.day||'')||(a.order||0)-(b.order||0)||(a.time||'').localeCompare(b.time||''));rtRender();});
-  ec.collection('timeline').onSnapshot(snap=>{rtState.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('videos').onSnapshot(snap=>{rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('interviews').onSnapshot(snap=>{rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
-  ec.collection('etapes').onSnapshot(snap=>{rtState.etapes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
-  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
+  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0)); if(window._quizzes.length && !window._quizPollLoaded){ window._quizPollLoaded=true; _loadQuizVotes(eventId); } rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
   ec.onSnapshot(snap=>{if(snap.exists){rtState.event=snap.data();rtRender();}});
-  try{
-    db.collection('journalists').onSnapshot(snap=>{_allGlobalJournalists=toArr(snap);rtRender();},err=>console.warn('[TourMaG Live] journalists error:',err.message));
-  }catch(e){console.warn('[TourMaG Live] Cannot subscribe to journalists:',e.message);}
+  // journalists (répertoire global) : chargé une fois au démarrage (jrS), plus d'écoute permanente.
   }
 
   // Scheduling check every 30s
