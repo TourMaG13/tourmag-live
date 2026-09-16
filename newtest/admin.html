@@ -3162,6 +3162,7 @@ function moduleSettingsPanel(type, ev){
   if(type==='articles'){
     var s=_tss('app-st-art', ev.articlesTitle, ev.articlesSubtitle, ev.articlesShowTitle, 'Nos articles', "L'événement vu par la rédaction");
     s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-art-count" value="'+(ev.articlesVisibleCount||4)+'" min="1" max="20" style="width:70px"></div><div class="form-row" style="max-width:200px"><label class="form-label">Taille titre (px)</label><input type="number" class="form-input" id="app-acc-art-tsize" value="'+(ev.articlesTitleSize||14)+'" min="10" max="24" style="width:70px"></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row" style="max-width:260px"><label class="form-label">Articles max dans l\'accordéon <span style="font-size:10px;color:var(--text3)">(colonne étroite)</span></label><input type="number" class="form-input" id="app-acc-art-max" value="'+(ev.articlesAccordionMax||20)+'" min="1" max="100" style="width:80px"></div><div class="form-row" style="max-width:260px"><label class="form-label">Hauteur zone déroulante (px) <span style="font-size:10px;color:var(--text3)">(colonne étroite)</span></label><input type="number" class="form-input" id="app-acc-art-height" value="'+(ev.articlesAccordionHeight||400)+'" min="150" max="1000" style="width:80px"></div></div>';
     return s;
   }
   if(type==='essential'){
@@ -3814,6 +3815,7 @@ async function _collectModuleSettings(type){
   } else if(type==='articles'){
     ud.articlesTitle=_v('app-st-art-title');ud.articlesSubtitle=_v('app-st-art-sub');ud.articlesShowTitle=_c('app-st-art-show');
     ud.articlesVisibleCount=_n('app-acc-art-count',4);ud.articlesTitleSize=_n('app-acc-art-tsize',14);
+    ud.articlesAccordionMax=_n('app-acc-art-max',20);ud.articlesAccordionHeight=_n('app-acc-art-height',400);
   } else if(type==='essential'){
     ud.essentialTitle=_v('app-st-ess-title');ud.essentialSubtitle=_v('app-st-ess-sub');ud.essentialShowTitle=_c('app-st-ess-show');
   } else if(type==='videos'){
