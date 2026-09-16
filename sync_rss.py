@@ -137,6 +137,48 @@ def format_date(entry):
     return datetime.now(timezone.utc).strftime("%-d mai %Y")
 
 # ── Traitement d'un événement ────────────────────────────────────────
+# Emplacement de l'index des liens déjà importés (1 seul document par événement)
+RSS_INDEX_PATH = ('_meta', 'rss_index')
+# Nombre maximum de liens conservés dans l'index (garde-fou taille doc Firestore ~1 Mo)
+RSS_INDEX_MAX = 8000
+
+
+def _load_rss_index(event_ref):
+    """Lit l'index des liens déjà importés en UNE seule lecture Firestore.
+    Retourne (set_des_liens, liste_ordonnée, doc_ref).
+    Rétro-compatible : si l'index n'existe pas encore, il est reconstruit une
+    seule fois depuis la collection articles, puis réutilisé aux runs suivants."""
+    idx_ref = event_ref.collection(RSS_INDEX_PATH[0]).document(RSS_INDEX_PATH[1])
+    snap = idx_ref.get()  # 1 lecture
+    if snap.exists:
+        data = snap.to_dict() or {}
+        links = data.get('links', []) or []
+        return set(links), list(links), idx_ref, False
+
+    # Première fois : reconstruire depuis les articles existants (coûteux, mais une seule fois)
+    log.info("   ⚙ Index RSS absent — reconstruction unique depuis la collection articles")
+    links = []
+    seen = set()
+    for doc in event_ref.collection('articles').stream():
+        d = doc.to_dict() or {}
+        link = d.get('link', '')
+        if link and link != '#' and link not in seen:
+            seen.add(link)
+            links.append(link)
+    return seen, links, idx_ref, True
+
+
+def _save_rss_index(idx_ref, links_list):
+    """Écrit l'index mis à jour en UNE seule écriture (tronque aux plus récents)."""
+    if len(links_list) > RSS_INDEX_MAX:
+        links_list = links_list[-RSS_INDEX_MAX:]
+    idx_ref.set({
+        'links': links_list,
+        'count': len(links_list),
+        'updated_at': firestore.SERVER_TIMESTAMP
+    })
+
+
 def process_event(db, event_ref, event_data):
     event_id = event_ref.id
     event_title = event_data.get('title', event_id)
@@ -147,21 +189,32 @@ def process_event(db, event_ref, event_data):
 
     log.info(f"📡 Événement « {event_title} » — {len(rss_feeds)} flux RSS")
 
-    # Récupérer les URLs déjà en base pour dédoublonner
     articles_ref = event_ref.collection('articles')
-    existing_docs = articles_ref.stream()
-    existing_links = set()
-    existing_docs_by_link = {}  # link → doc.reference (pour màj brandnews)
-    for doc in existing_docs:
-        d = doc.to_dict()
-        link = d.get('link', '')
-        if link and link != '#':
-            existing_links.add(link)
-            existing_docs_by_link[link] = doc.reference
 
-    log.info(f"   {len(existing_links)} articles existants en base")
+    # ── Dédoublonnage via index léger (1 lecture au lieu de N) ──
+    existing_links, links_list, idx_ref, rebuilt = _load_rss_index(event_ref)
+    log.info(f"   {len(existing_links)} liens connus dans l'index")
+
+    # Les mises à jour "brandnews" sur un article DÉJÀ importé nécessitent sa référence.
+    # On ne la résout QUE si un flux _brandnews est présent (sinon zéro lecture supplémentaire).
+    has_brandnews = any(f.get('label') == '_brandnews' for f in rss_feeds)
+    docs_by_link = {}
+    if has_brandnews:
+        # Ciblé : on ne lit que les articles des flux brandnews concernés, pas toute la collection.
+        bn_urls = [f.get('url', '') for f in rss_feeds if f.get('label') == '_brandnews' and f.get('url')]
+        for bn_url in bn_urls:
+            try:
+                q = articles_ref.where('rss_feed', '==', bn_url).stream()
+                for doc in q:
+                    d = doc.to_dict() or {}
+                    lk = d.get('link', '')
+                    if lk:
+                        docs_by_link[lk] = doc.reference
+            except Exception as qe:
+                log.warning(f"   ⚠ Lecture ciblée brandnews impossible : {qe}")
 
     total_imported = 0
+    index_changed = rebuilt  # si reconstruit, on sauvegarde même sans nouveauté
 
     for feed_conf in rss_feeds:
         feed_url = feed_conf.get('url', '')
@@ -178,28 +231,34 @@ def process_event(db, event_ref, event_data):
                 continue
 
             new_count = 0
+            consecutive_known = 0
             for entry in feed.entries:
                 link = getattr(entry, 'link', '') or ''
                 title = getattr(entry, 'title', '') or ''
 
                 if not title or not link:
                     continue
+
                 if link in existing_links:
-                    # Si c'est un flux _brandnews et l'article existe déjà,
-                    # marquer l'article existant comme brandnews
-                    if feed_label == '_brandnews' and link in existing_docs_by_link:
+                    # Article déjà connu
+                    if feed_label == '_brandnews' and link in docs_by_link:
                         try:
-                            existing_docs_by_link[link].update({
-                                'brandnews_feed': feed_url
-                            })
+                            docs_by_link[link].update({'brandnews_feed': feed_url})
                             log.info(f"     ↻ Article existant marqué brandnews : {title[:60]}")
-                            new_count += 1
                         except Exception as ue:
                             log.warning(f"     ⚠ Impossible de marquer brandnews : {ue}")
+                    # Arrêt anticipé : les flux sont triés du plus récent au plus ancien.
+                    # Après plusieurs articles connus d'affilée, inutile de continuer.
+                    # (désactivé pour un flux brandnews : on veut marquer tous les existants)
+                    if feed_label != '_brandnews':
+                        consecutive_known += 1
+                        if consecutive_known >= 5:
+                            break
                     continue
 
+                consecutive_known = 0
+
                 image = extract_image(entry)
-                # Fallback : fetch og:image depuis la page
                 if not image and link:
                     image = fetch_og_image(link)
 
@@ -213,12 +272,13 @@ def process_event(db, event_ref, event_data):
                     'rss_feed': feed_url,
                     'imported_at': firestore.SERVER_TIMESTAMP
                 }
-                # Si c'est un flux _brandnews, ajouter le marqueur
                 if feed_label == '_brandnews':
                     article['brandnews_feed'] = feed_url
 
                 articles_ref.add(article)
                 existing_links.add(link)
+                links_list.append(link)
+                index_changed = True
                 new_count += 1
                 total_imported += 1
 
@@ -226,6 +286,13 @@ def process_event(db, event_ref, event_data):
 
         except Exception as e:
             log.error(f"     ✗ Erreur sur {feed_url}: {e}")
+
+    # Sauvegarde de l'index (1 écriture) uniquement si nécessaire
+    if index_changed:
+        try:
+            _save_rss_index(idx_ref, links_list)
+        except Exception as se:
+            log.warning(f"   ⚠ Sauvegarde index impossible : {se}")
 
     return total_imported
 
