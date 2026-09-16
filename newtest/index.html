@@ -3544,8 +3544,8 @@ function renderExpedition(data){
       o += `<p class="exp-section-sub">${event.liveSubtitle||'Jour après jour, depuis le terrain'}</p>`;
     }
     if(_pub.length){
-      const EXP_LIVE_VIS = (opts && opts.limit) ? opts.limit : (event.liveVisibleCount || event.expLiveVisibleCount || 5);
-      const _lineClamp = event.liveLineClamp || 0;
+      const EXP_LIVE_VIS = (opts && opts.visibleCount!=null) ? opts.visibleCount : (event.liveVisibleCount || event.expLiveVisibleCount || 5);
+      const _lineClamp = (opts && opts.lineClamp!=null) ? opts.lineClamp : (event.liveLineClamp || 0);
       const visEntries = _pub.slice(0, EXP_LIVE_VIS);
       const extraEntries = _pub.slice(EXP_LIVE_VIS);
       // Day separator helper
@@ -5530,6 +5530,7 @@ function _bpRenderSection(sec, event, ctx){
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
       const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId };
       if(type==='citations' && ct.cit){ _opts.cit = ct.cit; }
+      if(type==='live'){ if(ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount); if(ct.lineClamp!=null&&ct.lineClamp!=='') _opts.lineClamp=parseInt(ct.lineClamp); }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -5632,6 +5633,17 @@ function _bpModuleOverrideCss(secId, ap){
   if(tx.style)  bodyDecl.push('font-style:'+tx.style+' !important');
   if(bodyDecl.length){
     rules.push(sel+' p, '+sel+' .live-entry-text, '+sel+' .cit-text, '+sel+' .pr-text, '+sel+' .pr-box-body, '+sel+' li, '+sel+' .exp-entry-text {'+bodyDecl.join(';')+'}');
+  }
+  // Labels / petits éléments (badges, dates, tags, mentions, byline, rôles…)
+  const lb=ap.label||{};
+  let labelDecl=[];
+  if(lb.font)   labelDecl.push("font-family:'"+lb.font+"',sans-serif !important");
+  if(lb.size)   labelDecl.push('font-size:'+parseInt(lb.size,10)+'px !important');
+  if(lb.color)  labelDecl.push('color:'+lb.color+' !important');
+  if(lb.weight) labelDecl.push('font-weight:'+lb.weight+' !important');
+  if(lb.style)  labelDecl.push('font-style:'+lb.style+' !important');
+  if(labelDecl.length){
+    rules.push(sel+' .art-card-tag, '+sel+' .art-card-byline, '+sel+' .live-tag, '+sel+' .live-entry-time, '+sel+' .cit-role, '+sel+' .exp-verbatim-role, '+sel+' .exp-art-date, '+sel+' .vid-date, '+sel+' .sec-title p, '+sel+' .exp-section-sub, '+sel+' .kpi-label, '+sel+' .prog-time, '+sel+' .badge, '+sel+' .tag, '+sel+' .er-mod-label {'+labelDecl.join(';')+'}');
   }
   // Couleur principale : variable + éléments d'accent courants
   if(ap.accent){
