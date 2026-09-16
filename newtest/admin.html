@@ -6489,7 +6489,9 @@ async function addLive(){
     tag_color:tagData?tagColor(tagData):'',
     phase:document.getElementById('live-phase')?.value||'',
     channel:document.getElementById('live-channel')?.value||'main',
-    time:firebase.firestore.FieldValue.serverTimestamp()
+    // Post programmé : l'horodatage affiché ET l'ordre suivent l'heure de publication prévue.
+    // Post immédiat : horodatage serveur (maintenant).
+    time: scheduledRaw ? firebase.firestore.Timestamp.fromDate(new Date(scheduledRaw)) : firebase.firestore.FieldValue.serverTimestamp()
   };
   if(image){
     doc.image_position=document.getElementById('live-imgpos')?.value||'center top';
@@ -6577,6 +6579,13 @@ async function saveLiveEdit(id){
   };
   const schedRaw=document.getElementById('m-live-scheduled')?.value||'';
   update.scheduledAt=schedRaw?new Date(schedRaw):firebase.firestore.FieldValue.delete();
+  // Si (re)programmé dans le futur, l'horodatage/ordre suit l'heure de publication prévue.
+  if(schedRaw){
+    const sd=new Date(schedRaw);
+    if(!isNaN(sd) && sd.getTime()>Date.now()){
+      update.time=firebase.firestore.Timestamp.fromDate(sd);
+    }
+  }
   const posEl=document.getElementById('m-live-imgpos');
   if(posEl) update.image_position=posEl.value;
   const hEl=document.getElementById('m-live-imgheight');
@@ -7124,11 +7133,25 @@ function renderArticles(el){
   else{
     const _ev0=eventsData.find(e=>e.id===currentEventId)||{};
     const _hidden=Array.isArray(_ev0.hiddenArticles)?_ev0.hiddenArticles:[];
-    articlesData.forEach(a=>{
+    // Même tri que le front : ordre manuel d'abord, puis date décroissante
+    const _hasOrder=a=>(a&&a.order!=null&&a.order!==''&&!isNaN(parseInt(a.order)));
+    const _t=v=>(v&&v.toDate?v.toDate().getTime():(v?new Date(v).getTime():0));
+    const _arts=articlesData.slice().sort((a,b)=>{
+      const ao=_hasOrder(a),bo=_hasOrder(b);
+      if(ao&&bo)return parseInt(a.order)-parseInt(b.order);
+      if(ao&&!bo)return -1; if(!ao&&bo)return 1;
+      return _t(b.created_at||b.date)-_t(a.created_at||a.date);
+    });
+    h+=`<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Utilisez ▲▼ pour définir un ordre d'affichage manuel. Les articles sans ordre manuel restent classés par date.</div>`;
+    _arts.forEach((a,idx)=>{
     const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
     const isHidden=a.link&&_hidden.indexOf(a.link)>=0;
     const hiddenBadge=isHidden?'<span style="font-size:8px;background:#FEE2E2;color:#B91C1C;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">MASQUÉ</span>':'';
     h+=`<div class="list-item" style="${isHidden?'opacity:.55':''}">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" style="padding:1px 6px;line-height:1" ${idx===0?'disabled':''} onclick="_articleMove(${idx},-1)">▲</button>
+        <button class="btn btn-ghost btn-xs" style="padding:1px 6px;line-height:1" ${idx===_arts.length-1?'disabled':''} onclick="_articleMove(${idx},1)">▼</button>
+      </div>
       ${a.image?`<div style="flex-shrink:0;width:56px;height:56px;border-radius:6px;overflow:hidden;background:#F1F5F9"><img src="${a.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='📰'"></div>`:''}
       <div class="list-item-content">
         <div class="list-item-text"><strong>${a.title}</strong>${source}${hiddenBadge}</div>
@@ -7141,6 +7164,7 @@ function renderArticles(el){
       </div>
     </div>`;
     });
+    window._articlesSorted=_arts; // référence pour le réordonnancement
   }
   h+=`</div>`; el.innerHTML=h;
 }
@@ -7168,6 +7192,7 @@ function editArticle(id){
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-art-title" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}${mkUploadBtn('m-art-image')}</div></div>
+    <div class="form-row" style="max-width:240px"><label class="form-label">Hauteur de l'image (px, optionnel)</label><input type="number" class="form-input" id="m-art-imgheight" value="${a.imageHeight||''}" min="80" max="600" placeholder="Auto (180px par défaut)" style="width:170px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Augmentez si l'image est trop rognée. Vide = hauteur automatique.</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveArticleEdit('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button>
@@ -7175,16 +7200,34 @@ function editArticle(id){
 }
 async function saveArticleEdit(id){
   saving(true);
+  const _ihEl=document.getElementById('m-art-imgheight');
+  const _ihVal=_ihEl&&_ihEl.value!==''?(parseInt(_ihEl.value)||firebase.firestore.FieldValue.delete()):firebase.firestore.FieldValue.delete();
   await subCol('articles').doc(id).update({
     title:document.getElementById('m-art-title').value.trim(),
     link:document.getElementById('m-art-link').value,
     author:document.getElementById('m-art-author').value,
-    image:document.getElementById('m-art-image').value
+    image:document.getElementById('m-art-image').value,
+    imageHeight:_ihVal
   });
   closeModal();toast('Modifié');
   await _loadColOnce('articles','articlesData');
 }
 async function deleteArticle(id){if(!confirm('Supprimer cet article ?'))return;saving(true);await subCol('articles').doc(id).delete();toast('Supprimé');await _loadColOnce('articles','articlesData');}
+// Réordonne les articles (▲▼) et écrit un champ `order` explicite sur chacun,
+// pour que l'ordre manuel soit stable côté front (ordre manuel prioritaire sur la date).
+async function _articleMove(idx, dir){
+  const list=(window._articlesSorted||articlesData).slice();
+  const j=idx+dir; if(j<0||j>=list.length) return;
+  const t=list[idx]; list[idx]=list[j]; list[j]=t;
+  saving(true);
+  try{
+    // Réécrit l'ordre de tous les articles (0,1,2,…) en une passe
+    const batch=[];
+    list.forEach((a,i)=>{ if(a.order!==i){ batch.push(subCol('articles').doc(a.id).update({order:i})); a.order=i; } });
+    await Promise.all(batch);
+    await _loadColOnce('articles','articlesData');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 async function toggleHideArticle(encLink, hide){
   const link=decodeURIComponent(encLink);
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
