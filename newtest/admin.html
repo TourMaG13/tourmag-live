@@ -4056,12 +4056,13 @@ function _renderPagesHubList(wrap, ev, phases, builders){
   h+=_cpTabOrderSection(ev);
   // Carte d'ouverture rapide : chaque page avec bouton Ouvrir (édition)
   h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir une page pour l\'éditer</h3>';
-  builders.forEach(p=>{
+  builders.filter(p=>window._showAdminHidden||!p.adminHidden).forEach(p=>{
     h+='<div class="list-item" style="align-items:center"><div style="width:10px;height:10px;border-radius:3px;background:'+(p.color||'#8B5CF6')+';flex-shrink:0"></div>'
       +'<div class="list-item-content"><div class="list-item-text"><strong>'+_escAdm(p.name||'(page)')+'</strong> <span class="cp-taborder-badge" style="background:#EDE9FE;color:#5B21B6">Page de contenu</span></div></div>'
       +'<div class="list-item-actions"><button class="btn btn-primary btn-xs" onclick="editBuilderPage(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir</button></div></div>';
   });
   phases.forEach((p,i)=>{
+    if(!window._showAdminHidden && p.adminHidden) return;
     h+='<div class="list-item" style="align-items:center"><div style="width:10px;height:10px;border-radius:3px;background:'+(p.color||'#6366F1')+';flex-shrink:0"></div>'
       +'<div class="list-item-content"><div class="list-item-text"><strong>'+_escAdm(p.name||'(phase)')+'</strong> <span class="cp-taborder-badge cp-tb-phase">Phase</span></div></div>'
       +'<div class="list-item-actions">'
@@ -5440,7 +5441,15 @@ function _cpTabOrderSection(ev){
   h+='<option value="">Premier onglet (automatique)</option>';
   list.forEach(it=>{ h+=`<option value="${it.tok}"${(ev.defaultTab||'')===it.tok?' selected':''}>${_escAdm(it.obj.name||'')}</option>`; });
   h+='</select></div>';
-  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Ordonnez les onglets (▲▼). Vous pouvez regrouper des onglets sous un onglet « parent » : ils deviennent alors un menu déroulant.</div>';
+  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Ordonnez les onglets (▲▼). Vous pouvez regrouper des onglets sous un onglet « parent » : ils deviennent alors un menu déroulant.<br>🗂️ <strong>Ranger</strong> retire un onglet de cette liste (utile pour les doublons) sans le supprimer ni changer le front.</div>';
+  // Compte les onglets "rangés" (masqués de la liste admin) pour proposer de les revoir
+  var _admHiddenCount=0;
+  (ev.phases||[]).forEach(p=>{if(p.adminHidden)_admHiddenCount++;});
+  (Array.isArray(ev.builderPages)?ev.builderPages:[]).forEach(p=>{if(p.adminHidden)_admHiddenCount++;});
+  (ev.contentPages||[]).forEach(p=>{if(p.adminHidden)_admHiddenCount++;});
+  if(_admHiddenCount>0 || window._showAdminHidden){
+    h+='<label style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);margin-bottom:12px;cursor:pointer"><input type="checkbox" '+(window._showAdminHidden?'checked':'')+' onchange="_setShowAdminHidden(this.checked)"> Afficher les onglets rangés'+(_admHiddenCount?(' ('+_admHiddenCount+')'):'')+'</label>';
+  }
   // Nettoyage : anciennes « pages libres » restant dans les données (système remplacé par le Constructeur)
   var _legacyPages = (ev.contentPages||[]);
   if(_legacyPages.length){
@@ -5489,11 +5498,13 @@ function _cpTabOrderSection(ev){
       </div>`;
     }
     const _isHidden = !!it.obj.navHidden;
-    h+=`<div class="cp-row"${_isHidden?' style="opacity:.5"':''}>
+    const _isAdmHidden = !!it.obj.adminHidden;
+    h+=`<div class="cp-row"${(_isHidden||_isAdmHidden)?' style="opacity:.5"':''}>
       <span class="cp-dot" style="background:${_dotVal}"></span>
-      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}${_isHidden?' <span style="font-size:9px;font-weight:700;color:#B91C1C;background:#FEE2E2;padding:1px 7px;border-radius:10px;margin-left:4px">MASQUÉ</span>':''}</div><div class="cp-meta" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">${parentSel} ${dotSel}</div>${parentOpts}</div>
+      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}${_isHidden?' <span style="font-size:9px;font-weight:700;color:#B91C1C;background:#FEE2E2;padding:1px 7px;border-radius:10px;margin-left:4px">MASQUÉ</span>':''}${_isAdmHidden?' <span style="font-size:9px;font-weight:700;color:#6B21A8;background:#F3E8FF;padding:1px 7px;border-radius:10px;margin-left:4px">RANGÉ</span>':''}</div><div class="cp-meta" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">${parentSel} ${dotSel}</div>${parentOpts}</div>
       <div class="cp-actions">
         <button class="btn btn-ghost btn-xs" title="${_isHidden?'Réafficher dans la navigation':'Masquer de la navigation (sans supprimer)'}" onclick="_toggleTabHidden('${myTok}',${_isHidden?'false':'true'})">${_isHidden?'👁️ Afficher':'🚫 Masquer'}</button>
+        <button class="btn btn-ghost btn-xs" title="${_isAdmHidden?'Remettre dans la liste admin':'Ranger : retirer de cette liste admin (données conservées, front inchangé)'}" onclick="_toggleAdminHidden('${myTok}',${_isAdmHidden?'false':'true'})">${_isAdmHidden?'📂 Sortir' : '🗂️ Ranger'}</button>
         ${i>0?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},-1)">▲</button>`:''}
         ${i<list.length-1?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},1)">▼</button>`:''}
       </div>
@@ -5555,6 +5566,9 @@ function _admTabList(ev){
   phases.forEach(p=>{ const tok='phase:'+p.id; if(!seen[tok]) out.push({kind:'phase',obj:p,tok}); });
   builders.forEach(p=>{ const tok='builder:'+p.id; if(!seen[tok]) out.push({kind:'builder',obj:p,tok}); });
   pages.forEach(p=>{ const tok='page:'+p.id; if(!seen[tok]) out.push({kind:'page',obj:p,tok}); });
+  // Masquage de la LISTE ADMIN (distinct du masquage de navigation) : on retire les
+  // onglets marqués adminHidden, sauf si l'utilisateur a demandé à les revoir.
+  if(!window._showAdminHidden) return out.filter(it=>!it.obj.adminHidden);
   return out;
 }
 async function _moveTab(idx,dir){
@@ -5596,6 +5610,24 @@ async function _toggleTabHidden(tok, hide){
   try{ await evRef().update(_bpStripUndefined(upd)); toast(hide?'Onglet masqué':'Onglet réaffiché'); renderTab(); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
+// Masque / réaffiche un onglet de la LISTE ADMIN uniquement (les données restent intactes,
+// et l'affichage front n'est pas affecté). Sert à ranger les doublons dont on ne veut plus la vue.
+async function _toggleAdminHidden(tok, hide){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let target=null;
+  if(tok.indexOf('phase:')===0){ const id=tok.slice(6); target=(ev.phases||[]).find(p=>p.id===id); }
+  else if(tok.indexOf('builder:')===0){ const id=tok.slice(8); target=(Array.isArray(ev.builderPages)?ev.builderPages:[]).find(p=>p.id===id); }
+  else if(tok.indexOf('page:')===0){ const id=tok.slice(5); target=(ev.contentPages||[]).find(p=>p.id===id); }
+  if(!target){ toast('Onglet introuvable','error'); return; }
+  if(hide) target.adminHidden=true; else delete target.adminHidden;
+  const upd={};
+  if(tok.indexOf('phase:')===0) upd.phases=ev.phases;
+  else if(tok.indexOf('builder:')===0) upd.builderPages=ev.builderPages;
+  else upd.contentPages=ev.contentPages;
+  try{ await evRef().update(_bpStripUndefined(upd)); toast(hide?'Rangé (masqué de la liste)':'Réaffiché dans la liste'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+function _setShowAdminHidden(v){ window._showAdminHidden=v; renderTab(); }
 async function addPhase(){
   const name=document.getElementById('phase-name').value.trim();
   if(!name){toast('Nom requis','error');return;}
