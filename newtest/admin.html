@@ -816,7 +816,7 @@ select.form-input{cursor:pointer}
       <div class="sidebar-item" data-tab="events"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-events"/></svg></span>Mes événements</div>
 
       <div class="sb-group" data-group="contenu">
-        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu</span><span class="sb-group-chev">▾</span></button>
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Contenu (vos données)</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Citations<span class="badge" id="badge-cit">0</span></div>
@@ -860,11 +860,9 @@ select.form-input{cursor:pointer}
       </div>
 
       <div class="sb-group" data-group="reglages">
-        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Réglages</span><span class="sb-group-chev">▾</span></button>
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Structure & réglages</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
-          <div class="sidebar-item" data-tab="phases"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-phases"/></svg></span>Phases / Temps forts</div>
-          <div class="sidebar-item" data-tab="builder"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>Constructeur<span class="badge" style="background:var(--violet)">Nouveau</span></div>
-          <div class="sidebar-item" data-tab="pages"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M4 3h11l5 5v13H4z M15 3v5h5 M8 13h8 M8 17h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Pages libres</div>
+          <div class="sidebar-item" data-tab="pageshub"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>Pages &amp; onglets</div>
           <div class="sidebar-item" data-tab="access"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></span>Accès</div>
           <div class="sidebar-item" data-tab="guide" style="background:var(--acc-soft);border-left:3px solid var(--acc)"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-guide"/></svg></span>Guide d'utilisation</div>
         </div>
@@ -1988,10 +1986,29 @@ function _flushDeferredRender(){
 // FIRESTORE LISTENERS
 // ============================================================
 function initApp(){
+  // ── DIAGNOSTIC LECTURES ADMIN (temporaire) — défini tôt pour tout capter ──
+  window._diagStats = window._diagStats || {};
+  window._diagStart = window._diagStart || Date.now();
+  window._diag = window._diag || function(name, snap){
+    var s = window._diagStats[name] || (window._diagStats[name]={fires:0, docs:0});
+    s.fires += 1;
+    try { s.docs += (snap && typeof snap.size==='number') ? snap.size : (snap&&snap.docs?snap.docs.length:0); } catch(e){}
+    return snap;
+  };
+  if(!window._diagTimer){
+    window._diagTimer = setInterval(function(){
+      var mins=((Date.now()-window._diagStart)/60000);
+      var rows=Object.keys(window._diagStats).map(function(k){var s=window._diagStats[k];return {collection:k,'déclenchements':s.fires,'docs lus (total)':s.docs,'docs/min':+(s.docs/Math.max(mins,0.01)).toFixed(1)};}).sort(function(a,b){return b['docs lus (total)']-a['docs lus (total)'];});
+      var totalDocs=rows.reduce(function(t,r){return t+r['docs lus (total)'];},0);
+      console.log('%c[DIAG ADMIN lectures] '+mins.toFixed(1)+' min — '+totalDocs+' docs lus au total','background:#B91C1C;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold');
+      if(console.table) console.table(rows);
+    },10000);
+  }
   // Init des groupes repliables de la sidebar (état par défaut / mémorisé)
   initSbGroups();
   // Listen to events collection
   const u1=db.collection('events').onSnapshot(snap=>{
+    if(window._diag) window._diag('GLOBAL:events', snap);
     const allEvents=[];
     snap.forEach(d=>allEvents.push({id:d.id,...d.data()}));
     // Filtrage selon le nouveau modèle d'accès :
@@ -2101,9 +2118,9 @@ function subscribeSubCollections(){
 
   subs.forEach(s=>{
     const u=subCol(s.col).onSnapshot(snap=>{
+      window._diag('sub:'+s.col, snap);
       const arr=[];
       snap.forEach(d=>arr.push({id:d.id,...d.data()}));
-      console.log('[TourMaG Live] onSnapshot',s.col,'→',arr.length,'docs');
       // Tri côté JS (robuste même si serverTimestamp pas encore résolu)
       if(s.col==='live') arr.sort((a,b)=>{ const ta=a.time?.toDate?a.time.toDate():new Date(a.time||0); const tb=b.time?.toDate?b.time.toDate():new Date(b.time||0); return tb-ta; });
       if(s.col==='citations') arr.sort((a,b)=>{ const ta=a.created_at?.toDate?a.created_at.toDate():new Date(a.created_at||0); const tb=b.created_at?.toDate?b.created_at.toDate():new Date(b.created_at||0); return tb-ta; });
@@ -2171,6 +2188,7 @@ function renderTab(){
   switch(currentTab){
     case 'home':renderHome(main);break;
     case 'events':renderEvents(main);break;
+    case 'pageshub':renderPagesHub(main);break;
     case 'phases':renderPhases(main);break;
     case 'pages':renderContentPages(main);break;
     case 'builder':renderBuilderTab(main);break;
@@ -3913,6 +3931,126 @@ async function deleteContentPage(id){
 }
 function editContentPage(id){ _cpEditKind='page'; _cpEditId=id; renderTab(); }
 function editPhaseContent(id){ _cpEditKind='phase'; _cpEditId=id; renderTab(); }
+// Carte « Liens par onglet » réutilisable — renvoie le HTML (chaîne)
+function _pagesHubLinksCard(ev){
+  const _gh = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html?event=' + encodeURIComponent(currentEventId);
+  const _pub = (ev.publicUrl||'').trim();
+  const _base = _pub || _gh;
+  const _hasEvent = /[?&]event=/.test(_base);
+  function _mk(param, val){
+    const parts=[];
+    if(!_hasEvent) parts.push('event='+encodeURIComponent(currentEventId));
+    parts.push(param+'='+encodeURIComponent(val));
+    const sep = _base.includes('?') ? (_base.endsWith('?')||_base.endsWith('&')?'':'&') : '?';
+    return _base+sep+parts.join('&');
+  }
+  const _tabs=[];
+  (ev.phases||[]).forEach(p=>{ const ref=(p.slug||'').trim()||_slugify(p.name||'')||p.id; _tabs.push({kind:'Phase',color:p.color||'#6366F1',name:p.name||'(phase)',url:_mk('phase',ref)}); });
+  (Array.isArray(ev.builderPages)?ev.builderPages:[]).forEach(p=>{ _tabs.push({kind:'Page',color:p.color||'#8B5CF6',name:p.name||'(page)',url:_mk('bpage',p.id)}); });
+  (ev.contentPages||[]).forEach(p=>{ _tabs.push({kind:'Ancienne',color:'#94A3B8',name:p.name||p.title||'(page)',url:_mk('page',p.id)}); });
+  const _warn = _pub ? '' : '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin-bottom:12px">⚠️ Aucune <strong>URL publique</strong> définie : ces liens pointent vers l\'adresse GitHub. Renseignez l\'URL de votre site dans les <a href="#" onclick="event.preventDefault();modifyEvent(currentEventId)" style="color:#92400E;font-weight:700;text-decoration:underline">réglages de l\'événement</a> pour des liens vers votre page.</div>';
+  let h=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> 🔗 Liens par onglet</h3>${_warn}<div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Le lien direct de <strong>chaque onglet</strong>. Copiez celui sur lequel renvoyer vos visiteurs — il ouvre exactement cet onglet.</div>`;
+  if(!_tabs.length){ h+='<div style="font-size:12px;color:var(--text3)">Aucun onglet pour le moment.</div>'; }
+  _tabs.forEach(t=>{
+    const _u=t.url, _uJs=_u.replace(/'/g,"\\'");
+    const _kc = t.kind==='Phase'?'#6366F1':(t.kind==='Page'?'#8B5CF6':'#94A3B8');
+    h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px"><div style="width:12px;height:12px;border-radius:3px;background:${t.color};flex-shrink:0"></div><div class="list-item-content" style="flex:1;min-width:180px"><div class="list-item-text"><strong>${_escAdm(t.name)}</strong> <span style="font-size:9px;font-weight:700;color:${_kc};background:${_kc}18;padding:1px 7px;border-radius:10px;margin-left:4px;text-transform:uppercase;letter-spacing:.5px">${t.kind}</span></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px"><code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_u}</code><button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_uJs}');toast('Lien copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button><a class="btn btn-ghost btn-xs" href="${_u}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a></div></div></div>`;
+  });
+  h+='</div>';
+  return h;
+}
+// ===== HUB « Pages & onglets » : vue unique de toutes les pages =====
+function _pagesHubCreate(kind){
+  if(kind==='phase'){ _pagesHubShowPhaseForm=true; renderTab(); setTimeout(()=>{const f=document.getElementById('phase-name'); if(f) f.focus();},50); }
+  else { _pagesHubCreatePage(); }
+}
+async function _pagesHubCreatePage(){
+  const name=(prompt('Nom de la nouvelle page de contenu :','')||'').trim();
+  if(!name) return;
+  const ev=_bpCurrentEv();
+  const mode = ev.mode==='expedition' ? 'expedition' : 'classic';
+  const list=_bpList(ev).slice();
+  const id=_uid();
+  list.push({ id, name, mode, color:'#7C3AED', dotColor:'', nav:{visible:true,clickable:true,parentTab:''}, display:{type:'always'}, sections:[] });
+  try{ await _bpPersist(list); _bpEditId=id; renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+var _pagesHubShowPhaseForm=false;
+function renderPagesHub(el){
+  const ev=_bpCurrentEv? _bpCurrentEv() : (eventsData.find(e=>e.id===currentEventId)||{});
+  if(!ev || !currentEventId){ el.innerHTML='<div class="empty"><div class="icon">📋</div><div class="text">Sélectionnez un événement</div></div>'; return; }
+  // Édition en cours → on laisse l'éditeur concerné prendre tout l'écran (inchangé)
+  if(_bpEditId && typeof _bpList==='function' && _bpList(ev).some(p=>p.id===_bpEditId)){ return _renderBuilderEditor(el); }
+  if(_cpEditId){ return renderPhases(el); } // éditeur de contenu de phase
+
+  const phases=ev.phases||[];
+  const builders=Array.isArray(ev.builderPages)?ev.builderPages:[];
+  let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Pages &amp; onglets</div>';
+  h+='<div class="page-desc">Toutes vos pages au même endroit. Chaque page est un onglet du dashboard (s\'il y en a plusieurs). Le badge indique le type de page.</div>';
+
+  // --- Créer une nouvelle page ---
+  h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Créer une page</h3>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+    +'<button class="btn btn-primary" onclick="_pagesHubCreate(\'page\')" style="flex:1;min-width:220px;text-align:left;padding:12px 16px"><div style="font-size:14px;font-weight:700">🧩 Page de contenu</div><div style="font-size:11px;font-weight:400;opacity:.85;margin-top:2px">Contenu libre : concept, programme, partenaires…</div></button>'
+    +'<button class="btn btn-ghost" onclick="_pagesHubCreate(\'phase\')" style="flex:1;min-width:220px;text-align:left;padding:12px 16px;border:1px solid var(--border)"><div style="font-size:14px;font-weight:700">🔀 Phase / temps fort</div><div style="font-size:11px;font-weight:400;color:var(--text3);margin-top:2px">Page-destination : bannière propre, dates, contenu filtré.</div></button>'
+    +'</div></div>';
+
+  // --- Formulaire d'ajout de phase (affiché à la demande) ---
+  if(_pagesHubShowPhaseForm){
+    h+='<div class="admin-card" style="border-color:#C7D2FE"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Nouvelle phase</h3>'
+      +'<div class="form-row-inline">'
+      +'<div class="form-row"><label class="form-label">Nom</label><input class="form-input" id="phase-name" placeholder="Ex : Les Açores (Portugal)"></div>'
+      +'<div class="form-row" style="max-width:120px"><label class="form-label">Couleur</label><input type="color" class="form-input" id="phase-color" value="#6366F1" style="height:38px;padding:3px"></div>'
+      +'</div>'
+      +'<div class="form-row-inline">'
+      +'<div class="form-row"><label class="form-label">Date début (optionnel)</label><input type="date" class="form-input" id="phase-start"></div>'
+      +'<div class="form-row"><label class="form-label">Date fin (optionnel)</label><input type="date" class="form-input" id="phase-end"></div>'
+      +'</div>'
+      +'<div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-primary" onclick="addPhase()">＋ Créer la phase</button><button class="btn btn-ghost" onclick="_pagesHubShowPhaseForm=false;renderTab()">Annuler</button></div>'
+      +'</div>';
+  }
+
+  const shell=document.createElement('div');
+  shell.innerHTML=h;
+  el.innerHTML=''; el.appendChild(shell);
+
+  // --- Liste unifiée de toutes les pages (ordre = ordre des onglets) + carte liens ---
+  const listWrap=document.createElement('div'); listWrap.id='pageshub-list';
+  el.appendChild(listWrap);
+  _renderPagesHubList(listWrap, ev, phases, builders);
+}
+// Liste unifiée : réutilise _cpTabOrderSection (déjà tous types) + boutons Ouvrir par ligne via la carte,
+// et la carte « Liens par onglet ». On construit une carte liste maison pour avoir le bouton Ouvrir.
+function _renderPagesHubList(wrap, ev, phases, builders){
+  let h='';
+  const total=phases.length+builders.length;
+  if(!total){
+    h+='<div class="admin-card"><div class="empty"><div class="icon">📄</div><div class="text">Aucune page pour le moment.<br><span style="font-size:12px;color:var(--text3)">Créez votre première page ci-dessus.</span></div></div></div>';
+    wrap.innerHTML=h; return;
+  }
+  // La carte « Ordre des onglets » liste déjà tout, avec réordonner + masquer.
+  h+=_cpTabOrderSection(ev);
+  // Carte d'ouverture rapide : chaque page avec bouton Ouvrir (édition)
+  h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir une page pour l\'éditer</h3>';
+  builders.forEach(p=>{
+    h+='<div class="list-item" style="align-items:center"><div style="width:10px;height:10px;border-radius:3px;background:'+(p.color||'#8B5CF6')+';flex-shrink:0"></div>'
+      +'<div class="list-item-content"><div class="list-item-text"><strong>'+_escAdm(p.name||'(page)')+'</strong> <span class="cp-taborder-badge" style="background:#EDE9FE;color:#5B21B6">Page de contenu</span></div></div>'
+      +'<div class="list-item-actions"><button class="btn btn-primary btn-xs" onclick="editBuilderPage(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir</button></div></div>';
+  });
+  phases.forEach((p,i)=>{
+    h+='<div class="list-item" style="align-items:center"><div style="width:10px;height:10px;border-radius:3px;background:'+(p.color||'#6366F1')+';flex-shrink:0"></div>'
+      +'<div class="list-item-content"><div class="list-item-text"><strong>'+_escAdm(p.name||'(phase)')+'</strong> <span class="cp-taborder-badge cp-tb-phase">Phase</span></div></div>'
+      +'<div class="list-item-actions">'
+      +'<button class="btn btn-ghost btn-xs" onclick="editPhaseContent(\''+p.id+'\')" title="Contenu éditorial"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-scroll"/></svg> Contenu</button>'
+      +'<button class="btn btn-primary btn-xs" onclick="editPhase('+i+')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Réglages</button>'
+      +'<button class="btn btn-danger btn-xs" onclick="deletePhase('+i+')">✕</button>'
+      +'</div></div>';
+  });
+  h+='</div>';
+  // Carte « Liens par onglet » (unique)
+  h+=_pagesHubLinksCard(ev, phases, builders);
+  wrap.innerHTML=h;
+}
 var _cpEditId=null;
 var _cpEditKind='page';
 function copyContentPageUrl(id){
@@ -4688,7 +4826,12 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Position de l\'image</label><select onchange="_bpSetCt(\'imagePos\',this.value)">'
           +['none','left','right','wrap-left','wrap-right','top','bottom'].map(function(o){return '<option value="'+o+'"'+((c.imagePos||'none')===o?' selected':'')+'>'+({none:'Aucune',left:'À gauche (colonne)',right:'À droite (colonne)','wrap-left':'Habillage à gauche','wrap-right':'Habillage à droite',top:'Au-dessus',bottom:'En dessous'}[o])+'</option>';}).join('')
           +'</select></div>'
-        +'<div class="bpe-fld"><label>Crédit / copyright image</label><input type="text" value="'+_escAdm(c.imageCredit||'')+'" onchange="_bpSetCt(\'imageCredit\',this.value)" placeholder="© Auteur"></div>';
+        +'<div class="bpe-fld"><label>Crédit / copyright image</label><input type="text" value="'+_escAdm(c.imageCredit||'')+'" onchange="_bpSetCt(\'imageCredit\',this.value)" placeholder="© Auteur"></div>'
+        +'<div class="bpe-fld"><label>Vidéo (optionnelle, URL YouTube / Vimeo / MP4)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-video" value="'+_escAdm(c.video||'')+'" onchange="_bpSetCt(\'video\',this.value)" style="flex:1" placeholder="https://youtube.com/... ou /shorts/...">'+mkMediaPickerBtn('bpct-video')+'</div><div class="bpe-hint">Peut coexister avec une image. Les shorts YouTube s\'affichent au format vertical.</div></div>'
+        +'<div class="bpe-fld"><label>Position de la vidéo</label><select onchange="_bpSetCt(\'videoPos\',this.value)">'
+          +['none','left','right','top','bottom'].map(function(o){return '<option value="'+o+'"'+((c.videoPos||'none')===o?' selected':'')+'>'+({none:'Aucune',left:'À gauche (colonne)',right:'À droite (colonne)',top:'Au-dessus',bottom:'En dessous'}[o])+'</option>';}).join('')
+          +'</select></div>'
+        +'<div class="bpe-fld"><label>Crédit / copyright vidéo</label><input type="text" value="'+_escAdm(c.videoCredit||'')+'" onchange="_bpSetCt(\'videoCredit\',this.value)" placeholder="© Auteur"></div>';
     case 'image':
       return '<div class="bpe-fld"><label>Image (URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-image" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-image')+mkUploadBtn('bpct-image')+'</div></div>'
         +'<div class="bpe-fld"><label>Légende</label><input type="text" value="'+_escAdm(c.caption||'')+'" onchange="_bpSetCt(\'caption\',this.value)"></div>'
@@ -5247,60 +5390,8 @@ function renderPhases(el){
       h+=`</div>`;
     })();
 
-    // ===== Liens d'accès par phase =====
-    // Base GitHub déduite de l'emplacement réel de l'admin (fallback si pas d'URL publique).
-    const _ghBase = window.location.href.replace(/\/[^\/]*(?:\?.*)?$/, '') + '/index.html?event=' + encodeURIComponent(currentEventId);
-    const _publicUrl=(ev.publicUrl||'').trim();
-    // Construit une URL en ajoutant proprement des paramètres (gère ? / & et les params déjà présents)
-    function _buildPhaseUrl(phaseId, lock){
-      let base, hasEvent;
-      if(_publicUrl){
-        base=_publicUrl;
-        hasEvent=/[?&]event=/.test(base);
-      } else {
-        base=_ghBase;
-        hasEvent=true;
-      }
-      const params=[];
-      if(!hasEvent) params.push('event='+encodeURIComponent(currentEventId));
-      params.push('phase='+encodeURIComponent(phaseId));
-      if(lock) params.push('lock=1');
-      const sep = base.includes('?') ? (base.endsWith('?')||base.endsWith('&')?'':'&') : '?';
-      return base+sep+params.join('&');
-    }
-    const _urlWarn = _publicUrl ? '' : '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin-bottom:12px">⚠️ Aucune <strong>URL publique</strong> définie pour cet événement : les liens ci-dessous pointent vers l\'adresse GitHub Pages par défaut. Renseignez l\'URL de votre site dans l\'onglet <a href="#" onclick="event.preventDefault();modifyEvent(currentEventId)" style="color:#92400E;font-weight:700;text-decoration:underline">réglages de l\'événement</a> pour générer des liens vers votre propre page.</div>';
-    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Liens d'accès par phase</h3>
-      ${_urlWarn}
-      <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Pour chaque phase, deux liens directs :<br>• <strong>Lien normal</strong> — ouvre la phase, le visiteur peut cliquer sur les autres onglets.<br>• <strong>Lien verrouillé</strong> — ouvre la phase et <strong>masque les onglets de phase</strong> (le visiteur reste sur cette phase uniquement).</div>`;
-    phases.forEach((p)=>{
-      // slug à jour si dispo, sinon calculé depuis le nom, sinon id historique
-      const _pRef = (p.slug||'').trim() || _slugify(p.name||'') || p.id;
-      const _u=_buildPhaseUrl(_pRef,false);
-      const _ul=_buildPhaseUrl(_pRef,true);
-      const _uJs=_u.replace(/'/g,"\\'");
-      const _ulJs=_ul.replace(/'/g,"\\'");
-      h+=`<div class="list-item" style="align-items:center;flex-wrap:wrap;gap:8px">
-        <div style="width:12px;height:12px;border-radius:3px;background:${p.color||'#6366F1'};flex-shrink:0"></div>
-        <div class="list-item-content" style="flex:1;min-width:180px">
-          <div class="list-item-text"><strong>${p.name}</strong></div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:10px;font-weight:600;color:#059669;background:#ECFDF5;border:1px solid #A7F3D0;padding:1px 7px;border-radius:10px;white-space:nowrap">Normal</span>
-              <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_u}</code>
-              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_uJs}');toast('Lien normal copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
-              <a class="btn btn-ghost btn-xs" href="${_u}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:10px;font-weight:600;color:#D97706;background:#FEF3C7;border:1px solid #FDE68A;padding:1px 7px;border-radius:10px;white-space:nowrap">Verrouillé</span>
-              <code style="flex:1;min-width:160px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_ul}</code>
-              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${_ulJs}');toast('Lien verrouillé copié')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button>
-              <a class="btn btn-ghost btn-xs" href="${_ul}" target="_blank" rel="noopener"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir</a>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    });
-    h+=`</div>`;
+    // (Carte « Liens de phase — option verrouillée » retirée : les liens simples de tous les
+    // onglets sont dans la carte « 🔗 Liens par onglet ». Les liens verrouillés ne sont plus proposés.)
 
     // Phase title display settings → moved to Apparence
     h+=`<div style="margin-top:12px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0369A1">💡 Le style du titre de phase active (taille, police, couleur…) se configure dans l'onglet <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=apparence]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Apparence</a>.</div>`;
@@ -5326,6 +5417,17 @@ function _cpTabOrderSection(ev){
   list.forEach(it=>{ h+=`<option value="${it.tok}"${(ev.defaultTab||'')===it.tok?' selected':''}>${_escAdm(it.obj.name||'')}</option>`; });
   h+='</select></div>';
   h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Ordonnez les onglets (▲▼). Vous pouvez regrouper des onglets sous un onglet « parent » : ils deviennent alors un menu déroulant.</div>';
+  // Nettoyage : anciennes « pages libres » restant dans les données (système remplacé par le Constructeur)
+  var _legacyPages = (ev.contentPages||[]);
+  if(_legacyPages.length){
+    h+='<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:12px">';
+    h+='<div style="font-size:12px;font-weight:600;color:#92400E;margin-bottom:6px">🧹 Anciennes pages libres à nettoyer</div>';
+    h+='<div style="font-size:11px;color:#92400E;line-height:1.5;margin-bottom:8px">Le système « Pages libres » est remplacé par le Constructeur. Ces pages migrées peuvent être supprimées définitivement une fois que vous avez vérifié leur version Constructeur.</div>';
+    _legacyPages.forEach(function(p){
+      h+='<div style="display:flex;align-items:center;gap:8px;padding:4px 0"><span style="flex:1;font-size:12px;color:#7C2D12">'+_escAdm(p.name||'(sans nom)')+'</span><button class="btn btn-danger btn-xs" onclick="_deleteLegacyPage(\''+p.id+'\')">Supprimer définitivement</button></div>';
+    });
+    h+='</div>';
+  }
   h+='<div class="cp-list">';
   // Un onglet qui a déjà des enfants ne peut pas devenir enfant à son tour (pas d'imbrication à 3 niveaux).
   const hasKids = {};
@@ -5362,10 +5464,12 @@ function _cpTabOrderSection(ev){
         </select></label>
       </div>`;
     }
-    h+=`<div class="cp-row">
+    const _isHidden = !!it.obj.navHidden;
+    h+=`<div class="cp-row"${_isHidden?' style="opacity:.5"':''}>
       <span class="cp-dot" style="background:${_dotVal}"></span>
-      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}</div><div class="cp-meta" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">${parentSel} ${dotSel}</div>${parentOpts}</div>
+      <div class="cp-info"><div class="cp-name">${_escAdm(it.obj.name||'(sans nom)')} ${badge}${_isHidden?' <span style="font-size:9px;font-weight:700;color:#B91C1C;background:#FEE2E2;padding:1px 7px;border-radius:10px;margin-left:4px">MASQUÉ</span>':''}</div><div class="cp-meta" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">${parentSel} ${dotSel}</div>${parentOpts}</div>
       <div class="cp-actions">
+        <button class="btn btn-ghost btn-xs" title="${_isHidden?'Réafficher dans la navigation':'Masquer de la navigation (sans supprimer)'}" onclick="_toggleTabHidden('${myTok}',${_isHidden?'false':'true'})">${_isHidden?'👁️ Afficher':'🚫 Masquer'}</button>
         ${i>0?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},-1)">▲</button>`:''}
         ${i<list.length-1?`<button class="btn btn-ghost btn-xs" onclick="_moveTab(${i},1)">▼</button>`:''}
       </div>
@@ -5439,6 +5543,35 @@ async function _moveTab(idx,dir){
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 function _slugify(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+// Supprime définitivement une ancienne page libre + nettoie sa référence dans tabOrder
+async function _deleteLegacyPage(id){
+  if(!confirm('Supprimer définitivement cette ancienne page libre ? (La version Constructeur, si elle existe, n\'est pas affectée.)')) return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pages=(ev.contentPages||[]).filter(p=>p.id!==id);
+  const tok='page:'+id;
+  const tabOrder=(ev.tabOrder||[]).filter(t=>t!==tok);
+  try{
+    await evRef().update({contentPages:pages, tabOrder:tabOrder});
+    ev.contentPages=pages; ev.tabOrder=tabOrder;
+    toast('Page libre supprimée'); renderTab();
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// Masque / réaffiche un onglet dans la navigation (sans supprimer la donnée)
+async function _toggleTabHidden(tok, hide){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let target=null;
+  if(tok.indexOf('phase:')===0){ const id=tok.slice(6); target=(ev.phases||[]).find(p=>p.id===id); }
+  else if(tok.indexOf('builder:')===0){ const id=tok.slice(8); target=(Array.isArray(ev.builderPages)?ev.builderPages:[]).find(p=>p.id===id); }
+  else if(tok.indexOf('page:')===0){ const id=tok.slice(5); target=(ev.contentPages||[]).find(p=>p.id===id); }
+  if(!target){ toast('Onglet introuvable','error'); return; }
+  if(hide) target.navHidden=true; else delete target.navHidden;
+  const upd={};
+  if(tok.indexOf('phase:')===0) upd.phases=ev.phases;
+  else if(tok.indexOf('builder:')===0) upd.builderPages=ev.builderPages;
+  else upd.contentPages=ev.contentPages;
+  try{ await evRef().update(_bpStripUndefined(upd)); toast(hide?'Onglet masqué':'Onglet réaffiché'); renderTab(); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 async function addPhase(){
   const name=document.getElementById('phase-name').value.trim();
   if(!name){toast('Nom requis','error');return;}
@@ -8391,6 +8524,7 @@ function editVideo(id){
       <div class="form-row"><label class="form-label">Section</label><select class="form-input" id="m-vid-section">${secOpts}</select></div>
     </div>
     ${mkPhaseSelect('m-vid-phase', v.phase||'')}
+    ${platform==='linkedin'?`<div class="form-row"><label class="form-label">Hauteur de l'aperçu LinkedIn (px)</label><input type="number" class="form-input" id="m-vid-embedheight" value="${v.embedHeight||580}" min="300" max="1200" style="width:150px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Ajustez pour éviter l'ascenseur : plus haut pour un post long, plus bas pour un post court.</div></div>`:''}
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveVideoEdit('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>`);
 }
 async function saveVideoEdit(id){
@@ -8403,6 +8537,8 @@ async function saveVideoEdit(id){
   };
   const thumbInput=document.getElementById('m-vid-thumb');
   if(thumbInput) updateData.thumbnail=thumbInput.value.trim();
+  const ehInput=document.getElementById('m-vid-embedheight');
+  if(ehInput) updateData.embedHeight=parseInt(ehInput.value)||580;
   await subCol('videos').doc(id).update(updateData);
   closeModal();toast('Modifié');
 }
