@@ -603,7 +603,12 @@ img{display:block}a{text-decoration:none}
 .side-col .art-card.featured{grid-template-columns:1fr}
 .side-col .art-card-img{height:180px}
 .side-col .art-card.featured .art-card-img{min-height:180px;height:180px}
+.art-acc-wrap{position:relative}
 .art-acc-scroll{overflow-y:auto;overflow-x:hidden;padding-right:4px;-webkit-overflow-scrolling:touch}
+.art-acc-fade{position:absolute;left:0;right:0;bottom:0;height:52px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--bg,#fff) 85%);border-radius:0 0 12px 12px;transition:opacity .25s;opacity:1}
+.art-acc-wrap.at-bottom .art-acc-fade,.art-acc-wrap.no-scroll .art-acc-fade{opacity:0}
+.art-acc-chev{font-size:16px;font-weight:700;color:var(--acc,#E8842C);padding-bottom:6px;animation:art-acc-bounce 1.4s infinite}
+@keyframes art-acc-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 .art-acc-scroll::-webkit-scrollbar{width:6px}
 .art-acc-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.04);border-radius:3px}
 .art-acc-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
@@ -1553,11 +1558,24 @@ window._filterLiveByTag = function(tag){
   });
   if(typeof sendHeight==='function') setTimeout(sendHeight,60);
 };
+// Indicateur de scroll de l'accordéon articles : masque le fondu quand on est en bas
+// ou quand le contenu tient sans défiler.
+window._artAccScroll = function(el){
+  const wrap = el.closest('.art-acc-wrap'); if(!wrap) return;
+  const scrollable = el.scrollHeight > el.clientHeight + 4;
+  wrap.classList.toggle('no-scroll', !scrollable);
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+  wrap.classList.toggle('at-bottom', atBottom);
+};
+window._artAccInit = function(){
+  document.querySelectorAll('.art-acc-scroll').forEach(el=>_artAccScroll(el));
+};
 window.toggleExpand = function(expandId, btnId, count, labelOpen, labelClosed){  const el=document.getElementById(expandId), btn=document.getElementById(btnId);
   if(!el||!btn) return;
   const open=el.classList.toggle('open');
   btn.classList.toggle('open-state',open);
   btn.innerHTML = open ? (labelOpen||'Réduire')+' '+_chevSvg : (labelClosed||('Voir les '+count+' précédents'))+' '+_chevSvg;
+  if(open && expandId==='art-expand' && typeof _artAccInit==='function') setTimeout(_artAccInit,30);
   if(typeof sendHeight==='function') setTimeout(sendHeight,50);
 };
 window.toggleCitAccordion = function(accId){
@@ -2407,9 +2425,9 @@ function render(data){
       va.forEach((a,i) => { o += mkArticle(a, i===0); });
       o += `</div>`;
       if(ea.length){
-        o += `<div class="expand-wrap" id="art-expand"><div class="art-acc-scroll" style="max-height:${accH}px"><div class="art-bento" style="margin-top:14px">`;
+        o += `<div class="expand-wrap" id="art-expand"><div class="art-acc-wrap"><div class="art-acc-scroll" style="max-height:${accH}px" onscroll="_artAccScroll(this)"><div class="art-bento" style="margin-top:14px">`;
         ea.forEach(a => { o += mkArticle(a, false); });
-        o += `</div></div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir plus d\\'articles')">Voir plus d'articles ${_chevSvg}</button></div>`;
+        o += `</div></div><div class="art-acc-fade"><span class="art-acc-chev">↓</span></div></div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir plus d\\'articles')">Voir plus d'articles ${_chevSvg}</button></div>`;
       }
       return o;
     }
