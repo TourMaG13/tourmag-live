@@ -3969,9 +3969,10 @@ function _pagesHubLinksCard(ev){
     return _base+sep+parts.join('&');
   }
   const _tabs=[];
-  (ev.phases||[]).forEach(p=>{ const ref=(p.slug||'').trim()||_slugify(p.name||'')||p.id; _tabs.push({kind:'Phase',color:p.color||'#6366F1',name:p.name||'(phase)',url:_mk('phase',ref)}); });
-  (Array.isArray(ev.builderPages)?ev.builderPages:[]).forEach(p=>{ _tabs.push({kind:'Page',color:p.color||'#8B5CF6',name:p.name||'(page)',url:_mk('bpage',p.id)}); });
-  (ev.contentPages||[]).forEach(p=>{ _tabs.push({kind:'Ancienne',color:'#94A3B8',name:p.name||p.title||'(page)',url:_mk('page',p.id)}); });
+  const _showH = window._showAdminHidden;
+  (ev.phases||[]).forEach(p=>{ if(!_showH && p.adminHidden) return; const ref=(p.slug||'').trim()||_slugify(p.name||'')||p.id; _tabs.push({kind:'Phase',color:p.color||'#6366F1',name:p.name||'(phase)',url:_mk('phase',ref)}); });
+  (Array.isArray(ev.builderPages)?ev.builderPages:[]).forEach(p=>{ if(!_showH && p.adminHidden) return; _tabs.push({kind:'Page',color:p.color||'#8B5CF6',name:p.name||'(page)',url:_mk('bpage',p.id)}); });
+  (ev.contentPages||[]).forEach(p=>{ if(!_showH && p.adminHidden) return; _tabs.push({kind:'Ancienne',color:'#94A3B8',name:p.name||p.title||'(page)',url:_mk('page',p.id)}); });
   const _warn = _pub ? '' : '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin-bottom:12px">⚠️ Aucune <strong>URL publique</strong> définie : ces liens pointent vers l\'adresse GitHub. Renseignez l\'URL de votre site dans les <a href="#" onclick="event.preventDefault();modifyEvent(currentEventId)" style="color:#92400E;font-weight:700;text-decoration:underline">réglages de l\'événement</a> pour des liens vers votre page.</div>';
   let h=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> 🔗 Liens par onglet</h3>${_warn}<div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Le lien direct de <strong>chaque onglet</strong>. Copiez celui sur lequel renvoyer vos visiteurs — il ouvre exactement cet onglet.</div>`;
   if(!_tabs.length){ h+='<div style="font-size:12px;color:var(--text3)">Aucun onglet pour le moment.</div>'; }
@@ -4059,7 +4060,7 @@ function _renderPagesHubList(wrap, ev, phases, builders){
   builders.filter(p=>window._showAdminHidden||!p.adminHidden).forEach(p=>{
     h+='<div class="list-item" style="align-items:center"><div style="width:10px;height:10px;border-radius:3px;background:'+(p.color||'#8B5CF6')+';flex-shrink:0"></div>'
       +'<div class="list-item-content"><div class="list-item-text"><strong>'+_escAdm(p.name||'(page)')+'</strong> <span class="cp-taborder-badge" style="background:#EDE9FE;color:#5B21B6">Page de contenu</span></div></div>'
-      +'<div class="list-item-actions"><button class="btn btn-primary btn-xs" onclick="editBuilderPage(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir</button></div></div>';
+      +'<div class="list-item-actions"><button class="btn btn-primary btn-xs" onclick="editBuilderPage(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ouvrir</button><button class="btn btn-danger btn-xs" onclick="deleteBuilderPage(\''+p.id+'\')" title="Supprimer cette page">✕</button></div></div>';
   });
   phases.forEach((p,i)=>{
     if(!window._showAdminHidden && p.adminHidden) return;
@@ -4495,6 +4496,7 @@ function _renderBuilderEditor(el){
     +'<div class="page-title" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px"><span class="cp-dot" style="background:'+(p.color||'#7C3AED')+'"></span>'+_escAdm(p.name||'Page')+'</div>'
     +'<div style="margin-left:auto;display:flex;gap:8px">'
     +'<button class="btn btn-ghost btn-sm" onclick="_bpPreview(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Aperçu</button>'
+    +'<button class="btn btn-danger btn-sm" onclick="deleteBuilderPage(\''+p.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg> Supprimer</button>'
     +'<button class="btn btn-primary btn-sm" onclick="_bpSaveAndToast()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button>'
     +'</div></div>';
 
