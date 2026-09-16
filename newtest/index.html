@@ -1567,6 +1567,21 @@ function _isPublished(entry){
   const sd=entry.scheduledAt?.toDate?entry.scheduledAt.toDate():(entry.scheduledAt?.seconds?new Date(entry.scheduledAt.seconds*1000):new Date(entry.scheduledAt));
   return !isNaN(sd)&&sd.getTime()<=Date.now();
 }
+// Tri des articles : ceux ayant un ordre manuel (champ `order`) d'abord, croissant ;
+// les autres ensuite, du plus récent au plus ancien (date). Stable et rétro-compatible.
+function _sortArticles(arr){
+  if(!Array.isArray(arr)) return arr||[];
+  const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
+  const _t = v => (v&&v.toDate?v.toDate().getTime():(v?new Date(v).getTime():0));
+  return arr.slice().sort((a,b)=>{
+    const ao=hasOrder(a), bo=hasOrder(b);
+    if(ao&&bo) return parseInt(a.order)-parseInt(b.order);
+    if(ao&&!bo) return -1;      // les articles ordonnés passent devant
+    if(!ao&&bo) return 1;
+    // aucun ordre manuel : tri par date décroissante
+    return _t(b.created_at||b.date)-_t(a.created_at||a.date);
+  });
+}
 
 function _mkPhaseTitle(event, activePhase, phases){
   if(!activePhase) return '';
@@ -2078,7 +2093,7 @@ function render(data){
   const live = _pf(_rawLive);
   const citations = _pf(_rawCit);
   const _hiddenArts = Array.isArray(event.hiddenArticles) ? event.hiddenArticles : [];
-  const articles = _pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0);
+  const articles = _sortArticles(_pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0));
   const videos = _pf(_rawVid);
   const interviews = _pf(_rawItw);
   const programme = _pf(_rawProg);
@@ -2341,7 +2356,8 @@ function render(data){
   // ===== ARTICLES (bento grid) =====
   const ART_VIS = event.articlesVisibleCount || ART_VISIBLE_DEFAULT;
   function mkArticle(a, featured){
-    const img = a.image ? `<img class="art-card-img" src="${a.image}" alt="" onerror="this.remove()">` : '';
+    const _ih = (a.imageHeight!=null && a.imageHeight!=='' && !isNaN(parseInt(a.imageHeight))) ? `height:${parseInt(a.imageHeight)}px;` : '';
+    const img = a.image ? `<img class="art-card-img" src="${a.image}" alt=""${_ih?` style="${_ih}"`:''} onerror="this.remove()">` : '';
     const initials = (a.author||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const link = a.link ? ` onclick="window.open('${a.link}','_blank')"` : '';
     return `<div class="art-card${featured?' featured':''}"${link}>${img}<div class="art-card-body"><span class="art-card-tag">${a.tag||fmtDateFr(a.date)||''}</span><div class="art-card-title">${a.title}</div>${a.excerpt?`<div class="art-card-excerpt">${a.excerpt}</div>`:''}<div class="art-card-byline"><div class="art-card-byline-avatar">${initials||'TM'}</div>${a.author||''} · ${fmtDateFr(a.date)}</div>${featured&&a.link?'<div class="art-card-cta">Lire l\'article →</div>':''}</div></div>`;
@@ -3163,7 +3179,7 @@ function renderExpedition(data){
   const live = _pf(_rawLive);
   const citations = _pf(_rawCit);
   const _hiddenArts = Array.isArray(event.hiddenArticles) ? event.hiddenArticles : [];
-  const articles = _pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0);
+  const articles = _sortArticles(_pf(_rawArt).filter(a => !_hiddenArts.length || !a.link || _hiddenArts.indexOf(a.link)<0));
   const videos = _pf(_rawVid);
   const interviews = _pf(_rawItw);
   const essential = _pf(_rawEss);
@@ -3682,21 +3698,23 @@ function renderExpedition(data){
     if(mod.articles===false || !articles || !articles.length) return '';
     let o=`<section class="exp-articles">`;
     if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head exp-sec-articles"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
-    const sorted=articles.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
+    const sorted=_sortArticles(articles);
     const visCount=event.articlesVisibleCount||4;
     const visArts=sorted.slice(0,visCount);
     const extraArts=sorted.slice(visCount);
     o+=`<div class="exp-art-grid">`;
     visArts.forEach(a=>{
       const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
-      o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
+      var _eih=(a.imageHeight!=null&&a.imageHeight!==''&&!isNaN(parseInt(a.imageHeight)))?` style="height:${parseInt(a.imageHeight)}px"`:'';
+      o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"${_eih}><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
     });
     o+=`</div>`;
     if(extraArts.length){
       o+=`<div class="exp-art-grid exp-expand" id="exp-art-expand">`;
       extraArts.forEach(a=>{
         const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
-        o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
+        var _eih=(a.imageHeight!=null&&a.imageHeight!==''&&!isNaN(parseInt(a.imageHeight)))?` style="height:${parseInt(a.imageHeight)}px"`:'';
+      o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"${_eih}><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
       });
       o+=`</div><button class="exp-voir-plus" id="exp-art-btn" onclick="toggleExpExpand('exp-art-expand','exp-art-btn',${extraArts.length})">▾ Voir les ${extraArts.length} autres articles</button>`;
     }
