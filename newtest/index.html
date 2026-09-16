@@ -3657,7 +3657,8 @@ function renderExpedition(data){
   _b.citations = function(opts){
     const _pubCit = _pfOpt(_rawCit, opts).filter(_isPublished);
     if(mod.citations===false || !_pubCit.length) return '';
-    const CIT_VIS = event.citVisibleCount || 6;
+    const _cOpt = (opts && opts.cit) || {};
+    const CIT_VIS = (_cOpt.visibleCount!=null && _cOpt.visibleCount!=='' ? parseInt(_cOpt.visibleCount) : (event.citVisibleCount || 6));
     const visible = _pubCit.slice(0, CIT_VIS);
     const extra = _pubCit.slice(CIT_VIS);
     let o = `<section class="exp-verbatims">`;
@@ -5528,6 +5529,7 @@ function _bpRenderSection(sec, event, ctx){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
       const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId };
+      if(type==='citations' && ct.cit){ _opts.cit = ct.cit; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -5576,6 +5578,26 @@ function _bpRenderSection(sec, event, ctx){
   if(isDelegated){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
     overrideCss = _bpModuleOverrideCss(secId, ap);
+  }
+  // Réglages citations par bloc → variables CSS scopées sur cette section
+  if(type==='citations' && ct.cit){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    const cc=ct.cit; let cv=[];
+    if(cc.avatarSize)   cv.push('--cit-av:'+parseInt(cc.avatarSize)+'px');
+    if(cc.textSize)     cv.push('--cit-ts:'+parseInt(cc.textSize)+'px');
+    if(cc.nameSize)     cv.push('--cit-ns:'+parseInt(cc.nameSize)+'px');
+    if(cc.roleSize)     cv.push('--cit-rs:'+parseInt(cc.roleSize)+'px');
+    if(cc.borderWidth)  cv.push('--cit-bw:'+parseFloat(cc.borderWidth)+'px');
+    if(cc.accent)       cv.push('--cit-accent:'+cc.accent);
+    if(cc.cardBgOn && cc.cardBg) cv.push('--cit-card:'+cc.cardBg);
+    if(cv.length){ overrideCss += '<style>#'+secId+'{'+cv.join(';')+'}</style>'; }
+    // Fond citation vedette (pas une variable — cible la carte featured)
+    if(cc.featuredBg){ overrideCss += '<style>#'+secId+' .citation-card.featured,#'+secId+' .exp-verbatim-card.featured{background:'+cc.featuredBg+' !important}</style>'; }
+    // Taille/police du nom de rubrique
+    let rd=[];
+    if(cc.rubricSize) rd.push('font-size:'+parseInt(cc.rubricSize)+'px !important');
+    if(cc.rubricFont) rd.push("font-family:'"+cc.rubricFont+"',sans-serif !important");
+    if(rd.length){ overrideCss += '<style>#'+secId+' .cit-rubric-title,#'+secId+' .citations-group-title{'+rd.join(';')+'}</style>'; }
   }
   const idAttr = secId ? ' id="'+secId+'"' : '';
   const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
