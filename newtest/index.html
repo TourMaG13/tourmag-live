@@ -3685,10 +3685,10 @@ function renderExpedition(data){
     return o + `</section>`;
   };
 
-  _b.interviews = function(){
+  _b.interviews = function(opts){
     const pubItw = (interviews||[]).sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.interviews===false || !pubItw.length) return '';
-    const ITW_VIS = event.itwVisibleCount || 4;
+    const ITW_VIS = (opts && opts.visibleCount!=null) ? opts.visibleCount : (event.itwVisibleCount || 4);
     const visItw = pubItw.slice(0, ITW_VIS);
     const extraItw = pubItw.slice(ITW_VIS);
     let o = `<section class="exp-interviews">`;
@@ -3840,7 +3840,8 @@ function renderExpedition(data){
     sp.sort((a,b)=>(a.order||0)-(b.order||0));
     if(mod.sponsors===false || !sp.length) return '';
     let o=`<section class="exp-sponsors"><div class="exp-section-head exp-sec-sponsors"><h2>${event.sponsorsTitle||'Partenaires'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.sponsorsSubtitle||"Cette expédition est réalisée avec le soutien de"}</p>`;
-    const perRow=parseInt(event.sponsorsPerRow)||0;
+    const _spo=(opts&&opts.sp)||{};
+    const perRow=(_spo.perRow!=null&&_spo.perRow!=='')?parseInt(_spo.perRow):(parseInt(event.sponsorsPerRow)||0);
     const gridCls=perRow>0?' sp-grid':'';
     const gridStyle=perRow>0?` style="--sp-cols:${perRow}"`:'';
     function _expSpItem(s){
@@ -3948,17 +3949,18 @@ function renderExpedition(data){
     return o;
   };
 
-  _b.questions = function(){
+  _b.questions = function(opts){
     if(mod.questions===false) return '';
     if(activePhase){
       const ph = phases.find(p=>p.id===activePhase);
       if(!ph || !ph.qaEnabled) return '';
     }
+    const _qo=(opts&&opts.qa)||{};
     return mkQuestionsBlock(_rawQuestions, {
       title: event.questionsTitle || 'Questions en direct',
       sub: event.questionsSubtitle || 'Une question ? Posez-la, la rédaction vous répond.',
       activePhase: activePhase,
-      limit: event.questionsVisibleCount || 10,
+      limit: (_qo.visibleCount!=null&&_qo.visibleCount!=='')?_qo.visibleCount:(event.questionsVisibleCount || 10),
       accent: event.questionsAccent || '',
       qBg: event.questionsItemBg || '',
       qText: event.questionsTextColor || '',
@@ -5531,6 +5533,11 @@ function _bpRenderSection(sec, event, ctx){
       const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId };
       if(type==='citations' && ct.cit){ _opts.cit = ct.cit; }
       if(type==='live'){ if(ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount); if(ct.lineClamp!=null&&ct.lineClamp!=='') _opts.lineClamp=parseInt(ct.lineClamp); }
+      if(type==='sponsors' && ct.sp){ _opts.sp = ct.sp; }
+      if(type==='programme' && ct.pg){ _opts.pg = ct.pg; }
+      if(type==='interviews' && ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount);
+      if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
+      if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -5599,6 +5606,37 @@ function _bpRenderSection(sec, event, ctx){
     if(cc.rubricSize) rd.push('font-size:'+parseInt(cc.rubricSize)+'px !important');
     if(cc.rubricFont) rd.push("font-family:'"+cc.rubricFont+"',sans-serif !important");
     if(rd.length){ overrideCss += '<style>#'+secId+' .cit-rubric-title,#'+secId+' .citations-group-title{'+rd.join(';')+'}</style>'; }
+  }
+  // Partenaires : taille des logos + couleur (par bloc)
+  if(type==='sponsors' && ct.sp){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    const sp=ct.sp; let sd=[];
+    if(sp.logoSize) sd.push('--sp-logo-h:'+parseInt(sp.logoSize)+'px');
+    if(sd.length){ overrideCss += '<style>#'+secId+'{'+sd.join(';')+'}</style>'; }
+    if(sp.logoColor){ overrideCss += '<style>#'+secId+' .sponsor-logo img,#'+secId+' .exp-sponsor img,#'+secId+' .sponsors-grid img{filter:none !important;opacity:1 !important}</style>'; }
+  }
+  // Programme : tailles jour/statut + masquage badge (par bloc)
+  if(type==='programme' && ct.pg){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    const pg=ct.pg; let pd=[];
+    if(pg.hideStatus){ overrideCss += '<style>#'+secId+' .prog-status,#'+secId+' .exp-prog-status{display:none !important}</style>'; }
+    if(pg.daySize){ overrideCss += '<style>#'+secId+' .prog-day,#'+secId+' .exp-prog-day,#'+secId+' .prog-day-header{font-size:'+parseInt(pg.daySize)+'px !important}</style>'; }
+    if(pg.statusSize){ overrideCss += '<style>#'+secId+' .prog-status,#'+secId+' .exp-prog-status{font-size:'+parseInt(pg.statusSize)+'px !important}</style>'; }
+  }
+  // Questions : couleurs par bloc
+  if(type==='questions' && ct.qa){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    const qa=ct.qa; let qd=[];
+    if(qa.accent) qd.push('--qa-accent:'+qa.accent);
+    if(qd.length){ overrideCss += '<style>#'+secId+'{'+qd.join(';')+'}</style>'; }
+    if(qa.itemBg){ overrideCss += '<style>#'+secId+' .qa-item,#'+secId+' .question-item{background:'+qa.itemBg+' !important}</style>'; }
+    if(qa.textColor){ overrideCss += '<style>#'+secId+' .qa-item,#'+secId+' .question-item,#'+secId+' .qa-text{color:'+qa.textColor+' !important}</style>'; }
+    if(qa.formBg){ overrideCss += '<style>#'+secId+' .qa-form,#'+secId+' .question-form{background:'+qa.formBg+' !important}</style>'; }
+  }
+  // Galerie : hauteur par bloc
+  if((type==='gallery'||type==='gallerylive') && ct.galleryHeight){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    overrideCss += '<style>#'+secId+' .gallery-item,#'+secId+' .exp-gallery-item,#'+secId+' .gal-item{height:'+parseInt(ct.galleryHeight)+'px !important}</style>';
   }
   const idAttr = secId ? ' id="'+secId+'"' : '';
   const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
