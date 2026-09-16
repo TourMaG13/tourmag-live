@@ -5547,10 +5547,14 @@ function _bpRenderSection(sec, event, ctx){
             inner = inner.replace(/(<h2)(\b[^>]*)(>)/, '$1'+_tszStyle+'$2$3');
           }
           // Sous-titre : remplace le <p> de la barre de titre s'il existe
+          var _ssz = (ct.subtitleSize? ' style="font-size:'+parseInt(ct.subtitleSize)+'px"':'');
           if(ct.subtitle){
             var _s=_bpEsc(ct.subtitle), _sdone=false;
-            inner = inner.replace(/(<div class="sec-title-line"><\/div>\s*<p>)([\s\S]*?)(<\/p>)/, function(m,a,b,c){ _sdone=true; return a+_s+c; });
-            if(!_sdone) inner = inner.replace(/(<p class="exp-section-sub"[^>]*>)([\s\S]*?)(<\/p>)/, function(m,a,b,c){ _sdone=true; return a+_s+c; });
+            inner = inner.replace(/(<div class="sec-title-line"><\/div>\s*<p)(>)([\s\S]*?)(<\/p>)/, function(m,a,g,b,c){ _sdone=true; return a+_ssz+g+_s+c; });
+            if(!_sdone) inner = inner.replace(/(<p class="exp-section-sub")([^>]*>)([\s\S]*?)(<\/p>)/, function(m,a,attr,b,c){ _sdone=true; return a+_ssz+attr+_s+c; });
+          } else if(ct.subtitleSize){
+            inner = inner.replace(/(<div class="sec-title-line"><\/div>\s*<p)(>)/, '$1'+_ssz+'$2');
+            inner = inner.replace(/(<p class="exp-section-sub")([^>]*>)/, '$1'+_ssz+'$2');
           }
         }
       }
@@ -5574,7 +5578,8 @@ function _bpRenderSection(sec, event, ctx){
     overrideCss = _bpModuleOverrideCss(secId, ap);
   }
   const idAttr = secId ? ' id="'+secId+'"' : '';
-  return '<div class="bp-section bp-'+type+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'">'+overrideCss+inner+'</div>';
+  const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
+  return '<div class="bp-section bp-'+type+_mobCls+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'">'+overrideCss+inner+'</div>';
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
