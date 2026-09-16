@@ -5792,6 +5792,7 @@ async function _loadQuizVotes(eventId){
   window._loadQuizTally = async function(){
     try{
       const snap = await db.collection('events').doc(eventId).collection('quizVotes').get();
+      if(window._diag) window._diag('quizVotes', snap);
       const tally={}, totals={}, mine={};
       snap.forEach(d=>{
         const data=d.data()||{};
@@ -6283,17 +6284,41 @@ async function init(){
   window._rtState = rtState;
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); }
 
+  // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
+  // Compte, par collection, le nombre de déclenchements et de documents lus.
+  // Récap dans la console (F12) toutes les 10 s. window._diagStats pour l'état brut.
+  window._diagStats = window._diagStats || {};
+  window._diagStart = window._diagStart || Date.now();
+  window._diag = function(name, snap){
+    var s = window._diagStats[name] || (window._diagStats[name]={fires:0, docs:0});
+    s.fires += 1;
+    try { s.docs += (snap && typeof snap.size==='number') ? snap.size : (snap&&snap.docs?snap.docs.length:0); } catch(e){}
+    return snap;
+  };
+  if(!window._diagTimer){
+    window._diagTimer = setInterval(function(){
+      var mins = ((Date.now()-window._diagStart)/60000);
+      var rows = Object.keys(window._diagStats).map(function(k){
+        var s=window._diagStats[k];
+        return {collection:k, 'déclenchements':s.fires, 'docs lus (total)':s.docs, 'docs/min': +(s.docs/Math.max(mins,0.01)).toFixed(1)};
+      }).sort(function(a,b){return b['docs lus (total)']-a['docs lus (total)'];});
+      var totalDocs = rows.reduce(function(t,r){return t+r['docs lus (total)'];},0);
+      console.log('%c[DIAG lectures] '+mins.toFixed(1)+' min écoulées — '+totalDocs+' docs lus au total','background:#0C6CA1;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold');
+      if(console.table) console.table(rows);
+    }, 10000);
+  }
+
   if(!window._DIAG.norealtime){
-  ec.collection('live').onSnapshot(snap=>{rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
+  ec.collection('live').onSnapshot(snap=>{window._diag('live',snap);rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
   // Contenus figés pendant le live : chargés une fois au démarrage (voir les .get() plus haut),
   // plus d'écoute permanente pour économiser les lectures Firestore.
   // rubriques, essential, programme, timeline, etapes, articles, journalists → lecture unique.
-  ec.collection('citations').onSnapshot(snap=>{rtState.citations=toArr(snap).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));rtRender();});
-  ec.collection('videos').onSnapshot(snap=>{rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
-  ec.collection('interviews').onSnapshot(snap=>{rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
-  ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
-  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0)); if(window._quizzes.length && !window._quizPollLoaded){ window._quizPollLoaded=true; _loadQuizVotes(eventId); } rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
-  ec.onSnapshot(snap=>{if(snap.exists){rtState.event=snap.data();rtRender();}});
+  ec.collection('citations').onSnapshot(snap=>{window._diag('citations',snap);rtState.citations=toArr(snap).sort((a,b)=>tsVal(b.created_at)-tsVal(a.created_at));rtRender();});
+  ec.collection('videos').onSnapshot(snap=>{window._diag('videos',snap);rtState.videos=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
+  ec.collection('interviews').onSnapshot(snap=>{window._diag('interviews',snap);rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
+  ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{window._diag('questions',snap);rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
+  if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._diag('quizzes',snap);window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0)); if(window._quizzes.length && !window._quizPollLoaded){ window._quizPollLoaded=true; _loadQuizVotes(eventId); } rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
+  ec.onSnapshot(snap=>{window._diag('event(doc)',snap&&snap.exists?{size:1}:{size:0});if(snap.exists){rtState.event=snap.data();rtRender();}});
   // journalists (répertoire global) : chargé une fois au démarrage (jrS), plus d'écoute permanente.
   }
 
