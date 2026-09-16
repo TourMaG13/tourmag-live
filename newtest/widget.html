@@ -645,8 +645,8 @@ async function init(){
       ec.collection('essential').get(),
       ec.collection('citations').get(),
       ec.collection('timeline').get(),
-      ec.collection('live').get(),
-      ec.collection('articles').get(),
+      ec.collection('live').orderBy('time','desc').limit(10).get(),
+      ec.collection('articles').limit(12).get(),
       db.collection('journalists').get().catch(()=>null)
     ]);
     if(!evS.exists){document.getElementById('encart').innerHTML='<div class="er-loading">Événement introuvable</div>';return;}
@@ -668,16 +668,10 @@ async function init(){
     };
     renderEncart(state, true);
 
-    // Real-time listeners — update widget when data changes
-    // Skip first snapshot fire (already loaded above)
-    let skipEv=true,skipEs=true,skipCi=true,skipTl=true,skipLv=true,skipAr=true,skipJr=true;
-    ec.onSnapshot(snap=>{if(skipEv){skipEv=false;return;}if(snap.exists){state.event=snap.data();state.reporters=resolveReporters(state.event);renderEncart(state);}});
-    db.collection('journalists').onSnapshot(snap=>{if(skipJr){skipJr=false;return;}_journalists=toArr(snap);state.reporters=resolveReporters(state.event);renderEncart(state);},()=>{});
-    ec.collection('essential').onSnapshot(snap=>{if(skipEs){skipEs=false;return;}state.essential=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
-    ec.collection('citations').onSnapshot(snap=>{if(skipCi){skipCi=false;return;}state.citations=toArr(snap).sort((a,b)=>{const ta=a.created_at?.toDate?a.created_at.toDate().getTime():0;const tb=b.created_at?.toDate?b.created_at.toDate().getTime():0;return tb-ta;});renderEncart(state);});
-    ec.collection('timeline').onSnapshot(snap=>{if(skipTl){skipTl=false;return;}state.timeline=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));renderEncart(state);});
-    ec.collection('live').onSnapshot(snap=>{if(skipLv){skipLv=false;return;}state.live=toArr(snap).sort((a,b)=>_wTs(b.time)-_wTs(a.time));renderEncart(state);});
-    ec.collection('articles').onSnapshot(snap=>{if(skipAr){skipAr=false;return;}state.articles=toArr(snap).sort((a,b)=>_wTs(b.created_at||b.date)-_wTs(a.created_at||a.date));renderEncart(state);});
+    // Pas d'écoute temps réel : l'encart est chargé une seule fois à l'ouverture de la page.
+    // Ce widget est affiché sur la homepage (fort trafic) ; des listeners permanents
+    // multiplieraient les lectures Firestore par le nombre de visiteurs. Le contenu se
+    // rafraîchit au prochain chargement de page, ce qui est suffisant pour un encart.
   }catch(e){
     console.error(e);
     document.getElementById('encart').innerHTML='<div class="er-loading">Erreur de chargement</div>';
