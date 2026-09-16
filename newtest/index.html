@@ -605,10 +605,13 @@ img{display:block}a{text-decoration:none}
 .side-col .art-card.featured .art-card-img{min-height:180px;height:180px}
 .art-acc-wrap{position:relative}
 .art-acc-scroll{overflow-y:auto;overflow-x:hidden;padding-right:4px;-webkit-overflow-scrolling:touch}
-.art-acc-fade{position:absolute;left:0;right:0;bottom:0;height:52px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--bg,#fff) 85%);border-radius:0 0 12px 12px;transition:opacity .25s;opacity:1}
-.art-acc-wrap.at-bottom .art-acc-fade,.art-acc-wrap.no-scroll .art-acc-fade{opacity:0}
-.art-acc-chev{font-size:16px;font-weight:700;color:var(--acc,#E8842C);padding-bottom:6px;animation:art-acc-bounce 1.4s infinite}
-@keyframes art-acc-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+.art-acc-fade{position:absolute;left:0;right:0;bottom:0;height:80px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--bg,#fff) 70%);border-radius:0 0 12px 12px;transition:opacity .25s;opacity:1}
+.art-acc-pill{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;background:var(--acc,#E8842C);color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;padding:7px 16px;border:none;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;z-index:2;transition:opacity .25s,transform .15s;animation:art-pill-bounce 1.5s infinite}
+
+.art-acc-pill-arrow{font-size:14px;font-weight:800;line-height:1}
+.art-acc-pill:hover{animation-play-state:paused;filter:brightness(1.08)}
+.art-acc-wrap.at-bottom .art-acc-fade,.art-acc-wrap.no-scroll .art-acc-fade,.art-acc-wrap.at-bottom .art-acc-pill,.art-acc-wrap.no-scroll .art-acc-pill{opacity:0;pointer-events:none}
+@keyframes art-pill-bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
 .art-acc-scroll::-webkit-scrollbar{width:6px}
 .art-acc-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.04);border-radius:3px}
 .art-acc-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
@@ -1570,6 +1573,12 @@ window._artAccScroll = function(el){
 window._artAccInit = function(){
   document.querySelectorAll('.art-acc-scroll').forEach(el=>_artAccScroll(el));
 };
+// Clic sur la pastille : fait défiler la zone d'un cran vers le bas (défilement animé)
+window._artAccStep = function(btn){
+  const wrap = btn.closest('.art-acc-wrap'); if(!wrap) return;
+  const sc = wrap.querySelector('.art-acc-scroll'); if(!sc) return;
+  sc.scrollBy({top: Math.round(sc.clientHeight*0.8), left:0, behavior:'smooth'});
+};
 window.toggleExpand = function(expandId, btnId, count, labelOpen, labelClosed){  const el=document.getElementById(expandId), btn=document.getElementById(btnId);
   if(!el||!btn) return;
   const open=el.classList.toggle('open');
@@ -2427,7 +2436,7 @@ function render(data){
       if(ea.length){
         o += `<div class="expand-wrap" id="art-expand"><div class="art-acc-wrap"><div class="art-acc-scroll" style="max-height:${accH}px" onscroll="_artAccScroll(this)"><div class="art-bento" style="margin-top:14px">`;
         ea.forEach(a => { o += mkArticle(a, false); });
-        o += `</div></div><div class="art-acc-fade"><span class="art-acc-chev">↓</span></div></div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir plus d\\'articles')">Voir plus d'articles ${_chevSvg}</button></div>`;
+        o += `</div></div><div class="art-acc-fade"></div><button class="art-acc-pill" onclick="_artAccStep(this)"><span class="art-acc-pill-arrow">↓</span> <span class="art-acc-pill-n">${ea.length}</span> autres</button></div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir plus d\\'articles')">Voir plus d'articles ${_chevSvg}</button></div>`;
       }
       return o;
     }
