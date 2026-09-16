@@ -5529,14 +5529,30 @@ function _bpRenderSection(sec, event, ctx){
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
       const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId };
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
-      // Surcharge du titre de section : si le module a un titre personnalisé dans le builder,
-      // on remplace le premier titre rendu (h2 de section, ou label de carte) par celui-ci.
-      if(inner && ct.title && type!=='hero'){
-        var _t = _bpEsc(ct.title);
-        var _done = false;
-        inner = inner.replace(/(<div class="exp-section-head[^"]*">\s*<h2>)([\s\S]*?)(<\/h2>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
-        if(!_done) inner = inner.replace(/(<h2>)([\s\S]*?)(<\/h2>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
-        if(!_done) inner = inner.replace(/(<div class="exp-card-label">)([\s\S]*?)(<\/div>)/, function(m,a,b,c){ return a+_t+c; });
+      // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
+      if(inner && type!=='hero'){
+        // Masquer le titre de section si demandé
+        if(ct.showTitle===false){
+          inner = inner.replace(/<div class="exp-section-head[^"]*">[\s\S]*?<\/div>\s*<\/div>/, '');
+          inner = inner.replace(/<div class="sec-title[^"]*">[\s\S]*?<\/div>\s*(<div class="sec-title-line"><\/div>\s*<p>[\s\S]*?<\/p>\s*)?<\/div>/, '');
+          inner = inner.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, '');
+        } else {
+          var _tszStyle = (ct.titleSize? ' style="font-size:'+parseInt(ct.titleSize)+'px"':'');
+          if(ct.title){
+            var _t=_bpEsc(ct.title), _done=false;
+            inner = inner.replace(/(<div class="exp-section-head[^"]*">\s*<h2)(>)([\s\S]*?)(<\/h2>)/, function(m,a,g,b,c){ _done=true; return a+_tszStyle+g+_t+c; });
+            if(!_done) inner = inner.replace(/(<h2)(\b[^>]*)(>)([\s\S]*?)(<\/h2>)/, function(m,a,attr,g,b,c){ _done=true; return a+_tszStyle+attr+g+_t+c; });
+            if(!_done) inner = inner.replace(/(<div class="exp-card-label">)([\s\S]*?)(<\/div>)/, function(m,a,b,c){ return a+_t+c; });
+          } else if(ct.titleSize){
+            inner = inner.replace(/(<h2)(\b[^>]*)(>)/, '$1'+_tszStyle+'$2$3');
+          }
+          // Sous-titre : remplace le <p> de la barre de titre s'il existe
+          if(ct.subtitle){
+            var _s=_bpEsc(ct.subtitle), _sdone=false;
+            inner = inner.replace(/(<div class="sec-title-line"><\/div>\s*<p>)([\s\S]*?)(<\/p>)/, function(m,a,b,c){ _sdone=true; return a+_s+c; });
+            if(!_sdone) inner = inner.replace(/(<p class="exp-section-sub"[^>]*>)([\s\S]*?)(<\/p>)/, function(m,a,b,c){ _sdone=true; return a+_s+c; });
+          }
+        }
       }
     }
     catch(e){ inner=''; console.warn('[builder] renderer "'+type+'" a échoué', e); }
