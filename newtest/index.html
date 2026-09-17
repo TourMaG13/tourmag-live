@@ -1609,14 +1609,20 @@ function _isPublished(entry){
 // les autres ensuite, du plus récent au plus ancien (date). Stable et rétro-compatible.
 function _sortArticles(arr){
   if(!Array.isArray(arr)) return arr||[];
-  const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
   const _t = v => (v&&v.toDate?v.toDate().getTime():(v?new Date(v).getTime():0));
+  const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
+  const anyOrdered = arr.some(hasOrder);
+  // Aucun ordre manuel défini → tri chronologique pur (plus récent d'abord)
+  if(!anyOrdered){
+    return arr.slice().sort((a,b)=> _t(b.created_at||b.date) - _t(a.created_at||a.date));
+  }
+  // Un ordre manuel existe → on respecte l'ordre glissé ; les articles sans ordre
+  // (nouveaux arrivants RSS) se classent par date, après ceux explicitement ordonnés.
   return arr.slice().sort((a,b)=>{
     const ao=hasOrder(a), bo=hasOrder(b);
     if(ao&&bo) return parseInt(a.order)-parseInt(b.order);
-    if(ao&&!bo) return -1;      // les articles ordonnés passent devant
+    if(ao&&!bo) return -1;
     if(!ao&&bo) return 1;
-    // aucun ordre manuel : tri par date décroissante
     return _t(b.created_at||b.date)-_t(a.created_at||a.date);
   });
 }
