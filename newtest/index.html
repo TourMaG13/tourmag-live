@@ -253,8 +253,6 @@ img{display:block}a{text-decoration:none}
 @keyframes livepulse-slow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
 @keyframes fpls{0%,100%{opacity:1}50%{opacity:.6}}
 
-/* ==================== STICKY NAV ==================== */
-.sticky-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.06);transform:translateY(-100%);transition:transform .35s ease}
 .phase-tabs{display:flex;align-items:center;gap:6px;padding:14px 0 10px;flex-wrap:wrap;justify-content:center}
 .phase-tab{display:inline-flex;align-items:center;gap:5px;padding:7px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid transparent;background:#F1F5F9;color:#475569;transition:all .2s;text-decoration:none;white-space:nowrap}
 /* Onglet menu déroulant */
@@ -278,13 +276,6 @@ img{display:block}a{text-decoration:none}
 .phase-tab-all{background:#fff;border-color:#E2E8F0}
 .phase-tab-all.active{border-color:#1E293B;color:#1E293B}
 .phase-active-title{text-align:center;padding:10px 0 6px;margin:0;line-height:1.2;transition:opacity .3s}
-.sticky-nav.visible{transform:translateY(0)}
-.sticky-nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:6px;padding:0 28px;height:50px}
-.sticky-nav-brand{font-family:'Josefin Sans';font-size:13px;font-weight:700;color:var(--pri);margin-right:auto;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
-.sticky-nav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--live);animation:livepulse 1.5s infinite;flex-shrink:0}
-.sticky-nav a{font-family:'Josefin Sans';font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:16px 10px;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
-.sticky-nav a:hover{color:var(--text)}.sticky-nav a.active{color:var(--acc);border-bottom-color:var(--acc)}
-@media(max-width:768px){.sticky-nav-inner{padding:0 10px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch}.sticky-nav a{font-size:8px;padding:14px 6px}.sticky-nav-brand{font-size:11px;max-width:160px}}
 
 /* ==================== HERO SPLIT ==================== */
 .hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:460px;overflow:hidden;background:linear-gradient(135deg,var(--hero-bg1) 0%,var(--hero-bg2) 50%,var(--hero-bg1) 100%)}
@@ -1201,7 +1192,6 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-footer small{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);letter-spacing:.05em}
 
 /* Hide live-mode elements in expedition mode */
-body.mode-expedition .sticky-nav{display:none}
 body.mode-expedition .upd-bar{display:none}
 body.mode-expedition .social-float{display:none}
 
@@ -1340,7 +1330,7 @@ body.mode-expedition .social-float{display:none}
 </head>
 <body>
 <script async src="//www.instagram.com/embed.js"></script>
-<nav class="sticky-nav" id="sticky-nav"><div class="sticky-nav-inner" id="sticky-nav-inner"></div></nav>
+<!-- (barre de navigation sticky retirée) -->
 <div class="upd-bar" id="upd-bar"></div>
 <div id="app">
   <div class="ld"><div class="spinner"></div><div class="tx">Chargement du live...</div></div>
@@ -3102,54 +3092,7 @@ function render(data){
   document.getElementById('app').innerHTML = h;
   document.getElementById('upd-bar').innerHTML = `Dernière mise à jour : ${fmtDT(new Date().toISOString())}`;
 
-  // Sticky nav
-  const navModules = [];
-  if(mod.live!==false && live && live.length) navModules.push({id:'section-live',label:'Live'});
-  if(mod.articles!==false && articles && articles.length) navModules.push({id:'section-articles',label:event.articlesTitle||'Nos articles'});
-  if(mod.interviews!==false && interviews && interviews.length) navModules.push({id:'section-interviews',label:'Interviews'});
-  if(mod.citations!==false && citations && citations.length) navModules.push({id:'section-citations',label:'Verbatims'});
-  if(mod.videos!==false && videos && videos.length) navModules.push({id:'section-videos',label:'Vidéos'});
-  if(mod.gallery!==false && event.gallery && (activePhase ? event.gallery.filter(p=>!p.phase||p.phase===activePhase) : event.gallery).length) navModules.push({id:'section-gallery',label:'Photos'});
-  (function(){
-    const ctRaw=event.contact;
-    if(mod.contact!==false && ctRaw){
-      let ppl=Array.isArray(ctRaw.people)?ctRaw.people:null;
-      if(!ppl){const s=ctRaw.name||ctRaw.email||ctRaw.phone||ctRaw.website;ppl=s?[ctRaw]:[];}
-      const reach=ppl.some(p=>p&&(p.email||p.phone||p.website||p.booking_url))||ctRaw.bookingUrl;
-      if(reach) navModules.push({id:'section-contact',label:ctRaw.title||'Contact'});
-    }
-  })();
-
-  let navHtml = `<div class="sticky-nav-brand"><span class="dot"></span> ${event.title||'TourMaG Live'}</div>`;
-  navModules.forEach(m => { navHtml += `<a href="#${m.id}">${m.label}</a>`; });
-  document.getElementById('sticky-nav-inner').innerHTML = navHtml;
-
-  // Sticky nav show/hide
-  const heroEl = document.querySelector('.hero-split');
-  if(heroEl){
-    if(window._stickyObs) window._stickyObs.disconnect();
-    window._stickyObs = new IntersectionObserver(([e])=>{
-      document.getElementById('sticky-nav').classList.toggle('visible',!e.isIntersecting);
-    },{threshold:0.05});
-    window._stickyObs.observe(heroEl);
-  }
-
-  // Active section tracking
-  document.querySelectorAll('.sec-title').forEach(st => {
-    const parent = st.closest('[id^="section-"]') || st.parentElement;
-    // Find the closest id
-    let section = st;
-    while(section && !section.id) section = section.parentElement;
-  });
-
-  // Smooth scroll for nav links
-  document.querySelectorAll('.sticky-nav a').forEach(a=>{
-    a.onclick = function(e){
-      e.preventDefault();
-      const tgt=document.querySelector(this.getAttribute('href'));
-      if(tgt) tgt.scrollIntoView({behavior:'smooth',block:'start'});
-    };
-  });
+  // (Barre de navigation sticky retirée — n'était plus utilisée.)
 
   // Fade-in observer — on deconnecte le precedent avant recreation (sinon fuite d'observers -> latence scroll)
   if(window._fadeObsC) window._fadeObsC.disconnect();
