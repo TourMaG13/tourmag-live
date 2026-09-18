@@ -173,6 +173,14 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bpe-cfg-body{padding:15px}
 .bpe-cfg-sech{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:16px 0 9px;padding-top:12px;border-top:1px dashed var(--border)}
 .bpe-cfg-body>.bpe-cfg-sech:first-child{border:none;padding-top:0;margin-top:0}
+.bpe-acc{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;background:var(--card,#fff)}
+.bpe-acc-hd{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);text-align:left}
+.bpe-acc-hd:hover{background:rgba(0,0,0,.02)}
+.bpe-acc-chev{transition:transform .2s;color:var(--text3);font-size:12px}
+.bpe-acc.open .bpe-acc-chev{transform:rotate(180deg)}
+.bpe-acc-body{display:none;padding:0 14px 14px}
+.bpe-acc.open .bpe-acc-body{display:block}
+.bpe-acc-body>.bpe-cfg-sech:first-child{border:none;padding-top:0;margin-top:0}
 .bpe-sub{font-size:11px;font-weight:600;color:var(--text2);margin:10px 0 6px}
 .bpe-fld{margin-bottom:12px}
 .bpe-fld label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px}
@@ -543,6 +551,9 @@ select.form-input{cursor:pointer}
 .toggle input:checked~.toggle-knob{transform:translateX(18px)}
 
 .list-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.art-dnd-row{transition:background .12s}
+.art-dnd-row.art-dnd-over{background:var(--acc-soft,#FEF3E7);box-shadow:inset 0 2px 0 var(--acc,#E8842C)}
+.art-dnd-handle:active{cursor:grabbing}
 .list-item:last-child{border-bottom:none}
 .list-item-time{font-family:'IBM Plex Mono';font-size:12px;color:var(--acc);font-weight:500;flex-shrink:0;width:45px;padding-top:2px}
 .list-item-content{flex:1;min-width:0}
@@ -710,6 +721,7 @@ select.form-input{cursor:pointer}
 <g id="ti-edit2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></g>
 <g id="ti-tv"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="8 3 12 7 16 3"/></g>
 <g id="ti-eye"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></g>
+<g id="ti-mobile"><rect x="7" y="2" width="10" height="20" rx="2.5"/><line x1="11" y1="18" x2="13" y2="18"/></g>
 <g id="ti-updown"><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></g>
 <g id="ti-robot"><rect x="4" y="8" width="16" height="12" rx="2"/><line x1="12" y1="4" x2="12" y2="8"/><circle cx="12" cy="4" r="1"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></g>
 <g id="ti-wrench"><path d="M14 7a4 4 0 0 0-5.5 5.2L3 18l3 3 5.8-5.5A4 4 0 0 0 17 10l-2.5 2.5L12 10l2.5-2.5A4 4 0 0 0 14 7Z"/></g>
@@ -844,7 +856,6 @@ select.form-input{cursor:pointer}
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="apparence"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg></span>Apparence</div>
           <div class="sidebar-item" data-tab="decor"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-decor"/></svg></span>Décor</div>
-          <div class="sidebar-item" data-tab="modules"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg></span>Modules</div>
         </div>
       </div>
 
@@ -860,9 +871,10 @@ select.form-input{cursor:pointer}
       </div>
 
       <div class="sb-group" data-group="reglages">
-        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Structure & réglages</span><span class="sb-group-chev">▾</span></button>
+        <button class="sb-group-hd" onclick="toggleSbGroup(this)"><span class="sb-group-nm">Affichage & structure</span><span class="sb-group-chev">▾</span></button>
         <div class="sb-group-items">
           <div class="sidebar-item" data-tab="pageshub"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>Pages &amp; onglets</div>
+          <div class="sidebar-item" data-tab="modules"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg></span>Affichage (classique)</div>
           <div class="sidebar-item" data-tab="access"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-access"/></svg></span>Accès</div>
           <div class="sidebar-item" data-tab="guide" style="background:var(--acc-soft);border-left:3px solid var(--acc)"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-guide"/></svg></span>Guide d'utilisation</div>
         </div>
@@ -4012,6 +4024,7 @@ function renderPagesHub(el){
   const builders=Array.isArray(ev.builderPages)?ev.builderPages:[];
   let h='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Pages &amp; onglets</div>';
   h+='<div class="page-desc">Toutes vos pages au même endroit. Chaque page est un onglet du dashboard (s\'il y en a plusieurs). Le badge indique le type de page.</div>';
+  h+='<div style="font-size:12px;color:#5B21B6;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6">💡 Ici, vous composez des <strong>pages sur-mesure</strong> (mode constructeur : blocs, colonnes, glisser-déposer). Pour le dashboard <strong>classique</strong> à zones fixes (activer/désactiver des modules), utilisez <a href="#" onclick="event.preventDefault();document.querySelector(\'[data-tab=modules]\').click()" style="color:#5B21B6;font-weight:700;text-decoration:underline">Affichage (classique)</a>.</div>';
 
   // --- Créer une nouvelle page ---
   h+='<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Créer une page</h3>'
@@ -4309,6 +4322,7 @@ var BP_CATALOG = [
     {type:'html',      name:'HTML libre',         icon:'ti-modules',  nature:'content', mode:'both'},
   ]},
   {group:'Modules live', items:[
+    {type:'flash',      name:'Bandeau Flash',      icon:'ti-flash',      nature:'live', mode:'both'},
     {type:'live',       name:'Fil live',           icon:'ti-live',       nature:'live', mode:'both'},
     {type:'kpis',       name:'Chiffres clés',      icon:'ti-kpis',       nature:'live', mode:'both'},
     {type:'citations',  name:'Citations',          icon:'ti-citations',  nature:'live', mode:'both'},
@@ -4735,19 +4749,25 @@ function _bpConfigHtml(){
   const meta=BP_TYPE[s.type]||{name:s.type,icon:'ti-modules'};
   let body='';
 
-  // Zone (commun)
-  body+='<div class="bpe-cfg-sech">Disposition</div>';
-  body+='<div class="bpe-fld"><label>Zone d\'affichage</label><div class="bpe-seg">'
+  // Panneau en sections repliables (accordéon). Contenu ouvert par défaut ; le reste replié.
+  function _acc(id, title, inner, open){
+    return '<div class="bpe-acc'+(open?' open':'')+'" data-acc="'+id+'">'
+      +'<button type="button" class="bpe-acc-hd" onclick="_bpAccToggle(this)"><span>'+title+'</span><span class="bpe-acc-chev">▾</span></button>'
+      +'<div class="bpe-acc-body">'+inner+'</div></div>';
+  }
+  // 1) CONTENU (ouvert)
+  var _contentInner = _bpContentFieldsHtml(s);
+  // 2) DISPOSITION (replié)
+  var _dispInner = '<div class="bpe-fld"><label>Zone d\'affichage</label><div class="bpe-seg">'
     +['max','full','main','side'].map(function(z){return '<button class="'+((s.zone||'full')===z?'on':'')+'" onclick="_bpSetZone(\''+z+'\')">'+({max:'Max',full:'Pleine',main:'Principale',side:'Sidebar'}[z])+'</button>';}).join('')
-    +'</div><div class="bpe-hint">« Pleine » = toute la largeur. « Principale » + « Sidebar » = mise en 2 colonnes.</div></div>';
+    +'</div><div class="bpe-hint">« Pleine » = toute la largeur. « Principale » + « Sidebar » = mise en 2 colonnes.</div></div>'
+    +'<div class="bpe-toggle"><span><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px"><use href="#ti-mobile"/></svg>Masquer sur mobile</span><label class="sw"><input type="checkbox" '+(s.hideMobile?'checked':'')+' onchange="_bpSetSecFlag(\'hideMobile\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  // 3) APPARENCE (replié)
+  var _appInner = _bpAppearanceHtml(s);
 
-  // Apparence commune (socle unifié)
-  body+='<div class="bpe-cfg-sech">Apparence</div>';
-  body+=_bpAppearanceHtml(s);
-
-  // Contenu spécifique
-  body+='<div class="bpe-cfg-sech">Contenu du module</div>';
-  body+=_bpContentFieldsHtml(s);
+  body += _acc('contenu','Contenu du module', _contentInner, true);
+  body += _acc('disposition','Disposition', _dispInner, false);
+  body += _acc('apparence','Apparence &amp; style', _appInner, false);
 
   return '<div class="bpe-cfg-head" style="'+_bpCatColorVars(s.type)+'"><div class="bpe-cfg-h-ico"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#'+meta.icon+'"/></svg></div>'
     +'<div><div class="bpe-cfg-h-t">'+_escAdm(meta.name)+'</div><div class="bpe-cfg-h-s">Réglages du module</div></div>'
@@ -4800,6 +4820,18 @@ function _bpAppearanceHtml(s){
     +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetApRole(\'text\',\'weight\',this.value)">'+_bpWeightOpts(tx.weight)+'</select></div>'
     +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'text\',\'style\',this.value)"><option value=""'+(!tx.style?' selected':'')+'>Normal</option><option value="italic"'+(tx.style==='italic'?' selected':'')+'>Italique</option></select></div>'
     +'</div>';
+  // ---- LABELS / PETITS ÉLÉMENTS (badges, dates, mentions, tags…) ----
+  const lb=ap.label||{};
+  h+='<div class="bpe-sub">Labels / petits éléments</div>';
+  h+='<div class="bpe-fld"><label>Police des labels</label><select onchange="_bpSetApRole(\'label\',\'font\',this.value)">'+_cpFontOpts(lb.font)+'</select></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(lb.size||'')+'" placeholder="11" onchange="_bpSetApRole(\'label\',\'size\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(lb.color||'#64748B')+'" onchange="_bpSetApRole(\'label\',\'color\',this.value)"></div>'
+    +'</div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetApRole(\'label\',\'weight\',this.value)">'+_bpWeightOpts(lb.weight)+'</select></div>'
+    +'<div class="bpe-fld"><label>Style</label><select onchange="_bpSetApRole(\'label\',\'style\',this.value)"><option value=""'+(!lb.style?' selected':'')+'>Normal</option><option value="italic"'+(lb.style==='italic'?' selected':'')+'>Italique</option></select></div>'
+    +'</div>';
   // Espacement au-dessus + sous le bloc (commun)
   h+='<div class="bpe-fld-row">'
     +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(ap.padTop!=null?ap.padTop:'')+'" placeholder="0" onchange="_bpSetAp(\'padTop\',this.value)"></div>'
@@ -4835,6 +4867,18 @@ function _bpPhaseFilterField(s){
 function _bpContentFieldsHtml(s){
   const c=s.content||{};
   const _phaseFld=_bpPhaseFilterField(s);
+  // Socle titre/sous-titre commun aux blocs module (repris du mode classique), stocké PAR BLOC :
+  // titre + sous-titre + taille du titre + afficher/masquer le titre.
+  function _bpTitleFields(defT, defS){
+    const showChecked=(c.showTitle!==false);
+    return '<div class="bpe-fld"><label>Titre de section</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="'+_escAdm(defT||'Titre par défaut')+'"></div>'
+      +'<div class="bpe-fld"><label>Sous-titre</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="'+_escAdm(defS||'')+'"></div>'
+      +'<div class="bpe-fld-row">'
+        +'<div class="bpe-fld"><label>Taille du titre (px)</label><input type="number" min="10" max="40" value="'+(c.titleSize||'')+'" onchange="_bpSetCt(\'titleSize\',this.value)" placeholder="défaut"></div>'
+        +'<div class="bpe-fld"><label>Taille du sous-titre (px)</label><input type="number" min="8" max="28" value="'+(c.subtitleSize||'')+'" onchange="_bpSetCt(\'subtitleSize\',this.value)" placeholder="défaut"></div>'
+      +'</div>'
+      +'<div class="bpe-toggle"><span>Afficher le titre</span><label class="sw"><input type="checkbox" '+(showChecked?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  }
   switch(s.type){
     case 'hero':
       return _phaseFld
@@ -4884,9 +4928,13 @@ function _bpContentFieldsHtml(s){
       const ev=_bpCurrentEv();
       const chans=(ev.liveChannels&&ev.liveChannels.length)?ev.liveChannels:[{id:'main',name:'Principal'}];
       return _phaseFld
-        +'<div class="bpe-fld"><label>Titre affiché</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
+        +_bpTitleFields('Fil Live','Minute par minute')
         +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live. Par défaut : Principal.</div></div>'
-        +'<div class="bpe-fld"><label>Nombre d\'entrées affichées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>';
+        +'<div class="bpe-fld-row">'
+          +'<div class="bpe-fld"><label>Entrées chargées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>'
+          +'<div class="bpe-fld"><label>Visibles avant accordéon</label><input type="number" value="'+(c.visibleCount!=null&&c.visibleCount!==''?c.visibleCount:'')+'" min="1" max="50" placeholder="5" onchange="_bpSetCt(\'visibleCount\',this.value)"></div>'
+          +'<div class="bpe-fld"><label>Lignes max / entrée</label><input type="number" value="'+(c.lineClamp!=null&&c.lineClamp!==''?c.lineClamp:'')+'" min="0" placeholder="0 = illimité" onchange="_bpSetCt(\'lineClamp\',this.value)"></div>'
+        +'</div>';
     }
     case 'journalists': {
       const ev=_bpCurrentEv();
@@ -4894,15 +4942,101 @@ function _bpContentFieldsHtml(s){
       let opts='<option value="">Tous les journalistes</option>';
       jrs.forEach(function(j){ opts+='<option value="'+(j.id||'')+'"'+((c.journalistId||'')===(j.id||'')?' selected':'')+'>'+_escAdm(j.name||'(sans nom)')+'</option>'; });
       return _phaseFld
+        +_bpTitleFields('Nos reporters','')
         +'<div class="bpe-fld"><label>Journaliste à afficher</label><select onchange="_bpSetCt(\'journalistId\',this.value)">'+opts+'</select><div class="bpe-hint">Choisissez un journaliste précis pour cette page, ou « Tous » pour les afficher tous. Les journalistes s\'alimentent dans l\'onglet Journalistes.</div></div>';
     }
-    case 'programme': case 'etapes': case 'itinerary': case 'citations':
-    case 'videos': case 'interviews': case 'essential': case 'sponsors': case 'kpis': case 'gallerylive': {
-      const _names={programme:'Programme',etapes:'Carte & Étapes',itinerary:'Itinéraire',citations:'Citations',videos:'Vidéos',interviews:'Interviews',essential:'Essentiel & Timeline',sponsors:'Partenaires',kpis:'Chiffres clés',gallerylive:'Galerie (module live)'};
-      var _titleFld = (s.type==='kpis'||s.type==='etapes'||s.type==='itinerary') ? '' :
-        '<div class="bpe-fld"><label>Titre de section (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Laisser vide = titre par défaut"></div>';
+    case 'citations': {
+      // Réglages spécifiques citations (repris du mode classique), stockés PAR BLOC (sec.content.cit)
+      var cc = c.cit || {};
+      function _cnum(k,def,mn,mx,step){ return '<input type="number" value="'+(cc[k]!=null&&cc[k]!==''?cc[k]:'')+'" placeholder="'+def+'"'+(mn!=null?' min="'+mn+'"':'')+(mx!=null?' max="'+mx+'"':'')+(step?' step="'+step+'"':'')+' onchange="_bpSetCit(\''+k+'\',this.value)" style="width:75px">'; }
+      return _phaseFld
+        + _bpTitleFields('Verbatims','Ce qu\'ils ont dit')
+        + '<div class="bpe-cfg-sech" style="margin-top:8px">Style des citations</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Style</label><select onchange="_bpSetCit(\'style\',this.value)"><option value="">Défaut</option><option value="classic"'+(cc.style==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(cc.style==='premium'?' selected':'')+'>Premium</option></select></div>'
+          + '<div class="bpe-fld"><label>Accent</label><input type="color" value="'+(cc.accent||'#E8842C')+'" onchange="_bpSetCit(\'accent\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Guillemets</label><select onchange="_bpSetCit(\'quoteSize\',this.value)"><option value="">Défaut</option><option value="small"'+(cc.quoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+(cc.quoteSize==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(cc.quoteSize==='large'?' selected':'')+'>Grand</option></select></div>'
+        + '</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Taille texte</label>'+_cnum('textSize','13',10,20)+'</div>'
+          + '<div class="bpe-fld"><label>Taille nom</label>'+_cnum('nameSize','12',10,20)+'</div>'
+          + '<div class="bpe-fld"><label>Taille poste</label>'+_cnum('roleSize','10',8,16)+'</div>'
+          + '<div class="bpe-fld"><label>Bordure (px)</label>'+_cnum('borderWidth','2.5',1,6,'0.5')+'</div>'
+        + '</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Médaillons (px)</label><select onchange="_bpSetCit(\'avatarSize\',this.value)"><option value="">Défaut</option>'+[60,80,100,120].map(function(v){return '<option value="'+v+'"'+(String(cc.avatarSize)===String(v)?' selected':'')+'>'+v+'px</option>';}).join('')+'</select></div>'
+          + '<div class="bpe-fld"><label>Visibles avant accordéon</label>'+_cnum('visibleCount','6',1,20)+'</div>'
+        + '</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Fond citation vedette</label><input type="color" value="'+(cc.featuredBg||'#0F2B3C')+'" onchange="_bpSetCit(\'featuredBg\',this.value)"></div>'
+          + '<div class="bpe-toggle" style="flex:1"><span>Fond des boîtes personnalisé</span><label class="sw"><input type="checkbox" '+(cc.cardBgOn?'checked':'')+' onchange="_bpSetCit(\'cardBgOn\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
+          + (cc.cardBgOn?'<div class="bpe-fld"><label>Couleur des boîtes</label><input type="color" value="'+(cc.cardBg||'#0F2B3C')+'" onchange="_bpSetCit(\'cardBg\',this.value)"></div>':'')
+        + '</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Taille nom de rubrique (px)</label>'+_cnum('rubricSize','',10,48)+'</div>'
+          + '<div class="bpe-fld"><label>Police nom de rubrique</label><select onchange="_bpSetCit(\'rubricFont\',this.value)">'+_fontOpts(cc.rubricFont||'')+'</select></div>'
+        + '</div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les citations sont alimentées dans l\'onglet Citations. Champs vides = valeurs par défaut du thème.</div>';
+    }
+    case 'sponsors': {
+      var sp = c.sp || {};
+      return _phaseFld
+        + _bpTitleFields('Partenaires','')
+        + '<div class="bpe-cfg-sech" style="margin-top:8px">Réglages partenaires</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Taille des logos (px)</label><input type="number" min="16" max="120" value="'+(sp.logoSize||'')+'" placeholder="30" onchange="_bpSetSp(\'logoSize\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Partenaires par ligne</label><select onchange="_bpSetSp(\'perRow\',this.value)"><option value="0"'+(!sp.perRow?' selected':'')+'>Auto</option>'+[2,3,4,5,6].map(function(n){return '<option value="'+n+'"'+(String(sp.perRow)===String(n)?' selected':'')+'>'+n+' / ligne</option>';}).join('')+'</select></div>'
+        + '</div>'
+        + '<div class="bpe-toggle"><span>Logos en couleur (désactive le noir &amp; blanc)</span><label class="sw"><input type="checkbox" '+(sp.logoColor?'checked':'')+' onchange="_bpSetSp(\'logoColor\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les partenaires sont alimentés dans l\'onglet Partenaires.</div>';
+    }
+    case 'programme': {
+      var pg = c.pg || {};
+      function _pnum(k,def,mn,mx){ return '<input type="number" value="'+(pg[k]!=null&&pg[k]!==''?pg[k]:'')+'" placeholder="'+def+'"'+(mn!=null?' min="'+mn+'"':'')+(mx!=null?' max="'+mx+'"':'')+' onchange="_bpSetPg(\''+k+'\',this.value)" style="width:80px">'; }
+      return _phaseFld
+        + _bpTitleFields('Programme','')
+        + '<div class="bpe-cfg-sech" style="margin-top:8px">Réglages programme</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Taille en-tête de jour (px)</label>'+_pnum('daySize','10',8,32)+'</div>'
+          + '<div class="bpe-fld"><label>Taille badge statut (px)</label>'+_pnum('statusSize','7',6,20)+'</div>'
+        + '</div>'
+        + '<div class="bpe-toggle"><span>Masquer le badge « À venir / En cours / Terminé »</span><label class="sw"><input type="checkbox" '+(pg.hideStatus?'checked':'')+' onchange="_bpSetPg(\'hideStatus\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Le programme est alimenté dans son onglet dédié.</div>';
+    }
+    case 'interviews': {
+      return _phaseFld
+        + _bpTitleFields('Interviews','Rencontres et visions')
+        + '<div class="bpe-fld"><label>Visibles avant accordéon</label><input type="number" min="1" max="20" value="'+(c.visibleCount!=null&&c.visibleCount!==''?c.visibleCount:'')+'" placeholder="4" onchange="_bpSetCt(\'visibleCount\',this.value)" style="width:80px"></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les interviews sont alimentées dans leur onglet dédié.</div>';
+    }
+    case 'gallery': case 'gallerylive': {
+      return _phaseFld
+        + _bpTitleFields('Galerie','En images')
+        + '<div class="bpe-fld"><label>Hauteur de la galerie (px)</label><input type="number" min="100" max="600" value="'+(c.galleryHeight!=null&&c.galleryHeight!==''?c.galleryHeight:'')+'" placeholder="260" onchange="_bpSetCt(\'galleryHeight\',this.value)" style="width:100px"></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les photos sont alimentées dans la Galerie / Médiathèque.</div>';
+    }
+    case 'questions': {
+      var qa = c.qa || {};
+      return _phaseFld
+        + _bpTitleFields('Questions en direct','Une question ? Posez-la, la rédaction vous répond.')
+        + '<div class="bpe-cfg-sech" style="margin-top:8px">Réglages questions</div>'
+        + '<div class="bpe-fld"><label>Questions visibles avant « voir plus »</label><input type="number" min="1" max="100" value="'+(qa.visibleCount!=null&&qa.visibleCount!==''?qa.visibleCount:'')+'" placeholder="10" onchange="_bpSetQa(\'visibleCount\',this.value)" style="width:80px"></div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Accent</label><input type="color" value="'+(qa.accent||'#6366F1')+'" onchange="_bpSetQa(\'accent\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Fond des questions</label><input type="color" value="'+(qa.itemBg||'#ffffff')+'" onchange="_bpSetQa(\'itemBg\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Couleur du texte</label><input type="color" value="'+(qa.textColor||'#1a1a1a')+'" onchange="_bpSetQa(\'textColor\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Fond du formulaire</label><input type="color" value="'+(qa.formBg||'#ffffff')+'" onchange="_bpSetQa(\'formBg\',this.value)"></div>'
+        + '</div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les questions du public arrivent en temps réel et se modèrent dans l\'onglet Questions.</div>';
+    }
+    case 'etapes': case 'itinerary':
+    case 'videos': case 'essential': case 'kpis': {
+      const _names={etapes:'Carte & Étapes',itinerary:'Itinéraire',videos:'Vidéos',essential:'Essentiel & Timeline',kpis:'Chiffres clés'};
+      const _defsub={citations:'Ce qu\'ils ont dit',videos:'Reportages et temps forts',interviews:'Rencontres et visions',essential:'Les points clés à retenir',sponsors:'',programme:'',kpis:''};
+      // kpis/etapes/itinerary n'ont pas de titre de section éditorial → pas de socle titre
+      var _titleFld = (s.type==='kpis'||s.type==='etapes'||s.type==='itinerary') ? '' : _bpTitleFields(_names[s.type]||'', _defsub[s.type]||'');
       return _phaseFld + _titleFld
-        + '<div class="bpe-hint" style="padding:4px 0">Le contenu de « '+(_names[s.type]||s.type)+' » est alimenté dans son onglet dédié à gauche. Utilisez les réglages ci-dessus pour choisir la phase et personnaliser le titre.</div>';
+        + '<div class="bpe-hint" style="padding:4px 0">Le contenu de « '+(_names[s.type]||s.type)+' » est alimenté dans son onglet dédié à gauche.</div>';
     }
     case 'product': {
       const ev=_bpCurrentEv();
@@ -4928,9 +5062,14 @@ function _bpContentFieldsHtml(s){
         + maps.map(function(m){ return '<option value="'+m.id+'"'+((c.countryMapId||maps[0].id)===m.id?' selected':'')+'>'+_escAdm(m.title||_CM_CONTINENT_LABELS[m.continent]||'Carte')+'</option>'; }).join('')
         + '</select><div class="bpe-hint">Choisissez laquelle de vos cartes pays afficher à cet emplacement.</div></div>';
     }
-    default:
-      return _phaseFld
-        +'<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié). Il s\'affichera ici à l\'emplacement choisi. Réglages détaillés à l\'étape suivante.</div>';
+    default:{
+      const _defNames={articles:'Nos articles',brandnews:'Brand News',questions:'Questions du public',quiz:'Quiz / Sondage',contact:'Contact'};
+      const _defSubs={articles:'L\'événement vu par la rédaction',questions:'Une question ? Posez-la.',contact:'Contactez l\'équipe'};
+      // Tous les modules éditoriaux du default reçoivent le socle titre (y compris contact).
+      const _tf = _bpTitleFields(_defNames[s.type]||'', _defSubs[s.type]||'');
+      return _phaseFld + _tf
+        +'<div class="bpe-hint" style="padding:4px 0">Ce module utilise sa source de contenu partagée (alimentée dans son onglet dédié).</div>';
+    }
   }
 }
 
@@ -5036,10 +5175,16 @@ var _bpSaveTimer=null;
 function _bpSavePageDebounced(){ clearTimeout(_bpSaveTimer); _bpSaveTimer=setTimeout(function(){ _bpSavePage(); },600); }
 
 function _bpSetZone(z){ const s=_bpSelectedSection(); if(!s)return; s.zone=z; _bpAfterSet(true); _bpRefreshCfg(); }
+function _bpSetSecFlag(key,val){ const s=_bpSelectedSection(); if(!s)return; if(val){ s[key]=true; } else { delete s[key]; } _bpAfterSet(true); }
+function _bpAccToggle(btn){ var acc=btn.closest('.bpe-acc'); if(acc) acc.classList.toggle('open'); }
+function _bpSetCit(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.cit=s.content.cit||{}; const numKeys=['textSize','nameSize','roleSize','avatarSize','visibleCount','rubricSize']; if(numKeys.indexOf(key)>=0){ s.content.cit[key]=(val===''?'':parseFloat(val)); } else { s.content.cit[key]=val; } _bpAfterSet(true); if(key==='cardBgOn') _bpRefreshCfg(); }
+function _bpSetSp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.sp=s.content.sp||{}; if(key==='logoSize'||key==='perRow'){ s.content.sp[key]=(val===''?'':parseInt(val,10)); } else { s.content.sp[key]=val; } _bpAfterSet(true); }
+function _bpSetPg(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.pg=s.content.pg||{}; if(key==='daySize'||key==='statusSize'){ s.content.pg[key]=(val===''?'':parseInt(val,10)); } else { s.content.pg[key]=val; } _bpAfterSet(true); }
 function _bpSetAp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; if(key==='pad'||key==='padTop'){ s.appearance[key]=(val===''?'':parseInt(val,10)); } else { s.appearance[key]=val; } _bpAfterSet(true); }
 function _bpSetApRole(role,prop,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance[role]=s.appearance[role]||{}; s.appearance[role][prop]=(prop==='size'?(val===''?'':parseInt(val,10)):val); _bpAfterSet(true); }
 function _bpSetBg(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance.bg=s.appearance.bg||{}; s.appearance.bg[key]=val; _bpAfterSet(true); if(key==='on') _bpRefreshCfg(); }
-function _bpSetCt(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; if(key==='height'||key==='limit'){ s.content[key]=(val===''?'':parseInt(val,10)); } else { s.content[key]=val; } _bpAfterSet(true); }
+function _bpSetCt(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; if(key==='height'||key==='limit'||key==='visibleCount'||key==='lineClamp'||key==='galleryHeight'){ s.content[key]=(val===''?'':parseInt(val,10)); } else { s.content[key]=val; } _bpAfterSet(true); }
+function _bpSetQa(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.qa=s.content.qa||{}; if(key==='visibleCount'){ s.content.qa[key]=(val===''?'':parseInt(val,10)); } else { s.content.qa[key]=val; } _bpAfterSet(true); }
 function _bpSetPage(key,val){ const p=_bpCurrentPage(); if(!p)return; p[key]=val; _bpSavePageDebounced(); if(key==='name'||key==='color'){ _renderBuilderEditor(document.getElementById('admin-main')); } }
 function _bpSetNav(key,val){ const p=_bpCurrentPage(); if(!p)return; p.nav=p.nav||{}; p.nav[key]=val; _bpSavePageDebounced(); }
 // Galerie
@@ -5052,7 +5197,7 @@ function _bpBtnDel(i){ const s=_bpSelectedSection(); if(!s)return; s.content.but
 function _bpBtnSet(i,field,val){ const s=_bpSelectedSection(); if(!s)return; s.content.buttons=s.content.buttons||[]; s.content.buttons[i]=s.content.buttons[i]||{}; s.content.buttons[i][field]=val; _bpSavePageDebounced(); _bpAfterSet(true); }
 
 // Rafraîchit uniquement le panneau config (sans perdre le focus canevas)
-function _bpRefreshCfg(){ const el=document.getElementById('bpe-cfg'); if(el) el.innerHTML=_bpConfigHtml(); }
+function _bpRefreshCfg(){ const el=document.getElementById('bpe-cfg'); if(!el) return; var _open=[]; el.querySelectorAll('.bpe-acc.open').forEach(function(a){_open.push(a.getAttribute('data-acc'));}); el.innerHTML=_bpConfigHtml(); if(_open.length){ el.querySelectorAll('.bpe-acc').forEach(function(a){ var id=a.getAttribute('data-acc'); if(_open.indexOf(id)>=0) a.classList.add('open'); else a.classList.remove('open'); }); } }
 
 function _cpCurrent(){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -5865,7 +6010,8 @@ function renderModules(el){
   const zoneLabels={full:'⬛ Pleine largeur',main:'◀ Colonne principale',side:'▶ Sidebar'};
   const zoneBgs={full:'#EEF2FF',main:'#FFF',side:'#F8FAFC'};
 
-  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg>Modules</div><div class="page-desc">Activez ou désactivez les modules, et réordonnez les blocs.</div>
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-modules"/></svg>Affichage (classique)</div><div class="page-desc">Organise l'affichage en <strong>mode classique</strong> : activez/désactivez les modules et réordonnez les blocs par zones (colonne principale, sidebar, pleine largeur).</div>
+  <div style="font-size:12px;color:#0369A1;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6">💡 Pour composer des pages librement en colonnes (glisser-déposer, mise en page sur-mesure), utilisez plutôt <a href="#" onclick="event.preventDefault();document.querySelector('[data-tab=pageshub]').click()" style="color:#0369A1;font-weight:700;text-decoration:underline">Pages &amp; onglets</a>. Cet onglet-ci concerne le dashboard classique à zones fixes.</div>
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-puzzle"/></svg> Visibilité</h3>`;
   mods.forEach(m=>{const checked=mod[m.key]!==false;h+=`<div class="toggle-row"><span class="toggle-label"><span class="icon">${m.icon}</span>${m.label}</span><label class="toggle"><input type="checkbox" ${checked?'checked':''} onchange="toggleModule('${m.key}',this.checked)"><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>`;});
   h+=`</div>`;
@@ -7111,6 +7257,7 @@ function renderArticles(el){
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> Ajout manuel</h3>
     <div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="art-title"></div>
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="art-link" placeholder="https://..."></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="art-author"></div></div>
+    <div class="form-row" style="max-width:220px"><label class="form-label">Date de publication</label><input type="date" class="form-input" id="art-date" style="width:180px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = aujourd'hui. Sert au tri chronologique.</div></div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="art-image" style="flex:1">${mkMediaPickerBtn('art-image')}${mkUploadBtn('art-image')}</div></div>
     ${mkPhaseSelect('art-phase','')}
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="addArticle()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-news"/></svg> Ajouter</button></div></div>
@@ -7183,7 +7330,8 @@ function renderArticles(el){
     const source=a.source==='rss'?'<span style="font-size:8px;background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">RSS</span>':'';
     const isHidden=a.link&&_hidden.indexOf(a.link)>=0;
     const hiddenBadge=isHidden?'<span style="font-size:8px;background:#FEE2E2;color:#B91C1C;padding:2px 6px;border-radius:3px;font-weight:700;margin-left:6px">MASQUÉ</span>':'';
-    h+=`<div class="list-item" style="${isHidden?'opacity:.55':''}">
+    h+=`<div class="list-item art-dnd-row" draggable="true" data-artid="${a.id}" data-idx="${idx}" ondragstart="_artDragStart(event,${idx})" ondragover="_artDragOver(event,${idx})" ondragleave="_artDragLeave(event)" ondrop="_artDrop(event,${idx})" ondragend="_artDragEnd(event)" style="${isHidden?'opacity:.55;':''}">
+      <div class="art-dnd-handle" title="Glisser pour réordonner" style="flex-shrink:0;cursor:grab;color:var(--text3);padding:0 4px;display:flex;align-items:center;font-size:16px">⠿</div>
       <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
         <button class="btn btn-ghost btn-xs" style="padding:1px 6px;line-height:1" ${idx===0?'disabled':''} onclick="_articleMove(${idx},-1)">▲</button>
         <button class="btn btn-ghost btn-xs" style="padding:1px 6px;line-height:1" ${idx===_arts.length-1?'disabled':''} onclick="_articleMove(${idx},1)">▼</button>
@@ -7209,16 +7357,20 @@ async function addArticle(){
   const title=document.getElementById('art-title').value.trim();
   if(!title){toast('Titre requis','error');return;}
   saving(true);
+  const _dRaw=document.getElementById('art-date')?.value||'';
+  const _d=_dRaw?new Date(_dRaw+'T12:00:00'):new Date();
+  const _months=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   await subCol('articles').add({
     title,
     link:document.getElementById('art-link').value||'#',
     author:document.getElementById('art-author').value||'La Rédaction',
     image:document.getElementById('art-image').value,
     phase:document.getElementById('art-phase')?.value||'',
-    date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),
+    date:_d.getDate()+' '+_months[_d.getMonth()]+' '+_d.getFullYear(),
+    created_at:firebase.firestore.Timestamp.fromDate(_d),
     source:'manual'
   });
-  ['art-title','art-link','art-author','art-image'].forEach(x=>document.getElementById(x).value='');toast('Ajouté');
+  ['art-title','art-link','art-author','art-image','art-date'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});toast('Ajouté');
   await _loadColOnce('articles','articlesData');
 }
 
@@ -7229,6 +7381,7 @@ function editArticle(id){
     <div class="form-row-inline"><div class="form-row"><label class="form-label">Lien</label><input class="form-input" id="m-art-link" value="${a.link||''}"></div><div class="form-row"><label class="form-label">Auteur</label><input class="form-input" id="m-art-author" value="${a.author||''}"></div></div>
     <div class="form-row"><label class="form-label">Image (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-art-image" value="${a.image||''}" style="flex:1">${mkMediaPickerBtn('m-art-image')}${mkUploadBtn('m-art-image')}</div></div>
     <div class="form-row" style="max-width:240px"><label class="form-label">Hauteur de l'image (px, optionnel)</label><input type="number" class="form-input" id="m-art-imgheight" value="${a.imageHeight||''}" min="80" max="600" placeholder="Auto (180px par défaut)" style="width:170px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Augmentez si l'image est trop rognée. Vide = hauteur automatique.</div></div>
+    <div class="form-row" style="max-width:220px"><label class="form-label">Date de publication</label><input type="date" class="form-input" id="m-art-date" value="${(function(){try{var d=a.created_at&&a.created_at.toDate?a.created_at.toDate():(a.created_at?new Date(a.created_at):null);if(d&&!isNaN(d)){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}}catch(e){}return '';})()}" style="width:180px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Modifie le tri chronologique de cet article.</div></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveArticleEdit('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button>
@@ -7238,13 +7391,21 @@ async function saveArticleEdit(id){
   saving(true);
   const _ihEl=document.getElementById('m-art-imgheight');
   const _ihVal=_ihEl&&_ihEl.value!==''?(parseInt(_ihEl.value)||firebase.firestore.FieldValue.delete()):firebase.firestore.FieldValue.delete();
-  await subCol('articles').doc(id).update({
+  const _upd={
     title:document.getElementById('m-art-title').value.trim(),
     link:document.getElementById('m-art-link').value,
     author:document.getElementById('m-art-author').value,
     image:document.getElementById('m-art-image').value,
     imageHeight:_ihVal
-  });
+  };
+  const _dRaw=document.getElementById('m-art-date')?.value||'';
+  if(_dRaw){
+    const _d=new Date(_dRaw+'T12:00:00');
+    const _months=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    _upd.created_at=firebase.firestore.Timestamp.fromDate(_d);
+    _upd.date=_d.getDate()+' '+_months[_d.getMonth()]+' '+_d.getFullYear();
+  }
+  await subCol('articles').doc(id).update(_upd);
   closeModal();toast('Modifié');
   await _loadColOnce('articles','articlesData');
 }
@@ -7263,6 +7424,32 @@ async function _articleMove(idx, dir){
     await Promise.all(batch);
     await _loadColOnce('articles','articlesData');
   }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// Persiste un nouvel ordre complet (0,1,2,…) à partir d'une liste réordonnée
+async function _articlePersistOrder(list){
+  saving(true);
+  try{
+    const batch=[];
+    list.forEach((a,i)=>{ if(a.order!==i){ batch.push(subCol('articles').doc(a.id).update({order:i})); a.order=i; } });
+    await Promise.all(batch);
+    await _loadColOnce('articles','articlesData');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+// --- Glisser-déposer des articles ---
+var _artDragIdx=null;
+function _artDragStart(e,idx){ _artDragIdx=idx; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',String(idx));}catch(_){ } const r=e.currentTarget; setTimeout(()=>{ if(r) r.style.opacity='.4'; },0); }
+function _artDragOver(e,idx){ e.preventDefault(); e.dataTransfer.dropEffect='move'; const r=e.currentTarget; if(r&&!r.classList.contains('art-dnd-over')){ document.querySelectorAll('.art-dnd-over').forEach(x=>x.classList.remove('art-dnd-over')); r.classList.add('art-dnd-over'); } }
+function _artDragLeave(e){ const r=e.currentTarget; if(r) r.classList.remove('art-dnd-over'); }
+function _artDragEnd(e){ document.querySelectorAll('.art-dnd-row').forEach(x=>{x.style.opacity='';x.classList.remove('art-dnd-over');}); _artDragIdx=null; }
+function _artDrop(e,idx){
+  e.preventDefault();
+  document.querySelectorAll('.art-dnd-over').forEach(x=>x.classList.remove('art-dnd-over'));
+  if(_artDragIdx===null||_artDragIdx===idx) return;
+  const list=(window._articlesSorted||articlesData).slice();
+  const moved=list.splice(_artDragIdx,1)[0];
+  list.splice(idx,0,moved);
+  _artDragIdx=null;
+  _articlePersistOrder(list);
 }
 async function toggleHideArticle(encLink, hide){
   const link=decodeURIComponent(encLink);
@@ -9135,7 +9322,7 @@ function renderAccess(el){
 
   const allTabs=[
     {key:'events',icon:'📋',label:'Mes événements'},
-    {key:'phases',icon:'📌',label:'Phases / Temps forts'},
+    {key:'pageshub',icon:'🧩',label:'Pages & onglets'},
     {key:'programme',icon:'🗓',label:'Programme'},
     {key:'flash',icon:'⚡',label:'Flash info'},
     {key:'essentiel',icon:'🧠',label:'Essentiel & Timeline'},
@@ -9151,8 +9338,6 @@ function renderAccess(el){
     {key:'interviews',icon:'🎙️',label:'Interviews'},
     {key:'journalistes',icon:'👤',label:'Journalistes'},
     {key:'gallery',icon:'📸',label:'Galerie photos'},
-    {key:'pages',icon:'📄',label:'Pages libres'},
-    {key:'builder',icon:'🧩',label:'Constructeur de pages'},
     {key:'product',icon:'📦',label:'Produit'},
     {key:'countrymap',icon:'🌍',label:'Carte pays'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
@@ -9162,7 +9347,7 @@ function renderAccess(el){
     {key:'media',icon:'📷',label:'Médiathèque'},
     {key:'rubriques',icon:'📁',label:'Rubriques'},
     {key:'tags',icon:'🏷',label:'Tags live'},
-    {key:'modules',icon:'⚙️',label:'Modules'},
+    {key:'modules',icon:'⚙️',label:'Affichage (classique)'},
     {key:'widget',icon:'📦',label:'Widget homepage'},
     {key:'guide',icon:'📖',label:'Guide d\'utilisation'}
   ];
