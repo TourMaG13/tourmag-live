@@ -2710,7 +2710,7 @@ function render(data){
   }
 
   // ===== GALERIE =====
-  function mkGallery(){
+  function mkGallery(opts){
     if(mod.gallery===false) return '';
     const _rawPhotos = event.gallery || [];
     const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
@@ -2725,19 +2725,27 @@ function render(data){
       const _hSty = ph_h?` style="height:${ph_h}px"`:'';
       return `<div style="position:relative;overflow:hidden;border-radius:14px"${_hSty}><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
     }
-    if(photos.length >= 3){
+    const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
+    const _visP = photos.slice(0, _galVis);
+    const _extraP = photos.slice(_galVis);
+    if(_visP.length >= 3){
       o += `<div class="gallery-grid fi" style="--gal-h:${galH}px">`;
-      photos.slice(0,3).forEach(p => { o += galImg(p); });
+      _visP.slice(0,3).forEach(p => { o += galImg(p); });
       o += `</div>`;
-      if(photos.length > 3){
+      if(_visP.length > 3){
         o += `<div class="gallery-extra fi" style="--gal-h:${galH}px">`;
-        photos.slice(3,9).forEach(p => { o += galImg(p); });
+        _visP.slice(3).forEach(p => { o += galImg(p); });
         o += `</div>`;
       }
     } else {
       o += `<div class="gallery-extra fi" style="--gal-h:${galH}px">`;
-      photos.forEach(p => { o += galImg(p); });
+      _visP.forEach(p => { o += galImg(p); });
       o += `</div>`;
+    }
+    if(_extraP.length){
+      o += `<div class="expand-wrap" id="gal-expand"><div class="gallery-extra fi" style="--gal-h:${galH}px;margin-top:10px">`;
+      _extraP.forEach(p => { o += galImg(p); });
+      o += `</div></div><div style="text-align:center"><button class="voir-plus-btn" id="gal-btn" onclick="toggleExpand('gal-expand','gal-btn',${_extraP.length},'Réduire','Voir ${_extraP.length} photos de plus')">Voir ${_extraP.length} photos de plus ${_chevSvg}</button></div>`;
     }
     return o;
   }
@@ -3704,7 +3712,7 @@ function renderExpedition(data){
       gp = activePhase ? _rawGp.filter(p=>!p.phase||p.phase===activePhase) : _rawGp;
     }
     if(mod.gallery===false || !gp.length) return '';
-    const GALLERY_VIS = 9;
+    const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
     function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
@@ -5486,6 +5494,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='programme' && ct.pg){ _opts.pg = ct.pg; }
       if(type==='interviews' && ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount);
       if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
+      if((type==='gallery'||type==='gallerylive') && ct.galleryVisible!=null&&ct.galleryVisible!=='') _opts.galleryVisible=parseInt(ct.galleryVisible);
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
