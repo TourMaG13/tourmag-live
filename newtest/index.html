@@ -6485,7 +6485,11 @@ init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div
 // IFRAME RESIZE + FULL-WIDTH
 var _lastSentH=0, _hTimer=null;
 function _computeH(){
-  return Math.max(document.body.scrollHeight, document.body.offsetHeight);
+  var b=document.body, e=document.documentElement;
+  return Math.max(
+    b.scrollHeight, b.offsetHeight,
+    e.scrollHeight, e.offsetHeight, e.clientHeight
+  );
 }
 function sendHeight(){
   const h=_computeH();
@@ -6522,6 +6526,13 @@ window.addEventListener('load',()=>{
   [100,300,600,1200,2500].forEach(d=>setTimeout(()=>{scheduleHeight();requestFullWidth();},d));
   if(window._DIAG && window._DIAG.noresize){ return; } // diagnostic : pas d'observer de hauteur
   new MutationObserver(scheduleHeight).observe(document.body,{childList:true,subtree:true});
+  // ResizeObserver : capte les changements de HAUTEUR (accordéons, images chargées, transitions)
+  // que le MutationObserver seul ne voit pas → l'iframe reste toujours à la bonne hauteur.
+  if(window.ResizeObserver){
+    try{ new ResizeObserver(function(){ _lastSentH=0; scheduleHeight(); }).observe(document.body); }catch(_){}
+  }
+  // Filet supplémentaire : les images qui finissent de charger allongent la page.
+  document.querySelectorAll('img').forEach(function(img){ if(!img.complete){ img.addEventListener('load',scheduleHeight,{once:true}); img.addEventListener('error',scheduleHeight,{once:true}); } });
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ _lastSentH=0; scheduleHeight(); } });
   window.addEventListener('pageshow',()=>{ _lastSentH=0; scheduleHeight(); });
   window.addEventListener('resize',scheduleHeight);
