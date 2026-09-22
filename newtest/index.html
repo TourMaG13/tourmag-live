@@ -6510,6 +6510,17 @@ function requestFullWidth(){
 }
 window.addEventListener('load',()=>{
   document.documentElement.style.overflowY='visible';document.documentElement.style.overflowX='hidden';document.body.style.overflowY='visible';document.body.style.overflowX='hidden';
+  // Fix scroll Mac/WebKit en iframe : le 1er geste de scroll sert d'ordinaire juste à donner
+  // le focus à l'iframe (et est "perdu"). On capte le focus dès l'entrée du curseur pour que
+  // le premier scroll agisse vraiment. Sans effet visible ailleurs.
+  (function(){
+    var _grab=function(){ try{ window.focus(); }catch(e){} };
+    window.addEventListener('pointerenter',_grab,{passive:true});
+    window.addEventListener('mouseenter',_grab,{passive:true});
+    // Filet : au tout premier mouvement de souris dans l'iframe, on prend le focus une fois.
+    var _once=function(){ _grab(); window.removeEventListener('mousemove',_once); };
+    window.addEventListener('mousemove',_once,{passive:true});
+  })();
   // Si on arrive avec une ancre #live-<id> (lien partagé), on scrolle vers l'entrée une fois rendue.
   (function(){
     const hash=window.location.hash;
