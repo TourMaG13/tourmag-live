@@ -7315,7 +7315,7 @@ function renderArticles(el){
   ${_bnArchivesAdminCard(ev)}
 
   <!-- HISTORIQUE -->
-  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length}) <button class="btn btn-ghost btn-xs" style="margin-left:8px;font-weight:400" onclick="refreshCol('articles','articlesData')">↻ Rafraîchir</button></h3>`;
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Articles (${articlesData.length}) <button class="btn btn-ghost btn-xs" style="margin-left:8px;font-weight:400" onclick="refreshCol('articles','articlesData')">↻ Rafraîchir</button><button class="btn btn-soft btn-xs" style="margin-left:6px;font-weight:500" onclick="_articleSortByDate()">📅 Trier par date (récent → ancien)</button></h3>`;
   if(!articlesData.length) h+=!_loadedCols.articles ? _skel(3) : `<div class="empty"><div class="icon">📰</div><div class="text">Aucun article</div><div class="hint">Importez un flux RSS ou ajoutez un article manuellement.</div></div>`;
   else{
     const _ev0=eventsData.find(e=>e.id===currentEventId)||{};
@@ -7430,6 +7430,27 @@ async function _articleMove(idx, dir){
   }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 // Persiste un nouvel ordre complet (0,1,2,…) à partir d'une liste réordonnée
+// Convertit toute date d'article en timestamp (ms) : created_at/imported_at Firestore,
+// date ISO, ou ancienne date texte française ("5 nov. 2026").
+function _artTimestamp(a){
+  var v=a.created_at||a.imported_at||a.date;
+  if(!v) return 0;
+  if(v.toDate){ try{ return v.toDate().getTime(); }catch(e){} }
+  if(v.seconds) return v.seconds*1000;
+  var d=new Date(v); if(!isNaN(d)) return d.getTime();
+  // Ancienne date texte FR : "5 nov. 2026"
+  var mois={'janv':0,'févr':1,'fevr':1,'mars':2,'avr':3,'mai':4,'juin':5,'juil':6,'août':7,'aout':7,'sept':8,'oct':9,'nov':10,'déc':11,'dec':11};
+  var m=String(v).toLowerCase().match(/(\d{1,2})\s+([a-zéûà.]+)\.?\s+(\d{4})/);
+  if(m){ var mo=mois[m[2].replace(/\.$/,'')]; if(mo!=null){ return new Date(parseInt(m[3]),mo,parseInt(m[1]),12).getTime(); } }
+  return 0;
+}
+// Bouton : trie TOUS les articles par date (récent → ancien) et fige cet ordre.
+async function _articleSortByDate(){
+  if(!confirm('Réordonner tous les articles par date, du plus récent au plus ancien ?\nCela remplace l\'ordre manuel actuel.')) return;
+  const list=(articlesData||[]).slice().sort((a,b)=>_artTimestamp(b)-_artTimestamp(a));
+  await _articlePersistOrder(list);
+  toast('Articles triés par date');
+}
 async function _articlePersistOrder(list){
   saving(true);
   try{
