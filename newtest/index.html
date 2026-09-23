@@ -259,8 +259,9 @@ img{display:block}a{text-decoration:none}
 /* Onglet menu déroulant */
 .phase-tab-dd{position:relative;display:inline-block}
 .phase-tab-ddbtn{border:none;font-family:inherit}
-.dd-caret{font-size:9px;margin-left:2px;transition:transform .2s}
-.phase-tab-dd.open .dd-caret{transform:rotate(180deg)}
+.dd-caret{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:5px;border-radius:50%;background:rgba(0,0,0,.06);font-size:11px;line-height:1;transition:transform .2s,background .15s;color:var(--phase-color,#0C6CA1)}
+.phase-tab-ddbtn:hover .dd-caret{background:var(--phase-color,#0C6CA1);color:#fff}
+.phase-tab-dd.open .dd-caret{transform:rotate(180deg);background:var(--phase-color,#0C6CA1);color:#fff}
 .phase-menu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border-radius:12px;box-shadow:0 12px 34px rgba(16,24,40,.22);padding:6px;display:none;z-index:60;min-width:200px;max-width:280px}
 .phase-tab-dd.open .phase-menu{display:block}
 /* Ouverture au survol */
@@ -3061,7 +3062,7 @@ function render(data){
     var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
     if(typeof _bpActivateFx==='function') _bpActivateFx();
     if(typeof _applyDecor==='function'){ try{ _applyDecor(event, (event.modules||{})); }catch(e){} }
-    if(typeof window._tmgResize==='function') window._tmgResize();
+    if(typeof window._tmgResize==='function') (window._tmgResizeSettle?window._tmgResizeSettle():window._tmgResize());
     _builderHandled = true;
   })();
   if(_builderHandled) return;
@@ -3076,7 +3077,7 @@ function render(data){
     h += `<div class="dash"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>`;
     document.getElementById('app').innerHTML = h;
     var _ub=document.getElementById('upd-bar'); if(_ub) _ub.innerHTML='';
-    if(typeof window._tmgResize==='function') window._tmgResize();
+    if(typeof window._tmgResize==='function') (window._tmgResizeSettle?window._tmgResizeSettle():window._tmgResize());
     return;
   }
 
@@ -3137,7 +3138,8 @@ window._switchPhase = function(e, phaseId){
   // Re-render with current data
   if(window._rtState) render(window._rtState);
   // Recalcule la hauteur de l'iframe (la nouvelle phase peut être plus courte → évite la zone blanche)
-  if(typeof window._tmgResize==='function'){ window._tmgResize(); requestAnimationFrame(window._tmgResize); setTimeout(window._tmgResize,150); }
+  if(typeof window._tmgResizeSettle==='function'){ window._tmgResizeSettle(); }
+  else if(typeof window._tmgResize==='function'){ window._tmgResize(); }
   // Remonte le parent en haut du bloc si besoin (au cas où on était scrollé bas)
   window.parent.postMessage({type:'tourmag-live-scrolltop'},'*');
 };
@@ -4968,7 +4970,7 @@ function _renderTabItems(phases, contentPages, tabOrder, ctx){
       // Au clic : on toggle le menu (sauf en mode survol où le CSS gère l'ouverture)
       const btnClick = _hover ? '' : ' onclick="this.parentNode.classList.toggle(\'open\')"';
       t += `<div class="${ddCls}" style="--phase-color:${it.obj.color||'#0C6CA1'}">`
-        + `<button type="button" class="phase-tab phase-tab-ddbtn"${btnClick}><span class="phase-dot" style="background:${_pdot}"></span>${_qEsc(it.obj.name||'')} <span class="dd-caret">▾</span></button>`
+        + `<button type="button" class="phase-tab phase-tab-ddbtn"${btnClick}><span class="phase-dot" style="background:${_pdot}"></span>${_qEsc(it.obj.name||'')} <span class="dd-caret" aria-hidden="true">⌄</span></button>`
         + `<div class="phase-menu">` + ownLink + kids.map(k=>tabLink(k,true)).join('') + `</div>`
         + `</div>`;
     } else {
@@ -6521,6 +6523,12 @@ window.addEventListener('load',()=>{
     var _once=function(){ _grab(); window.removeEventListener('mousemove',_once); };
     window.addEventListener('mousemove',_once,{passive:true});
   })();
+  // Ferme les onglets déroulants (menus parents) au clic à l'extérieur.
+  document.addEventListener('click',function(e){
+    var open=document.querySelectorAll('.phase-tab-dd.open');
+    if(!open.length) return;
+    open.forEach(function(dd){ if(!dd.contains(e.target)) dd.classList.remove('open'); });
+  });
   // Si on arrive avec une ancre #live-<id> (lien partagé), on scrolle vers l'entrée une fois rendue.
   (function(){
     const hash=window.location.hash;
@@ -6550,6 +6558,15 @@ window.addEventListener('load',()=>{
 });
 // Recalcul forcé après un rendu. Neutralisé en mode diagnostic noresize.
 window._tmgResize=function(){ if(window._DIAG && window._DIAG.noresize) return; _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} scheduleHeight(); };
+// Remesure la hauteur plusieurs fois après un changement d'onglet : la mise en page se
+// stabilise progressivement (images, transitions), donc la hauteur FINALE (plus courte)
+// doit toujours l'emporter, sinon une zone blanche reste en bas.
+window._tmgResizeSettle=function(){
+  if(window._DIAG && window._DIAG.noresize) return;
+  [0,80,180,320,600].forEach(function(ms){
+    setTimeout(function(){ _lastSentH=0; if(_hTimer){clearTimeout(_hTimer);_hTimer=null;} sendHeight(); }, ms);
+  });
+};
 </script>
 </body>
 </html>
