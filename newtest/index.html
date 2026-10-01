@@ -5524,6 +5524,7 @@ function _bpRenderSection(sec, event, ctx){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
     overrideCss = _bpModuleOverrideCss(secId, ap);
   }
+  try{ if(window.location.search.indexOf('diagap')>=0) console.log('[diag-apparence] type='+type+' | délégué='+(!!isDelegated)+' | appearance='+JSON.stringify(ap)+' | secStyle='+(secStyle||'(vide)')+' | overrideCss='+(overrideCss?overrideCss.length+' car.':'(vide)')); }catch(e){}
   // Réglages citations par bloc → variables CSS scopées sur cette section
   if(type==='citations' && ct.cit){
     if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
