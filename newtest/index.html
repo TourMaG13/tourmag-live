@@ -6419,17 +6419,7 @@ async function init(){
     try { s.docs += (snap && typeof snap.size==='number') ? snap.size : (snap&&snap.docs?snap.docs.length:0); } catch(e){}
     return snap;
   };
-  if(!window._diagTimer){
-    window._diagTimer = setInterval(function(){
-      var mins = ((Date.now()-window._diagStart)/60000);
-      var rows = Object.keys(window._diagStats).map(function(k){
-        var s=window._diagStats[k];
-        return {collection:k, 'déclenchements':s.fires, 'docs lus (total)':s.docs, 'docs/min': +(s.docs/Math.max(mins,0.01)).toFixed(1)};
-      }).sort(function(a,b){return b['docs lus (total)']-a['docs lus (total)'];});
-      var totalDocs = rows.reduce(function(t,r){return t+r['docs lus (total)'];},0);
-      if(console.table) console.table(rows);
-    }, 10000);
-  }
+  // (Minuteur de diagnostic des lectures désactivé — il polluait la console.)
 
   if(!window._DIAG.norealtime){
   ec.collection('live').onSnapshot(snap=>{window._diag('live',snap);rtState.live=toArr(snap).sort((a,b)=>tsVal(b.time)-tsVal(a.time));rtRender();});
