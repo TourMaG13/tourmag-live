@@ -2014,7 +2014,6 @@ function initApp(){
       var mins=((Date.now()-window._diagStart)/60000);
       var rows=Object.keys(window._diagStats).map(function(k){var s=window._diagStats[k];return {collection:k,'déclenchements':s.fires,'docs lus (total)':s.docs,'docs/min':+(s.docs/Math.max(mins,0.01)).toFixed(1)};}).sort(function(a,b){return b['docs lus (total)']-a['docs lus (total)'];});
       var totalDocs=rows.reduce(function(t,r){return t+r['docs lus (total)'];},0);
-      console.log('%c[DIAG ADMIN lectures] '+mins.toFixed(1)+' min — '+totalDocs+' docs lus au total','background:#B91C1C;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold');
       if(console.table) console.table(rows);
     },10000);
   }
@@ -2112,7 +2111,6 @@ function subscribeSubCollections(){
   if(!currentEventId){ subCollectionsEventId=''; return; }
   subCollectionsEventId=currentEventId;
   _loadedCols = {}; // nouvel événement : on ré-affiche les squelettes le temps du chargement
-  console.log('[TourMaG Live] Subscribing to subcollections for event:', currentEventId);
 
   const subs=[
     {col:'live',target:'liveData'},
@@ -3627,7 +3625,6 @@ async function saveApparence(){
     saving(true);
     await db.collection('events').doc(currentEventId).update({typography:root});
     _ev.typography = root; // cache local
-    console.log('[Admin] Typography saved for', currentEventId, 'mode=', mk, root);
     toast('Typographie enregistrée ('+(mk==='expedition'?'Expédition':'Classique')+')');
   }catch(err){
     console.error('[Admin] saveApparence failed:', err);
@@ -6290,7 +6287,6 @@ async function saveUnifiedBlockOrder(){
 }
 async function toggleModule(key,val){
   saving(true);
-  console.log('[toggleModule]', key, val, 'eventId:', currentEventId);
   // Optimistic local update — prevents checkbox flicker on re-render
   const ev=eventsData.find(e=>e.id===currentEventId);
   if(ev){
@@ -6299,7 +6295,6 @@ async function toggleModule(key,val){
   }
   try{
     await evRef().update({[`modules.${key}`]:val});
-    console.log('[toggleModule] OK — modules.'+key+'='+val);
     toast(val?'Module activé':'Module désactivé');
   }catch(e){
     // Rollback optimistic update on error
@@ -7638,7 +7633,6 @@ async function fetchAllRss(){
           if(feed.label==='_brandnews' && existingDocsByLink[link]){
             try{
               await subCol('articles').doc(existingDocsByLink[link]).update({brandnews_feed:feed.url});
-              console.log('[BrandNews] ↻ Marqué brandnews:',title.slice(0,60));
               imported++;
             }catch(e){console.warn('[BrandNews] Update failed:',e);}
           } else { skipped++; }
