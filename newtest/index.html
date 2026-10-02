@@ -5522,7 +5522,8 @@ function _bpRenderSection(sec, event, ctx){
   const isDelegated = !EDITORIAL[type] && legacyDelegate[type];
   if(isDelegated){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
-    overrideCss = _bpModuleOverrideCss(secId, ap);
+    // Le programme a son propre panneau d'apparence dédié (_bpProgCss) → pas de socle générique.
+    if(type!=='programme') overrideCss = _bpModuleOverrideCss(secId, ap);
   }
   // Réglages citations par bloc → variables CSS scopées sur cette section
   if(type==='citations' && ct.cit){
@@ -5553,12 +5554,9 @@ function _bpRenderSection(sec, event, ctx){
     if(sp.logoColor){ overrideCss += '<style>#'+secId+' .sponsor-logo img,#'+secId+' .exp-sponsor img,#'+secId+' .sponsors-grid img{filter:none !important;opacity:1 !important}</style>'; }
   }
   // Programme : tailles jour/statut + masquage badge (par bloc)
-  if(type==='programme' && ct.pg){
+  if(type==='programme'){
     if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
-    const pg=ct.pg; let pd=[];
-    if(pg.hideStatus){ overrideCss += '<style>#'+secId+' .prog-status,#'+secId+' .exp-prog-status{display:none !important}</style>'; }
-    if(pg.daySize){ overrideCss += '<style>#'+secId+' .prog-day,#'+secId+' .exp-prog-day,#'+secId+' .prog-day-header{font-size:'+parseInt(pg.daySize)+'px !important}</style>'; }
-    if(pg.statusSize){ overrideCss += '<style>#'+secId+' .prog-status,#'+secId+' .exp-prog-status{font-size:'+parseInt(pg.statusSize)+'px !important}</style>'; }
+    overrideCss += _bpProgCss(secId, (sec.appearance&&sec.appearance.prog)||{});
   }
   // Questions : couleurs par bloc
   if(type==='questions' && ct.qa){
@@ -5581,6 +5579,37 @@ function _bpRenderSection(sec, event, ctx){
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
+// CSS d'apparence SPÉCIFIQUE au module programme : chaque réglage cible le bon élément réel.
+// p = objet appearance.prog = { title:{...}, date:{...}, time:{...}, text:{...}, hideStatus, bg, padTop, pad }
+// Chaque rôle a : size, font, weight, color.
+function _bpProgCss(secId, p){
+  p=p||{}; const sel='#'+secId; const rules=[];
+  function decl(r){ var d=[]; if(!r) return d;
+    if(r.font)   d.push("font-family:'"+r.font+"',sans-serif !important");
+    if(r.size)   d.push('font-size:'+parseInt(r.size,10)+'px !important');
+    if(r.weight) d.push('font-weight:'+r.weight+' !important');
+    if(r.color)  d.push('color:'+r.color+' !important');
+    return d;
+  }
+  // Titre du bloc : .ct (classique) + .exp-card-label (expédition)
+  var dt=decl(p.title); if(dt.length) rules.push(sel+' .ct, '+sel+' .exp-card-label{'+dt.join(';')+'}');
+  // Date / jour : le jour (classique = div inline avec --prog-day-size) + .exp-prog-day
+  var dd=decl(p.date); if(dd.length) rules.push(sel+' .prog-day, '+sel+' .exp-prog-day, '+sel+' .prog-list > div[style*="prog-day-size"]{'+dd.join(';')+'}');
+  // Heures : .prog-time + .exp-prog-time
+  var dh=decl(p.time); if(dh.length) rules.push(sel+' .prog-time, '+sel+' .exp-prog-time{'+dh.join(';')+'}');
+  // Texte courant : intitulé (.prog-label) + description (.prog-desc)
+  var dx=decl(p.text); if(dx.length) rules.push(sel+' .prog-label, '+sel+' .prog-desc, '+sel+' .exp-prog-label, '+sel+' .exp-prog-desc{'+dx.join(';')+'}');
+  // Badge (À venir/En cours/Terminé)
+  if(p.hideStatus) rules.push(sel+' .prog-status, '+sel+' .exp-prog-status{display:none !important}');
+  // Fond du bloc
+  if(p.bg) rules.push(sel+'{background:'+p.bg+' !important;padding:20px 22px;border-radius:12px}');
+  // Espacement
+  var sp=[];
+  if(p.padTop!=null && p.padTop!=='') sp.push('margin-top:'+parseInt(p.padTop,10)+'px !important');
+  if(p.pad!=null && p.pad!=='') sp.push('margin-bottom:'+parseInt(p.pad,10)+'px !important');
+  if(sp.length) rules.push(sel+'{'+sp.join(';')+'}');
+  return rules.length ? '<style>'+rules.join('\n')+'</style>' : '';
+}
 // d'un module live/riche, sans toucher à son code. On ne pose que les propriétés définies.
 function _bpModuleOverrideCss(secId, ap){
   ap=ap||{};
