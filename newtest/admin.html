@@ -5031,7 +5031,6 @@ function _bpContentFieldsHtml(s){
       const _showT=(c.showTitle!==false);
       return _phaseFld
         + '<div class="bpe-fld"><label>Titre du bloc</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Programme"></div>'
-        + '<div class="bpe-fld"><label>Sous-titre</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="(optionnel)"></div>'
         + '<div class="bpe-toggle"><span>Afficher le titre</span><label class="sw"><input type="checkbox" '+(_showT?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
         + '<div class="bpe-hint" style="padding:4px 0">Le programme est alimenté dans son onglet dédié. L\'apparence (tailles, couleurs, badge…) se règle dans l\'onglet <b>Apparence</b> ci-dessus.</div>';
     }
