@@ -4770,7 +4770,47 @@ function _bpConfigHtml(){
 function _bpDeselect(){ _bpSelSection=null; _renderBuilderEditor(document.getElementById('admin-main')); }
 
 // Socle d'apparence unifié : couleurs + fond + espacement (+ titre/texte si pertinent)
+// Génère 4 champs (taille, police, graisse, couleur) pour un rôle d'un module.
+// path = chemin dans appearance (ex. 'prog.title'). cur = objet courant {size,font,weight,color}.
+function _bpRoleFields(label, path, cur, defColor){
+  cur=cur||{};
+  const esc=s=>(s||'').replace(/'/g,"\\'");
+  return '<div class="bpe-sub">'+label+'</div>'
+    +'<div class="bpe-fld-row">'
+      +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(cur.size||'')+'" placeholder="déf." onchange="_bpSetDeep(\''+path+'\',\'size\',this.value)"></div>'
+      +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(cur.color||defColor||'#334155')+'" onchange="_bpSetDeep(\''+path+'\',\'color\',this.value)"></div>'
+    +'</div>'
+    +'<div class="bpe-fld-row">'
+      +'<div class="bpe-fld"><label>Police</label><select onchange="_bpSetDeep(\''+path+'\',\'font\',this.value)">'+_cpFontOpts(cur.font)+'</select></div>'
+      +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetDeep(\''+path+'\',\'weight\',this.value)">'+_bpWeightOpts(cur.weight)+'</select></div>'
+    +'</div>';
+}
+// Panneau d'apparence dédié au PROGRAMME — exactement les champs demandés.
+function _bpProgApHtml(s){
+  const ap=s.appearance||{};
+  const p=ap.prog||{};
+  let h='';
+  h+=_bpRoleFields('Titre du bloc','prog.title',p.title,'#0F172A');
+  h+=_bpRoleFields('Date / jour','prog.date',p.date,'#B45309');
+  h+=_bpRoleFields('Heures','prog.time',p.time,'#0C6CA1');
+  h+=_bpRoleFields('Texte courant','prog.text',p.text,'#334155');
+  // Badge À venir / En cours / Terminé
+  h+='<div class="bpe-sub">Badge de statut</div>';
+  h+='<div class="bpe-toggle"><span>Afficher le badge (À venir / En cours / Terminé)</span><label class="sw"><input type="checkbox" '+(p.hideStatus?'':'checked')+' onchange="_bpSetDeepVal(\'prog\',\'hideStatus\',!this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  // Fond + espacement
+  h+='<div class="bpe-sub">Bloc</div>';
+  const bgOn=!!p.bg;
+  h+='<div class="bpe-toggle"><span>Couleur de fond du bloc</span><label class="sw"><input type="checkbox" '+(bgOn?'checked':'')+' onchange="_bpProgBgToggle(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  if(bgOn) h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+(p.bg||'#F1F5F9')+'" onchange="_bpSetDeepVal(\'prog\',\'bg\',this.value)"></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(p.padTop!=null?p.padTop:'')+'" placeholder="0" onchange="_bpSetDeepVal(\'prog\',\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(p.pad!=null?p.pad:'')+'" placeholder="28" onchange="_bpSetDeepVal(\'prog\',\'pad\',this.value)"></div>'
+    +'</div>';
+  return h;
+}
 function _bpAppearanceHtml(s){
+  // Panneau d'apparence DÉDIÉ au programme (champs spécifiques, branchés sur les vrais éléments)
+  if(s.type==='programme') return _bpProgApHtml(s);
   const ap=s.appearance||{};
   let h='';
   // Couleur principale + couleur du texte (unifiées)
@@ -5176,6 +5216,30 @@ function _bpSetSp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.conten
 function _bpSetPg(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.pg=s.content.pg||{}; if(key==='daySize'||key==='statusSize'){ s.content.pg[key]=(val===''?'':parseInt(val,10)); } else { s.content.pg[key]=val; } _bpAfterSet(true); }
 function _bpSetAp(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; if(key==='pad'||key==='padTop'){ s.appearance[key]=(val===''?'':parseInt(val,10)); } else { s.appearance[key]=val; } _bpAfterSet(true); }
 function _bpSetApRole(role,prop,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance[role]=s.appearance[role]||{}; s.appearance[role][prop]=(prop==='size'?(val===''?'':parseInt(val,10)):val); _bpAfterSet(true); }
+// Setter pour un rôle imbriqué (ex. path='prog.title', prop='size'). Taille → entier.
+function _bpSetDeep(path,prop,val){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{};
+  const parts=path.split('.'); let o=s.appearance;
+  for(let i=0;i<parts.length;i++){ o[parts[i]]=o[parts[i]]||{}; o=o[parts[i]]; }
+  o[prop]=(prop==='size'?(val===''?'':parseInt(val,10)):val);
+  _bpAfterSet(true);
+}
+// Setter pour une valeur simple sous un groupe (ex. group='prog', key='hideStatus').
+function _bpSetDeepVal(group,key,val){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{}; s.appearance[group]=s.appearance[group]||{};
+  if(key==='padTop'||key==='pad') val=(val===''?'':parseInt(val,10));
+  s.appearance[group][key]=val;
+  _bpAfterSet(true);
+}
+function _bpProgBgToggle(on){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{}; s.appearance.prog=s.appearance.prog||{};
+  if(on){ s.appearance.prog.bg = s.appearance.prog.bg || '#F1F5F9'; }
+  else { delete s.appearance.prog.bg; }
+  _bpAfterSet(true); _bpRefreshCfg();
+}
 function _bpSetBg(key,val){ const s=_bpSelectedSection(); if(!s)return; s.appearance=s.appearance||{}; s.appearance.bg=s.appearance.bg||{}; s.appearance.bg[key]=val; _bpAfterSet(true); if(key==='on') _bpRefreshCfg(); }
 function _bpSetCt(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; if(key==='height'||key==='limit'||key==='visibleCount'||key==='lineClamp'||key==='galleryHeight'||key==='galleryVisible'){ s.content[key]=(val===''?'':parseInt(val,10)); } else { s.content[key]=val; } _bpAfterSet(true); }
 function _bpSetQa(key,val){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.qa=s.content.qa||{}; if(key==='visibleCount'){ s.content.qa[key]=(val===''?'':parseInt(val,10)); } else { s.content.qa[key]=val; } _bpAfterSet(true); }
