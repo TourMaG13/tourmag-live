@@ -4790,6 +4790,52 @@ function _bpRoleFields(label, path, cur, defColor){
       +'<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetDeep(\''+path+'\',\'weight\',this.value)">'+_bpWeightOpts(cur.weight)+'</select></div>'
     +'</div>';
 }
+// Variante : seulement Taille + Police (pour les éléments où couleur/graisse ne sont pas demandés)
+function _bpRoleFields2(label, path, cur){
+  cur=cur||{};
+  return '<div class="bpe-sub">'+label+'</div>'
+    +'<div class="bpe-fld-row">'
+      +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" value="'+(cur.size||'')+'" placeholder="déf." onchange="_bpSetDeep(\''+path+'\',\'size\',this.value)"></div>'
+      +'<div class="bpe-fld"><label>Police</label><select onchange="_bpSetDeep(\''+path+'\',\'font\',this.value)">'+_cpFontOpts(cur.font)+'</select></div>'
+    +'</div>';
+}
+// Panneau d'apparence dédié au FIL LIVE — exactement les champs demandés.
+function _bpLiveApHtml(s){
+  const ap=s.appearance||{}; const l=ap.live||{};
+  const c=s.content||{};
+  let h='';
+  // Titre + sous-titre du bloc : texte + visibilité (contenu), apparence (ici)
+  h+='<div class="bpe-fld"><label>Titre du bloc</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Fil de route"></div>';
+  h+='<div class="bpe-fld"><label>Sous-titre du bloc</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="(optionnel)"></div>';
+  h+='<div class="bpe-toggle"><span>Afficher titre et sous-titre</span><label class="sw"><input type="checkbox" '+(c.showTitle!==false?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  h+=_bpRoleFields('Apparence du titre','live.title',l.title,'#0F172A');
+  h+=_bpRoleFields('Apparence du sous-titre','live.subtitle',l.subtitle,'#64748B');
+  // Éléments du post (taille + police)
+  h+=_bpRoleFields2('Titre du post','live.postTitle',l.postTitle);
+  h+=_bpRoleFields2('Texte courant','live.text',l.text);
+  h+=_bpRoleFields2('Heure','live.time',l.time);
+  h+=_bpRoleFields2('Journaliste','live.journalist',l.journalist);
+  h+=_bpRoleFields2('Tag / rubrique','live.tag',l.tag);
+  h+=_bpRoleFields2('Bouton « Partager »','live.share',l.share);
+  // Interligne du texte
+  h+='<div class="bpe-fld"><label>Interligne du texte</label><input type="number" step="0.05" value="'+(l.lh||'')+'" placeholder="1.6" onchange="_bpSetDeepVal(\'live\',\'lh\',this.value)"></div>';
+  // Bloc : fond + espacement
+  h+='<div class="bpe-sub">Bloc</div>';
+  const bgOn=!!l.bg;
+  h+='<div class="bpe-toggle"><span>Couleur de fond du bloc</span><label class="sw"><input type="checkbox" '+(bgOn?'checked':'')+' onchange="_bpLiveBgToggle(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  if(bgOn) h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+(l.bg||'#F1F5F9')+'" onchange="_bpSetDeepVal(\'live\',\'bg\',this.value)"></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(l.padTop!=null?l.padTop:'')+'" placeholder="0" onchange="_bpSetDeepVal(\'live\',\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(l.pad!=null?l.pad:'')+'" placeholder="28" onchange="_bpSetDeepVal(\'live\',\'pad\',this.value)"></div>'
+    +'</div>';
+  return h;
+}
+function _bpLiveBgToggle(on){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{}; s.appearance.live=s.appearance.live||{};
+  if(on){ s.appearance.live.bg=s.appearance.live.bg||'#F1F5F9'; } else { delete s.appearance.live.bg; }
+  _bpAfterSet(true); _bpRefreshCfg();
+}
 // Panneau d'apparence dédié au PROGRAMME — exactement les champs demandés.
 function _bpProgApHtml(s){
   const ap=s.appearance||{};
@@ -4814,8 +4860,9 @@ function _bpProgApHtml(s){
   return h;
 }
 function _bpAppearanceHtml(s){
-  // Panneau d'apparence DÉDIÉ au programme (champs spécifiques, branchés sur les vrais éléments)
+  // Panneaux d'apparence DÉDIÉS (champs spécifiques, branchés sur les vrais éléments)
   if(s.type==='programme') return _bpProgApHtml(s);
+  if(s.type==='live') return _bpLiveApHtml(s);
   const ap=s.appearance||{};
   let h='';
   // Couleur principale + couleur du texte (unifiées)
@@ -4964,13 +5011,13 @@ function _bpContentFieldsHtml(s){
       const ev=_bpCurrentEv();
       const chans=(ev.liveChannels&&ev.liveChannels.length)?ev.liveChannels:[{id:'main',name:'Principal'}];
       return _phaseFld
-        +_bpTitleFields('Fil Live','Minute par minute')
         +'<div class="bpe-fld"><label>Canal de live</label><select onchange="_bpSetCt(\'channel\',this.value)">'+chans.map(function(ch){return '<option value="'+ch.id+'"'+((c.channel||'main')===ch.id?' selected':'')+'>'+_escAdm(ch.name)+'</option>';}).join('')+'</select><div class="bpe-hint">Les canaux se gèrent dans l\'onglet Fil live. Par défaut : Principal.</div></div>'
         +'<div class="bpe-fld-row">'
           +'<div class="bpe-fld"><label>Entrées chargées</label><input type="number" value="'+(c.limit||10)+'" min="1" max="100" onchange="_bpSetCt(\'limit\',this.value)"></div>'
           +'<div class="bpe-fld"><label>Visibles avant accordéon</label><input type="number" value="'+(c.visibleCount!=null&&c.visibleCount!==''?c.visibleCount:'')+'" min="1" max="50" placeholder="5" onchange="_bpSetCt(\'visibleCount\',this.value)"></div>'
           +'<div class="bpe-fld"><label>Lignes max / entrée</label><input type="number" value="'+(c.lineClamp!=null&&c.lineClamp!==''?c.lineClamp:'')+'" min="0" placeholder="0 = illimité" onchange="_bpSetCt(\'lineClamp\',this.value)"></div>'
-        +'</div>';
+        +'</div>'
+        +'<div class="bpe-hint" style="padding:4px 0">L\'apparence (titre, sous-titre, tailles, couleurs…) se règle dans l\'onglet <b>Apparence</b> ci-dessus.</div>';
     }
     case 'journalists': {
       const ev=_bpCurrentEv();
