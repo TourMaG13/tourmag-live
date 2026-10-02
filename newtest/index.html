@@ -1611,12 +1611,22 @@ function _isPublished(entry){
 // les autres ensuite, du plus récent au plus ancien (date). Stable et rétro-compatible.
 function _sortArticles(arr){
   if(!Array.isArray(arr)) return arr||[];
-  const _t = v => (v&&v.toDate?v.toDate().getTime():(v?new Date(v).getTime():0));
+  const _t = function(v){
+    if(!v) return 0;
+    if(v.toDate){ try{ return v.toDate().getTime(); }catch(e){} }
+    if(v.seconds) return v.seconds*1000;
+    var d=new Date(v); if(!isNaN(d)) return d.getTime();
+    // Date texte FR : "5 nov. 2026"
+    var mois={'janv':0,'févr':1,'fevr':1,'mars':2,'avr':3,'mai':4,'juin':5,'juil':6,'août':7,'aout':7,'sept':8,'oct':9,'nov':10,'déc':11,'dec':11};
+    var m=String(v).toLowerCase().match(/(\d{1,2})\s+([a-zéûà.]+)\.?\s+(\d{4})/);
+    if(m){ var mo=mois[m[2].replace(/\.$/,'')]; if(mo!=null) return new Date(parseInt(m[3]),mo,parseInt(m[1]),12).getTime(); }
+    return 0;
+  };
   const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
   const anyOrdered = arr.some(hasOrder);
   // Aucun ordre manuel défini → tri chronologique pur (plus récent d'abord)
   if(!anyOrdered){
-    return arr.slice().sort((a,b)=> _t(b.created_at||b.date) - _t(a.created_at||a.date));
+    return arr.slice().sort((a,b)=> _t(b.created_at||b.imported_at||b.date) - _t(a.created_at||a.imported_at||a.date));
   }
   // Un ordre manuel existe → on respecte l'ordre glissé ; les articles sans ordre
   // (nouveaux arrivants RSS) se classent par date, après ceux explicitement ordonnés.
@@ -1625,7 +1635,7 @@ function _sortArticles(arr){
     if(ao&&bo) return parseInt(a.order)-parseInt(b.order);
     if(ao&&!bo) return -1;
     if(!ao&&bo) return 1;
-    return _t(b.created_at||b.date)-_t(a.created_at||a.date);
+    return _t(b.created_at||b.imported_at||b.date)-_t(a.created_at||a.imported_at||a.date);
   });
 }
 
@@ -5604,8 +5614,8 @@ function _bpProgCss(secId, p){
   var dx=decl(p.text); if(dx.length) rules.push(sel+' .prog-label, '+sel+' .prog-desc, '+sel+' .exp-prog-label, '+sel+' .exp-prog-desc{'+dx.join(';')+'}');
   // Badge (À venir/En cours/Terminé)
   if(p.hideStatus) rules.push(sel+' .prog-status, '+sel+' .exp-prog-status{display:none !important}');
-  // Fond du bloc
-  if(p.bg) rules.push(sel+'{background:'+p.bg+' !important;padding:20px 22px;border-radius:12px}');
+  // Fond du bloc : cible la vraie carte (remplace le dégradé jaune en dur), pas le wrapper
+  if(p.bg) rules.push(sel+' .prog-card, '+sel+' .exp-card.exp-prog{background:'+p.bg+' !important}');
   // Espacement
   var sp=[];
   if(p.padTop!=null && p.padTop!=='') sp.push('margin-top:'+parseInt(p.padTop,10)+'px !important');
