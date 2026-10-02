@@ -5022,17 +5022,13 @@ function _bpContentFieldsHtml(s){
         + '<div class="bpe-hint" style="padding:4px 0">Les partenaires sont alimentés dans l\'onglet Partenaires.</div>';
     }
     case 'programme': {
-      var pg = c.pg || {};
-      function _pnum(k,def,mn,mx){ return '<input type="number" value="'+(pg[k]!=null&&pg[k]!==''?pg[k]:'')+'" placeholder="'+def+'"'+(mn!=null?' min="'+mn+'"':'')+(mx!=null?' max="'+mx+'"':'')+' onchange="_bpSetPg(\''+k+'\',this.value)" style="width:80px">'; }
+      // Contenu : filtre phase + le texte du titre du bloc (apparence réglée dans l'onglet Apparence).
+      const _showT=(c.showTitle!==false);
       return _phaseFld
-        + _bpTitleFields('Programme','')
-        + '<div class="bpe-cfg-sech" style="margin-top:8px">Réglages programme</div>'
-        + '<div class="bpe-fld-row">'
-          + '<div class="bpe-fld"><label>Taille en-tête de jour (px)</label>'+_pnum('daySize','10',8,32)+'</div>'
-          + '<div class="bpe-fld"><label>Taille badge statut (px)</label>'+_pnum('statusSize','7',6,20)+'</div>'
-        + '</div>'
-        + '<div class="bpe-toggle"><span>Masquer le badge « À venir / En cours / Terminé »</span><label class="sw"><input type="checkbox" '+(pg.hideStatus?'checked':'')+' onchange="_bpSetPg(\'hideStatus\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
-        + '<div class="bpe-hint" style="padding:4px 0">Le programme est alimenté dans son onglet dédié.</div>';
+        + '<div class="bpe-fld"><label>Titre du bloc</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Programme"></div>'
+        + '<div class="bpe-fld"><label>Sous-titre</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="(optionnel)"></div>'
+        + '<div class="bpe-toggle"><span>Afficher le titre</span><label class="sw"><input type="checkbox" '+(_showT?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Le programme est alimenté dans son onglet dédié. L\'apparence (tailles, couleurs, badge…) se règle dans l\'onglet <b>Apparence</b> ci-dessus.</div>';
     }
     case 'interviews': {
       return _phaseFld
@@ -12187,8 +12183,8 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6">Intègre la page live dans un iframe avec auto-resize. L'iframe prend toute la largeur de son conteneur.<br><strong>Ce code relaie automatiquement</strong> les paramètres <code>?phase=</code>, <code>?lock=</code>, <code>?page=</code> et <code>?bpage=</code> de l'URL de votre page vers l'iframe : vos liens d'accès par phase et par onglet (pointant vers votre domaine) fonctionneront.</p>
-    <div style="position:relative"><textarea class="form-input" rows="16" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
+    <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6"><strong>Un seul code pour tout le dashboard</strong>, que vous ayez une ou plusieurs pages. Les visiteurs naviguent entre les pages via les onglets. La page affichée à l'arrivée est votre <strong>page d'accueil</strong> (réglable dans l'onglet Constructeur, bouton 🏠).<br>Le code relaie aussi <code>?phase=</code>, <code>?page=</code>, <code>?bpage=</code>, <code>?lock=</code> si vous voulez pointer un lien vers une page précise. Un cache-buster garantit l'affichage de vos dernières modifications.</p>
+    <div style="position:relative"><textarea class="form-input" rows="15" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
 &lt;script&gt;
 (function(){
   var base="${frontUrl}";
@@ -12196,6 +12192,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
   var u=new URL(base, window.location.href);
   ['phase','lock','page','bpage'].forEach(function(k){ if(here.get(k)) u.searchParams.set(k, here.get(k)); });
   if(!u.searchParams.get('event') && here.get('event')) u.searchParams.set('event', here.get('event'));
+  u.searchParams.set('v', Math.floor(Date.now()/60000));
   document.getElementById('${iframeId}').src=u.toString();
 })();
 window.addEventListener('message',function(e){
@@ -12213,7 +12210,7 @@ window.addEventListener('message',function(e){
 });
 &lt;/script&gt;</textarea>
     <button class="btn btn-primary btn-sm" style="position:absolute;top:8px;right:8px" onclick="copyEmbed('embed-iframe')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-list"/></svg> Copier</button></div>
-    <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6">💡 L'iframe s'étend automatiquement en pleine largeur grâce au message <code>tourmag-live-fullwidth</code>. Le redimensionnement en hauteur est automatique.</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6">💡 Pour changer la page affichée à l'arrivée : onglet <b>Constructeur</b> → bouton 🏠 sur la page voulue.</div>
   </div>
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-widget"/></svg> Option 2 — Widget encart compact (iframe)</h3>
