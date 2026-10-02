@@ -5524,7 +5524,6 @@ function _bpRenderSection(sec, event, ctx){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
     overrideCss = _bpModuleOverrideCss(secId, ap);
   }
-  try{ if(window.location.search.indexOf('diagap')>=0) console.log('[diag-apparence] type='+type+' | délégué='+(!!isDelegated)+' | appearance='+JSON.stringify(ap)+' | secStyle='+(secStyle||'(vide)')+' | overrideCss='+(overrideCss?overrideCss.length+' car.':'(vide)')); }catch(e){}
   // Réglages citations par bloc → variables CSS scopées sur cette section
   if(type==='citations' && ct.cit){
     if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
@@ -5599,7 +5598,7 @@ function _bpModuleOverrideCss(secId, ap){
   if(titleDecl.length){
     rules.push(sel+' h1, '+sel+' h2, '+sel+' h3, '+sel+' .sec-title h2, '+sel+' .exp-section-head h2, '+sel+' .pr-title {'+titleDecl.join(';')+'}');
   }
-  // Corps de texte du module
+  // Corps de texte du module — on cible largement pour couvrir tous les modules
   let bodyDecl=[];
   if(tx.font)   bodyDecl.push("font-family:'"+tx.font+"',sans-serif !important");
   if(tx.size)   bodyDecl.push('font-size:'+parseInt(tx.size,10)+'px !important');
@@ -5608,7 +5607,17 @@ function _bpModuleOverrideCss(secId, ap){
   if(tx.weight) bodyDecl.push('font-weight:'+tx.weight+' !important');
   if(tx.style)  bodyDecl.push('font-style:'+tx.style+' !important');
   if(bodyDecl.length){
-    rules.push(sel+' p, '+sel+' .live-entry-text, '+sel+' .cit-text, '+sel+' .pr-text, '+sel+' .pr-box-body, '+sel+' li, '+sel+' .exp-entry-text {'+bodyDecl.join(';')+'}');
+    // Sélecteur large : paragraphes, items de liste, et classes de corps des modules
+    // (live, citations, produit, programme, étapes, essentiel, interviews…).
+    rules.push(sel+' p, '+sel+' li, '+sel+' .live-entry-text, '+sel+' .cit-text, '+sel+' .pr-text, '+sel+' .pr-box-body, '+sel+' .exp-entry-text, '
+      +sel+' .prog-body, '+sel+' .prog-desc, '+sel+' .prog-list, '+sel+' .ct, '
+      +sel+' .exp-prog-title, '+sel+' .exp-prog-desc, '+sel+' .exp-itin-label, '+sel+' .ess-text, '+sel+' .exp-essential-text, '
+      +sel+' .itw-quote, '+sel+' .exp-itw-text, '+sel+' .vid-title, '+sel+' .art-card-title, '+sel+' .ni-title '
+      +'{'+bodyDecl.join(';')+'}');
+  }
+  // Titres de programme (classique = .prog-title/.hd, exp = labels de carte)
+  if(titleDecl.length){
+    rules.push(sel+' .prog-title, '+sel+' .prog-day, '+sel+' .hd, '+sel+' .exp-card-label {'+titleDecl.join(';')+'}');
   }
   // Labels / petits éléments (badges, dates, tags, mentions, byline, rôles…)
   const lb=ap.label||{};
@@ -5621,6 +5630,12 @@ function _bpModuleOverrideCss(secId, ap){
   if(labelDecl.length){
     rules.push(sel+' .art-card-tag, '+sel+' .art-card-byline, '+sel+' .live-tag, '+sel+' .live-entry-time, '+sel+' .cit-role, '+sel+' .exp-verbatim-role, '+sel+' .exp-art-date, '+sel+' .vid-date, '+sel+' .sec-title p, '+sel+' .exp-section-sub, '+sel+' .kpi-label, '+sel+' .prog-time, '+sel+' .badge, '+sel+' .tag, '+sel+' .er-mod-label {'+labelDecl.join(';')+'}');
   }
+  // Espacement au-dessus / en dessous : forcé en CSS scopé (le style inline du wrapper
+  // peut être neutralisé par les marges propres du module).
+  let spc=[];
+  if(ap.padTop!=null && ap.padTop!=='') spc.push('margin-top:'+parseInt(ap.padTop,10)+'px !important');
+  if(ap.pad!=null && ap.pad!=='') spc.push('margin-bottom:'+parseInt(ap.pad,10)+'px !important');
+  if(spc.length){ rules.push(sel+'{'+spc.join(';')+'}'); }
   // Couleur principale : variable + éléments d'accent courants
   if(ap.accent){
     rules.push(sel+' {--acc:'+ap.accent+';--pr-accent:'+ap.accent+'}');
@@ -5636,7 +5651,6 @@ function _bpRenderContentModule(sec, event, ctx){
   const textStyle  = _bpRoleStyle(ap.text);
   const uiStyle    = _bpRoleStyle(ap.ui);
   const accent = ap.accent || 'var(--acc,#0C6CA1)';
-  try{ if(window.location.search.indexOf('diagap')>=0) console.log('[diag-apparence] type='+sec.type+' | appearance=',JSON.stringify(ap),'| titleStyle=',titleStyle||'(vide)','| textStyle=',textStyle||'(vide)'); }catch(e){}
 
   switch(sec.type){
     case 'text': {
