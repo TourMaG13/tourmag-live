@@ -5483,13 +5483,16 @@ function _bpRenderSection(sec, event, ctx){
           inner = inner.replace(/<div class="exp-section-head[^"]*">[\s\S]*?<\/div>\s*<\/div>/, '');
           inner = inner.replace(/<div class="sec-title[^"]*">[\s\S]*?<\/div>\s*(<div class="sec-title-line"><\/div>\s*<p>[\s\S]*?<\/p>\s*)?<\/div>/, '');
           inner = inner.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, '');
+          inner = inner.replace(/<div class="exp-card-label">[\s\S]*?<\/div>/, '');
+          inner = inner.replace(/<div class="hd">[\s\S]*?<\/div>/, '');
         } else {
           var _tszStyle = (ct.titleSize? ' style="font-size:'+parseInt(ct.titleSize)+'px"':'');
           if(ct.title){
             var _t=_bpEsc(ct.title), _done=false;
             inner = inner.replace(/(<div class="exp-section-head[^"]*">\s*<h2)(>)([\s\S]*?)(<\/h2>)/, function(m,a,g,b,c){ _done=true; return a+_tszStyle+g+_t+c; });
             if(!_done) inner = inner.replace(/(<h2)(\b[^>]*)(>)([\s\S]*?)(<\/h2>)/, function(m,a,attr,g,b,c){ _done=true; return a+_tszStyle+attr+g+_t+c; });
-            if(!_done) inner = inner.replace(/(<div class="exp-card-label">)([\s\S]*?)(<\/div>)/, function(m,a,b,c){ return a+_t+c; });
+            if(!_done) inner = inner.replace(/(<div class="exp-card-label">)([\s\S]*?)(<\/div>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
+            if(!_done) inner = inner.replace(/(<span class="ct">)([\s\S]*?)(<\/span>)/, function(m,a,b,c){ _done=true; return a+_t+c; });
           } else if(ct.titleSize){
             inner = inner.replace(/(<h2)(\b[^>]*)(>)/, '$1'+_tszStyle+'$2$3');
           }
