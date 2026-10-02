@@ -5535,8 +5535,8 @@ function _bpRenderSection(sec, event, ctx){
   const isDelegated = !EDITORIAL[type] && legacyDelegate[type];
   if(isDelegated){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
-    // Le programme a son propre panneau d'apparence dédié (_bpProgCss) → pas de socle générique.
-    if(type!=='programme') overrideCss = _bpModuleOverrideCss(secId, ap);
+    // Programme et fil live ont leur panneau d'apparence dédié → pas de socle générique.
+    if(type!=='programme' && type!=='live') overrideCss = _bpModuleOverrideCss(secId, ap);
   }
   // Réglages citations par bloc → variables CSS scopées sur cette section
   if(type==='citations' && ct.cit){
@@ -5571,6 +5571,10 @@ function _bpRenderSection(sec, event, ctx){
     if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
     overrideCss += _bpProgCss(secId, (sec.appearance&&sec.appearance.prog)||{});
   }
+  if(type==='live'){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    overrideCss += _bpLiveCss(secId, (sec.appearance&&sec.appearance.live)||{});
+  }
   // Questions : couleurs par bloc
   if(type==='questions' && ct.qa){
     if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
@@ -5592,6 +5596,42 @@ function _bpRenderSection(sec, event, ctx){
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
+// CSS d'apparence SPÉCIFIQUE au module FIL LIVE. l = appearance.live = {title,subtitle,postTitle,text,time,journalist,tag,share:{size,font,weight,color}, lh, bg, padTop, pad}
+function _bpLiveCss(secId, l){
+  l=l||{}; const sel='#'+secId; const rules=[];
+  function decl(r,extra){ var d=[]; if(!r) r={};
+    if(r.font)   d.push("font-family:'"+r.font+"',sans-serif !important");
+    if(r.size)   d.push('font-size:'+parseInt(r.size,10)+'px !important');
+    if(r.weight) d.push('font-weight:'+r.weight+' !important');
+    if(r.color)  d.push('color:'+r.color+' !important');
+    if(extra) d.push(extra);
+    return d;
+  }
+  // Titre du bloc : .sec-title h2 (classique) + .exp-section-head h2 (exp)
+  var t=decl(l.title); if(t.length) rules.push(sel+' .sec-title h2, '+sel+' .exp-section-head h2{'+t.join(';')+'}');
+  // Sous-titre du bloc : .sec-title p + .exp-section-sub
+  var st=decl(l.subtitle); if(st.length) rules.push(sel+' .sec-title p, '+sel+' .exp-section-sub{'+st.join(';')+'}');
+  // Titre du post : .live-title + .exp-entry-body h3
+  var pt=decl(l.postTitle); if(pt.length) rules.push(sel+' .live-title, '+sel+' .exp-entry-body h3{'+pt.join(';')+'}');
+  // Texte courant : .live-text + .exp-entry-body (hors h3) — interligne géré ici
+  var tx=decl(l.text, l.lh?('line-height:'+l.lh+' !important'):''); if(tx.length) rules.push(sel+' .live-text, '+sel+' .exp-entry-body{'+tx.join(';')+'}');
+  // Heure : .live-timestamp + premier span de .exp-entry-meta
+  var hr=decl(l.time); if(hr.length) rules.push(sel+' .live-timestamp, '+sel+' .exp-entry-meta > span:first-child{'+hr.join(';')+'}');
+  // Journaliste : .live-journalist
+  var jr=decl(l.journalist); if(jr.length) rules.push(sel+' .live-journalist, '+sel+' .exp-entry-meta > span:last-child{'+jr.join(';')+'}');
+  // Tag / rubrique : .live-tag + .exp-entry-meta .tag
+  var tg=decl(l.tag); if(tg.length) rules.push(sel+' .live-tag, '+sel+' .exp-entry-meta .tag{'+tg.join(';')+'}');
+  // Bouton partager : .live-actions (texte)
+  var sh=decl(l.share); if(sh.length) rules.push(sel+' .live-actions, '+sel+' .live-actions button, '+sel+' .live-share{'+sh.join(';')+'}');
+  // Fond du bloc
+  if(l.bg) rules.push(sel+'{background:'+l.bg+' !important;padding:20px 22px;border-radius:12px}');
+  // Espacement
+  var sp=[];
+  if(l.padTop!=null && l.padTop!=='') sp.push('margin-top:'+parseInt(l.padTop,10)+'px !important');
+  if(l.pad!=null && l.pad!=='') sp.push('margin-bottom:'+parseInt(l.pad,10)+'px !important');
+  if(sp.length) rules.push(sel+'{'+sp.join(';')+'}');
+  return rules.length ? '<style>'+rules.join('\n')+'</style>' : '';
+}
 // CSS d'apparence SPÉCIFIQUE au module programme : chaque réglage cible le bon élément réel.
 // p = objet appearance.prog = { title:{...}, date:{...}, time:{...}, text:{...}, hideStatus, bg, padTop, pad }
 // Chaque rôle a : size, font, weight, color.
