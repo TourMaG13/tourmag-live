@@ -188,6 +188,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .sec-banner-x:hover{opacity:1}
 @media(max-width:768px){.sec-banner-in{padding:28px 20px}.sec-banner-title{font-size:26px}}
 .side-col .art-bento,.exp-side-col .art-bento{grid-template-columns:1fr}
+.exp-side-col .exp-art-grid,.side-col .exp-art-grid{grid-template-columns:1fr !important;gap:14px}
 .side-col .art-card.featured,.exp-side-col .art-card.featured{grid-template-columns:1fr;grid-column:auto}
 .side-col .art-card.featured .art-card-img,.exp-side-col .art-card.featured .art-card-img{height:170px;min-height:0}
 .bp-text p{margin:0 0 14px}.bp-text p:last-child{margin-bottom:0}
@@ -5641,6 +5642,7 @@ function _bpRenderSection(sec, event, ctx){
 // a = appearance.art = {title,subtitle,artTitle,date,journalist:{size,font,weight,color}, vignetteH, lh, bg, padTop, pad}
 function _bpArtCss(secId, a){
   a=a||{}; const sel='#'+secId; const rules=[];
+  try{ if(window.location.search.indexOf('diagart')>=0) console.log('[diag-art] appearance.art=',JSON.stringify(a)); }catch(e){}
   function decl(r,extra){ var d=[]; if(!r) r={};
     if(r.font)   d.push("font-family:'"+r.font+"',sans-serif !important");
     if(r.size)   d.push('font-size:'+parseInt(r.size,10)+'px !important');
