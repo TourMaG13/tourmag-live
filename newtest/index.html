@@ -175,6 +175,10 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-section:last-child{margin-bottom:0}
 .bp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);margin:0 0 14px;line-height:1.25}
 .bp-text{font-size:16px;line-height:1.75;color:#334155}
+.bp-subtitle{font-size:16px;color:#64748B;line-height:1.5;margin:-2px 0 14px}
+.side-col .art-bento,.exp-side-col .art-bento{grid-template-columns:1fr}
+.side-col .art-card.featured,.exp-side-col .art-card.featured{grid-template-columns:1fr;grid-column:auto}
+.side-col .art-card.featured .art-card-img,.exp-side-col .art-card.featured .art-card-img{height:170px;min-height:0}
 .bp-text p{margin:0 0 14px}.bp-text p:last-child{margin-bottom:0}
 .bp-text a{color:var(--acc,#0C6CA1);text-decoration:underline}
 .bp-text ul,.bp-text ol{margin:0 0 14px;padding-left:24px}
@@ -5816,6 +5820,14 @@ function _bpRenderContentModule(sec, event, ctx){
       } else {
         titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
       }
+      // Sous-titre personnalisable (style « simple ») — en « section », il est déjà rendu ci-dessus
+      if(ct.subtitle && _titleStyleKind!=='section'){
+        var _subSty='';
+        if(ct.subFont) _subSty+="font-family:'"+ct.subFont+"',sans-serif;";
+        if(ct.subSize) _subSty+='font-size:'+(parseInt(ct.subSize,10)||16)+'px;';
+        if(ct.subColor) _subSty+='color:'+ct.subColor+';';
+        titleHtml += '<div class="bp-subtitle"'+(_subSty?' style="'+_subSty+'"':'')+'>'+_bpEsc(ct.subtitle)+'</div>';
+      }
       const textHtml  = ct.text ? '<div class="bp-text"'+(textStyle?' style="'+textStyle+'"':'')+'>'+ct.text+'</div>' : '';
       // Vidéo optionnelle (indépendante de l'image)
       const vpos = ct.videoPos || 'none';
@@ -5849,7 +5861,7 @@ function _bpRenderContentModule(sec, event, ctx){
       const media = ct.image ? '<div class="bp-media"><img src="'+_bpEsc(ct.image)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+credit+'</div>' : '';
       if(ct.image && pos==='top') return media+titleHtml+bpBody;
       if(ct.image && pos==='bottom') return titleHtml+bpBody+media;
-      return titleHtml+bpBody;
+      return titleHtml+bpBody+media;
     }
     case 'image': {
       if(!ct.image) return '';
@@ -5933,10 +5945,13 @@ function _renderBuilderPage(page, event, ctx){
     anchorMain = mainSecs.find(s=>s.id===page.sidebarAnchor) || mainSecs[0];
   }
 
-  function renderTwoCol(mainBlock){
+  // Zone 2-colonnes : TOUS les blocs "principal" empilés à gauche, la sidebar (tous les
+  // blocs "side") à droite, alignée en haut sur toute la hauteur de la colonne principale.
+  let twoColDone=false;
+  function renderTwoCol(){
     openDash();
     h+='<div class="'+CL.layout+'"><div class="'+CL.main+'">';
-    if(mainBlock) h+=_bpRenderSection(mainBlock,event,ctx);
+    mainSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
     h+='</div><div class="'+CL.side+'">';
     sideSecs.forEach(s=>{ h+=_bpRenderSection(s,event,ctx); });
     h+='</div></div>';
@@ -5955,10 +5970,10 @@ function _renderBuilderPage(page, event, ctx){
       return;
     }
     if(z==='main'){
-      if(hasTwoCol && s===anchorMain){
-        renderTwoCol(s);   // le bloc ancre + toute la sidebar, à la position de l'ancre
+      if(hasTwoCol){
+        if(!twoColDone){ renderTwoCol(); twoColDone=true; } // tous les blocs "principal" + la sidebar
       } else {
-        renderSolo(s);     // les autres blocs "main" → pleine largeur, à leur place
+        renderSolo(s);     // pas de sidebar → pleine largeur
       }
       _emitTabsIfDue();
       return;
