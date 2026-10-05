@@ -2573,6 +2573,10 @@ function modifyEvent(id){
         <option value="live"${!isExp?' selected':''}>Live classique</option>
         <option value="expedition"${isExp?' selected':''}>🧭 Expédition / Carnet de route</option></select><div style="font-size:10px;color:var(--text3);margin-top:3px">En mode expédition, le front affiche un carnet de route avec carte et le sidebar admin s'adapte.</div></div>
     </div>
+    <div class="form-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><label class="form-label">Affichage chronologique</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-chrono"${ev.afficheChrono?' checked':''}> Activer l'affichage chronologique (frise + fiches par date) pour cet événement</label>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px">Remplace le rendu public habituel par une frise de dates cliquables, un panneau par édition et une colonne latérale. Les contenus se saisissent dans tes modules existants (timeline, interviews, articles par rubrique).</div>
+    </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
     <div class="form-row"><label class="form-label">🔗 URL publique du dashboard</label><input class="form-input" id="m-ev-public-url" value="${(ev.publicUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.monsite.fr/live/mon-evenement.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Adresse de la page où ce dashboard est intégré sur votre site. Sert à générer les liens d'accès par phase et le widget. Si vide, l'adresse GitHub Pages par défaut est utilisée.</div></div>
     <div style="margin-top:12px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0369A1">💡 Les réglages visuels du hero (image, couleur, hauteur, timeline, tags…) se configurent dans l'onglet <strong>Apparence</strong>.</div>
@@ -2601,7 +2605,8 @@ async function updateEvent(id){
     status:document.getElementById('m-ev-status').value,
     mode:document.getElementById('m-ev-mode').value,
     logo_url:document.getElementById('m-ev-logo').value,
-    publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim()
+    publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim(),
+    afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked
   };
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
@@ -4799,6 +4804,41 @@ function _bpRoleFields2(label, path, cur){
       +'<div class="bpe-fld"><label>Police</label><select onchange="_bpSetDeep(\''+path+'\',\'font\',this.value)">'+_cpFontOpts(cur.font)+'</select></div>'
     +'</div>';
 }
+// Panneau d'apparence dédié aux ARTICLES LIÉS.
+function _bpArtApHtml(s){
+  const ap=s.appearance||{}; const a=ap.art||{};
+  const c=s.content||{};
+  let h='';
+  h+='<div class="bpe-fld"><label>Titre du bloc</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Articles"></div>';
+  h+='<div class="bpe-fld"><label>Sous-titre du bloc</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="(optionnel)"></div>';
+  h+='<div class="bpe-toggle"><span>Afficher titre et sous-titre</span><label class="sw"><input type="checkbox" '+(c.showTitle!==false?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  h+=_bpRoleFields('Apparence du titre','art.title',a.title,'#0F172A');
+  h+=_bpRoleFields('Apparence du sous-titre','art.subtitle',a.subtitle,'#64748B');
+  h+=_bpRoleFields('Titre des articles','art.artTitle',a.artTitle,'#0F172A');
+  h+=_bpRoleFields('Date des articles','art.date',a.date,'#64748B');
+  h+=_bpRoleFields('Nom du journaliste','art.journalist',a.journalist,'#334155');
+  h+='<div class="bpe-sub">Vignettes & texte</div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Hauteur des vignettes (px)</label><input type="number" value="'+(a.vignetteH||'')+'" placeholder="180" onchange="_bpSetDeepVal(\'art\',\'vignetteH\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Interligne du texte</label><input type="number" step="0.05" value="'+(a.lh||'')+'" placeholder="1.6" onchange="_bpSetDeepVal(\'art\',\'lh\',this.value)"></div>'
+    +'</div>';
+  // Bloc : fond + espacement
+  h+='<div class="bpe-sub">Bloc</div>';
+  const bgOn=!!a.bg;
+  h+='<div class="bpe-toggle"><span>Couleur de fond du bloc</span><label class="sw"><input type="checkbox" '+(bgOn?'checked':'')+' onchange="_bpArtBgToggle(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  if(bgOn) h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+(a.bg||'#F1F5F9')+'" onchange="_bpSetDeepVal(\'art\',\'bg\',this.value)"></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(a.padTop!=null?a.padTop:'')+'" placeholder="0" onchange="_bpSetDeepVal(\'art\',\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(a.pad!=null?a.pad:'')+'" placeholder="28" onchange="_bpSetDeepVal(\'art\',\'pad\',this.value)"></div>'
+    +'</div>';
+  return h;
+}
+function _bpArtBgToggle(on){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{}; s.appearance.art=s.appearance.art||{};
+  if(on){ s.appearance.art.bg=s.appearance.art.bg||'#F1F5F9'; } else { delete s.appearance.art.bg; }
+  _bpAfterSet(true); _bpRefreshCfg();
+}
 // Panneau d'apparence dédié au FIL LIVE — exactement les champs demandés.
 function _bpLiveApHtml(s){
   const ap=s.appearance||{}; const l=ap.live||{};
@@ -4863,6 +4903,7 @@ function _bpAppearanceHtml(s){
   // Panneaux d'apparence DÉDIÉS (champs spécifiques, branchés sur les vrais éléments)
   if(s.type==='programme') return _bpProgApHtml(s);
   if(s.type==='live') return _bpLiveApHtml(s);
+  if(s.type==='articles') return _bpArtApHtml(s);
   const ap=s.appearance||{};
   let h='';
   // Couleur principale + couleur du texte (unifiées)
@@ -5109,6 +5150,15 @@ function _bpContentFieldsHtml(s){
           + '<div class="bpe-fld"><label>Fond du formulaire</label><input type="color" value="'+(qa.formBg||'#ffffff')+'" onchange="_bpSetQa(\'formBg\',this.value)"></div>'
         + '</div>'
         + '<div class="bpe-hint" style="padding:4px 0">Les questions du public arrivent en temps réel et se modèrent dans l\'onglet Questions.</div>';
+    }
+    case 'articles': {
+      return _phaseFld
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Articles visibles avant accordéon</label><input type="number" min="1" max="50" value="'+(c.visibleCount!=null&&c.visibleCount!==''?c.visibleCount:'')+'" placeholder="4" onchange="_bpSetCt(\'visibleCount\',this.value)"></div>'
+          + '<div class="bpe-fld"><label>Articles max dans l\'accordéon</label><input type="number" min="0" max="100" value="'+(c.accCount!=null&&c.accCount!==''?c.accCount:'')+'" placeholder="tous" onchange="_bpSetCt(\'accCount\',this.value)"></div>'
+        + '</div>'
+        + '<div class="bpe-fld"><label>Hauteur de la zone déroulante (px)</label><input type="number" min="100" max="1200" step="20" value="'+((s.appearance&&s.appearance.art&&s.appearance.art.scrollH)||'')+'" placeholder="auto" onchange="_bpSetDeepVal(\'art\',\'scrollH\',this.value)"></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les articles sont alimentés dans l\'onglet Articles liés. L\'apparence (titres, tailles, vignettes…) se règle dans l\'onglet <b>Apparence</b> ci-dessus.</div>';
     }
     case 'etapes': case 'itinerary':
     case 'videos': case 'essential': case 'kpis': {
