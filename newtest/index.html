@@ -5814,6 +5814,7 @@ function _bpRenderContentModule(sec, event, ctx){
     case 'text': {
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
       if(!ct.title && !ct.text && !ct.image && !ct.video) return '';
+      try{ if(window.location.search.indexOf('diagtxt')>=0) console.log('[diag-texte] titleSize='+ct.titleSize+' subSize='+ct.subSize+' titleFont='+ct.titleFont+' titleStyle='+ct.titleStyle+' | content complet=',JSON.stringify(ct)); }catch(e){}
       var _titleStyleKind = ct.titleStyle || 'simple';
       var _titSty='';
       if(ct.titleFont) _titSty+="font-family:'"+ct.titleFont+"',sans-serif;";
