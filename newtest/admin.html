@@ -5270,6 +5270,9 @@ function _bpPagePropsHtml(){
   h+='<div class="bpe-fld"><label>Couleur de l\'onglet</label><input type="color" value="'+(p.color||'#7C3AED')+'" onchange="_bpSetPage(\'color\',this.value)"></div>';
   h+='<div class="bpe-toggle"><span>Visible dans la navigation</span><label class="sw"><input type="checkbox" '+(nav.visible!==false?'checked':'')+' onchange="_bpSetNav(\'visible\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
   h+='<div class="bpe-toggle"><span>Onglet cliquable</span><label class="sw"><input type="checkbox" '+(nav.clickable!==false?'checked':'')+' onchange="_bpSetNav(\'clickable\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  // Carte de la frise chronologique (option « Affichage chronologique » de l'événement)
+  h+='<div class="bpe-fld" style="margin-top:12px"><label>Sous-titre de la carte (frise)</label><input type="text" value="'+_escAdm(p.subtitle||'')+'" onchange="_bpSetPage(\'subtitle\',this.value)" placeholder="Optionnel — ligne sous le titre de la carte"></div>';
+  h+='<div class="bpe-fld"><label>Taille du titre de la carte (px)</label><input type="number" min="12" max="40" value="'+((p.cardTitleSize!=null&&p.cardTitleSize!=='')?p.cardTitleSize:'')+'" onchange="_bpSetPage(\'cardTitleSize\',this.value)" placeholder="18" style="width:110px"><div class="bpe-hint">Vide = 18px. Taille du titre de cette carte dans la frise.</div></div>';
   // Phase associée à la page : affiche son titre + sous-titre de phase sous les onglets
   const _phases=Array.isArray(_bpCurrentEv().phases)?_bpCurrentEv().phases:[];
   if(_phases.length){
