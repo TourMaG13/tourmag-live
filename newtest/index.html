@@ -176,6 +176,13 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);margin:0 0 14px;line-height:1.25}
 .bp-text{font-size:16px;line-height:1.75;color:#334155}
 .bp-subtitle{font-size:16px;color:#64748B;line-height:1.5;margin:-2px 0 14px}
+.sec-banner{width:100%}
+.sec-banner-in{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:15px;line-height:1.5}
+.sec-banner-in strong{font-weight:700}
+.sec-banner-in span{flex:1;min-width:180px}
+.sec-banner-cta{display:inline-block;border:1.5px solid;border-radius:999px;padding:5px 14px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.sec-banner-x{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;padding:0 2px;opacity:.7}
+.sec-banner-x:hover{opacity:1}
 .side-col .art-bento,.exp-side-col .art-bento{grid-template-columns:1fr}
 .side-col .art-card.featured,.exp-side-col .art-card.featured{grid-template-columns:1fr;grid-column:auto}
 .side-col .art-card.featured .art-card-img,.exp-side-col .art-card.featured .art-card-img{height:170px;min-height:0}
@@ -1335,10 +1342,10 @@ body.mode-expedition .social-float{display:none}
 </style>
 <style id="chr-css">
 .phase-tabs.chr-frise{display:block;overflow-x:auto;justify-content:flex-start;padding:12px 0 16px}
-.phase-tabs.chr-frise .chr-frise-track{position:relative;display:flex;align-items:flex-start;gap:14px;min-width:min-content;padding:24px 2px 2px}
-.chr-rail{position:absolute;left:16px;right:16px;top:6px;height:2px;background:#E4E1D6;z-index:0}
+.phase-tabs.chr-frise .chr-frise-track{position:relative;display:flex;align-items:flex-start;gap:14px;min-width:min-content;padding:4px 2px 2px}
+.chr-rail{position:absolute;left:16px;right:16px;top:9px;height:2px;background:#E4E1D6;z-index:0}
 .chr-fitem{position:relative;flex:none;width:188px}
-.chr-fdot{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #C4BEAC;z-index:2}
+.chr-fdot{display:block;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #C4BEAC;margin:0 auto 12px;position:relative;z-index:2}
 .chr-fitem.on .chr-fdot{background:var(--pc,#6366F1);border-color:var(--pc,#6366F1)}
 .chr-fcard{display:block;border:1px solid #E4E1D6;border-radius:12px;background:#fff;overflow:hidden;text-decoration:none;color:#1E2A23;transition:transform .15s,box-shadow .15s,border-color .15s}
 .chr-fitem:hover .chr-fcard{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.08);border-color:#CBD5E1}
@@ -5802,31 +5809,34 @@ function _bpRenderContentModule(sec, event, ctx){
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
       if(!ct.title && !ct.text && !ct.image && !ct.video) return '';
       var _titleStyleKind = ct.titleStyle || 'simple';
+      var _titSty='';
+      if(ct.titleFont) _titSty+="font-family:'"+ct.titleFont+"',sans-serif;";
+      if(ct.titleSize) _titSty+='font-size:'+(parseInt(ct.titleSize,10)||0)+'px;';
+      if(ct.titleColor) _titSty+='color:'+ct.titleColor+';';
+      var _subSty='';
+      if(ct.subFont) _subSty+="font-family:'"+ct.subFont+"',sans-serif;";
+      if(ct.subSize) _subSty+='font-size:'+(parseInt(ct.subSize,10)||16)+'px;';
+      if(ct.subColor) _subSty+='color:'+ct.subColor+';';
+      var _subStyAttr=_subSty?' style="'+_subSty+'"':'';
       var titleHtml = '';
       if(ct.title && _titleStyleKind==='section'){
-        // Titre présenté comme un titre de module (classique ou expédition)
         var _isExpMode = (event && event.mode==='expedition');
         var _accent = (ap.accent) || '';
-        var _h2sty = titleStyle ? ' style="'+titleStyle+'"' : '';
+        var _h2sty = ' style="'+(titleStyle||'')+_titSty+'"';
         if(_isExpMode){
           titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
-            + (ct.subtitle ? '<p class="exp-section-sub">'+_bpEsc(ct.subtitle)+'</p>' : '');
+            + (ct.subtitle ? '<p class="exp-section-sub"'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</p>' : '');
         } else {
           titleHtml = '<div class="sec-title"'+(_accent?' style="--sec-rule:'+_accent+'"':'')+'>'
             + '<h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
-            + (ct.subtitle ? '<p>'+_bpEsc(ct.subtitle)+'</p>' : '')
+            + (ct.subtitle ? '<p'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</p>' : '')
             + '</div>';
         }
       } else {
-        titleHtml = ct.title ? '<h2 class="bp-h2"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_bpEsc(ct.title)+'</h2>' : '';
+        titleHtml = ct.title ? '<h2 class="bp-h2" style="'+(titleStyle||'')+_titSty+'">'+_bpEsc(ct.title)+'</h2>' : '';
       }
-      // Sous-titre personnalisable (style « simple ») — en « section », il est déjà rendu ci-dessus
       if(ct.subtitle && _titleStyleKind!=='section'){
-        var _subSty='';
-        if(ct.subFont) _subSty+="font-family:'"+ct.subFont+"',sans-serif;";
-        if(ct.subSize) _subSty+='font-size:'+(parseInt(ct.subSize,10)||16)+'px;';
-        if(ct.subColor) _subSty+='color:'+ct.subColor+';';
-        titleHtml += '<div class="bp-subtitle"'+(_subSty?' style="'+_subSty+'"':'')+'>'+_bpEsc(ct.subtitle)+'</div>';
+        titleHtml += '<div class="bp-subtitle"'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</div>';
       }
       const textHtml  = ct.text ? '<div class="bp-text"'+(textStyle?' style="'+textStyle+'"':'')+'>'+ct.text+'</div>' : '';
       // Vidéo optionnelle (indépendante de l'image)
@@ -6760,6 +6770,34 @@ window._tmgResizeSettle=function(){
   if(app && window.MutationObserver){ new MutationObserver(function(){ enhance(); }).observe(app,{childList:true,subtree:true}); }
   document.addEventListener('DOMContentLoaded',enhance);
   setTimeout(enhance,300); setTimeout(enhance,1000);
+})();
+</script>
+<script id="sec-banner-js">
+/* Bandeau secondaire — réglé sur l'événement (secBanner). Affiché sous le bandeau
+   principal ; le visiteur peut le masquer (mémorisé par navigateur). Générique. */
+(function(){
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function hash(s){var h=0,i;for(i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return String(h);}
+  function render(){
+    var st=window._rtState, ev=st&&st.event; if(!ev) return;
+    var sb=ev.secBanner; if(!sb||!sb.enabled||!(sb.text||sb.title)) return;
+    var app=document.getElementById('app'); if(!app) return;
+    if(app.querySelector('#sec-banner')) return;
+    var key='secBanner:'+(ev.id||'')+':'+hash((sb.title||'')+'|'+(sb.text||''));
+    try{ if(localStorage.getItem(key)==='1') return; }catch(e){}
+    var bg=sb.bg||'#E0A02C', col=sb.color||'#3A2A08';
+    var el=document.createElement('div');
+    el.id='sec-banner'; el.className='sec-banner'; el.style.background=bg; el.style.color=col;
+    el.innerHTML='<div class="sec-banner-in">'+(sb.title?'<strong>'+esc(sb.title)+'</strong>':'')+'<span>'+esc(sb.text||'')+'</span>'+((sb.ctaLabel&&sb.ctaUrl)?'<a class="sec-banner-cta" href="'+esc(sb.ctaUrl)+'" style="border-color:'+col+';color:'+col+'">'+esc(sb.ctaLabel)+'</a>':'')+'<button class="sec-banner-x" aria-label="Masquer" title="Masquer" style="color:'+col+'">\u00d7</button></div>';
+    var hero=app.querySelector('.hero-split, .cp-hero, .exp-hero, [data-bp-type="hero"], .hero');
+    if(hero && hero.parentNode){ hero.parentNode.insertBefore(el, hero.nextSibling); }
+    else { app.insertBefore(el, app.firstChild); }
+    el.querySelector('.sec-banner-x').addEventListener('click',function(){ el.remove(); try{localStorage.setItem(key,'1');}catch(e){} });
+  }
+  var app=document.getElementById('app');
+  if(app && window.MutationObserver){ new MutationObserver(function(){ render(); }).observe(app,{childList:true}); }
+  document.addEventListener('DOMContentLoaded',render);
+  setTimeout(render,300); setTimeout(render,1000);
 })();
 </script>
 </body>
