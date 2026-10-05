@@ -6730,7 +6730,7 @@ window._tmgResizeSettle=function(){
         if(!ph && onclick){ var mo=onclick.match(/_switchPhase\(event,'([^']+)'\)/); if(mo) ph=phaseById(mo[1]); }
         var date=ph?fmtDate(ph.dateStart||ph.date):'';
         var sub=(pageObj&&pageObj.subtitle)||(ph&&(ph.subtitle||ph.sousTitre))||'';
-        var img=(ph&&(ph.heroImage||ph.heroLogo))||'';
+        var img=(pageObj&&pageObj.cardImage)||(ph&&(ph.heroImage||ph.heroLogo))||'';
         if(!col) col=(ph&&ph.color)||'#6366F1';
         var tsz=pageObj&&pageObj.cardTitleSize; tsz=(tsz!=null&&tsz!=='')?(parseInt(tsz,10)||0):0;
         var sty='--pc:'+esc(col)+(tsz?(';--chr-title-size:'+tsz+'px'):'');
