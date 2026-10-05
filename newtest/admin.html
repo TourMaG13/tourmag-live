@@ -2577,19 +2577,45 @@ function modifyEvent(id){
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-chrono"${ev.afficheChrono?' checked':''}> Activer l'affichage chronologique (frise + fiches par date) pour cet événement</label>
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Remplace le rendu public habituel par une frise de dates cliquables, un panneau par édition et une colonne latérale. Les contenus se saisissent dans tes modules existants (timeline, interviews, articles par rubrique).</div>
     </div>
-    <div class="form-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><label class="form-label">Bandeau secondaire</label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-sb-on"${ev.secBanner&&ev.secBanner.enabled?' checked':''}> Afficher un bandeau sous le bandeau principal</label>
-    </div>
-    <div class="form-row"><label class="form-label">Message du bandeau</label><input class="form-input" id="m-ev-sb-text" value="${((ev.secBanner&&ev.secBanner.text)||'').replace(/"/g,'&quot;')}" placeholder="Ex : Pour nos 40 ans, nous reconstruisons le village…"></div>
-    <div class="form-row"><label class="form-label">Titre en gras (optionnel)</label><input class="form-input" id="m-ev-sb-title" value="${((ev.secBanner&&ev.secBanner.title)||'').replace(/"/g,'&quot;')}" placeholder="Optionnel — mot(s) en gras devant le message"></div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Couleur de fond</label><input type="color" id="m-ev-sb-bg" value="${(ev.secBanner&&ev.secBanner.bg)||'#E0A02C'}"></div>
-      <div class="form-row"><label class="form-label">Couleur du texte</label><input type="color" id="m-ev-sb-color" value="${(ev.secBanner&&ev.secBanner.color)||'#3A2A08'}"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row"><label class="form-label">Bouton — libellé (optionnel)</label><input class="form-input" id="m-ev-sb-cta" value="${((ev.secBanner&&ev.secBanner.ctaLabel)||'').replace(/"/g,'&quot;')}" placeholder="Ex : En savoir plus"></div>
-      <div class="form-row"><label class="form-label">Bouton — lien</label><input class="form-input" id="m-ev-sb-ctaurl" value="${((ev.secBanner&&ev.secBanner.ctaUrl)||'').replace(/"/g,'&quot;')}" placeholder="https://…"></div>
-    </div>
+    ${(function(){
+      var sb=ev.secBanner||{};
+      var FONTS=['','Poppins','Josefin Sans','Playfair Display','Lora','Merriweather','Montserrat','Oswald','Archivo','Outfit','EB Garamond','Libre Caslon Text','Inter'];
+      function fopts(cur){return FONTS.map(function(f){return '<option value="'+f+'"'+((cur||'')===f?' selected':'')+'>'+(f||'Par défaut')+'</option>';}).join('');}
+      var esc=function(s){return (s||'').replace(/"/g,'&quot;');};
+      return '<div class="form-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><label class="form-label">🎀 Bandeau secondaire</label>'
+        +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-sb-on"'+(sb.enabled?' checked':'')+'> Afficher un bandeau sous le bandeau principal</label></div>'
+        // Contenu
+        +'<div class="form-row"><label class="form-label">Eyebrow (petit intitulé en haut)</label><input class="form-input" id="m-ev-sb-eyebrow" value="'+esc(sb.eyebrow)+'" placeholder="Ex : Nos 40 ans ont une mission"></div>'
+        +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:8px"><input type="checkbox" id="m-ev-sb-ebicon"'+(sb.eyebrowIcon!==false?' checked':'')+'> Afficher l&rsquo;icône devant l&rsquo;eyebrow</label>'
+        +'<div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-sb-title" value="'+esc(sb.title)+'" placeholder="Ex : Reconstruire le village qui nous a donné notre nom"></div>'
+        +'<div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-ev-sb-text" rows="3" placeholder="Le paragraphe du bandeau…">'+esc(sb.text)+'</textarea></div>'
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Bouton — libellé</label><input class="form-input" id="m-ev-sb-cta" value="'+esc(sb.ctaLabel)+'" placeholder="Ex : Suivre la reconstruction ›"></div>'
+        +'<div class="form-row"><label class="form-label">Bouton — lien</label><input class="form-input" id="m-ev-sb-ctaurl" value="'+esc(sb.ctaUrl)+'" placeholder="https://…"></div></div>'
+        // Mise en page
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Alignement</label><select class="form-input" id="m-ev-sb-align"><option value="left"'+((sb.align||'left')==='left'?' selected':'')+'>Gauche</option><option value="center"'+(sb.align==='center'?' selected':'')+'>Centré</option><option value="right"'+(sb.align==='right'?' selected':'')+'>Droite</option></select></div>'
+        +'<div class="form-row"><label class="form-label">Largeur max (px)</label><input type="number" class="form-input" id="m-ev-sb-maxw" value="'+(sb.maxWidth||'')+'" placeholder="900" style="width:100px"></div>'
+        +'<div class="form-row"><label class="form-label">Couleur de fond</label><input type="color" id="m-ev-sb-bg" value="'+(sb.bg||'#FAF3E0')+'"></div></div>'
+        // Eyebrow style
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">Eyebrow</div>'
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" id="m-ev-sb-eb-color" value="'+(sb.eyebrowColor||'#B7791F')+'"></div>'
+        +'<div class="form-row"><label class="form-label">Taille</label><input type="number" class="form-input" id="m-ev-sb-eb-size" value="'+(sb.eyebrowSize||'')+'" placeholder="13" style="width:80px"></div>'
+        +'<div class="form-row"><label class="form-label">Police</label><select class="form-input" id="m-ev-sb-eb-font">'+fopts(sb.eyebrowFont)+'</select></div></div>'
+        // Titre style
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">Titre</div>'
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" id="m-ev-sb-ti-color" value="'+(sb.titleColor||'#1A2E22')+'"></div>'
+        +'<div class="form-row"><label class="form-label">Taille</label><input type="number" class="form-input" id="m-ev-sb-ti-size" value="'+(sb.titleSize||'')+'" placeholder="34" style="width:80px"></div>'
+        +'<div class="form-row"><label class="form-label">Police</label><select class="form-input" id="m-ev-sb-ti-font">'+fopts(sb.titleFont)+'</select></div></div>'
+        // Texte style
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">Texte</div>'
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Couleur</label><input type="color" id="m-ev-sb-tx-color" value="'+(sb.textColor||'#44403C')+'"></div>'
+        +'<div class="form-row"><label class="form-label">Taille</label><input type="number" class="form-input" id="m-ev-sb-tx-size" value="'+(sb.textSize||'')+'" placeholder="16" style="width:80px"></div>'
+        +'<div class="form-row"><label class="form-label">Police</label><select class="form-input" id="m-ev-sb-tx-font">'+fopts(sb.textFont)+'</select></div></div>'
+        // Bouton style
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">Bouton</div>'
+        +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Fond</label><input type="color" id="m-ev-sb-btn-bg" value="'+(sb.btnBg||'#E0A02C')+'"></div>'
+        +'<div class="form-row"><label class="form-label">Couleur texte</label><input type="color" id="m-ev-sb-btn-color" value="'+(sb.btnColor||'#3A2A08')+'"></div>'
+        +'<div class="form-row"><label class="form-label">Taille</label><input type="number" class="form-input" id="m-ev-sb-btn-size" value="'+(sb.btnSize||'')+'" placeholder="14" style="width:80px"></div></div>';
+    })()}
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
     <div class="form-row"><label class="form-label">🔗 URL publique du dashboard</label><input class="form-input" id="m-ev-public-url" value="${(ev.publicUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.monsite.fr/live/mon-evenement.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Adresse de la page où ce dashboard est intégré sur votre site. Sert à générer les liens d'accès par phase et le widget. Si vide, l'adresse GitHub Pages par défaut est utilisée.</div></div>
     <div style="margin-top:12px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0369A1">💡 Les réglages visuels du hero (image, couleur, hauteur, timeline, tags…) se configurent dans l'onglet <strong>Apparence</strong>.</div>
@@ -2620,15 +2646,26 @@ async function updateEvent(id){
     logo_url:document.getElementById('m-ev-logo').value,
     publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim(),
     afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked,
-    secBanner:{
-      enabled:!!(document.getElementById('m-ev-sb-on')||{}).checked,
-      title:(document.getElementById('m-ev-sb-title')||{}).value||'',
-      text:(document.getElementById('m-ev-sb-text')||{}).value||'',
-      bg:(document.getElementById('m-ev-sb-bg')||{}).value||'#E0A02C',
-      color:(document.getElementById('m-ev-sb-color')||{}).value||'#3A2A08',
-      ctaLabel:(document.getElementById('m-ev-sb-cta')||{}).value||'',
-      ctaUrl:(document.getElementById('m-ev-sb-ctaurl')||{}).value||''
-    }
+    secBanner:(function(){
+      var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
+      var gi=function(id){var v=parseInt(g(id),10);return isNaN(v)?'':v;};
+      return {
+        enabled:!!(document.getElementById('m-ev-sb-on')||{}).checked,
+        eyebrow:g('m-ev-sb-eyebrow'),
+        eyebrowIcon:!!(document.getElementById('m-ev-sb-ebicon')||{}).checked,
+        title:g('m-ev-sb-title'),
+        text:g('m-ev-sb-text'),
+        ctaLabel:g('m-ev-sb-cta'),
+        ctaUrl:g('m-ev-sb-ctaurl'),
+        align:g('m-ev-sb-align')||'left',
+        maxWidth:gi('m-ev-sb-maxw'),
+        bg:g('m-ev-sb-bg')||'#FAF3E0',
+        eyebrowColor:g('m-ev-sb-eb-color'), eyebrowSize:gi('m-ev-sb-eb-size'), eyebrowFont:g('m-ev-sb-eb-font'),
+        titleColor:g('m-ev-sb-ti-color'), titleSize:gi('m-ev-sb-ti-size'), titleFont:g('m-ev-sb-ti-font'),
+        textColor:g('m-ev-sb-tx-color'), textSize:gi('m-ev-sb-tx-size'), textFont:g('m-ev-sb-tx-font'),
+        btnBg:g('m-ev-sb-btn-bg'), btnColor:g('m-ev-sb-btn-color'), btnSize:gi('m-ev-sb-btn-size')
+      };
+    })()
   };
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
