@@ -2577,6 +2577,19 @@ function modifyEvent(id){
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-chrono"${ev.afficheChrono?' checked':''}> Activer l'affichage chronologique (frise + fiches par date) pour cet événement</label>
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Remplace le rendu public habituel par une frise de dates cliquables, un panneau par édition et une colonne latérale. Les contenus se saisissent dans tes modules existants (timeline, interviews, articles par rubrique).</div>
     </div>
+    <div class="form-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><label class="form-label">Bandeau secondaire</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-sb-on"${ev.secBanner&&ev.secBanner.enabled?' checked':''}> Afficher un bandeau sous le bandeau principal</label>
+    </div>
+    <div class="form-row"><label class="form-label">Message du bandeau</label><input class="form-input" id="m-ev-sb-text" value="${((ev.secBanner&&ev.secBanner.text)||'').replace(/"/g,'&quot;')}" placeholder="Ex : Pour nos 40 ans, nous reconstruisons le village…"></div>
+    <div class="form-row"><label class="form-label">Titre en gras (optionnel)</label><input class="form-input" id="m-ev-sb-title" value="${((ev.secBanner&&ev.secBanner.title)||'').replace(/"/g,'&quot;')}" placeholder="Optionnel — mot(s) en gras devant le message"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Couleur de fond</label><input type="color" id="m-ev-sb-bg" value="${(ev.secBanner&&ev.secBanner.bg)||'#E0A02C'}"></div>
+      <div class="form-row"><label class="form-label">Couleur du texte</label><input type="color" id="m-ev-sb-color" value="${(ev.secBanner&&ev.secBanner.color)||'#3A2A08'}"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row"><label class="form-label">Bouton — libellé (optionnel)</label><input class="form-input" id="m-ev-sb-cta" value="${((ev.secBanner&&ev.secBanner.ctaLabel)||'').replace(/"/g,'&quot;')}" placeholder="Ex : En savoir plus"></div>
+      <div class="form-row"><label class="form-label">Bouton — lien</label><input class="form-input" id="m-ev-sb-ctaurl" value="${((ev.secBanner&&ev.secBanner.ctaUrl)||'').replace(/"/g,'&quot;')}" placeholder="https://…"></div>
+    </div>
     <div class="form-row"><label class="form-label">Logo (URL)</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="m-ev-logo" value="${ev.logo_url||''}" style="flex:1">${mkMediaPickerBtn('m-ev-logo')}${mkUploadBtn('m-ev-logo')}</div></div>
     <div class="form-row"><label class="form-label">🔗 URL publique du dashboard</label><input class="form-input" id="m-ev-public-url" value="${(ev.publicUrl||'').replace(/"/g,'&quot;')}" placeholder="https://www.monsite.fr/live/mon-evenement.html"><div style="font-size:10px;color:var(--text3);margin-top:3px">Adresse de la page où ce dashboard est intégré sur votre site. Sert à générer les liens d'accès par phase et le widget. Si vide, l'adresse GitHub Pages par défaut est utilisée.</div></div>
     <div style="margin-top:12px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0369A1">💡 Les réglages visuels du hero (image, couleur, hauteur, timeline, tags…) se configurent dans l'onglet <strong>Apparence</strong>.</div>
@@ -2606,7 +2619,16 @@ async function updateEvent(id){
     mode:document.getElementById('m-ev-mode').value,
     logo_url:document.getElementById('m-ev-logo').value,
     publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim(),
-    afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked
+    afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked,
+    secBanner:{
+      enabled:!!(document.getElementById('m-ev-sb-on')||{}).checked,
+      title:(document.getElementById('m-ev-sb-title')||{}).value||'',
+      text:(document.getElementById('m-ev-sb-text')||{}).value||'',
+      bg:(document.getElementById('m-ev-sb-bg')||{}).value||'#E0A02C',
+      color:(document.getElementById('m-ev-sb-color')||{}).value||'#3A2A08',
+      ctaLabel:(document.getElementById('m-ev-sb-cta')||{}).value||'',
+      ctaUrl:(document.getElementById('m-ev-sb-ctaurl')||{}).value||''
+    }
   };
   await db.collection('events').doc(id).update(updateData);
   closeModal();toast('Enregistré');
@@ -5012,6 +5034,9 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Image de fond (URL, optionnel)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-heroimg" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-heroimg')+mkUploadBtn('bpct-heroimg')+'</div></div>';
     case 'text':
       return '<div class="bpe-fld"><label>Titre (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
+        +'<div class="bpe-fld-row"><div class="bpe-fld"><label>Police du titre</label><select onchange="_bpSetCt(\'titleFont\',this.value)">'+['','Poppins','Josefin Sans','Playfair Display','Lora','Merriweather','Montserrat','Oswald','Archivo','Outfit','EB Garamond','Inter'].map(function(f){return '<option value="'+f+'"'+((c.titleFont||'')===f?' selected':'')+'>'+(f||'Par défaut')+'</option>';}).join('')+'</select></div>'
+          +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" min="12" max="72" value="'+(c.titleSize||'')+'" onchange="_bpSetCt(\'titleSize\',this.value)" placeholder="auto" style="width:90px"></div>'
+          +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(c.titleColor||'#0F2B3C')+'" onchange="_bpSetCt(\'titleColor\',this.value)"></div></div>'
         +'<div class="bpe-fld"><label>Style du titre</label><div class="bpe-seg">'
           +[['simple','Titre simple'],['section','Titre de section (comme les modules)']].map(function(o){return '<button class="'+((c.titleStyle||'simple')===o[0]?'on':'')+'" onclick="_bpSetCt(\'titleStyle\',\''+o[0]+'\');_bpRefreshCfg()">'+o[1]+'</button>';}).join('')
           +'</div><div class="bpe-hint">« Titre de section » reprend la présentation des modules (VERBATIMS, Itinéraire…) : titre stylé + trait + sous-titre.</div></div>'
@@ -5021,12 +5046,12 @@ function _bpContentFieldsHtml(s){
           +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(c.subColor||'#64748B')+'" onchange="_bpSetCt(\'subColor\',this.value)"></div></div>'
         +'<div class="bpe-hint">Le sous-titre s\'affiche sous le titre. Police / taille / couleur s\'appliquent en style « Titre simple » (en « Titre de section », il suit la présentation de section).</div>'
         +'<div class="bpe-fld"><label>Texte</label>'+_bpRte('bpct-text', c.text)+'</div>'
-        +'<div class="bpe-fld"><label>Image (optionnelle, URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-img" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-img')+mkUploadBtn('bpct-img')+'</div></div>'
+        +'<div class="bpe-fld"><label>Image (optionnelle, URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-img" value="'+_escAdm(c.image||'')+'" oninput="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-img')+mkUploadBtn('bpct-img')+'</div></div>'
         +'<div class="bpe-fld"><label>Position de l\'image</label><select onchange="_bpSetCt(\'imagePos\',this.value)">'
           +['none','left','right','wrap-left','wrap-right','top','bottom'].map(function(o){return '<option value="'+o+'"'+((c.imagePos||'none')===o?' selected':'')+'>'+({none:'Aucune',left:'À gauche (colonne)',right:'À droite (colonne)','wrap-left':'Habillage à gauche','wrap-right':'Habillage à droite',top:'Au-dessus',bottom:'En dessous'}[o])+'</option>';}).join('')
           +'</select></div>'
         +'<div class="bpe-fld"><label>Crédit / copyright image</label><input type="text" value="'+_escAdm(c.imageCredit||'')+'" onchange="_bpSetCt(\'imageCredit\',this.value)" placeholder="© Auteur"></div>'
-        +'<div class="bpe-fld"><label>Vidéo (optionnelle, URL YouTube / Vimeo / MP4)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-video" value="'+_escAdm(c.video||'')+'" onchange="_bpSetCt(\'video\',this.value)" style="flex:1" placeholder="https://youtube.com/... ou /shorts/...">'+mkMediaPickerBtn('bpct-video')+'</div><div class="bpe-hint">Peut coexister avec une image. Les shorts YouTube s\'affichent au format vertical.</div></div>'
+        +'<div class="bpe-fld"><label>Vidéo (optionnelle, URL YouTube / Vimeo / MP4)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-video" value="'+_escAdm(c.video||'')+'" oninput="_bpSetCt(\'video\',this.value)" style="flex:1" placeholder="https://youtube.com/... ou /shorts/...">'+mkMediaPickerBtn('bpct-video')+'</div><div class="bpe-hint">Peut coexister avec une image. Les shorts YouTube s\'affichent au format vertical.</div></div>'
         +'<div class="bpe-fld"><label>Position de la vidéo</label><select onchange="_bpSetCt(\'videoPos\',this.value)">'
           +['none','left','right','top','bottom'].map(function(o){return '<option value="'+o+'"'+((c.videoPos||'none')===o?' selected':'')+'>'+({none:'Aucune',left:'À gauche (colonne)',right:'À droite (colonne)',top:'Au-dessus',bottom:'En dessous'}[o])+'</option>';}).join('')
           +'</select></div>'
