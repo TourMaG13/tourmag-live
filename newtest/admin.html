@@ -5015,7 +5015,11 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Style du titre</label><div class="bpe-seg">'
           +[['simple','Titre simple'],['section','Titre de section (comme les modules)']].map(function(o){return '<button class="'+((c.titleStyle||'simple')===o[0]?'on':'')+'" onclick="_bpSetCt(\'titleStyle\',\''+o[0]+'\');_bpRefreshCfg()">'+o[1]+'</button>';}).join('')
           +'</div><div class="bpe-hint">« Titre de section » reprend la présentation des modules (VERBATIMS, Itinéraire…) : titre stylé + trait + sous-titre.</div></div>'
-        +((c.titleStyle==='section')?'<div class="bpe-fld"><label>Sous-titre (optionnel)</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="Ex : Ce qu\'ils ont dit"></div>':'')
+        +'<div class="bpe-fld"><label>Sous-titre (optionnel)</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="Ex : Ce qu\'ils ont dit"></div>'
+        +'<div class="bpe-fld-row"><div class="bpe-fld"><label>Police du sous-titre</label><select onchange="_bpSetCt(\'subFont\',this.value)">'+['','Poppins','Josefin Sans','Playfair Display','Lora','Merriweather','Montserrat','Oswald','Archivo','Outfit','EB Garamond','Inter'].map(function(f){return '<option value="'+f+'"'+((c.subFont||'')===f?' selected':'')+'>'+(f||'Par défaut')+'</option>';}).join('')+'</select></div>'
+          +'<div class="bpe-fld"><label>Taille (px)</label><input type="number" min="10" max="40" value="'+(c.subSize||'')+'" onchange="_bpSetCt(\'subSize\',this.value)" placeholder="16" style="width:90px"></div>'
+          +'<div class="bpe-fld"><label>Couleur</label><input type="color" value="'+(c.subColor||'#64748B')+'" onchange="_bpSetCt(\'subColor\',this.value)"></div></div>'
+        +'<div class="bpe-hint">Le sous-titre s\'affiche sous le titre. Police / taille / couleur s\'appliquent en style « Titre simple » (en « Titre de section », il suit la présentation de section).</div>'
         +'<div class="bpe-fld"><label>Texte</label>'+_bpRte('bpct-text', c.text)+'</div>'
         +'<div class="bpe-fld"><label>Image (optionnelle, URL)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-img" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-img')+mkUploadBtn('bpct-img')+'</div></div>'
         +'<div class="bpe-fld"><label>Position de l\'image</label><select onchange="_bpSetCt(\'imagePos\',this.value)">'
