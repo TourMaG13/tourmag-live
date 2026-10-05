@@ -6697,18 +6697,36 @@ window._tmgResizeSettle=function(){
   function fmtDate(v){ if(!v) return ''; try{ var d=(v&&v.toDate)?v.toDate():new Date(v); if(isNaN(d.getTime())) return String(v); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return String(v); } }
   function enhance(){
     var st=window._rtState, ev=st&&st.event; if(!ev||!ev.afficheChrono) return;
-    var phases=ev.phases||[]; if(!phases.length) return;
+    var phases=Array.isArray(ev.phases)?ev.phases:[];
+    var bpages=Array.isArray(ev.builderPages)?ev.builderPages:[];
     var navs=document.querySelectorAll('#app .phase-tabs:not(.chr-frise)'); if(!navs.length) return;
-    var active=window._activePhase||'';
+    function phaseById(id){ for(var i=0;i<phases.length;i++){ if(phases[i].id===id) return phases[i]; } return null; }
+    function bpageById(id){ for(var i=0;i<bpages.length;i++){ if(bpages[i].id===id) return bpages[i]; } return null; }
     navs.forEach(function(nav){
-      var hrefById={};
-      nav.querySelectorAll('a[onclick*="_switchPhase"]').forEach(function(a){ var m=(a.getAttribute('onclick')||'').match(/_switchPhase\(event,'([^']+)'\)/); if(m) hrefById[m[1]]=a.getAttribute('href')||'#'; });
-      var cards=phases.map(function(p){
-        var on=p.id===active, href=hrefById[p.id]||'#', date=fmtDate(p.dateStart||p.date), img=p.heroImage||p.heroLogo||p.image||'';
-        return '<a class="chr-fcard'+(on?' on':'')+'" href="'+esc(href)+'" onclick="window._switchPhase(event,\''+esc(p.id)+'\')" style="--pc:'+esc(p.color||'#6366F1')+'"><div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(p.name||'Phase')+'</div></div></a>';
-      }).join('');
+      // On réutilise les liens d'onglets déjà rendus (pages builder, phases, pages),
+      // et on les habille en cartes datées. La date + la vignette viennent de la phase liée.
+      var anchors=nav.querySelectorAll('a'); if(!anchors.length) return;
+      var cards=[];
+      anchors.forEach(function(a){
+        if(a.closest('.phase-menu')) return; // évite les doublons des menus déroulants
+        var href=a.getAttribute('href')||'#';
+        var onclick=a.getAttribute('onclick')||'';
+        var title=(a.textContent||'').trim();
+        var active=a.classList.contains('active');
+        var col=(a.style&&a.style.getPropertyValue('--phase-color'))||'';
+        var ph=null;
+        var mb=href.match(/[?&]bpage=([^&]+)/), mp=href.match(/[?&]phase=([^&]+)/);
+        if(mb){ var bp=bpageById(decodeURIComponent(mb[1])); if(bp){ if(!col) col=bp.color||''; if(bp.linkedPhase) ph=phaseById(bp.linkedPhase); } }
+        else if(mp){ ph=phaseById(decodeURIComponent(mp[1])); }
+        else if(onclick){ var mo=onclick.match(/_switchPhase\(event,'([^']+)'\)/); if(mo) ph=phaseById(mo[1]); }
+        var date=ph?fmtDate(ph.dateStart||ph.date):'';
+        var img=ph?(ph.heroImage||ph.heroLogo||''):'';
+        if(!col) col=(ph&&ph.color)||'#6366F1';
+        cards.push('<a class="chr-fcard'+(active?' on':'')+'" href="'+esc(href)+'"'+(onclick?' onclick="'+esc(onclick)+'"':'')+' style="--pc:'+esc(col)+'"><div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div></div></a>');
+      });
+      if(!cards.length) return;
       nav.classList.add('chr-frise');
-      nav.innerHTML='<div class="chr-frise-track">'+cards+'</div>';
+      nav.innerHTML='<div class="chr-frise-track">'+cards.join('')+'</div>';
     });
   }
   var app=document.getElementById('app');
