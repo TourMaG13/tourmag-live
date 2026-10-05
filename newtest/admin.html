@@ -4826,6 +4826,26 @@ function _bpRoleFields2(label, path, cur){
       +'<div class="bpe-fld"><label>Police</label><select onchange="_bpSetDeep(\''+path+'\',\'font\',this.value)">'+_cpFontOpts(cur.font)+'</select></div>'
     +'</div>';
 }
+// Panneau d'apparence MINIMAL pour le bloc texte : titre/sous-titre/texte se règlent
+// dans "Contenu" (taille, police, couleur) ; ici seulement le bloc (fond, espacement).
+function _bpTextApHtml(s){
+  const ap=s.appearance||{};
+  let h='<div class="bpe-hint" style="padding:2px 0 10px">Les réglages du titre, du sous-titre et du texte (taille, police, couleur) se font dans l\'onglet <b>Contenu</b> ci-dessus.</div>';
+  // Couleur du texte courant (interligne/taille du corps restent dans le socle text)
+  h+=_bpRoleFields2('Texte courant','text',ap.text);
+  h+='<div class="bpe-fld"><label>Couleur du texte</label><input type="color" value="'+((ap.text&&ap.text.color)||'#334155')+'" onchange="_bpSetApRole(\'text\',\'color\',this.value)"></div>';
+  h+='<div class="bpe-fld"><label>Interligne du texte</label><input type="number" step="0.05" value="'+((ap.text&&ap.text.lh)||'')+'" placeholder="1.75" onchange="_bpSetApRole(\'text\',\'lh\',this.value)"></div>';
+  // Bloc : fond + espacement
+  h+='<div class="bpe-sub">Bloc</div>';
+  const bgOn=ap.bg&&ap.bg.on;
+  h+='<div class="bpe-toggle"><span>Couleur de fond du bloc</span><label class="sw"><input type="checkbox" '+(bgOn?'checked':'')+' onchange="_bpSetBg(\'on\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  if(bgOn) h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+((ap.bg&&ap.bg.color)||'#F1F5F9')+'" onchange="_bpSetBg(\'color\',this.value)"></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(ap.padTop!=null?ap.padTop:'')+'" placeholder="0" onchange="_bpSetAp(\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(ap.pad!=null?ap.pad:'')+'" placeholder="28" onchange="_bpSetAp(\'pad\',this.value)"></div>'
+    +'</div>';
+  return h;
+}
 // Panneau d'apparence dédié aux ARTICLES LIÉS.
 function _bpArtApHtml(s){
   const ap=s.appearance||{}; const a=ap.art||{};
@@ -4926,6 +4946,7 @@ function _bpAppearanceHtml(s){
   if(s.type==='programme') return _bpProgApHtml(s);
   if(s.type==='live') return _bpLiveApHtml(s);
   if(s.type==='articles') return _bpArtApHtml(s);
+  if(s.type==='text') return _bpTextApHtml(s);
   const ap=s.appearance||{};
   let h='';
   // Couleur principale + couleur du texte (unifiées)
@@ -5241,9 +5262,9 @@ function _bpGalleryEditorHtml(s){
     const url=(typeof u==='object'&&u)?(u.url||''):u;
     const cr=(typeof u==='object'&&u)?(u.credit||''):'';
     h+='<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">'
-      +'<input type="text" id="bpgal-'+gi+'" class="form-input" style="flex:1 1 160px" value="'+_escAdm(url)+'" placeholder="URL" onchange="_bpGalSet('+gi+',\'url\',this.value)">'
+      +'<input type="text" id="bpgal-'+gi+'" class="form-input" style="flex:1 1 160px" value="'+_escAdm(url)+'" placeholder="URL" oninput="_bpGalSet('+gi+',\'url\',this.value)">'
       +mkMediaPickerBtn('bpgal-'+gi)+mkUploadBtn('bpgal-'+gi)
-      +'<input type="text" class="form-input" style="flex:1 1 120px" value="'+_escAdm(cr)+'" placeholder="© crédit" onchange="_bpGalSet('+gi+',\'credit\',this.value)">'
+      +'<input type="text" class="form-input" style="flex:1 1 120px" value="'+_escAdm(cr)+'" placeholder="© crédit" oninput="_bpGalSet('+gi+',\'credit\',this.value)">'
       +'<button class="btn btn-danger btn-xs" onclick="_bpGalDel('+gi+')">✕</button></div>';
   });
   h+='</div><button class="btn btn-ghost btn-sm" onclick="_bpGalAdd()">＋ Ajouter une photo</button></div>';
@@ -5376,9 +5397,24 @@ function _bpSetQa(key,val){ const s=_bpSelectedSection(); if(!s)return; s.conten
 function _bpSetPage(key,val){ const p=_bpCurrentPage(); if(!p)return; p[key]=val; _bpSavePageDebounced(); if(key==='name'||key==='color'){ _renderBuilderEditor(document.getElementById('admin-main')); } }
 function _bpSetNav(key,val){ const p=_bpCurrentPage(); if(!p)return; p.nav=p.nav||{}; p.nav[key]=val; _bpSavePageDebounced(); }
 // Galerie
-function _bpGalAdd(){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.images=s.content.images||[]; s.content.images.push(''); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
-function _bpGalDel(i){ const s=_bpSelectedSection(); if(!s)return; s.content.images.splice(i,1); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
-function _bpGalSet(i,field,val){ const s=_bpSelectedSection(); if(!s)return; s.content.images=s.content.images||[]; let ex=s.content.images[i]; let obj=(typeof ex==='object'&&ex)?ex:{url:(ex||''),credit:''}; obj[field]=val; s.content.images[i]=(obj.credit?obj:obj.url); _bpSavePageDebounced(); _bpAfterSet(true); }
+// Collecte les valeurs des champs galerie actuellement à l'écran (avant tout re-render),
+// pour ne jamais perdre une saisie non encore validée.
+function _bpGalCollect(){
+  const s=_bpSelectedSection(); if(!s)return;
+  const rows=document.querySelectorAll('#bpe-gal-rows > div');
+  if(!rows.length) return;
+  const imgs=[];
+  rows.forEach(function(row){
+    const ins=row.querySelectorAll('input[type="text"]');
+    const url=(ins[0]?ins[0].value:'').trim();
+    const cr=(ins[1]?ins[1].value:'').trim();
+    imgs.push(cr?{url:url,credit:cr}:url);
+  });
+  s.content=s.content||{}; s.content.images=imgs;
+}
+function _bpGalAdd(){ const s=_bpSelectedSection(); if(!s)return; _bpGalCollect(); s.content=s.content||{}; s.content.images=s.content.images||[]; s.content.images.push(''); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
+function _bpGalDel(i){ const s=_bpSelectedSection(); if(!s)return; _bpGalCollect(); s.content.images.splice(i,1); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
+function _bpGalSet(i,field,val){ const s=_bpSelectedSection(); if(!s)return; s.content.images=s.content.images||[]; let ex=s.content.images[i]; let obj=(typeof ex==='object'&&ex)?ex:{url:(ex||''),credit:''}; obj[field]=val; s.content.images[i]=(obj.credit?obj:obj.url); _bpSavePageDebounced(); _bpAfterSet(false); }
 // Boutons
 function _bpBtnAdd(){ const s=_bpSelectedSection(); if(!s)return; s.content=s.content||{}; s.content.buttons=s.content.buttons||[]; s.content.buttons.push({label:'Bouton',url:'',color:'#0C6CA1'}); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
 function _bpBtnDel(i){ const s=_bpSelectedSection(); if(!s)return; s.content.buttons.splice(i,1); _bpSavePageDebounced(); _bpRefreshCfg(); _bpAfterSet(true); }
