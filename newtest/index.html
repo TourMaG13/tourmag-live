@@ -1331,21 +1331,22 @@ body.mode-expedition .social-float{display:none}
 </style>
 <style id="chr-css">
 .phase-tabs.chr-frise{display:block;overflow-x:auto;justify-content:flex-start;padding:12px 0 16px}
-.phase-tabs.chr-frise .chr-frise-track{position:relative;display:flex;gap:14px;min-width:min-content;padding:26px 2px 2px}
-.chr-rail{position:absolute;left:16px;right:16px;top:7px;height:2px;background:#E4E1D6;z-index:0}
-.chr-fcard{position:relative;flex:none;width:188px;border:1px solid #E4E1D6;border-radius:12px;background:#fff;overflow:hidden;text-decoration:none;color:#1E2A23;display:block;transition:transform .15s,box-shadow .15s,border-color .15s}
-.chr-fcard::before{content:"";position:absolute;top:-19px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #C4BEAC;z-index:2}
-.chr-fcard.on::before{background:var(--pc,#6366F1);border-color:var(--pc,#6366F1)}
-.chr-fcard:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.08);border-color:#CBD5E1}
+.phase-tabs.chr-frise .chr-frise-track{position:relative;display:flex;align-items:flex-start;gap:14px;min-width:min-content;padding:24px 2px 2px}
+.chr-rail{position:absolute;left:16px;right:16px;top:6px;height:2px;background:#E4E1D6;z-index:0}
+.chr-fitem{position:relative;flex:none;width:188px}
+.chr-fdot{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #C4BEAC;z-index:2}
+.chr-fitem.on .chr-fdot{background:var(--pc,#6366F1);border-color:var(--pc,#6366F1)}
+.chr-fcard{display:block;border:1px solid #E4E1D6;border-radius:12px;background:#fff;overflow:hidden;text-decoration:none;color:#1E2A23;transition:transform .15s,box-shadow .15s,border-color .15s}
+.chr-fitem:hover .chr-fcard{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.08);border-color:#CBD5E1}
+.chr-fitem.on .chr-fcard{border-color:var(--pc,#6366F1);box-shadow:0 0 0 1px var(--pc,#6366F1)}
 .chr-fthumb{position:relative;height:92px;background:#EEF1F4;display:flex;align-items:center;justify-content:center;color:#AEB6C0;border-bottom:1px solid #E4E1D6}
 .chr-fthumb img{width:100%;height:100%;object-fit:cover}
 .chr-fthumb::after{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--pc,#6366F1)}
 .chr-fbody{padding:10px 12px 12px;text-align:left}
 .chr-fdate{font-size:12px;color:#64748B;margin-bottom:3px;letter-spacing:.02em}
 .chr-ftitle{font-size:var(--chr-title-size,18px);font-weight:700;line-height:1.25}
+.chr-fitem.on .chr-ftitle{color:var(--pc,#6366F1)}
 .chr-fsub{font-size:12.5px;color:#64748B;margin-top:4px;line-height:1.45}
-.chr-fcard.on{border-color:var(--pc,#6366F1);box-shadow:0 0 0 1px var(--pc,#6366F1)}
-.chr-fcard.on .chr-ftitle{color:var(--pc,#6366F1)}
 </style>
 </head>
 <body>
@@ -6703,9 +6704,11 @@ window._tmgResizeSettle=function(){
     var st=window._rtState, ev=st&&st.event; if(!ev||!ev.afficheChrono) return;
     var phases=Array.isArray(ev.phases)?ev.phases:[];
     var bpages=Array.isArray(ev.builderPages)?ev.builderPages:[];
+    var cpages=Array.isArray(ev.contentPages)?ev.contentPages:[];
     var navs=document.querySelectorAll('#app .phase-tabs:not(.chr-frise)'); if(!navs.length) return;
     function phaseById(id){ for(var i=0;i<phases.length;i++){ if(phases[i].id===id) return phases[i]; } return null; }
     function bpageById(id){ for(var i=0;i<bpages.length;i++){ if(bpages[i].id===id) return bpages[i]; } return null; }
+    function cpById(id){ for(var i=0;i<cpages.length;i++){ if(cpages[i].id===id) return cpages[i]; } return null; }
     navs.forEach(function(nav){
       // On réutilise les liens d'onglets déjà rendus (pages builder, phases, pages),
       // et on les habille en cartes datées. La date + la vignette viennent de la phase liée.
@@ -6718,16 +6721,20 @@ window._tmgResizeSettle=function(){
         var title=(a.textContent||'').trim();
         var active=a.classList.contains('active');
         var col=(a.style&&a.style.getPropertyValue('--phase-color'))||'';
-        var ph=null;
-        var mb=href.match(/[?&]bpage=([^&]+)/), mp=href.match(/[?&]phase=([^&]+)/);
-        if(mb){ var bp=bpageById(decodeURIComponent(mb[1])); if(bp){ if(!col) col=bp.color||''; if(bp.linkedPhase) ph=phaseById(bp.linkedPhase); } }
-        else if(mp){ ph=phaseById(decodeURIComponent(mp[1])); }
-        else if(onclick){ var mo=onclick.match(/_switchPhase\(event,'([^']+)'\)/); if(mo) ph=phaseById(mo[1]); }
+        var ph=null, pageObj=null;
+        var mb=href.match(/[?&]bpage=([^&]+)/), mp=href.match(/[?&]page=([^&]+)/), mph=href.match(/[?&]phase=([^&]+)/);
+        if(mb){ pageObj=bpageById(decodeURIComponent(mb[1])); }
+        else if(mp){ pageObj=cpById(decodeURIComponent(mp[1])); }
+        if(pageObj){ if(!col) col=pageObj.color||''; if(pageObj.linkedPhase) ph=phaseById(pageObj.linkedPhase); }
+        if(!ph && mph){ ph=phaseById(decodeURIComponent(mph[1])); }
+        if(!ph && onclick){ var mo=onclick.match(/_switchPhase\(event,'([^']+)'\)/); if(mo) ph=phaseById(mo[1]); }
         var date=ph?fmtDate(ph.dateStart||ph.date):'';
-        var sub=ph?(ph.subtitle||ph.sousTitre||''):'';
-        var img=ph?(ph.heroImage||ph.heroLogo||''):'';
+        var sub=(pageObj&&pageObj.subtitle)||(ph&&(ph.subtitle||ph.sousTitre))||'';
+        var img=(ph&&(ph.heroImage||ph.heroLogo))||'';
         if(!col) col=(ph&&ph.color)||'#6366F1';
-        cards.push('<a class="chr-fcard'+(active?' on':'')+'" href="'+esc(href)+'"'+(onclick?' onclick="'+esc(onclick)+'"':'')+' style="--pc:'+esc(col)+'"><div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div></a>');
+        var tsz=pageObj&&pageObj.cardTitleSize; tsz=(tsz!=null&&tsz!=='')?(parseInt(tsz,10)||0):0;
+        var sty='--pc:'+esc(col)+(tsz?(';--chr-title-size:'+tsz+'px'):'');
+        cards.push('<div class="chr-fitem'+(active?' on':'')+'" style="'+sty+'"><span class="chr-fdot"></span><a class="chr-fcard" href="'+esc(href)+'"'+(onclick?' onclick="'+esc(onclick)+'"':'')+'><div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div></a></div>');
       });
       if(!cards.length) return;
       nav.classList.add('chr-frise');
