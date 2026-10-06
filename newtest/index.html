@@ -1356,7 +1356,7 @@ body.mode-expedition .social-float{display:none}
 </style>
 <style id="chr-css">
 .phase-tabs.chr-frise{display:block;position:relative;justify-content:flex-start;padding:12px 0 16px}
-.phase-tabs.chr-frise .chr-frise-track{overflow-x:auto;scroll-behavior:smooth}
+.phase-tabs.chr-frise .chr-frise-scroller{overflow-x:auto;scroll-behavior:smooth;width:100%}
 .chr-frise-nav{position:absolute;top:-6px;right:0;display:flex;gap:6px;z-index:3}
 .chr-frise-arrow{width:34px;height:34px;border-radius:50%;border:1px solid #D9D4C7;background:#fff;color:#64748B;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .chr-frise-arrow:hover{background:#F8FAFC;color:#1a1a1a;border-color:#CBD5E1}
@@ -6856,14 +6856,14 @@ window._tmgResizeSettle=function(){
       });
       if(!cards.length) return;
       nav.classList.add('chr-frise');
+      // Structure : nav (relatif) > [flèches fixes] + [scroller (overflow) > track]
       nav.innerHTML='<div class="chr-frise-nav"><button type="button" class="chr-frise-arrow" data-dir="-1" aria-label="Précédent">‹</button><button type="button" class="chr-frise-arrow" data-dir="1" aria-label="Suivant">›</button></div>'
-        +'<div class="chr-frise-track"><div class="chr-rail"></div>'+cards.join('')+'</div>';
-      // Brancher les flèches
-      var track=nav.querySelector('.chr-frise-track');
+        +'<div class="chr-frise-scroller"><div class="chr-frise-track"><div class="chr-rail"></div>'+cards.join('')+'</div></div>';
+      var scroller=nav.querySelector('.chr-frise-scroller');
       nav.querySelectorAll('.chr-frise-arrow').forEach(function(btn){
         btn.addEventListener('click',function(){
           var dir=parseInt(btn.getAttribute('data-dir'),10)||1;
-          if(track) track.scrollBy({left:dir*Math.max(280,track.clientWidth*0.7),behavior:'smooth'});
+          if(scroller) scroller.scrollBy({left:dir*Math.max(280,scroller.clientWidth*0.7),behavior:'smooth'});
         });
       });
     });
