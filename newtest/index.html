@@ -928,7 +928,9 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-banner{position:relative;width:100%;height:var(--exp-hero-h,420px);overflow:hidden;background:#111}
 .exp-hero-banner-img{width:100%;height:var(--exp-hero-h,420px);object-fit:cover;display:block}
 .exp-hero-banner-overlay{position:absolute;inset:0;display:flex;align-items:center;background:linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.28) 55%,transparent 100%)}
-.exp-hero-banner-inner{padding:48px 44px;max-width:660px;color:#fff}
+/* Le contenu du bandeau s'aligne sur la grille du dashboard (1200px centré, padding 32px) */
+.exp-hero-banner-inner{width:100%;max-width:1200px;margin:0 auto;padding:0 32px;color:#fff;box-sizing:border-box}
+.exp-hero-banner-inner>*{max-width:660px}
 .exp-hero-banner-inner h1{color:#fff;margin:0 0 12px}
 .exp-hero-banner-inner .exp-hero-subtitle{color:rgba(255,255,255,.9)}
 .exp-hero-photo img{width:100%;height:100%;object-fit:cover;display:block;animation:heroImgFade .5s ease}
