@@ -168,6 +168,12 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .blk-wrap{display:contents}
 /* ==================== PAGE BUILDER (bp-*) ==================== */
 .bp-section{margin-bottom:28px;clear:both;position:relative}
+/* Barre "Explorer par thème" */
+.bp-themes-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 0 18px}
+.bp-themes-label{font-size:13px;font-weight:600;color:var(--text3,#64748B);margin-right:4px}
+.bp-theme-chip{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid #D9D4C7;border-radius:999px;padding:6px 14px;font-size:13.5px;color:#64748B;cursor:pointer;transition:all .15s;font-family:inherit}
+.bp-theme-chip:hover{border-color:var(--chip,#CFC9B8);color:#1a1a1a}
+.bp-theme-chip.on{background:var(--chip,#FBF3E1);border-color:var(--chip,#ECD9AA);color:#1a1a1a;font-weight:600}
 /* Décor dans les marges : masqué sur écrans étroits (pas de place dans la marge) */
 @media(max-width:1300px){ [data-decor][data-margin="1"]{display:none} }
 /* Sécurité : aucune section ne doit se coincer à côté d'un float d'habillage précédent */
@@ -5417,6 +5423,22 @@ function _renderContentPage(page){
 //   accent, textColor, bg:{on,color}, pad, zone
 // ============================================================
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Filtre les blocs par thème : masque ceux d'un AUTRE thème ; les blocs sans thème restent visibles.
+window._bpFilterTheme = function(btn, themeId){
+  try{
+    // État actif des chips
+    var bar = btn.closest('.bp-themes-bar');
+    if(bar){ bar.querySelectorAll('.bp-theme-chip').forEach(function(c){ c.classList.toggle('on', c===btn); }); }
+    // Montrer/masquer les sections
+    document.querySelectorAll('#app .bp-section').forEach(function(sec){
+      var t = sec.getAttribute('data-theme') || '';
+      // "Tout" (themeId vide) → tout visible ; sinon : visible si pas de thème OU thème == sélection
+      var show = !themeId || !t || t===themeId;
+      sec.style.display = show ? '' : 'none';
+    });
+    if(typeof window._tmgResize==='function') window._tmgResize();
+  }catch(e){}
+};
 
 // Génère les archives Brand News (articles précédents), dépliables via un bouton.
 // bn.hiddenArchives = liste des liens d'articles à NE PAS afficher dans les archives.
@@ -5634,7 +5656,8 @@ function _bpRenderSection(sec, event, ctx){
   }
   const idAttr = secId ? ' id="'+secId+'"' : '';
   const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
-  return '<div class="bp-section bp-'+type+_mobCls+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'">'+overrideCss+inner+'</div>';
+  var _themeAttr = (ct.theme) ? ' data-theme="'+_bpEsc(ct.theme)+'"' : '';
+  return '<div class="bp-section bp-'+type+_mobCls+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'"'+_themeAttr+'>'+overrideCss+inner+'</div>';
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
@@ -5942,8 +5965,19 @@ function _renderBuilderPage(page, event, ctx){
   function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
   function renderSolo(s){ openDash(); h+=_bpRenderSection(s,event,ctx); }
 
+  // Barre "Explorer par thème" (sous les onglets/frise), si la page définit des thèmes.
+  var _themes = Array.isArray(page.themes) ? page.themes : [];
+  var _themesBar = '';
+  if(_themes.length){
+    _themesBar = '<div class="'+CL.dash+'"><div class="bp-themes-bar" id="bp-themes-bar">'
+      + '<span class="bp-themes-label">Explorer par thème :</span>'
+      + '<button class="bp-theme-chip on" data-th="" onclick="_bpFilterTheme(this,\'\')">Tout</button>'
+      + _themes.map(function(th){ return '<button class="bp-theme-chip" data-th="'+_bpEsc(th.id)+'" style="--chip:'+(th.color||'#E0A02C')+'" onclick="_bpFilterTheme(this,\''+_bpEsc(th.id)+'\')">'+_bpEsc(th.name||'')+'</button>'; }).join('')
+      + '</div></div>';
+  }
   // Onglets : insérés après le groupe d'en-tête (hero + chiffres clés), sinon en tête.
-  const _tabsHtml = ctx.tabsHtml || '';
+  // La barre de thèmes est accolée juste après les onglets.
+  const _tabsHtml = (ctx.tabsHtml || '') + _themesBar;
   let _tabsInserted = false;
   let _headEndIdx = -1;
   for(let i=0;i<sections.length;i++){
