@@ -5423,20 +5423,36 @@ function _renderContentPage(page){
 //   accent, textColor, bg:{on,color}, pad, zone
 // ============================================================
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-// Filtre les blocs par thème : masque ceux d'un AUTRE thème ; les blocs sans thème restent visibles.
+// Bascule entre la vue normale (page courante) et une vue thématique transversale
+// (blocs du thème agrégés depuis toutes les pages).
 window._bpFilterTheme = function(btn, themeId){
   try{
-    // État actif des chips
     var bar = btn.closest('.bp-themes-bar');
     if(bar){ bar.querySelectorAll('.bp-theme-chip').forEach(function(c){ c.classList.toggle('on', c===btn); }); }
-    // Montrer/masquer les sections
-    document.querySelectorAll('#app .bp-section').forEach(function(sec){
-      var t = sec.getAttribute('data-theme') || '';
-      // "Tout" (themeId vide) → tout visible ; sinon : visible si pas de thème OU thème == sélection
-      var show = !themeId || !t || t===themeId;
-      sec.style.display = show ? '' : 'none';
+    var app = document.getElementById('app') || document;
+    // Toutes les vues thématiques pré-rendues
+    var views = app.querySelectorAll('.bp-theme-view');
+    // Le contenu "normal" = les conteneurs .dash/.exp-dash qui ne sont PAS des vues thématiques
+    // ni la barre de thèmes ni le footer. On repère par la présence de .bp-section à l'intérieur.
+    var normals = [];
+    app.querySelectorAll('.dash, .exp-dash').forEach(function(d){
+      if(d.classList.contains('bp-theme-view')) return;
+      if(d.querySelector('.bp-themes-bar')) return;      // barre de thèmes : toujours visible
+      if(d.querySelector('.ft')) return;                 // footer : toujours visible
+      normals.push(d);
     });
+    if(!themeId){
+      // "Tout" → afficher le contenu normal, masquer les vues thématiques
+      normals.forEach(function(d){ d.style.display=''; });
+      views.forEach(function(v){ v.style.display='none'; });
+    } else {
+      // Thème → masquer le contenu normal, afficher la vue de ce thème
+      normals.forEach(function(d){ d.style.display='none'; });
+      views.forEach(function(v){ v.style.display = (v.id==='bp-theme-view-'+themeId) ? '' : 'none'; });
+    }
     if(typeof window._tmgResize==='function') window._tmgResize();
+    if(typeof window._applyDecor==='function'){} // le décor reste tel quel
+    window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){}
 };
 
@@ -6040,6 +6056,27 @@ function _renderBuilderPage(page, event, ctx){
   // Sécurités
   if(!_tabsInserted && _tabsHtml){ closeDash(); h += _tabsHtml; }
   closeDash();
+
+  // Enrober le contenu normal (hors onglets/barre de thèmes) pour pouvoir le masquer
+  // quand on bascule sur une vue thématique transversale.
+  // On insère un marqueur juste après la barre de thèmes.
+  // Vues thématiques : pour chaque thème, agréger les blocs de ce thème de TOUTES les pages.
+  if(_themes.length){
+    var _allPages = Array.isArray(event.builderPages) ? event.builderPages : [];
+    _themes.forEach(function(th){
+      var agg='';
+      _allPages.forEach(function(pg){
+        (pg.sections||[]).forEach(function(sx){
+          if(sx && sx.content && sx.content.theme===th.id){
+            // Forcer le bloc en pleine largeur dans la vue thématique
+            var sxCopy = JSON.parse(JSON.stringify(sx)); sxCopy.zone='full';
+            agg += _bpRenderSection(sxCopy, event, ctx);
+          }
+        });
+      });
+      h += '<div class="bp-theme-view '+CL.dash+'" id="bp-theme-view-'+_bpEsc(th.id)+'" style="display:none">'+(agg||'<p style="text-align:center;color:#94A3B8;padding:40px">Aucun contenu pour ce thème.</p>')+'</div>';
+    });
+  }
 
   h += '<div class="'+CL.dash+'"><div class="ft">Couverture en direct <a href="https://www.tourmag.com" target="_blank">TourMaG.com</a> · Powered by TourMaG Live</div></div>';
   return h;
