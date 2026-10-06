@@ -4815,8 +4815,8 @@ function _bpConfigHtml(){
       +'<button type="button" class="bpe-acc-hd" onclick="_bpAccToggle(this)"><span>'+title+'</span><span class="bpe-acc-chev">▾</span></button>'
       +'<div class="bpe-acc-body">'+inner+'</div></div>';
   }
-  // 1) CONTENU (ouvert)
-  var _contentInner = _bpContentFieldsHtml(s);
+  // 1) CONTENU (ouvert) — précédé du sélecteur de thème (si la page a des thèmes)
+  var _contentInner = _bpThemeField(s) + _bpContentFieldsHtml(s);
   // 2) DISPOSITION (replié)
   var _dispInner = '<div class="bpe-fld"><label>Zone d\'affichage</label><div class="bpe-seg">'
     +['max','full','main','side'].map(function(z){return '<button class="'+((s.zone||'full')===z?'on':'')+'" onclick="_bpSetZone(\''+z+'\')">'+({max:'Max',full:'Pleine',main:'Principale',side:'Sidebar'}[z])+'</button>';}).join('')
@@ -5067,6 +5067,16 @@ function _bpPhaseFilterField(s){
   opts+='<option value="all"'+(cur==='all'?' selected':'')+'>Toutes les phases</option>';
   phases.forEach(function(p){ opts+='<option value="'+p.id+'"'+(cur===p.id?' selected':'')+'>'+_escAdm(p.name||'')+'</option>'; });
   return '<div class="bpe-fld"><label>Contenu à afficher (phase)</label><select onchange="_bpSetCt(\'phaseFilter\',this.value===\'active\'?\'\':this.value)">'+opts+'</select><div class="bpe-hint">Choisissez quelle phase ce module affiche : une phase précise, toutes, ou celle active par défaut.</div></div>';
+}
+function _bpThemeField(s){
+  // Sélecteur de thème pour ce bloc (si la page a des thèmes définis)
+  const p=_bpCurrentPage();
+  const themes=(p&&Array.isArray(p.themes))?p.themes:[];
+  if(!themes.length) return '';
+  const c=s.content||{};
+  let opts='<option value="">— Aucun (toujours visible) —</option>';
+  themes.forEach(function(th){ opts+='<option value="'+th.id+'"'+((c.theme||'')===th.id?' selected':'')+'>'+_escAdm(th.name||'')+'</option>'; });
+  return '<div class="bpe-fld"><label>Thème de ce bloc</label><select onchange="_bpSetCt(\'theme\',this.value)">'+opts+'</select><div class="bpe-hint">Quand on filtre par thème sur le dashboard, ce bloc n\'apparaît que pour ce thème. « Aucun » = visible dans tous les thèmes.</div></div>';
 }
 function _bpContentFieldsHtml(s){
   const c=s.content||{};
@@ -5380,8 +5390,48 @@ function _bpPagePropsHtml(){
     mainSecs.forEach(function(s){ const nm=(BP_TYPE[s.type]&&BP_TYPE[s.type].name)||s.type; h+='<option value="'+s.id+'"'+(cur===s.id?' selected':'')+'>À côté de : '+_escAdm(nm)+'</option>'; });
     h+='</select><div class="bpe-hint">Choisissez le bloc principal en face duquel la sidebar (blocs « Sidebar ») doit démarrer.</div></div>';
   }
+  // ---- Thèmes (explorer par thème) ----
+  h+='<div class="bpe-cfg-sech" style="margin-top:16px">Explorer par thème</div>';
+  const themes=Array.isArray(p.themes)?p.themes:[];
+  h+='<div class="bpe-hint" style="margin-bottom:8px">Définissez des thèmes, puis assignez un thème à chaque bloc (dans ses réglages de contenu). Sur le dashboard, des boutons permettront de filtrer les blocs par thème.</div>';
+  if(themes.length){
+    h+='<div id="bpe-themes-list">';
+    themes.forEach(function(th,i){
+      h+='<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'
+        +'<input type="color" value="'+(th.color||'#E0A02C')+'" onchange="_bpThemeSet('+i+',\'color\',this.value)" style="width:34px;height:32px;padding:2px;border:1px solid var(--border);border-radius:6px">'
+        +'<input type="text" class="form-input" value="'+_escAdm(th.name||'')+'" placeholder="Nom du thème" oninput="_bpThemeSet('+i+',\'name\',this.value)" style="flex:1">'
+        +'<button class="btn btn-danger btn-xs" onclick="_bpThemeDel('+i+')">✕</button>'
+        +'</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<input type="text" class="form-input" id="bpe-new-theme" placeholder="Nouveau thème (ex : Village)" onkeydown="if(event.key===\'Enter\')_bpThemeAdd()" style="flex:1">'
+    +'<button class="btn btn-ghost btn-sm" onclick="_bpThemeAdd()">＋ Ajouter</button></div>';
   h+='<div class="bpe-hint" style="margin-top:10px">Le mode de cette page suit celui de l\'événement ('+(p.mode==='expedition'?'Expédition':'Classique')+').</div>';
   return h;
+}
+// ---- Gestion des thèmes de la page ----
+function _bpThemeUid(){ return 'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,4); }
+function _bpThemeAdd(){
+  const p=_bpCurrentPage(); if(!p) return;
+  const inp=document.getElementById('bpe-new-theme');
+  const name=(inp&&inp.value||'').trim(); if(!name) return;
+  p.themes=Array.isArray(p.themes)?p.themes:[];
+  p.themes.push({id:_bpThemeUid(), name:name, color:'#E0A02C'});
+  _bpSavePageDebounced(); _renderBuilderEditor(document.getElementById('admin-main'));
+}
+function _bpThemeSet(i,field,val){
+  const p=_bpCurrentPage(); if(!p||!p.themes||!p.themes[i]) return;
+  p.themes[i][field]=val; _bpSavePageDebounced();
+}
+function _bpThemeDel(i){
+  const p=_bpCurrentPage(); if(!p||!p.themes) return;
+  const removed=p.themes[i];
+  p.themes.splice(i,1);
+  // Nettoyer l'assignation de ce thème sur les blocs
+  if(removed&&removed.id){ (p.sections||[]).forEach(function(s){ if(s.content&&s.content.theme===removed.id) delete s.content.theme; }); }
+  _bpSavePageDebounced(); _renderBuilderEditor(document.getElementById('admin-main'));
 }
 
 // ---------- Setters (mettent à jour l'état + sauvegardent + re-render partiel) ----------
