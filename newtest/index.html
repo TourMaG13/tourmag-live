@@ -925,8 +925,8 @@ body.mode-expedition *:not(html):not(body){scrollbar-width:thin;scrollbar-color:
 .exp-hero-tag:hover{border-color:rgba(255,255,255,.5)}
 .exp-hero-photo{position:relative;overflow:hidden}
 /* Héro bandeau pleine largeur (expédition) */
-.exp-hero-banner{position:relative;width:100%;min-height:var(--exp-hero-h,420px);overflow:hidden;background:#111}
-.exp-hero-banner-img{width:100%;height:100%;min-height:var(--exp-hero-h,420px);object-fit:cover;display:block}
+.exp-hero-banner{position:relative;width:100%;height:var(--exp-hero-h,420px);overflow:hidden;background:#111}
+.exp-hero-banner-img{width:100%;height:var(--exp-hero-h,420px);object-fit:cover;display:block}
 .exp-hero-banner-overlay{position:absolute;inset:0;display:flex;align-items:center;background:linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.28) 55%,transparent 100%)}
 .exp-hero-banner-inner{padding:48px 44px;max-width:660px;color:#fff}
 .exp-hero-banner-inner h1{color:#fff;margin:0 0 12px}
@@ -4177,7 +4177,6 @@ function _buildExpHero(phaseObj, event, exp, accent, heightOverride){
   const hasHeroImage = !!_heroImage;
   const _expHeroH = _bannerH || event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1" style="--exp-hero-h:${parseInt(_expHeroH,10)}px"` : '';
-  try{ if(window.location.search.indexOf('diaghero')>=0) console.log('[diag-hero] heightOverride='+heightOverride+' | _bannerH='+_bannerH+' | event.hero_height='+event.hero_height+' | _expUseBanner='+_expUseBanner+' | _expHeroH='+_expHeroH); }catch(e){}
   if(_expUseBanner){
     const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
     H += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
