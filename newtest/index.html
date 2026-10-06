@@ -5814,7 +5814,15 @@ function _bpRenderContentModule(sec, event, ctx){
     case 'text': {
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
       if(!ct.title && !ct.text && !ct.image && !ct.video) return '';
-      try{ if(window.location.search.indexOf('diagtxt')>=0) console.log('[diag-texte] titleSize='+ct.titleSize+' subSize='+ct.subSize+' titleFont='+ct.titleFont+' titleStyle='+ct.titleStyle+' | content complet=',JSON.stringify(ct)); }catch(e){}
+      if(window.location.search.indexOf('diagtxt')>=0 && ct.title){
+        var _tt=ct.title;
+        setTimeout(function(){
+          try{
+            var hs=document.querySelectorAll('.bp-section.bp-text h2');
+            hs.forEach(function(hh){ if(hh.textContent.trim()===_tt.trim()){ var cs=getComputedStyle(hh); console.log('[diag-texte] "'+_tt+'" → taille demandée='+ct.titleSize+'px | taille RÉELLE affichée='+cs.fontSize+' | police='+cs.fontFamily); } });
+          }catch(e){}
+        }, 800);
+      }
       var _titleStyleKind = ct.titleStyle || 'simple';
       var _titSty='';
       if(ct.titleFont) _titSty+="font-family:'"+ct.titleFont+"',sans-serif;";
