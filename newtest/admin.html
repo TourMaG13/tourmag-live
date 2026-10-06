@@ -5074,9 +5074,8 @@ function _bpPhaseFilterField(s){
   return '<div class="bpe-fld"><label>Contenu à afficher (phase)</label><select onchange="_bpSetCt(\'phaseFilter\',this.value===\'active\'?\'\':this.value)">'+opts+'</select><div class="bpe-hint">Choisissez quelle phase ce module affiche : une phase précise, toutes, ou celle active par défaut.</div></div>';
 }
 function _bpThemeField(s){
-  // Sélecteur de thème pour ce bloc (si la page a des thèmes définis)
-  const p=_bpCurrentPage();
-  const themes=(p&&Array.isArray(p.themes))?p.themes:[];
+  // Sélecteur de thème pour ce bloc (thèmes globaux au dashboard)
+  const themes=_bpThemesList();
   if(!themes.length) return '';
   const c=s.content||{};
   let opts='<option value="">— Aucun (toujours visible) —</option>';
@@ -5397,10 +5396,10 @@ function _bpPagePropsHtml(){
     mainSecs.forEach(function(s){ const nm=(BP_TYPE[s.type]&&BP_TYPE[s.type].name)||s.type; h+='<option value="'+s.id+'"'+(cur===s.id?' selected':'')+'>À côté de : '+_escAdm(nm)+'</option>'; });
     h+='</select><div class="bpe-hint">Choisissez le bloc principal en face duquel la sidebar (blocs « Sidebar ») doit démarrer.</div></div>';
   }
-  // ---- Thèmes (explorer par thème) ----
+  // ---- Thèmes (explorer par thème) — GLOBAUX au dashboard ----
   h+='<div class="bpe-cfg-sech" style="margin-top:16px">Explorer par thème</div>';
-  const themes=Array.isArray(p.themes)?p.themes:[];
-  h+='<div class="bpe-hint" style="margin-bottom:8px">Définissez des thèmes, puis assignez un thème à chaque bloc (dans ses réglages de contenu). Sur le dashboard, des boutons permettront de filtrer les blocs par thème.</div>';
+  const themes=_bpThemesList();
+  h+='<div class="bpe-hint" style="margin-bottom:8px">Thèmes <b>communs à tout le dashboard</b> : un même thème (ex. « Notre Histoire ») regroupe les blocs de ce thème sur toutes les pages. Assignez un thème à chaque bloc dans ses réglages de contenu.</div>';
   if(themes.length){
     h+='<div id="bpe-themes-list">';
     themes.forEach(function(th,i){
@@ -5418,27 +5417,47 @@ function _bpPagePropsHtml(){
   h+='<div class="bpe-hint" style="margin-top:10px">Le mode de cette page suit celui de l\'événement ('+(p.mode==='expedition'?'Expédition':'Classique')+').</div>';
   return h;
 }
-// ---- Gestion des thèmes de la page ----
+// ---- Gestion des thèmes — GLOBAUX au dashboard (event.themes) ----
 function _bpThemeUid(){ return 'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,4); }
+// Liste des thèmes globaux, avec migration depuis les anciens thèmes par-page.
+function _bpThemesList(){
+  const ev=_bpCurrentEv(); if(!ev) return [];
+  if(!Array.isArray(ev.themes)){
+    // Migration : agréger les p.themes existants (dédoublonnés par nom)
+    var acc=[], seen={};
+    (ev.builderPages||[]).forEach(function(pg){
+      (pg.themes||[]).forEach(function(th){
+        var key=(th.name||'').toLowerCase().trim();
+        if(key && !seen[key]){ seen[key]=1; acc.push({id:th.id||_bpThemeUid(), name:th.name, color:th.color||'#E0A02C'}); }
+      });
+    });
+    ev.themes=acc;
+  }
+  return ev.themes;
+}
+async function _bpThemesSave(){
+  const ev=_bpCurrentEv(); if(!ev) return;
+  try{ await evRef().update({themes:ev.themes||[]}); }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function _bpThemeAdd(){
-  const p=_bpCurrentPage(); if(!p) return;
+  const ev=_bpCurrentEv(); if(!ev) return;
   const inp=document.getElementById('bpe-new-theme');
   const name=(inp&&inp.value||'').trim(); if(!name) return;
-  p.themes=Array.isArray(p.themes)?p.themes:[];
-  p.themes.push({id:_bpThemeUid(), name:name, color:'#E0A02C'});
-  _bpSavePageDebounced(); _renderBuilderEditor(document.getElementById('admin-main'));
+  ev.themes=_bpThemesList();
+  ev.themes.push({id:_bpThemeUid(), name:name, color:'#E0A02C'});
+  _bpThemesSave(); _renderBuilderEditor(document.getElementById('admin-main'));
 }
 function _bpThemeSet(i,field,val){
-  const p=_bpCurrentPage(); if(!p||!p.themes||!p.themes[i]) return;
-  p.themes[i][field]=val; _bpSavePageDebounced();
+  const ev=_bpCurrentEv(); const themes=_bpThemesList(); if(!themes[i]) return;
+  themes[i][field]=val; _bpThemesSave();
 }
 function _bpThemeDel(i){
-  const p=_bpCurrentPage(); if(!p||!p.themes) return;
-  const removed=p.themes[i];
-  p.themes.splice(i,1);
-  // Nettoyer l'assignation de ce thème sur les blocs
-  if(removed&&removed.id){ (p.sections||[]).forEach(function(s){ if(s.content&&s.content.theme===removed.id) delete s.content.theme; }); }
-  _bpSavePageDebounced(); _renderBuilderEditor(document.getElementById('admin-main'));
+  const ev=_bpCurrentEv(); const themes=_bpThemesList(); if(!themes[i]) return;
+  const removed=themes[i];
+  themes.splice(i,1);
+  // Nettoyer l'assignation de ce thème sur les blocs de toutes les pages
+  if(removed&&removed.id){ (ev.builderPages||[]).forEach(function(pg){ (pg.sections||[]).forEach(function(s){ if(s.content&&s.content.theme===removed.id) delete s.content.theme; }); }); }
+  _bpThemesSave(); _bpSavePageDebounced(); _renderBuilderEditor(document.getElementById('admin-main'));
 }
 
 // ---------- Setters (mettent à jour l'état + sauvegardent + re-render partiel) ----------
