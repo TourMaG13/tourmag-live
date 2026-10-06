@@ -4177,6 +4177,7 @@ function _buildExpHero(phaseObj, event, exp, accent, heightOverride){
   const hasHeroImage = !!_heroImage;
   const _expHeroH = _bannerH || event.hero_height;
   const _expHeroAttr = _expHeroH ? ` data-h="1" style="--exp-hero-h:${parseInt(_expHeroH,10)}px"` : '';
+  try{ if(window.location.search.indexOf('diaghero')>=0) console.log('[diag-hero] heightOverride='+heightOverride+' | _bannerH='+_bannerH+' | event.hero_height='+event.hero_height+' | _expUseBanner='+_expUseBanner+' | _expHeroH='+_expHeroH); }catch(e){}
   if(_expUseBanner){
     const _bStyleExp = _bannerH ? ` style="--exp-hero-h:${_bannerH}px"` : '';
     H += `<section class="exp-hero-banner"${_bStyleExp}><img class="exp-hero-banner-img" src="${_heroBannerImage}" alt="">`;
