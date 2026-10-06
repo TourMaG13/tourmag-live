@@ -5814,24 +5814,17 @@ function _bpRenderContentModule(sec, event, ctx){
     case 'text': {
       // Bloc entièrement vide → rien (évite un bloc fantôme avec sa marge)
       if(!ct.title && !ct.text && !ct.image && !ct.video) return '';
-      if(window.location.search.indexOf('diagtxt')>=0 && ct.title){
-        var _tt=ct.title;
-        setTimeout(function(){
-          try{
-            var hs=document.querySelectorAll('.bp-section.bp-text h2');
-            hs.forEach(function(hh){ if(hh.textContent.trim()===_tt.trim()){ var cs=getComputedStyle(hh); console.log('[diag-texte] "'+_tt+'" → taille demandée='+ct.titleSize+'px | taille RÉELLE affichée='+cs.fontSize+' | police='+cs.fontFamily); } });
-          }catch(e){}
-        }, 800);
-      }
       var _titleStyleKind = ct.titleStyle || 'simple';
+      // !important : en mode "section", le CSS .sec-title h2 / .exp-section-head h2 surchargerait
+      // sinon l'inline. On force donc les réglages du builder à primer.
       var _titSty='';
-      if(ct.titleFont) _titSty+="font-family:'"+ct.titleFont+"',sans-serif;";
-      if(ct.titleSize) _titSty+='font-size:'+(parseInt(ct.titleSize,10)||0)+'px;';
-      if(ct.titleColor) _titSty+='color:'+ct.titleColor+';';
+      if(ct.titleFont) _titSty+="font-family:'"+ct.titleFont+"',sans-serif !important;";
+      if(ct.titleSize) _titSty+='font-size:'+(parseInt(ct.titleSize,10)||0)+'px !important;';
+      if(ct.titleColor) _titSty+='color:'+ct.titleColor+' !important;';
       var _subSty='';
-      if(ct.subFont) _subSty+="font-family:'"+ct.subFont+"',sans-serif;";
-      if(ct.subSize) _subSty+='font-size:'+(parseInt(ct.subSize,10)||16)+'px;';
-      if(ct.subColor) _subSty+='color:'+ct.subColor+';';
+      if(ct.subFont) _subSty+="font-family:'"+ct.subFont+"',sans-serif !important;";
+      if(ct.subSize) _subSty+='font-size:'+(parseInt(ct.subSize,10)||16)+'px !important;';
+      if(ct.subColor) _subSty+='color:'+ct.subColor+' !important;';
       var _subStyAttr=_subSty?' style="'+_subSty+'"':'';
       var titleHtml = '';
       if(ct.title && _titleStyleKind==='section'){
