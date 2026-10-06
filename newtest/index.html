@@ -5983,8 +5983,8 @@ function _renderBuilderPage(page, event, ctx){
   function closeDash(){ if(inDash){ h+='</div>'; inDash=false; } }
   function renderSolo(s){ openDash(); h+=_bpRenderSection(s,event,ctx); }
 
-  // Barre "Explorer par thème" (sous les onglets/frise), si la page définit des thèmes.
-  var _themes = Array.isArray(page.themes) ? page.themes : [];
+  // Barre "Explorer par thème" (sous les onglets/frise). Thèmes GLOBAUX au dashboard.
+  var _themes = Array.isArray(event.themes) ? event.themes : (Array.isArray(page.themes)?page.themes:[]);
   var _themesBar = '';
   if(_themes.length){
     _themesBar = '<div class="'+CL.dash+'"><div class="bp-themes-bar" id="bp-themes-bar">'
