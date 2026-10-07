@@ -5463,16 +5463,26 @@ function _bpScrollToEl(el){
   _bpWhenImagesReady(function(){
     if(inIframe){
       if(window._bpScrollIv){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
+      var anchorName = el.getAttribute('data-anchor');
       var n=0;
-      // On RENVOIE la position (recalculée) en continu pendant ~5s. Le parent se recale
-      // à chaque message, donc il suit le bloc tant que le layout bouge, et finit juste.
       window._bpScrollIv=setInterval(function(){
         n++;
-        var tt = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
-        var off = Math.max(0, tt-20);
-        try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
-        if(typeof _bpDbgBanner==='function' && (n<=2 || n%5===0)) _bpDbgBanner('envoi #'+n+' offset='+off);
-        if(n>=20){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; } // ~5s
+        // RE-sélectionner à chaque fois le meilleur candidat VISIBLE (top>0) portant cette ancre.
+        // (Le bloc peut exister en double : page courante + vue thématique cachée.)
+        var cands=[].slice.call(document.querySelectorAll('[data-anchor="'+anchorName+'"]'));
+        var best=null, bestTop=0;
+        for(var i=0;i<cands.length;i++){
+          var c=cands[i];
+          var r=c.getBoundingClientRect();
+          // ignorer un élément non affiché (hauteur nulle = caché)
+          if(r.height===0 && r.width===0) continue;
+          var t=r.top+(window.pageYOffset||document.documentElement.scrollTop||0);
+          if(t>bestTop){ best=c; bestTop=t; }
+        }
+        var off = Math.max(0, bestTop-20);
+        if(off>0){ try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){} }
+        if(typeof _bpDbgBanner==='function' && (n<=2 || n%5===0)) _bpDbgBanner('envoi #'+n+' offset='+off+' (candidats='+cands.length+')');
+        if(n>=20){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
       }, 250);
     } else {
       el.scrollIntoView({behavior:'smooth', block:'start'});
