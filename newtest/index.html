@@ -5461,14 +5461,21 @@ function _bpScrollToEl(el){
   var inIframe = false; try{ inIframe = (window.self!==window.top); }catch(e){ inIframe=true; }
   // On attend le chargement des images AVANT de calculer la position finale.
   _bpWhenImagesReady(function(){
-    var t = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
-    if(_dg) console.log('[diag-anchor] (images prêtes) inIframe='+inIframe+' | top='+t);
     if(inIframe){
-      var send=function(){
+      // Réajustement CONTINU : on renvoie la position (recalculée) de façon répétée
+      // pendant ~3,5s, pour suivre le layout qui se stabilise (resize de l'iframe,
+      // contenus tardifs). Le parent se recale à chaque message → position finale juste.
+      var _last=-1, _stable=0, n=0;
+      var iv=setInterval(function(){
+        n++;
         var tt = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
-        try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, tt-20) }, '*'); }catch(e){}
-      };
-      send(); setTimeout(send,300); setTimeout(send,800);
+        var off = Math.max(0, tt-20);
+        try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
+        if(_dg) console.log('[diag-anchor] envoi #'+n+' offset='+off);
+        // Si la position ne bouge plus sur plusieurs mesures, on peut s'arrêter tôt.
+        if(off===_last){ _stable++; } else { _stable=0; _last=off; }
+        if(_stable>=4 || n>=16){ clearInterval(iv); } // stable 4x d'affilée, ou ~4s max
+      }, 250);
     } else {
       el.scrollIntoView({behavior:'smooth', block:'start'});
     }
