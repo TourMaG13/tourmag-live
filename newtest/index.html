@@ -5462,19 +5462,17 @@ function _bpScrollToEl(el){
   // On attend le chargement des images AVANT de calculer la position finale.
   _bpWhenImagesReady(function(){
     if(inIframe){
-      // Réajustement CONTINU : on renvoie la position (recalculée) de façon répétée
-      // pendant ~3,5s, pour suivre le layout qui se stabilise (resize de l'iframe,
-      // contenus tardifs). Le parent se recale à chaque message → position finale juste.
+      // Une SEULE boucle active : on annule la précédente (rechargements rapides, re-renders).
+      if(window._bpScrollIv){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
       var _last=-1, _stable=0, n=0;
-      var iv=setInterval(function(){
+      window._bpScrollIv=setInterval(function(){
         n++;
         var tt = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
         var off = Math.max(0, tt-20);
         try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
         if(_dg) console.log('[diag-anchor] envoi #'+n+' offset='+off);
-        // Si la position ne bouge plus sur plusieurs mesures, on peut s'arrêter tôt.
-        if(off===_last){ _stable++; } else { _stable=0; _last=off; }
-        if(_stable>=4 || n>=16){ clearInterval(iv); } // stable 4x d'affilée, ou ~4s max
+        if(Math.abs(off-_last)<=2){ _stable++; } else { _stable=0; _last=off; }
+        if(_stable>=4 || n>=16){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
       }, 250);
     } else {
       el.scrollIntoView({behavior:'smooth', block:'start'});
