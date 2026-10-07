@@ -5448,6 +5448,7 @@ window._bpFilterTheme = function(btn, themeId){
     var normals = [];
     app.querySelectorAll('.dash, .exp-dash').forEach(function(d){
       if(d.classList.contains('bp-theme-view')) return;
+      if(d.closest('.bp-theme-view')) return;            // conteneur À L'INTÉRIEUR d'une vue thématique
       if(d.querySelector('.bp-themes-bar')) return;      // barre de thèmes : toujours visible
       if(d.querySelector('.ft')) return;                 // footer : toujours visible
       normals.push(d);
@@ -6076,16 +6077,8 @@ function _renderBuilderPage(page, event, ctx){
   // Vues thématiques : pour chaque thème, agréger les blocs de ce thème de TOUTES les pages.
   if(_themes.length){
     var _allPages = Array.isArray(event.builderPages) ? event.builderPages : [];
-    if(window.location.search.indexOf('diagtheme')>=0){
-      console.log('[diag-theme] THÈMES globaux:', _themes.map(function(t){return t.name+'='+t.id;}).join(' | '));
-      var _assigned={};
-      _allPages.forEach(function(pg){ (pg.sections||[]).forEach(function(sx){ if(sx&&sx.content&&sx.content.theme){ _assigned[sx.content.theme]=(_assigned[sx.content.theme]||0)+1; } }); });
-      console.log('[diag-theme] IDs de thème assignés aux blocs:', JSON.stringify(_assigned));
-    }
     _themes.forEach(function(th){
       var agg='';
-      var _dbg = window.location.search.indexOf('diagtheme')>=0;
-      if(_dbg){ var _found=0; _allPages.forEach(function(pg){ (pg.sections||[]).forEach(function(sx){ if(sx&&sx.content&&sx.content.theme) { if(sx.content.theme===th.id)_found++; } }); }); console.log('[diag-theme] thème "'+th.name+'" id='+th.id+' → '+_found+' bloc(s) trouvé(s)'); }
       _allPages.forEach(function(pg){
         (pg.sections||[]).forEach(function(sx){
           if(sx && sx.content && sx.content.theme===th.id){
@@ -6094,9 +6087,7 @@ function _renderBuilderPage(page, event, ctx){
             var sxCopy = JSON.parse(JSON.stringify(sx)); sxCopy.zone='full';
             sxCopy.content = sxCopy.content || {};
             sxCopy.content.showTitle = false;
-            var _rendered = _bpRenderSection(sxCopy, event, ctx);
-            if(window.location.search.indexOf('diagtheme')>=0) console.log('[diag-theme]   bloc type='+sx.type+' → rendu '+(_rendered?_rendered.length+' car.':'VIDE')+' | content keys='+Object.keys(sx.content||{}).join(','));
-            agg += _rendered;
+            agg += _bpRenderSection(sxCopy, event, ctx);
           }
         });
       });
