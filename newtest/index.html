@@ -5438,13 +5438,13 @@ function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 // (blocs du thème agrégés depuis toutes les pages).
 // Défile jusqu'au bloc dont data-anchor == hash de l'URL (lien direct depuis une pub).
 function _bpScrollToEl(el){
-  if(!el) return;
+  var _dg = (window.location.hash||'').indexOf('diag')>=0 || (window.location.search||'').indexOf('diaganchor')>=0;
+  if(!el){ if(_dg)console.log('[diag-anchor] élément introuvable'); return; }
   var inIframe = false; try{ inIframe = (window.self!==window.top); }catch(e){ inIframe=true; }
+  var top = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
+  if(_dg) console.log('[diag-anchor] bloc trouvé | inIframe='+inIframe+' | top='+top);
   if(inIframe){
-    // Dans un iframe (sans scroll interne car la hauteur s'ajuste) : on demande à la page
-    // parente de défiler jusqu'à la position du bloc (position de l'iframe + offset du bloc).
-    var top = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
-    try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, top-20) }, '*'); }catch(e){}
+    try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, top-20) }, '*'); if(_dg)console.log('[diag-anchor] message envoyé au parent, offset='+Math.max(0,top-20)); }catch(e){ if(_dg)console.log('[diag-anchor] erreur postMessage',e); }
   } else {
     el.scrollIntoView({behavior:'smooth', block:'start'});
   }
@@ -5461,6 +5461,8 @@ window._bpScrollToAnchor = function(){
 if(!window._bpAnchorWatch){
   window._bpAnchorWatch = true;
   (function(){
+    var _dg = (window.location.search||'').indexOf('diaganchor')>=0;
+    if(_dg) console.log('[diag-anchor] hash au chargement =', window.location.hash||'(vide)');
     if(!(window.location.hash||'').length) return;
     var tries=0;
     var iv=setInterval(function(){
@@ -5468,6 +5470,7 @@ if(!window._bpAnchorWatch){
       var h=(window.location.hash||'').replace(/^#/,'');
       var el=h?document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]'):null;
       if(el){ clearInterval(iv); setTimeout(function(){ _bpScrollToEl(el); },300); }
+      if(tries===1 && _dg){ var all=[].slice.call(document.querySelectorAll('[data-anchor]')).map(function(x){return x.getAttribute('data-anchor');}); console.log('[diag-anchor] cherche "'+h+'" | ancres présentes:', all.join(', ')||'AUCUNE'); }
       if(tries>40) clearInterval(iv); // ~8s max
     }, 200);
   })();
