@@ -5444,7 +5444,14 @@ function _bpScrollToEl(el){
   var top = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
   if(_dg) console.log('[diag-anchor] bloc trouvé | inIframe='+inIframe+' | top='+top);
   if(inIframe){
-    try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, top-20) }, '*'); if(_dg)console.log('[diag-anchor] message envoyé au parent, offset='+Math.max(0,top-20)); }catch(e){ if(_dg)console.log('[diag-anchor] erreur postMessage',e); }
+    // On recalcule la position À CHAQUE envoi (la hauteur de l'iframe et le layout
+    // peuvent encore bouger juste après le chargement), et on ré-émet plusieurs fois.
+    var _send=function(){
+      var t = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
+      try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, t-20) }, '*'); }catch(e){}
+      if(_dg)console.log('[diag-anchor] message envoyé, offset='+Math.max(0,t-20));
+    };
+    _send(); setTimeout(_send,500); setTimeout(_send,1100); setTimeout(_send,2000);
   } else {
     // Hors iframe : scrollIntoView est le plus fiable (gère layout dynamique)
     el.scrollIntoView({behavior:'smooth', block:'start'});
