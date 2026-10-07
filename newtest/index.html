@@ -174,7 +174,7 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-theme-chip{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid #D9D4C7;border-radius:999px;padding:6px 14px;font-size:13.5px;color:#64748B;cursor:pointer;transition:all .15s;font-family:inherit}
 .bp-theme-chip:hover{border-color:var(--chip,#CFC9B8);color:#1a1a1a}
 .bp-theme-chip.on{background:var(--chip,#FBF3E1);border-color:var(--chip,#ECD9AA);color:#1a1a1a;font-weight:600}
-.bp-theme-view-head{margin:10px 0 24px}
+.bp-theme-view-head{margin:10px 0 40px}
 .bp-theme-view-head h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:#1A2E22;margin:0 0 10px}
 .bp-theme-view-rule{width:64px;height:4px;border-radius:2px}
 /* Décor dans les marges : masqué sur écrans étroits (pas de place dans la marge) */
@@ -5436,6 +5436,31 @@ function _renderContentPage(page){
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // Bascule entre la vue normale (page courante) et une vue thématique transversale
 // (blocs du thème agrégés depuis toutes les pages).
+// Défile jusqu'au bloc dont data-anchor == hash de l'URL (lien direct depuis une pub).
+window._bpScrollToAnchor = function(){
+  try{
+    var h = (window.location.hash||'').replace(/^#/,'');
+    if(!h) return;
+    var el = document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]');
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  }catch(e){}
+};
+// Au chargement (le rendu est asynchrone) : on tente plusieurs fois jusqu'à trouver l'ancre.
+if(!window._bpAnchorWatch){
+  window._bpAnchorWatch = true;
+  (function(){
+    if(!(window.location.hash||'').length) return;
+    var tries=0;
+    var iv=setInterval(function(){
+      tries++;
+      var h=(window.location.hash||'').replace(/^#/,'');
+      var el=h?document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]'):null;
+      if(el){ clearInterval(iv); setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); },150); }
+      if(tries>40) clearInterval(iv); // ~8s max
+    }, 200);
+  })();
+  window.addEventListener('hashchange', window._bpScrollToAnchor);
+}
 window._bpFilterTheme = function(btn, themeId){
   try{
     var bar = btn.closest('.bp-themes-bar');
@@ -5685,7 +5710,8 @@ function _bpRenderSection(sec, event, ctx){
   const idAttr = secId ? ' id="'+secId+'"' : '';
   const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
   var _themeAttr = (ct.theme) ? ' data-theme="'+_bpEsc(ct.theme)+'"' : '';
-  return '<div class="bp-section bp-'+type+_mobCls+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'"'+_themeAttr+'>'+overrideCss+inner+'</div>';
+  var _ancAttr = (ct.anchor) ? ' data-anchor="'+_bpEsc(ct.anchor)+'"' : '';
+  return '<div class="bp-section bp-'+type+_mobCls+'"'+idAttr+st+' data-bp-type="'+type+'" data-exp-block="'+type+'"'+_themeAttr+_ancAttr+'>'+overrideCss+inner+'</div>';
 }
 
 // Génère un <style> scopé qui applique l'apparence du constructeur à l'intérieur
