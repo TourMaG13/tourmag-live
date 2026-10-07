@@ -5463,15 +5463,26 @@ function _bpScrollToEl(el){
   _bpWhenImagesReady(function(){
     if(inIframe){
       if(window._bpScrollIv){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
-      var _last=-1, _stable=0, n=0;
+      var _last=-1, _stable=0, n=0, _sent=false;
       window._bpScrollIv=setInterval(function(){
         n++;
         var tt = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
         var off = Math.max(0, tt-20);
-        try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
-        if(typeof _bpDbgBanner==='function' && (n<=3 || n%4===0)) _bpDbgBanner('postMessage #'+n+' → parent, offset='+off);
-        if(Math.abs(off-_last)<=2){ _stable++; } else { _stable=0; _last=off; }
-        if(_stable>=4 || n>=16){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; if(typeof _bpDbgBanner==='function')_bpDbgBanner('→ fin boucle, offset final='+off); }
+        // On attend que la position soit STABLE (ne bouge plus de >3px) sur 3 mesures
+        // AVANT d'envoyer au parent — sinon on vise une position encore en train de grandir.
+        if(Math.abs(off-_last)<=3){ _stable++; } else { _stable=0; _last=off; }
+        if(_stable>=3 && !_sent){
+          _sent=true;
+          try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
+          if(typeof _bpDbgBanner==='function') _bpDbgBanner('position STABLE à '+off+' (mesure #'+n+') → envoi au parent');
+          clearInterval(window._bpScrollIv); window._bpScrollIv=null;
+        } else if(n>=24 && !_sent){
+          // Sécurité : au bout de ~6s, on envoie la dernière mesure même si pas parfaitement stable
+          _sent=true;
+          try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
+          if(typeof _bpDbgBanner==='function') _bpDbgBanner('timeout stabilité → envoi offset='+off);
+          clearInterval(window._bpScrollIv); window._bpScrollIv=null;
+        }
       }, 250);
     } else {
       el.scrollIntoView({behavior:'smooth', block:'start'});
