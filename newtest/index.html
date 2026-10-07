@@ -5877,7 +5877,9 @@ function _bpRenderContentModule(sec, event, ctx){
       if(ct.subWeight) _subSty+='font-weight:'+ct.subWeight+' !important;';
       var _subStyAttr=_subSty?' style="'+_subSty+'"':'';
       var titleHtml = '';
-      if(ct.title && _titleStyleKind==='section'){
+      if(ct.showTitle===false){
+        titleHtml = ''; // titre masqué (ex. vue thématique)
+      } else if(ct.title && _titleStyleKind==='section'){
         var _isExpMode = (event && event.mode==='expedition');
         var _accent = (ap.accent) || '';
         var _h2sty = ' style="'+(titleStyle||'')+_titSty+'"';
@@ -6072,8 +6074,16 @@ function _renderBuilderPage(page, event, ctx){
   // Vues thématiques : pour chaque thème, agréger les blocs de ce thème de TOUTES les pages.
   if(_themes.length){
     var _allPages = Array.isArray(event.builderPages) ? event.builderPages : [];
+    if(window.location.search.indexOf('diagtheme')>=0){
+      console.log('[diag-theme] THÈMES globaux:', _themes.map(function(t){return t.name+'='+t.id;}).join(' | '));
+      var _assigned={};
+      _allPages.forEach(function(pg){ (pg.sections||[]).forEach(function(sx){ if(sx&&sx.content&&sx.content.theme){ _assigned[sx.content.theme]=(_assigned[sx.content.theme]||0)+1; } }); });
+      console.log('[diag-theme] IDs de thème assignés aux blocs:', JSON.stringify(_assigned));
+    }
     _themes.forEach(function(th){
       var agg='';
+      var _dbg = window.location.search.indexOf('diagtheme')>=0;
+      if(_dbg){ var _found=0; _allPages.forEach(function(pg){ (pg.sections||[]).forEach(function(sx){ if(sx&&sx.content&&sx.content.theme) { if(sx.content.theme===th.id)_found++; } }); }); console.log('[diag-theme] thème "'+th.name+'" id='+th.id+' → '+_found+' bloc(s) trouvé(s)'); }
       _allPages.forEach(function(pg){
         (pg.sections||[]).forEach(function(sx){
           if(sx && sx.content && sx.content.theme===th.id){
