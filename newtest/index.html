@@ -5462,7 +5462,6 @@ function _bpScrollToEl(el){
   // On attend le chargement des images AVANT de calculer la position finale.
   _bpWhenImagesReady(function(){
     if(inIframe){
-      // Une SEULE boucle active : on annule la précédente (rechargements rapides, re-renders).
       if(window._bpScrollIv){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
       var _last=-1, _stable=0, n=0;
       window._bpScrollIv=setInterval(function(){
@@ -5470,9 +5469,9 @@ function _bpScrollToEl(el){
         var tt = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
         var off = Math.max(0, tt-20);
         try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){}
-        if(_dg) console.log('[diag-anchor] envoi #'+n+' offset='+off);
+        if(typeof _bpDbgBanner==='function' && (n<=3 || n%4===0)) _bpDbgBanner('postMessage #'+n+' → parent, offset='+off);
         if(Math.abs(off-_last)<=2){ _stable++; } else { _stable=0; _last=off; }
-        if(_stable>=4 || n>=16){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
+        if(_stable>=4 || n>=16){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; if(typeof _bpDbgBanner==='function')_bpDbgBanner('→ fin boucle, offset final='+off); }
       }, 250);
     } else {
       el.scrollIntoView({behavior:'smooth', block:'start'});
@@ -5488,31 +5487,33 @@ window._bpScrollToAnchor = function(){
   }catch(e){}
 };
 // Au chargement (le rendu est asynchrone) : on tente plusieurs fois jusqu'à trouver l'ancre.
+function _bpDbgBanner(msg){
+  if((window.location.search||'').indexOf('diaganchor')<0) return;
+  var d=document.getElementById('_bpdbg');
+  if(!d){ d=document.createElement('div'); d.id='_bpdbg'; d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#111;color:#0f0;font:12px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;max-height:40vh;overflow:auto'; document.body.appendChild(d); }
+  d.textContent += msg+'\n';
+}
 if(!window._bpAnchorWatch){
   window._bpAnchorWatch = true;
   (function(){
-    var _dg = (window.location.search||'').indexOf('diaganchor')>=0;
-    if(_dg) console.log('[diag-anchor] hash au chargement =', window.location.hash||'(vide)');
-    if(!(window.location.hash||'').length) return;
+    _bpDbgBanner('hash reçu dans iframe = '+(window.location.hash||'(VIDE)'));
+    if(!(window.location.hash||'').length){ _bpDbgBanner('→ pas de hash, arrêt.'); return; }
     var tries=0;
     var iv=setInterval(function(){
       tries++;
       var h=(window.location.hash||'').replace(/^#/,'');
-      // Chercher le bloc VISIBLE (pas dans une vue thématique cachée) avec une position réelle.
       var cands=h?[].slice.call(document.querySelectorAll('[data-anchor="'+h.replace(/"/g,'')+'"]')):[];
       var el=null, top=0;
       for(var i=0;i<cands.length;i++){
         var c=cands[i];
-        // ignorer ceux dont un ancêtre est caché
         if(c.closest('[style*="display:none"]')) continue;
         var t=c.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0);
         if(t>0){ el=c; top=t; break; }
-        if(!el){ el=c; top=t; } // garder un fallback
+        if(!el){ el=c; top=t; }
       }
-      if(tries===1 && _dg){ var all=[].slice.call(document.querySelectorAll('[data-anchor]')).map(function(x){return x.getAttribute('data-anchor');}); console.log('[diag-anchor] cherche "'+h+'" | ancres présentes:', all.join(', ')||'AUCUNE'); }
-      // On attend que la position soit réelle (>0) OU qu'on ait essayé assez longtemps.
-      if(el && (top>0 || tries>8)){ clearInterval(iv); setTimeout(function(){ _bpScrollToEl(el); },200); }
-      if(tries>40) clearInterval(iv); // ~8s max
+      if(tries===1){ var all=[].slice.call(document.querySelectorAll('[data-anchor]')).map(function(x){return x.getAttribute('data-anchor');}); _bpDbgBanner('cherche "'+h+'" | ancres présentes: '+(all.join(', ')||'AUCUNE')+' | candidats='+cands.length); }
+      if(el && (top>0 || tries>8)){ clearInterval(iv); _bpDbgBanner('bloc trouvé, top='+top+' → scroll dans 200ms'); setTimeout(function(){ _bpScrollToEl(el); },200); }
+      if(tries>40){ clearInterval(iv); _bpDbgBanner('timeout : bloc jamais positionné'); }
     }, 250);
   })();
   window.addEventListener('hashchange', window._bpScrollToAnchor);
