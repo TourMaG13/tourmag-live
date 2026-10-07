@@ -5437,12 +5437,24 @@ function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 // Bascule entre la vue normale (page courante) et une vue thématique transversale
 // (blocs du thème agrégés depuis toutes les pages).
 // Défile jusqu'au bloc dont data-anchor == hash de l'URL (lien direct depuis une pub).
+function _bpScrollToEl(el){
+  if(!el) return;
+  var inIframe = false; try{ inIframe = (window.self!==window.top); }catch(e){ inIframe=true; }
+  if(inIframe){
+    // Dans un iframe (sans scroll interne car la hauteur s'ajuste) : on demande à la page
+    // parente de défiler jusqu'à la position du bloc (position de l'iframe + offset du bloc).
+    var top = el.getBoundingClientRect().top + (window.pageYOffset||document.documentElement.scrollTop||0);
+    try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, top-20) }, '*'); }catch(e){}
+  } else {
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
 window._bpScrollToAnchor = function(){
   try{
     var h = (window.location.hash||'').replace(/^#/,'');
     if(!h) return;
     var el = document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]');
-    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); }
+    _bpScrollToEl(el);
   }catch(e){}
 };
 // Au chargement (le rendu est asynchrone) : on tente plusieurs fois jusqu'à trouver l'ancre.
@@ -5455,7 +5467,7 @@ if(!window._bpAnchorWatch){
       tries++;
       var h=(window.location.hash||'').replace(/^#/,'');
       var el=h?document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]'):null;
-      if(el){ clearInterval(iv); setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); },150); }
+      if(el){ clearInterval(iv); setTimeout(function(){ _bpScrollToEl(el); },300); }
       if(tries>40) clearInterval(iv); // ~8s max
     }, 200);
   })();
