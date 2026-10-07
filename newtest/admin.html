@@ -2591,7 +2591,7 @@ function modifyEvent(id){
         +'<div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-sb-title" value="'+esc(sb.title)+'" placeholder="Ex : Reconstruire le village qui nous a donné notre nom"></div>'
         +'<div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-ev-sb-text" rows="3" placeholder="Le paragraphe du bandeau…">'+esc(sb.text)+'</textarea></div>'
         +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Bouton — libellé</label><input class="form-input" id="m-ev-sb-cta" value="'+esc(sb.ctaLabel)+'" placeholder="Ex : Suivre la reconstruction ›"></div>'
-        +'<div class="form-row"><label class="form-label">Bouton — lien</label><input class="form-input" id="m-ev-sb-ctaurl" value="'+esc(sb.ctaUrl)+'" placeholder="https://…"></div></div>'
+        +'<div class="form-row"><label class="form-label">Bouton — lien</label><input class="form-input" id="m-ev-sb-ctaurl" value="'+esc(sb.ctaUrl)+'" placeholder="https://… ou #ancre-dun-bloc">'+_bpAnchorPickerForBanner(sb)+'<div style="font-size:10px;color:var(--text3);margin-top:3px">Pour pointer vers un bloc précis : utilisez son ancre (ex. <code>#rebatir-village</code>), définie dans les réglages du bloc (onglet Constructeur).</div></div></div>'
         // Mise en page
         +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Alignement</label><select class="form-input" id="m-ev-sb-align"><option value="left"'+((sb.align||'left')==='left'?' selected':'')+'>Gauche</option><option value="center"'+(sb.align==='center'?' selected':'')+'>Centré</option><option value="right"'+(sb.align==='right'?' selected':'')+'>Droite</option></select></div>'
         +'<div class="form-row"><label class="form-label">Largeur max (px)</label><input type="number" class="form-input" id="m-ev-sb-maxw" value="'+(sb.maxWidth||'')+'" placeholder="1200" style="width:100px"></div>'
@@ -4822,8 +4822,8 @@ function _bpConfigHtml(){
       +'<button type="button" class="bpe-acc-hd" onclick="_bpAccToggle(this)"><span>'+title+'</span><span class="bpe-acc-chev">▾</span></button>'
       +'<div class="bpe-acc-body">'+inner+'</div></div>';
   }
-  // 1) CONTENU (ouvert) — précédé du sélecteur de thème (si la page a des thèmes)
-  var _contentInner = _bpThemeField(s) + _bpContentFieldsHtml(s);
+  // 1) CONTENU (ouvert) — précédé du sélecteur de thème + de l'ancre (lien direct)
+  var _contentInner = _bpThemeField(s) + _bpAnchorField(s) + _bpContentFieldsHtml(s);
   // 2) DISPOSITION (replié)
   var _dispInner = '<div class="bpe-fld"><label>Zone d\'affichage</label><div class="bpe-seg">'
     +['max','full','main','side'].map(function(z){return '<button class="'+((s.zone||'full')===z?'on':'')+'" onclick="_bpSetZone(\''+z+'\')">'+({max:'Max',full:'Pleine',main:'Principale',side:'Sidebar'}[z])+'</button>';}).join('')
@@ -5083,6 +5083,22 @@ function _bpThemeField(s){
   let opts='<option value="">— Aucun (toujours visible) —</option>';
   themes.forEach(function(th){ opts+='<option value="'+th.id+'"'+((c.theme||'')===th.id?' selected':'')+'>'+_escAdm(th.name||'')+'</option>'; });
   return '<div class="bpe-fld"><label>Thème de ce bloc</label><select onchange="_bpSetCt(\'theme\',this.value)">'+opts+'</select><div class="bpe-hint">Quand on filtre par thème sur le dashboard, ce bloc n\'apparaît que pour ce thème. « Aucun » = visible dans tous les thèmes.</div></div>';
+}
+function _bpAnchorField(s){
+  const c=s.content||{};
+  const anc=c.anchor||'';
+  const ev=_bpCurrentEv();
+  // Construire un exemple d'URL avec l'ancre
+  var ex = anc ? ('…?event='+(currentEventId||'XXX')+'&bpage='+((_bpCurrentPage()||{}).id||'')+'#'+anc) : '';
+  return '<div class="bpe-fld"><label>Lien direct vers ce bloc (ancre)</label>'
+    +'<input type="text" value="'+_escAdm(anc)+'" oninput="_bpSetAnchor(this.value)" placeholder="ex : rebatir-village">'
+    +'<div class="bpe-hint">Donnez un identifiant court (sans espaces) pour pouvoir pointer une URL directement sur ce bloc.'
+    +(ex?'<br><b>URL :</b> <span style="user-select:all;color:var(--acc2)">'+_escAdm(ex)+'</span>':'')+'</div></div>';
+}
+function _bpSetAnchor(val){
+  // Nettoie : minuscules, tirets, pas d'accents ni espaces
+  var clean=(val||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  _bpSetCt('anchor', clean);
 }
 function _bpContentFieldsHtml(s){
   const c=s.content||{};
@@ -5419,6 +5435,23 @@ function _bpPagePropsHtml(){
     +'<button class="btn btn-ghost btn-sm" onclick="_bpThemeAdd()">＋ Ajouter</button></div>';
   h+='<div class="bpe-hint" style="margin-top:10px">Le mode de cette page suit celui de l\'événement ('+(p.mode==='expedition'?'Expédition':'Classique')+').</div>';
   return h;
+}
+// Menu des ancres disponibles pour le bouton du bandeau (remplit le champ lien).
+function _bpAnchorPickerForBanner(sb){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pages=Array.isArray(ev.builderPages)?ev.builderPages:[];
+  var opts='';
+  pages.forEach(function(pg){
+    (pg.sections||[]).forEach(function(s){
+      if(s.content&&s.content.anchor){
+        var label=(s.content.title||s.type)+' — '+pg.name;
+        var url='#'+s.content.anchor;
+        opts+='<option value="'+_escAdm(url)+'">'+_escAdm(label)+' ('+_escAdm(s.content.anchor)+')</option>';
+      }
+    });
+  });
+  if(!opts) return '';
+  return '<select class="form-input" style="margin-top:6px;font-size:12px" onchange="if(this.value){document.getElementById(\'m-ev-sb-ctaurl\').value=this.value;}"><option value="">— Choisir un bloc par son ancre —</option>'+opts+'</select>';
 }
 // ---- Gestion des thèmes — GLOBAUX au dashboard (event.themes) ----
 function _bpThemeUid(){ return 'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,4); }
