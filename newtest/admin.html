@@ -2587,6 +2587,7 @@ function modifyEvent(id){
         // Contenu
         +'<div class="form-row"><label class="form-label">Eyebrow (petit intitulé en haut)</label><input class="form-input" id="m-ev-sb-eyebrow" value="'+esc(sb.eyebrow)+'" placeholder="Ex : Nos 40 ans ont une mission"></div>'
         +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:8px"><input type="checkbox" id="m-ev-sb-ebicon"'+(sb.eyebrowIcon!==false?' checked':'')+'> Afficher l&rsquo;icône devant l&rsquo;eyebrow</label>'
+        +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:8px"><input type="checkbox" id="m-ev-sb-closable"'+(sb.closable!==false?' checked':'')+'> Afficher la croix de fermeture (le visiteur peut masquer le bandeau)</label>'
         +'<div class="form-row"><label class="form-label">Titre</label><input class="form-input" id="m-ev-sb-title" value="'+esc(sb.title)+'" placeholder="Ex : Reconstruire le village qui nous a donné notre nom"></div>'
         +'<div class="form-row"><label class="form-label">Texte</label><textarea class="form-input" id="m-ev-sb-text" rows="3" placeholder="Le paragraphe du bandeau…">'+esc(sb.text)+'</textarea></div>'
         +'<div class="form-row-inline"><div class="form-row"><label class="form-label">Bouton — libellé</label><input class="form-input" id="m-ev-sb-cta" value="'+esc(sb.ctaLabel)+'" placeholder="Ex : Suivre la reconstruction ›"></div>'
@@ -2655,6 +2656,7 @@ async function updateEvent(id){
         enabled:!!(document.getElementById('m-ev-sb-on')||{}).checked,
         eyebrow:g('m-ev-sb-eyebrow'),
         eyebrowIcon:!!(document.getElementById('m-ev-sb-ebicon')||{}).checked,
+        closable:!!(document.getElementById('m-ev-sb-closable')||{}).checked,
         title:g('m-ev-sb-title'),
         text:g('m-ev-sb-text'),
         ctaLabel:g('m-ev-sb-cta'),
