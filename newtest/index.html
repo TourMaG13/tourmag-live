@@ -5446,6 +5446,7 @@ function _bpScrollToEl(el){
   if(inIframe){
     try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: Math.max(0, top-20) }, '*'); if(_dg)console.log('[diag-anchor] message envoyé au parent, offset='+Math.max(0,top-20)); }catch(e){ if(_dg)console.log('[diag-anchor] erreur postMessage',e); }
   } else {
+    // Hors iframe : scrollIntoView est le plus fiable (gère layout dynamique)
     el.scrollIntoView({behavior:'smooth', block:'start'});
   }
 }
@@ -5468,11 +5469,22 @@ if(!window._bpAnchorWatch){
     var iv=setInterval(function(){
       tries++;
       var h=(window.location.hash||'').replace(/^#/,'');
-      var el=h?document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]'):null;
-      if(el){ clearInterval(iv); setTimeout(function(){ _bpScrollToEl(el); },300); }
+      // Chercher le bloc VISIBLE (pas dans une vue thématique cachée) avec une position réelle.
+      var cands=h?[].slice.call(document.querySelectorAll('[data-anchor="'+h.replace(/"/g,'')+'"]')):[];
+      var el=null, top=0;
+      for(var i=0;i<cands.length;i++){
+        var c=cands[i];
+        // ignorer ceux dont un ancêtre est caché
+        if(c.closest('[style*="display:none"]')) continue;
+        var t=c.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0);
+        if(t>0){ el=c; top=t; break; }
+        if(!el){ el=c; top=t; } // garder un fallback
+      }
       if(tries===1 && _dg){ var all=[].slice.call(document.querySelectorAll('[data-anchor]')).map(function(x){return x.getAttribute('data-anchor');}); console.log('[diag-anchor] cherche "'+h+'" | ancres présentes:', all.join(', ')||'AUCUNE'); }
+      // On attend que la position soit réelle (>0) OU qu'on ait essayé assez longtemps.
+      if(el && (top>0 || tries>8)){ clearInterval(iv); setTimeout(function(){ _bpScrollToEl(el); },200); }
       if(tries>40) clearInterval(iv); // ~8s max
-    }, 200);
+    }, 250);
   })();
   window.addEventListener('hashchange', window._bpScrollToAnchor);
 }
