@@ -5437,95 +5437,46 @@ function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 // Bascule entre la vue normale (page courante) et une vue thématique transversale
 // (blocs du thème agrégés depuis toutes les pages).
 // Défile jusqu'au bloc dont data-anchor == hash de l'URL (lien direct depuis une pub).
-// Attend que toutes les images de la page soient chargées (ou timeout), puis exécute cb.
-// C'est la cause du "s'arrête au mauvais endroit" : les images au-dessus du bloc poussent
-// le contenu vers le bas en se chargeant, donc la position finale n'est connue qu'après.
-function _bpWhenImagesReady(cb){
-  try{
-    var imgs=[].slice.call(document.querySelectorAll('#app img'));
-    var pending=imgs.filter(function(im){ return !im.complete; });
-    if(!pending.length){ cb(); return; }
-    var done=0, finished=false;
-    var finish=function(){ if(finished)return; finished=true; cb(); };
-    pending.forEach(function(im){
-      var on=function(){ done++; if(done>=pending.length) finish(); };
-      im.addEventListener('load',on,{once:true});
-      im.addEventListener('error',on,{once:true});
-    });
-    setTimeout(finish, 2500); // filet de sécurité
-  }catch(e){ cb(); }
-}
-function _bpScrollToEl(el){
-  var _dg = (window.location.hash||'').indexOf('diag')>=0 || (window.location.search||'').indexOf('diaganchor')>=0;
-  if(!el){ if(_dg)console.log('[diag-anchor] élément introuvable'); return; }
-  var inIframe = false; try{ inIframe = (window.self!==window.top); }catch(e){ inIframe=true; }
-  // On attend le chargement des images AVANT de calculer la position finale.
-  _bpWhenImagesReady(function(){
-    if(inIframe){
-      if(window._bpScrollIv){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
-      var anchorName = el.getAttribute('data-anchor');
-      var n=0;
-      window._bpScrollIv=setInterval(function(){
-        n++;
-        // RE-sélectionner à chaque fois le meilleur candidat VISIBLE (top>0) portant cette ancre.
-        // (Le bloc peut exister en double : page courante + vue thématique cachée.)
-        var cands=[].slice.call(document.querySelectorAll('[data-anchor="'+anchorName+'"]'));
-        var best=null, bestTop=0;
-        for(var i=0;i<cands.length;i++){
-          var c=cands[i];
-          var r=c.getBoundingClientRect();
-          // ignorer un élément non affiché (hauteur nulle = caché)
-          if(r.height===0 && r.width===0) continue;
-          var t=r.top+(window.pageYOffset||document.documentElement.scrollTop||0);
-          if(t>bestTop){ best=c; bestTop=t; }
-        }
-        var off = Math.max(0, bestTop-20);
-        if(off>0){ try{ window.parent.postMessage({ type:'tourmag-live-scrollto', offset: off }, '*'); }catch(e){} }
-        if(typeof _bpDbgBanner==='function' && (n<=2 || n%5===0)) _bpDbgBanner('envoi #'+n+' offset='+off+' (candidats='+cands.length+')');
-        if(n>=20){ clearInterval(window._bpScrollIv); window._bpScrollIv=null; }
-      }, 250);
-    } else {
-      el.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-  });
+// Trouve le bloc VISIBLE portant l'ancre du hash et le fait défiler à l'écran.
+// Simple et robuste : scrollIntoView en direct ; en iframe, un message au parent.
+function _bpFindAnchorEl(name){
+  var cands=[].slice.call(document.querySelectorAll('[data-anchor="'+name.replace(/"/g,'')+'"]'));
+  var best=null, bestTop=-1;
+  for(var i=0;i<cands.length;i++){
+    var r=cands[i].getBoundingClientRect();
+    if(r.height===0 && r.width===0) continue; // caché
+    var t=r.top+(window.pageYOffset||document.documentElement.scrollTop||0);
+    if(t>bestTop){ best=cands[i]; bestTop=t; }
+  }
+  return best;
 }
 window._bpScrollToAnchor = function(){
   try{
-    var h = (window.location.hash||'').replace(/^#/,'');
-    if(!h) return;
-    var el = document.querySelector('[data-anchor="'+h.replace(/"/g,'')+'"]');
-    _bpScrollToEl(el);
+    var h=(window.location.hash||'').replace(/^#/,''); if(!h) return;
+    var el=_bpFindAnchorEl(h); if(!el) return;
+    var inIframe=false; try{ inIframe=(window.self!==window.top); }catch(e){ inIframe=true; }
+    if(inIframe){
+      var off=Math.max(0, el.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0)-20);
+      if(off>0){ try{ window.parent.postMessage({type:'tourmag-live-scrollto', offset:off}, '*'); }catch(e){} }
+    } else {
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    }
   }catch(e){}
 };
-// Au chargement (le rendu est asynchrone) : on tente plusieurs fois jusqu'à trouver l'ancre.
-function _bpDbgBanner(msg){
-  if((window.location.search||'').indexOf('diaganchor')<0) return;
-  var d=document.getElementById('_bpdbg');
-  if(!d){ d=document.createElement('div'); d.id='_bpdbg'; d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#111;color:#0f0;font:12px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;max-height:40vh;overflow:auto'; document.body.appendChild(d); }
-  d.textContent += msg+'\n';
-}
+// Au chargement : on attend que le bloc existe et soit positionné, puis on défile une fois.
 if(!window._bpAnchorWatch){
   window._bpAnchorWatch = true;
   (function(){
-    _bpDbgBanner('hash reçu dans iframe = '+(window.location.hash||'(VIDE)'));
-    if(!(window.location.hash||'').length){ _bpDbgBanner('→ pas de hash, arrêt.'); return; }
+    if(!(window.location.hash||'').length) return;
     var tries=0;
     var iv=setInterval(function(){
       tries++;
       var h=(window.location.hash||'').replace(/^#/,'');
-      var cands=h?[].slice.call(document.querySelectorAll('[data-anchor="'+h.replace(/"/g,'')+'"]')):[];
-      var el=null, top=0;
-      for(var i=0;i<cands.length;i++){
-        var c=cands[i];
-        if(c.closest('[style*="display:none"]')) continue;
-        var t=c.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0);
-        if(t>0){ el=c; top=t; break; }
-        if(!el){ el=c; top=t; }
-      }
-      if(tries===1){ var all=[].slice.call(document.querySelectorAll('[data-anchor]')).map(function(x){return x.getAttribute('data-anchor');}); _bpDbgBanner('cherche "'+h+'" | ancres présentes: '+(all.join(', ')||'AUCUNE')+' | candidats='+cands.length); }
-      if(el && (top>0 || tries>8)){ clearInterval(iv); _bpDbgBanner('bloc trouvé, top='+top+' → scroll dans 200ms'); setTimeout(function(){ _bpScrollToEl(el); },200); }
-      if(tries>40){ clearInterval(iv); _bpDbgBanner('timeout : bloc jamais positionné'); }
-    }, 250);
+      var el=h?_bpFindAnchorEl(h):null;
+      var top=el?(el.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0)):0;
+      if(el && top>0){ clearInterval(iv); setTimeout(window._bpScrollToAnchor, 300); }
+      if(tries>30) clearInterval(iv); // ~6s max
+    }, 200);
   })();
   window.addEventListener('hashchange', window._bpScrollToAnchor);
 }
