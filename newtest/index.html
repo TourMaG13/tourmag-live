@@ -58,6 +58,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .side-col .pr-boxes,.exp-side-col .pr-boxes{grid-template-columns:1fr;padding:16px 18px 2px;gap:12px}
 .side-col .pr-head,.exp-side-col .pr-head{padding:16px 18px}
 .side-col .pr-desc,.exp-side-col .pr-desc{padding-left:18px;padding-right:18px}
+/* En colonne latérale, les conteneurs .dash/.exp-dash imbriqués ne doivent pas rajouter
+   leur padding horizontal (28/32px) qui rétrécit le contenu dans la colonne étroite. */
+.side-col .dash,.side-col .exp-dash,.exp-side-col .dash,.exp-side-col .exp-dash{padding-left:0;padding-right:0;max-width:none}
 .pr-mainimg img{width:100%;max-height:420px;object-fit:cover;display:block}
 .pr-mainimg-fixed img{max-height:none;height:var(--pr-img-h,420px)}
 .pr-head-side{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center}
@@ -188,6 +191,8 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bp-section::before{content:"";display:table;clear:both}
 .bp-section:last-child{margin-bottom:0}
 .bp-h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);margin:0 0 14px;line-height:1.25}
+.bp-title-ico{display:inline-block;margin-right:10px;vertical-align:-0.12em}
+.sec-title h2 .bp-title-ico,.exp-section-head h2 .bp-title-ico{margin-right:12px}
 .bp-text{font-size:16px;line-height:1.75;color:#334155}
 .bp-subtitle{font-size:16px;color:#64748B;line-height:1.5;margin:-2px 0 14px}
 .sec-banner{width:100%;position:relative}
@@ -1515,6 +1520,36 @@ if(window.self !== window.top) document.body.classList.add('is-embed');
 // ============================================================
 // SVG ICONS
 // ============================================================
+// Galerie de pictos vectoriels pour les titres de paragraphe (bloc texte).
+// Trait fin, currentColor → ils prennent la couleur du titre. Clé → path(s) SVG.
+var BP_TITLE_ICONS = {
+  star:'<path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 7L12 18l-6.2 3.2 1.6-7L2 9.5l7.1-.6z"/>',
+  heart:'<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+  pin:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.1 14.1 7.8 16.2 9.9 9.9"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  mountain:'<path d="M8 3l4 8 5-5 5 15H2z"/>',
+  book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  leaf:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  anchor:'<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+  award:'<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  bulb:'<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/>',
+  plane:'<path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-1 .3L2.5 7.8 9 11l-2 4-3 .5L3 17l3.5 1L8 21.5 9.2 20l4-2z"/>',
+  ship:'<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2c1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4M12 2v3"/>'
+};
+function _bpTitleIconSvg(key, sizePx, color){
+  var p = BP_TITLE_ICONS[key]; if(!p) return '';
+  var sz = sizePx || 20;
+  return '<svg class="bp-title-ico" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:middle">'+p+'</svg>';
+}
 const ICO = {
   mapPin:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
   calendar:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
@@ -5930,6 +5965,10 @@ function _bpRenderContentModule(sec, event, ctx){
       if(ct.subWeight) _subSty+='font-weight:'+ct.subWeight+' !important;';
       var _subStyAttr=_subSty?' style="'+_subSty+'"':'';
       var titleHtml = '';
+      // Picto optionnel devant le titre
+      var _icoColor = ct.titleColor || (ap.accent) || 'currentColor';
+      var _icoSize = ct.titleSize ? Math.round(parseInt(ct.titleSize,10)*0.9) : 22;
+      var _titleIco = (ct.titleIcon && typeof _bpTitleIconSvg==='function') ? _bpTitleIconSvg(ct.titleIcon, _icoSize, _icoColor) : '';
       if(ct.showTitle===false){
         titleHtml = ''; // titre masqué (ex. vue thématique)
       } else if(ct.title && _titleStyleKind==='section'){
@@ -5937,16 +5976,16 @@ function _bpRenderContentModule(sec, event, ctx){
         var _accent = (ap.accent) || '';
         var _h2sty = ' style="'+(titleStyle||'')+_titSty+'"';
         if(_isExpMode){
-          titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
+          titleHtml = '<div class="exp-section-head"'+(_accent?' style="--acc:'+_accent+'"':'')+'><h2'+_h2sty+'>'+_titleIco+_bpEsc(ct.title)+'</h2><div class="rule"></div></div>'
             + (ct.subtitle ? '<p class="exp-section-sub"'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</p>' : '');
         } else {
           titleHtml = '<div class="sec-title"'+(_accent?' style="--sec-rule:'+_accent+'"':'')+'>'
-            + '<h2'+_h2sty+'>'+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
+            + '<h2'+_h2sty+'>'+_titleIco+_bpEsc(ct.title)+'</h2><div class="sec-title-line"></div>'
             + (ct.subtitle ? '<p'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</p>' : '')
             + '</div>';
         }
       } else {
-        titleHtml = ct.title ? '<h2 class="bp-h2" style="'+(titleStyle||'')+_titSty+'">'+_bpEsc(ct.title)+'</h2>' : '';
+        titleHtml = ct.title ? '<h2 class="bp-h2" style="'+(titleStyle||'')+_titSty+'">'+_titleIco+_bpEsc(ct.title)+'</h2>' : '';
       }
       if(ct.subtitle && _titleStyleKind!=='section'){
         titleHtml += '<div class="bp-subtitle"'+_subStyAttr+'>'+_bpEsc(ct.subtitle)+'</div>';
