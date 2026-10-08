@@ -1718,22 +1718,11 @@ function _sortArticles(arr){
     if(m){ var mo=mois[m[2].replace(/\.$/,'')]; if(mo!=null) return new Date(parseInt(m[3]),mo,parseInt(m[1]),12).getTime(); }
     return 0;
   };
-  const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
-  const anyOrdered = arr.some(hasOrder);
-  try{ if(typeof window!=='undefined' && window.location && window.location.search.indexOf('diagsort')>=0){ console.log('[diag-sort] anyOrdered='+anyOrdered+' | '+arr.length+' articles'); arr.slice(0,6).forEach(function(a){ console.log('  "'+String(a.title||'').slice(0,28)+'" order='+a.order+' created_at='+a.created_at+' imported_at='+a.imported_at+' date='+a.date); }); } }catch(e){}
-  // Aucun ordre manuel défini → tri chronologique pur (plus récent d'abord)
-  if(!anyOrdered){
-    return arr.slice().sort((a,b)=> _t(b.created_at||b.imported_at||b.date) - _t(a.created_at||a.imported_at||a.date));
-  }
-  // Un ordre manuel existe → on respecte l'ordre glissé ; les articles sans ordre
-  // (nouveaux arrivants RSS) se classent par date, après ceux explicitement ordonnés.
-  return arr.slice().sort((a,b)=>{
-    const ao=hasOrder(a), bo=hasOrder(b);
-    if(ao&&bo) return parseInt(a.order)-parseInt(b.order);
-    if(ao&&!bo) return -1;
-    if(!ao&&bo) return 1;
-    return _t(b.created_at||b.imported_at||b.date)-_t(a.created_at||a.imported_at||a.date);
-  });
+  // Tri chronologique : du plus récent au plus ancien, sur la meilleure date disponible.
+  // (On se base sur la date de l'article ; le champ "order" historique est ignoré car
+  //  il n'était pas fiable chronologiquement.)
+  var dateOf = function(a){ return _t(a.created_at||a.date||a.imported_at); };
+  return arr.slice().sort(function(a,b){ return dateOf(b)-dateOf(a); });
 }
 
 function _mkPhaseTitle(event, activePhase, phases){
@@ -3816,14 +3805,18 @@ function renderExpedition(data){
     return o+`</section>`;
   };
 
-  _b.articles = function(){
+  _b.articles = function(opts){
     if(mod.articles===false || !articles || !articles.length) return '';
+    opts=opts||{};
     let o=`<section class="exp-articles">`;
     if(event.articlesShowTitle!==false) o+=`<div class="exp-section-head exp-sec-articles"><h2>${event.articlesTitle||'Articles'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.articlesSubtitle||'Analyses, reportages et coulisses'}</p>`;
     const sorted=_sortArticles(articles);
-    const visCount=event.articlesVisibleCount||4;
+    // Priorité aux réglages du bloc (opts), sinon réglages globaux de l'événement.
+    const visCount=(opts.visibleCount!=null&&opts.visibleCount!=='')?parseInt(opts.visibleCount,10):(event.articlesVisibleCount||4);
+    const _maxAcc=(opts.accCount!=null&&opts.accCount!=='')?parseInt(opts.accCount,10):0;
     const visArts=sorted.slice(0,visCount);
-    const extraArts=sorted.slice(visCount);
+    let extraArts=sorted.slice(visCount);
+    if(_maxAcc>0) extraArts=extraArts.slice(0,_maxAcc);
     o+=`<div class="exp-art-grid">`;
     visArts.forEach(a=>{
       const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
@@ -3832,7 +3825,7 @@ function renderExpedition(data){
     });
     o+=`</div>`;
     if(extraArts.length){
-      var _artAccH=(event.articlesScrollH!=null&&event.articlesScrollH!==''&&!isNaN(parseInt(event.articlesScrollH)))?parseInt(event.articlesScrollH):520;
+      var _artAccH=(opts.scrollH!=null&&opts.scrollH!==''&&!isNaN(parseInt(opts.scrollH)))?parseInt(opts.scrollH):((event.articlesScrollH!=null&&event.articlesScrollH!==''&&!isNaN(parseInt(event.articlesScrollH)))?parseInt(event.articlesScrollH):520);
       o+=`<div class="exp-expand" id="exp-art-expand"><div class="exp-art-scroll" style="max-height:${_artAccH}px"><div class="exp-art-grid">`;
       extraArts.forEach(a=>{
         const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
@@ -5651,7 +5644,7 @@ function _bpRenderSection(sec, event, ctx){
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
-      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId, bannerHeight: ct.bannerHeight };
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId, bannerHeight: ct.bannerHeight, visibleCount: ct.visibleCount, accCount: ct.accCount, scrollH: (sec.appearance&&sec.appearance.art&&sec.appearance.art.scrollH) };
       if(type==='citations' && ct.cit){ _opts.cit = ct.cit; }
       if(type==='live'){ if(ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount); if(ct.lineClamp!=null&&ct.lineClamp!=='') _opts.lineClamp=parseInt(ct.lineClamp); }
       if(type==='sponsors' && ct.sp){ _opts.sp = ct.sp; }
