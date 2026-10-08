@@ -12538,6 +12538,23 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
     <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveWidgetLiveMode()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le mode</button></div>
   </div>
 
+  ${(function(){
+    var ev=eventsData.find(e=>e.id===currentEventId)||{};
+    var hasPub=!!(ev.published&&typeof ev.published==='object');
+    var when=ev.publishedAt?('Dernière publication : '+String(ev.publishedAt).slice(0,16).replace('T',' à ')):'Jamais publié';
+    var frontBase='https://tourmag13.github.io/tourmag-live/newtest/index.html?event='+(currentEventId||'');
+    return '<div class="admin-card" style="border-color:#C7D2FE;background:#F5F7FF"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Publication &amp; preview</h3>'
+      +'<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">Le contenu éditorial n\'apparaît sur le site <b>qu\'après publication</b>. Vos modifications dans l\'admin restent invisibles du public jusqu\'à ce que vous cliquiez « Publier ». Le <b>fil live</b>, lui, reste toujours en direct.</p>'
+      +'<div style="font-size:12px;color:'+(hasPub?'#166534':'#92400E')+';background:'+(hasPub?'#F0FDF4':'#FFFBEB')+';padding:8px 12px;border-radius:8px;margin-bottom:12px">'+(hasPub?'✅ ':'⚠️ ')+when+'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+      +'<button class="btn btn-primary" onclick="publishEvent()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Publier pour le site</button>'
+      +'<a class="btn btn-ghost" href="'+frontBase+'&preview=1" target="_blank"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-eye"/></svg> Ouvrir la preview</a>'
+      +'<button class="btn btn-ghost btn-sm" onclick="copyPreviewLink()">Copier le lien preview (client)</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:8px">Le lien preview montre l\'état de travail (non publié) — à transmettre au client pour validation.</div>'
+      +'</div>';
+  })()}
+
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-tv"/></svg> Option 1 — Page complète (iframe)</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.6"><strong>Un seul code pour tout le dashboard</strong>, que vous ayez une ou plusieurs pages. Les visiteurs naviguent entre les pages via les onglets. La page affichée à l'arrivée est votre <strong>page d'accueil</strong> (réglable dans l'onglet Constructeur, bouton 🏠).<br>Le code relaie aussi <code>?phase=</code>, <code>?page=</code>, <code>?bpage=</code>, <code>?lock=</code> si vous voulez pointer un lien vers une page précise. Un cache-buster garantit l'affichage de vos dernières modifications.</p>
     <div style="position:relative"><textarea class="form-input" rows="15" id="embed-iframe" readonly style="font-family:'IBM Plex Mono';font-size:11px;background:#1B1B2F;color:#A78BFA;border-color:#2D1B4E;line-height:1.6">&lt;iframe id="${iframeId}" style="width:100%;border:none;min-height:800px;display:block" allow="web-share; clipboard-write"&gt;&lt;/iframe&gt;
@@ -12733,6 +12750,32 @@ function wcfgMove(key,dir){
     const plabel=pc?pc.closest('label'):null;
     if(pc){ const last=(i===nr.length-1); pc.disabled=last; if(last)pc.checked=false; if(plabel){plabel.style.opacity=last?'.35':'';plabel.style.pointerEvents=last?'none':'';} }
   });
+}
+// Prend un instantané du contenu ÉDITORIAL de l'event et le publie (event.published).
+// On copie tout SAUF les champs techniques / temps réel / l'instantané lui-même.
+async function publishEvent(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const EXCLUDE={ published:1, publishedAt:1, uploadUrl:1, rssFeeds:1, hiddenTabs:1, access:1, _notPublished:1 };
+  var snap={};
+  Object.keys(ev).forEach(function(k){
+    if(EXCLUDE[k]) return;
+    if(k==='id') return;
+    snap[k]=ev[k];
+  });
+  if(!confirm('Publier le contenu éditorial actuel sur le site ?\nLe public verra cette version (le fil live reste en direct).')) return;
+  saving(true);
+  try{
+    const now=new Date().toISOString();
+    await evRef().update({ published: snap, publishedAt: now });
+    if(ev){ ev.published=snap; ev.publishedAt=now; }
+    toast('Contenu publié sur le site ✅');
+    renderTab();
+  }catch(e){ toast('Erreur de publication : '+(e.message||e),'error'); console.error('publishEvent:',e); }
+}
+function copyPreviewLink(){
+  const url='https://tourmag13.github.io/tourmag-live/newtest/index.html?event='+(currentEventId||'')+'&preview=1';
+  try{ navigator.clipboard.writeText(url); toast('Lien preview copié'); }
+  catch(e){ prompt('Lien preview :', url); }
 }
 function copyEmbed(id){
   const el=document.getElementById(id);
