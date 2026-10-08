@@ -5473,6 +5473,33 @@ function _renderContentPage(page){
 //   ui:{font,size,color}
 //   accent, textColor, bg:{on,color}, pad, zone
 // ============================================================
+// Mode preview vs public :
+// - preview (?preview=1) → on affiche l'état de TRAVAIL (le brouillon), tel quel.
+// - public → on applique l'instantané publié (event.published) par-dessus le contenu
+//   éditorial, pour n'afficher que ce qui a été validé/publié. Le fil live et les
+//   sous-collections restent lus en direct dans les deux cas (gérés ailleurs).
+function _isPreviewMode(){
+  try{ return new URLSearchParams(window.location.search).get('preview')==='1'; }catch(e){ return false; }
+}
+function _applyPublishState(ev){
+  ev = ev || {};
+  if(_isPreviewMode()) return ev;               // preview : état de travail complet
+  var pub = ev.published;
+  if(!pub || typeof pub!=='object'){
+    // Jamais publié → on neutralise le contenu éditorial (site "vide" tant que non publié),
+    // tout en gardant les réglages techniques nécessaires au bon fonctionnement.
+    var keepTech = {};
+    ['id','mode','status','uploadUrl','rssFeeds','hiddenTabs','liveChannels','countryMaps'].forEach(function(k){ if(ev[k]!==undefined) keepTech[k]=ev[k]; });
+    keepTech._notPublished = true;
+    return keepTech;
+  }
+  // Publié : l'instantané éditorial remplace l'état de travail ; on conserve les champs
+  // techniques/temps réel de l'event de travail (ils ne sont pas dans l'instantané).
+  var merged = {};
+  Object.keys(ev).forEach(function(k){ merged[k]=ev[k]; });     // base = travail (pour la technique)
+  Object.keys(pub).forEach(function(k){ merged[k]=pub[k]; });   // écrase par le publié (éditorial)
+  return merged;
+}
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // Bascule entre la vue normale (page courante) et une vue thématique transversale
 // (blocs du thème agrégés depuis toutes les pages).
@@ -6750,7 +6777,7 @@ async function init(){
   var jrS=null;
   try{ jrS=await db.collection('journalists').get(); }catch(e){ console.warn('[TourMaG Live] Cannot read journalists:',e.message); }
   if(!evS.exists){ document.getElementById('app').innerHTML='<div class="ld"><div class="tx">Événement introuvable</div></div>'; return; }
-  const ev=evS.data();
+  const ev=_applyPublishState(evS.data());
   function toArr(s){ const a=[]; s.forEach(d=>a.push({id:d.id,...d.data()})); return a; }
   var _allGlobalJournalists=jrS?toArr(jrS):[];
   function resolveJournalists(evData,globalArr){
@@ -6801,7 +6828,7 @@ async function init(){
   ec.collection('interviews').onSnapshot(snap=>{window._diag('interviews',snap);rtState.interviews=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0));rtRender();});
   ec.collection('questions').where('status','==','approved').onSnapshot(snap=>{window._diag('questions',snap);rtState.questions=toArr(snap).sort((a,b)=>tsVal(a.createdAt)-tsVal(b.createdAt));rtRender();},err=>console.warn('[TourMaG Live] questions error:',err.message));
   if(!window._DIAG.noquiz) ec.collection('quizzes').where('active','==',true).onSnapshot(snap=>{window._diag('quizzes',snap);window._quizzes=toArr(snap).sort((a,b)=>(a.order||0)-(b.order||0)); if(window._quizzes.length && !window._quizPollLoaded){ window._quizPollLoaded=true; _loadQuizVotes(eventId); } rtRender();},err=>console.warn('[TourMaG Live] quizzes error:',err.message));
-  ec.onSnapshot(snap=>{window._diag('event(doc)',snap&&snap.exists?{size:1}:{size:0});if(snap.exists){rtState.event=snap.data();rtRender();}});
+  ec.onSnapshot(snap=>{window._diag('event(doc)',snap&&snap.exists?{size:1}:{size:0});if(snap.exists){rtState.event=_applyPublishState(snap.data());rtRender();}});
   // journalists (répertoire global) : chargé une fois au démarrage (jrS), plus d'écoute permanente.
   }
 
