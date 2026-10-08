@@ -1085,11 +1085,6 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-verbatim-grid.exp-expand{display:none}.exp-verbatim-grid.exp-expand.open{display:grid}
 .exp-itw-grid.exp-expand{display:none}.exp-itw-grid.exp-expand.open{display:grid}
 .exp-art-grid.exp-expand{display:none}.exp-art-grid.exp-expand.open{display:grid}
-.exp-art-scroll-wrap{margin-top:16px}
-.exp-art-scroll{overflow-y:auto;padding-right:8px}
-.exp-art-scroll::-webkit-scrollbar{width:8px}
-.exp-art-scroll::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px}
-.exp-art-scroll .exp-art-grid{margin-top:0}
 
 /* Sidebar cards */
 .exp-card{border:1px solid var(--exp-line);padding:26px}
@@ -1721,7 +1716,6 @@ function _sortArticles(arr){
   };
   const hasOrder = a => (a && a.order!=null && a.order!=='' && !isNaN(parseInt(a.order)));
   const anyOrdered = arr.some(hasOrder);
-  try{ if(window.location.search.indexOf('diagsort')>=0){ console.log('[diag-sort] anyOrdered='+anyOrdered); arr.slice(0,5).forEach(function(a){ console.log('  titre='+(a.title||'').slice(0,30)+' | order='+a.order+' | created_at='+a.created_at+' | imported_at='+a.imported_at+' | date='+a.date); }); } }catch(e){}
   // Aucun ordre manuel défini → tri chronologique pur (plus récent d'abord)
   if(!anyOrdered){
     return arr.slice().sort((a,b)=> _t(b.created_at||b.imported_at||b.date) - _t(a.created_at||a.imported_at||a.date));
@@ -3833,14 +3827,13 @@ function renderExpedition(data){
     });
     o+=`</div>`;
     if(extraArts.length){
-      var _accH = (event.articlesScrollH!=null && event.articlesScrollH!=='' && !isNaN(parseInt(event.articlesScrollH))) ? parseInt(event.articlesScrollH) : 520;
-      o+=`<div class="exp-expand exp-art-scroll-wrap" id="exp-art-expand"><div class="exp-art-scroll" style="max-height:${_accH}px"><div class="exp-art-grid">`;
+      o+=`<div class="exp-art-grid exp-expand" id="exp-art-expand">`;
       extraArts.forEach(a=>{
         const lnk=a.link?` onclick="window.open('${a.link}','_blank')"`:'';;
         var _eih=(a.imageHeight!=null&&a.imageHeight!==''&&!isNaN(parseInt(a.imageHeight)))?` style="height:${parseInt(a.imageHeight)}px"`:'';
       o+=`<div class="exp-art"${lnk}>${a.image?`<div class="exp-art-img"${_eih}><img src="${a.image}" alt="" onerror="this.parentElement.remove()"></div>`:''}<div class="exp-art-body"><div class="exp-art-date">${fmtDateFr(a.date)||a.tag||''}</div><h4>${a.title||''}</h4></div></div>`;
       });
-      o+=`</div></div></div><button class="exp-voir-plus" id="exp-art-btn" onclick="toggleExpExpand('exp-art-expand','exp-art-btn',${extraArts.length})">▾ Voir les ${extraArts.length} autres articles</button>`;
+      o+=`</div><button class="exp-voir-plus" id="exp-art-btn" onclick="toggleExpExpand('exp-art-expand','exp-art-btn',${extraArts.length})">▾ Voir les ${extraArts.length} autres articles</button>`;
     }
     return o+`</section>`;
   };
