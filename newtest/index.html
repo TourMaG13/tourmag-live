@@ -1705,6 +1705,19 @@ function _isPublished(entry){
 }
 // Tri des articles : ceux ayant un ordre manuel (champ `order`) d'abord, croissant ;
 // les autres ensuite, du plus récent au plus ancien (date). Stable et rétro-compatible.
+// Valeur de date d'un article pour le tri Brand News (réutilise le parseur FR).
+function _bnDateVal(a){
+  if(!a) return 0;
+  var v=a.created_at||a.date||a.imported_at;
+  if(!v) return 0;
+  if(v.toDate){ try{ return v.toDate().getTime(); }catch(e){} }
+  if(v.seconds) return v.seconds*1000;
+  var d=new Date(v); if(!isNaN(d)) return d.getTime();
+  var mois={'janv':0,'févr':1,'fevr':1,'mars':2,'avr':3,'mai':4,'juin':5,'juil':6,'août':7,'aout':7,'sept':8,'oct':9,'nov':10,'déc':11,'dec':11};
+  var m=String(v).toLowerCase().match(/(\d{1,2})\s+([a-zéûà.]+)\.?\s+(\d{4})/);
+  if(m){ var mo=mois[m[2].replace(/\.$/,'')]; if(mo!=null) return new Date(parseInt(m[3]),mo,parseInt(m[1]),12).getTime(); }
+  return 0;
+}
 function _sortArticles(arr){
   if(!Array.isArray(arr)) return arr||[];
   const _t = function(v){
@@ -2991,13 +3004,16 @@ function render(data){
   // ===== BRAND NEWS =====
   function mkBrandNews(){
     if(mod.brandnews===false) return '';
-    const bn = event.brandNews;
-    if(!bn || !bn.rssUrl) return '';
+    const bn = event.brandNews || {};
     const now = new Date();
     const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
     if(bn.startDate && today < bn.startDate) return '';
     if(bn.endDate && today > bn.endDate) return '';
-    const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    // PRIORITÉ : articles cochés manuellement (isBrandNews). Sinon, flux RSS.
+    const _manual = (articles||[]).filter(a => a.isBrandNews===true).sort((a,b)=>_bnDateVal(b)-_bnDateVal(a));
+    let bnArticles;
+    if(_manual.length){ bnArticles = _manual; }
+    else { if(!bn.rssUrl) return ''; bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString())); }
     const _bnHiddenC = Array.isArray(bn.hiddenArchives) ? bn.hiddenArchives : [];
     const bnVisible = _bnHiddenC.length ? bnArticles.filter(a => !a.link || _bnHiddenC.indexOf(a.link)<0) : bnArticles;
     if(!bnVisible.length) return '';
@@ -3839,13 +3855,21 @@ function renderExpedition(data){
 
   _b.brandnews = function(){
     if(mod.brandnews===false) return '';
-    const bn = event.brandNews;
-    if(!bn || !bn.rssUrl) return '';
+    const bn = event.brandNews || {};
     const now = new Date();
     const today = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
     if(bn.startDate && today < bn.startDate) return '';
     if(bn.endDate && today > bn.endDate) return '';
-    const bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    // PRIORITÉ : articles cochés manuellement (isBrandNews). Sinon, flux RSS.
+    const _manual = (articles||[]).filter(a => a.isBrandNews===true)
+      .sort((a,b) => _bnDateVal(b) - _bnDateVal(a));
+    let bnArticles;
+    if(_manual.length){
+      bnArticles = _manual;
+    } else {
+      if(!bn.rssUrl) return '';
+      bnArticles = (articles||[]).filter(a => a.brandnews_feed === bn.rssUrl || a.rss_feed === bn.rssUrl).sort((a,b) => (b.imported_at||'').toString().localeCompare((a.imported_at||'').toString()));
+    }
     const _bnHiddenE = Array.isArray(bn.hiddenArchives) ? bn.hiddenArchives : [];
     const bnVisible = _bnHiddenE.length ? bnArticles.filter(a => !a.link || _bnHiddenE.indexOf(a.link)<0) : bnArticles;
     if(!bnVisible.length) return '';
