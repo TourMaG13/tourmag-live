@@ -5126,7 +5126,8 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Titre (optionnel, surcharge)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
         +'<div class="bpe-fld"><label>Sous-titre (optionnel)</label><input type="text" value="'+_escAdm(c.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)"></div>'
         +'<div class="bpe-fld"><label>Image de fond (URL, optionnel)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-heroimg" value="'+_escAdm(c.image||'')+'" onchange="_bpSetCt(\'image\',this.value)" style="flex:1">'+mkMediaPickerBtn('bpct-heroimg')+mkUploadBtn('bpct-heroimg')+'</div></div>'
-        +'<div class="bpe-fld"><label>Hauteur du bandeau (px)</label><input type="number" min="120" max="900" step="10" value="'+(c.bannerHeight||'')+'" onchange="_bpSetCt(\'bannerHeight\',this.value)" placeholder="420"><div class="bpe-hint">S\'applique au bandeau de ce bloc hero (mode image ou classique).</div></div>';
+        +'<div class="bpe-fld"><label>Hauteur du bandeau (px)</label><input type="number" min="120" max="900" step="10" value="'+(c.bannerHeight||'')+'" onchange="_bpSetCt(\'bannerHeight\',this.value)" placeholder="420"><div class="bpe-hint">S\'applique au bandeau de ce bloc hero (mode image ou classique).</div></div>'
+        +'<div class="bpe-fld"><label>Crédit © de la photo</label><input type="text" value="'+_escAdm(c.photoCredit||'')+'" onchange="_bpSetCt(\'photoCredit\',this.value)" placeholder="Ex : Depositphotos, nom du photographe…"></div>';
     case 'text':
       return '<div class="bpe-fld"><label>Titre (optionnel)</label><input type="text" value="'+_escAdm(c.title||'')+'" onchange="_bpSetCt(\'title\',this.value)"></div>'
         +'<div class="bpe-fld-row"><div class="bpe-fld"><label>Police du titre</label><select onchange="_bpSetCt(\'titleFont\',this.value)">'+['','Poppins','Josefin Sans','Playfair Display','Lora','Merriweather','Montserrat','Oswald','Archivo','Outfit','EB Garamond','Inter'].map(function(f){return '<option value="'+f+'"'+((c.titleFont||'')===f?' selected':'')+'>'+(f||'Par défaut')+'</option>';}).join('')+'</select></div>'
@@ -5403,6 +5404,7 @@ function _bpPagePropsHtml(){
   h+='<div class="bpe-fld" style="margin-top:12px"><label>Sous-titre de la carte (frise)</label><input type="text" value="'+_escAdm(p.subtitle||'')+'" onchange="_bpSetPage(\'subtitle\',this.value)" placeholder="Optionnel — ligne sous le titre de la carte"></div>';
   h+='<div class="bpe-fld"><label>Taille du titre de la carte (px)</label><input type="number" min="12" max="40" value="'+((p.cardTitleSize!=null&&p.cardTitleSize!=='')?p.cardTitleSize:'')+'" onchange="_bpSetPage(\'cardTitleSize\',this.value)" placeholder="18" style="width:110px"><div class="bpe-hint">Vide = 18px. Taille du titre de cette carte dans la frise.</div></div>';
   h+='<div class="bpe-fld"><label>Image de la vignette (frise)</label><div style="display:flex;gap:6px;align-items:flex-end"><input type="text" id="bp-card-img" value="'+_escAdm(p.cardImage||'')+'" oninput="_bpSetPage(\'cardImage\',this.value)" placeholder="URL — vide = image hero de la phase" style="flex:1">'+mkMediaPickerBtn('bp-card-img')+mkUploadBtn('bp-card-img')+'</div><div class="bpe-hint">Image en haut de la carte. Vide = image hero de la phase liée.</div></div>';
+  h+='<div class="bpe-fld"><label>Crédit © de la vignette</label><input type="text" value="'+_escAdm(p.cardImageCredit||'')+'" oninput="_bpSetPage(\'cardImageCredit\',this.value)" placeholder="Ex : nom du photographe"></div>';
   // Phase associée à la page : affiche son titre + sous-titre de phase sous les onglets
   const _phases=Array.isArray(_bpCurrentEv().phases)?_bpCurrentEv().phases:[];
   if(_phases.length){
@@ -11626,6 +11628,7 @@ function _renderProductEditor(el){
     <div class="form-row"><label class="form-label">Titre du produit</label><input class="form-input" id="pr-title" value="${_escAdm(p.title||'')}"></div>
     <div class="form-row"><label class="form-label">Description</label>${_prRte('pr-desc', p.description)}</div>
     <div class="form-row"><label class="form-label">Photo principale</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" id="pr-mainimage" style="flex:1" value="${_escAdm(p.mainImage||'')}">${mkMediaPickerBtn('pr-mainimage')}${mkUploadBtn('pr-mainimage')}</div></div>
+    <div class="form-row"><label class="form-label">Crédit © de la photo principale</label><input class="form-input" id="pr-mainimage-credit" value="${_escAdm(p.mainImageCredit||'')}" placeholder="Ex : Depositphotos, nom du photographe…"></div>
   </div>`;
 
   h += `<div class="admin-card"><h3>✓ Points forts &amp; ℹ Bon à savoir</h3>
@@ -11680,6 +11683,7 @@ function _prCollectInto(p){
     title:g('pr-title'),
     description: desc?desc.innerHTML:(p.description||''),
     mainImage:g('pr-mainimage'),
+    mainImageCredit:g('pr-mainimage-credit'),
     strongTitle:g('pr-strongtitle'), strong: strong?strong.innerHTML:(p.strong||''),
     knowTitle:g('pr-knowtitle'), know: know?know.innerHTML:(p.know||''),
     gallery: galArr.filter(x=>x!==undefined&&x!==''),
