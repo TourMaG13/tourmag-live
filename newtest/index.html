@@ -1550,10 +1550,20 @@ var BP_TITLE_ICONS = {
   plane:'<path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-1 .3L2.5 7.8 9 11l-2 4-3 .5L3 17l3.5 1L8 21.5 9.2 20l4-2z"/>',
   ship:'<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2c1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4M12 2v3"/>'
 };
+// Ajustement optique : certaines icônes "remplissent" moins leur cadre 24x24 et
+// paraissent donc plus petites. On les agrandit légèrement (scale centré sur 12,12).
+var _BP_ICON_SCALE = { book:1.18, home:1.14, flag:1.12, leaf:1.1, gift:1.08, award:1.1, bulb:1.12, anchor:1.1, calendar:1.08, camera:1.06, users:1.06 };
 function _bpTitleIconSvg(key, sizePx, color){
   var p = BP_TITLE_ICONS[key]; if(!p) return '';
   var sz = sizePx || 20;
-  return '<svg class="bp-title-ico" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:middle">'+p+'</svg>';
+  var sc = _BP_ICON_SCALE[key];
+  var inner = p;
+  if(sc){
+    // scale centré sur le centre du viewBox (12,12) ; on compense le stroke pour garder
+    // une épaisseur de trait visuellement constante.
+    inner = '<g transform="translate(12,12) scale('+sc+') translate(-12,-12)" stroke-width="'+(2/sc).toFixed(3)+'">'+p+'</g>';
+  }
+  return '<svg class="bp-title-ico" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:middle">'+inner+'</svg>';
 }
 const ICO = {
   mapPin:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
