@@ -1387,6 +1387,7 @@ body.mode-expedition .social-float{display:none}
 .chr-fcard-disabled{cursor:default;opacity:.62}
 .chr-fitem-disabled:hover .chr-fcard{transform:none;box-shadow:none;border-color:#E4E1D6}
 .chr-fthumb{position:relative;height:92px;background:#EEF1F4;display:flex;align-items:center;justify-content:center;color:#AEB6C0;border-bottom:1px solid #E4E1D6}
+.chr-fsoon{position:absolute;top:8px;left:8px;background:rgba(17,17,17,.72);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:20px;text-transform:uppercase}
 .chr-fthumb img{width:100%;height:100%;object-fit:cover}
 
 .chr-fbody{padding:10px 12px 12px;text-align:left}
@@ -3130,6 +3131,8 @@ function render(data){
     if(!_bpId) return; // pas de page-builder ciblée → legacy
     const _bp = _builderPages.find(p=>p.id===_bpId);
     if(!_bp) return;
+    // Page programmée non encore publiée (date future) : accès bloqué hors preview.
+    if(!_bpPageAvailable(_bp)) return;
     // Barre d'onglets avec la page-builder courante marquée active
     const evId2 = new URLSearchParams(window.location.search).get('event')||'';
     const frameId2 = new URLSearchParams(window.location.search).get('frameId')||'';
@@ -5497,6 +5500,19 @@ function _renderContentPage(page){
 //   accent, textColor, bg:{on,color}, pad, zone
 // ============================================================
 function _bpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Une page-builder est "disponible" (contenu accessible) si elle n'a pas de date de
+// publication programmée, ou si cette date est atteinte. En preview (?preview=1),
+// tout est disponible (pour que tu puisses vérifier le contenu avant la date).
+function _bpPageAvailable(page){
+  if(!page) return true;
+  try{ if(new URLSearchParams(window.location.search).get('preview')==='1') return true; }catch(e){}
+  var d = page.publishDate;
+  if(!d) return true;                        // pas de date → toujours dispo
+  var now = new Date();
+  var target = new Date(d + (d.length<=10 ? 'T00:00:00' : ''));
+  if(isNaN(target)) return true;             // date invalide → on n'empêche pas
+  return now >= target;
+}
 // Bascule entre la vue normale (page courante) et une vue thématique transversale
 // (blocs du thème agrégés depuis toutes les pages).
 // Défile jusqu'au bloc dont data-anchor == hash de l'URL (lien direct depuis une pub).
@@ -6971,9 +6987,11 @@ window._tmgResizeSettle=function(){
         if(!col) col=(ph&&ph.color)||'#6366F1';
         var tsz=pageObj&&pageObj.cardTitleSize; tsz=(tsz!=null&&tsz!=='')?(parseInt(tsz,10)||0):0;
         var sty='--pc:'+esc(col)+(tsz?(';--chr-title-size:'+tsz+'px'):'');
-        // Page non cliquable (ex. page vide) : vignette affichée mais clic désactivé
-        var _clickable = !(pageObj && pageObj.nav && pageObj.nav.clickable===false);
-        var _inner='<div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div>';
+        // Page non cliquable si : réglage manuel OU date de publication non atteinte.
+        var _avail = _bpPageAvailable(pageObj);
+        var _clickable = !(pageObj && pageObj.nav && pageObj.nav.clickable===false) && _avail;
+        var _soonBadge = (!_avail) ? '<span class="chr-fsoon">À venir</span>' : '';
+        var _inner='<div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+_soonBadge+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div>';
         var _card = _clickable
           ? '<a class="chr-fcard" href="'+esc(href)+'"'+(onclick?' onclick="'+esc(onclick)+'"':'')+'>'+_inner+'</a>'
           : '<div class="chr-fcard chr-fcard-disabled" aria-disabled="true">'+_inner+'</div>';
