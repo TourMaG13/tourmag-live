@@ -5585,7 +5585,9 @@ window._bpFilterTheme = function(btn, themeId){
       normals.forEach(function(d){ d.style.display='none'; });
       views.forEach(function(v){ v.style.display = (v.id==='bp-theme-view-'+themeId) ? '' : 'none'; });
     }
-    if(typeof window._tmgResize==='function') window._tmgResize();
+    // Remesure multiple : la hauteur change (contenu plus court/long) → éviter la zone vide.
+    if(typeof window._tmgResizeSettle==='function') window._tmgResizeSettle();
+    else if(typeof window._tmgResize==='function') window._tmgResize();
     if(typeof window._applyDecor==='function'){} // le décor reste tel quel
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){}
@@ -6862,11 +6864,18 @@ init().catch(e=>{console.error(e);document.getElementById('app').innerHTML='<div
 // IFRAME RESIZE + FULL-WIDTH
 var _lastSentH=0, _hTimer=null;
 function _computeH(){
+  // On mesure la hauteur réelle du CONTENU (#app), pas celle du body : le body/html
+  // remplit au moins la hauteur fixée de l'iframe, donc leur scrollHeight ne diminue
+  // jamais quand le contenu rétrécit (navigation vers une page plus courte) → zone vide.
+  var app=document.getElementById('app');
+  if(app){
+    var r=app.getBoundingClientRect();
+    // position du bas de #app par rapport au haut du document + petite marge
+    var bottom = r.bottom + (window.pageYOffset||document.documentElement.scrollTop||0);
+    return Math.ceil(bottom + 8);
+  }
   var b=document.body, e=document.documentElement;
-  return Math.max(
-    b.scrollHeight, b.offsetHeight,
-    e.scrollHeight, e.offsetHeight, e.clientHeight
-  );
+  return Math.max(b.scrollHeight, b.offsetHeight, e.scrollHeight, e.offsetHeight, e.clientHeight);
 }
 function sendHeight(){
   const h=_computeH();
