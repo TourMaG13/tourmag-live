@@ -61,7 +61,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 /* En colonne latérale, les conteneurs .dash/.exp-dash imbriqués ne doivent pas rajouter
    leur padding horizontal (28/32px) qui rétrécit le contenu dans la colonne étroite. */
 .side-col .dash,.side-col .exp-dash,.exp-side-col .dash,.exp-side-col .exp-dash{padding-left:0;padding-right:0;max-width:none}
+.pr-mainimg{position:relative}
 .pr-mainimg img{width:100%;max-height:420px;object-fit:cover;display:block}
+.pr-img-credit{position:absolute;bottom:8px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.8);background:rgba(17,17,17,.5);padding:3px 8px;border-radius:3px}
 .pr-mainimg-fixed img{max-height:none;height:var(--pr-img-h,420px)}
 .pr-head-side{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center}
 .pr-head-side .pr-head-text{padding:32px 30px}
@@ -1389,6 +1391,7 @@ body.mode-expedition .social-float{display:none}
 .chr-fthumb{position:relative;height:92px;background:#EEF1F4;display:flex;align-items:center;justify-content:center;color:#AEB6C0;border-bottom:1px solid #E4E1D6}
 .chr-fsoon{position:absolute;top:8px;left:8px;background:rgba(17,17,17,.72);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:20px;text-transform:uppercase}
 .chr-fthumb img{width:100%;height:100%;object-fit:cover}
+.chr-fcredit{position:absolute;bottom:4px;right:6px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.04em;color:rgba(255,255,255,.8);background:rgba(17,17,17,.5);padding:2px 6px;border-radius:3px}
 
 .chr-fbody{padding:10px 12px 12px;text-align:left}
 .chr-fdate{font-size:12px;color:#64748B;margin-bottom:3px;letter-spacing:.02em}
@@ -3465,7 +3468,7 @@ function renderExpedition(data){
     if(opts && opts.phaseFilter && opts.phaseFilter!=='all' && opts.phaseFilter!=='active'){
       _hp = (phases||[]).find(p=>p.id===opts.phaseFilter) || _activePhaseObj;
     }
-    return _buildExpHero(_hp, event, exp, accent, (opts&&opts.bannerHeight)||'');
+    return _buildExpHero(_hp, event, exp, accent, (opts&&opts.bannerHeight)||'', (opts&&opts.photoCredit)||'');
   };
 
   _b.phaseTabs = function(activeBuilderPage){
@@ -4266,7 +4269,7 @@ window.toggleExpGallery = function(count){
 };
 // Génère le HTML du hero expédition pour une phase donnée (réutilisable par le builder).
 // phaseObj = objet phase (ou null pour les valeurs événement). Retourne une chaîne HTML.
-function _buildExpHero(phaseObj, event, exp, accent, heightOverride){
+function _buildExpHero(phaseObj, event, exp, accent, heightOverride, creditOverride){
   event = event || {}; exp = exp || {}; accent = accent || event.accentColor || '#FF6C00';
   const _ph = phaseObj || {};
   const _heroTitle      = _ph.heroTitle      || event.title    || '';
@@ -4276,7 +4279,7 @@ function _buildExpHero(phaseObj, event, exp, accent, heightOverride){
   const _heroLocation   = _ph.heroLocation   || event.location || '';
   const _heroDates      = _ph.heroDates      || event.dates    || '';
   const _heroEyebrow    = _ph.heroEyebrow    || exp.eyebrow   || '';
-  const _heroPhotoCredit= _ph.heroPhotoCredit|| exp.photoCredit|| '';
+  const _heroPhotoCredit= creditOverride || _ph.heroPhotoCredit|| exp.photoCredit|| '';
   const _heroBtn = (event.heroButtonUrl && event.heroButtonUrl.trim())
     ? `<a class="hero-btn exp-hero-btn" href="${event.heroButtonUrl.trim()}" target="_blank" rel="noopener" style="${event.heroButtonColor?`background:${event.heroButtonColor}`:''}">${(event.heroButtonLabel||'En savoir plus').trim()}</a>`
     : '';
@@ -4310,6 +4313,7 @@ function _buildExpHero(phaseObj, event, exp, accent, heightOverride){
       H += _heroBtn;
       H += `</div></div>`;
     }
+    if(_heroPhotoCredit) H += `<span class="exp-hero-credit">© ${_heroPhotoCredit}</span>`;
     H += `</section>`;
   } else {
   H += `<section class="exp-hero${hasHeroImage?'':' no-image'}"${_expHeroAttr}>`;  H += `<div class="exp-hero-text">`;
@@ -5411,7 +5415,7 @@ function _renderProduct(pr, event){
   var boxFontStyle = (pr.boxFont?"font-family:'"+pr.boxFont+"',sans-serif;":'') + (pr.boxSize?'--pr-box-size:'+parseInt(pr.boxSize,10)+'px;':'');
   var imgH = parseInt(pr.imgHeight,10)||0;
   var mainImgStyle = imgH ? ' style="--pr-img-h:'+imgH+'px"' : '';
-  var mainImg = pr.mainImage ? '<div class="pr-mainimg'+(imgH?' pr-mainimg-fixed':'')+'"'+mainImgStyle+'><img src="'+_qEsc(pr.mainImage)+'" alt="'+_qEsc(pr.title||'')+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>' : '';
+  var mainImg = pr.mainImage ? '<div class="pr-mainimg'+(imgH?' pr-mainimg-fixed':'')+'"'+mainImgStyle+'><img src="'+_qEsc(pr.mainImage)+'" alt="'+_qEsc(pr.title||'')+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'">'+(pr.mainImageCredit?'<span class="pr-img-credit">© '+_qEsc(pr.mainImageCredit)+'</span>':'')+'</div>' : '';
   var titleBlock = (pr.title?'<h2 class="pr-title"'+(titleStyle?' style="'+titleStyle+'"':'')+'>'+_qEsc(pr.title)+'</h2>':'') + (pr.description?'<div class="pr-desc"'+(textStyle?' style="'+textStyle+'"':'')+'>'+pr.description+'</div>':'');
 
   var head;
@@ -5732,7 +5736,7 @@ function _bpRenderSection(sec, event, ctx){
   if(!EDITORIAL[type] && legacyDelegate[type] && ctx.blockRenderers && ctx.blockRenderers[legacyDelegate[type]]){
     try {
       // Options passées aux renderers live/riches (canal, limite, fiche produit…)
-      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId, bannerHeight: ct.bannerHeight, visibleCount: ct.visibleCount, accCount: ct.accCount, scrollH: (sec.appearance&&sec.appearance.art&&sec.appearance.art.scrollH) };
+      const _opts = { channel: (ct.channel||'main'), limit: ct.limit, sectionTitle: ct.title, productId: ct.productId, phaseFilter: ct.phaseFilter, countryMapId: ct.countryMapId, journalistId: ct.journalistId, bannerHeight: ct.bannerHeight, photoCredit: ct.photoCredit, visibleCount: ct.visibleCount, accCount: ct.accCount, scrollH: (sec.appearance&&sec.appearance.art&&sec.appearance.art.scrollH) };
       if(type==='citations' && ct.cit){ _opts.cit = ct.cit; }
       if(type==='live'){ if(ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount); if(ct.lineClamp!=null&&ct.lineClamp!=='') _opts.lineClamp=parseInt(ct.lineClamp); }
       if(type==='sponsors' && ct.sp){ _opts.sp = ct.sp; }
@@ -7046,7 +7050,8 @@ window._tmgResizeSettle=function(){
         var _avail = _bpPageAvailable(pageObj);
         var _clickable = !(pageObj && pageObj.nav && pageObj.nav.clickable===false) && _avail;
         var _soonBadge = (!_avail) ? '<span class="chr-fsoon">À venir</span>' : '';
-        var _inner='<div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+_soonBadge+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div>';
+        var _cardCredit=(pageObj&&pageObj.cardImageCredit)||'';
+        var _inner='<div class="chr-fthumb">'+(img?'<img src="'+esc(img)+'" alt="">':PHOTO)+_soonBadge+(img&&_cardCredit?'<span class="chr-fcredit">© '+esc(_cardCredit)+'</span>':'')+'</div><div class="chr-fbody">'+(date?'<div class="chr-fdate">'+esc(date)+'</div>':'')+'<div class="chr-ftitle">'+esc(title||'Page')+'</div>'+(sub?'<div class="chr-fsub">'+esc(sub)+'</div>':'')+'</div>';
         var _card = _clickable
           ? '<a class="chr-fcard" href="'+esc(href)+'"'+(onclick?' onclick="'+esc(onclick)+'"':'')+'>'+_inner+'</a>'
           : '<div class="chr-fcard chr-fcard-disabled" aria-disabled="true">'+_inner+'</div>';
