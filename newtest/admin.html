@@ -4894,6 +4894,37 @@ function _bpTextApHtml(s){
     +'</div>';
   return h;
 }
+// Panneau d'apparence dédié aux CITATIONS / VERBATIMS.
+function _bpCitApHtml(s){
+  const ap=s.appearance||{}; const c=ap.cit||{};
+  const cc=s.content||{};
+  let h='';
+  // Titre + sous-titre du bloc (texte + visibilité)
+  h+='<div class="bpe-fld"><label>Titre du bloc</label><input type="text" value="'+_escAdm(cc.title||'')+'" onchange="_bpSetCt(\'title\',this.value)" placeholder="Verbatims"></div>';
+  h+='<div class="bpe-fld"><label>Sous-titre du bloc</label><input type="text" value="'+_escAdm(cc.subtitle||'')+'" onchange="_bpSetCt(\'subtitle\',this.value)" placeholder="(optionnel)"></div>';
+  h+='<div class="bpe-toggle"><span>Afficher titre et sous-titre</span><label class="sw"><input type="checkbox" '+(cc.showTitle!==false?'checked':'')+' onchange="_bpSetCt(\'showTitle\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  h+=_bpRoleFields('Titre de rubrique','cit.title',c.title,'#0F172A');
+  h+=_bpRoleFields('Nom','cit.name',c.name,'#0F172A');
+  h+=_bpRoleFields('Poste / sous-titre','cit.role',c.role,'#64748B');
+  h+=_bpRoleFields('Texte de la citation','cit.text',c.text,'#334155');
+  // Médaillons
+  h+='<div class="bpe-sub">Médaillons & bloc</div>';
+  h+='<div class="bpe-fld"><label>Taille des médaillons (px)</label><input type="number" min="40" max="160" step="4" value="'+(c.avatarSize||'')+'" placeholder="80" onchange="_bpSetDeepVal(\'cit\',\'avatarSize\',this.value)"></div>';
+  const bgOn=!!c.bg;
+  h+='<div class="bpe-toggle"><span>Couleur de fond du bloc</span><label class="sw"><input type="checkbox" '+(bgOn?'checked':'')+' onchange="_bpCitBgToggle(this.checked)"><span class="tr"></span><span class="kn"></span></label></div>';
+  if(bgOn) h+='<div class="bpe-fld"><label>Couleur de fond</label><input type="color" value="'+(c.bg||'#F1F5F9')+'" onchange="_bpSetDeepVal(\'cit\',\'bg\',this.value)"></div>';
+  h+='<div class="bpe-fld-row">'
+    +'<div class="bpe-fld"><label>Espacement au-dessus (px)</label><input type="number" value="'+(c.padTop!=null?c.padTop:'')+'" placeholder="0" onchange="_bpSetDeepVal(\'cit\',\'padTop\',this.value)"></div>'
+    +'<div class="bpe-fld"><label>Espacement en dessous (px)</label><input type="number" value="'+(c.pad!=null?c.pad:'')+'" placeholder="28" onchange="_bpSetDeepVal(\'cit\',\'pad\',this.value)"></div>'
+    +'</div>';
+  return h;
+}
+function _bpCitBgToggle(on){
+  const s=_bpSelectedSection(); if(!s)return;
+  s.appearance=s.appearance||{}; s.appearance.cit=s.appearance.cit||{};
+  if(on){ s.appearance.cit.bg=s.appearance.cit.bg||'#F1F5F9'; } else { delete s.appearance.cit.bg; }
+  _bpAfterSet(true); _bpRefreshCfg();
+}
 // Panneau d'apparence dédié aux ARTICLES LIÉS.
 function _bpArtApHtml(s){
   const ap=s.appearance||{}; const a=ap.art||{};
@@ -4994,6 +5025,7 @@ function _bpAppearanceHtml(s){
   if(s.type==='programme') return _bpProgApHtml(s);
   if(s.type==='live') return _bpLiveApHtml(s);
   if(s.type==='articles') return _bpArtApHtml(s);
+  if(s.type==='citations') return _bpCitApHtml(s);
   if(s.type==='text') return _bpTextApHtml(s);
   const ap=s.appearance||{};
   let h='';
@@ -5198,37 +5230,17 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-fld"><label>Journaliste à afficher</label><select onchange="_bpSetCt(\'journalistId\',this.value)">'+opts+'</select><div class="bpe-hint">Choisissez un journaliste précis pour cette page, ou « Tous » pour les afficher tous. Les journalistes s\'alimentent dans l\'onglet Journalistes.</div></div>';
     }
     case 'citations': {
-      // Réglages spécifiques citations (repris du mode classique), stockés PAR BLOC (sec.content.cit)
+      // Contenu : filtre phase + style des citations. L'apparence (tailles, couleurs,
+      // médaillons, fond…) se règle dans l'onglet Apparence dédié.
       var cc = c.cit || {};
       function _cnum(k,def,mn,mx,step){ return '<input type="number" value="'+(cc[k]!=null&&cc[k]!==''?cc[k]:'')+'" placeholder="'+def+'"'+(mn!=null?' min="'+mn+'"':'')+(mx!=null?' max="'+mx+'"':'')+(step?' step="'+step+'"':'')+' onchange="_bpSetCit(\''+k+'\',this.value)" style="width:75px">'; }
       return _phaseFld
-        + _bpTitleFields('Verbatims','Ce qu\'ils ont dit')
-        + '<div class="bpe-cfg-sech" style="margin-top:8px">Style des citations</div>'
         + '<div class="bpe-fld-row">'
           + '<div class="bpe-fld"><label>Style</label><select onchange="_bpSetCit(\'style\',this.value)"><option value="">Défaut</option><option value="classic"'+(cc.style==='classic'?' selected':'')+'>Classique</option><option value="premium"'+(cc.style==='premium'?' selected':'')+'>Premium</option></select></div>'
-          + '<div class="bpe-fld"><label>Accent</label><input type="color" value="'+(cc.accent||'#E8842C')+'" onchange="_bpSetCit(\'accent\',this.value)"></div>'
           + '<div class="bpe-fld"><label>Guillemets</label><select onchange="_bpSetCit(\'quoteSize\',this.value)"><option value="">Défaut</option><option value="small"'+(cc.quoteSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+(cc.quoteSize==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(cc.quoteSize==='large'?' selected':'')+'>Grand</option></select></div>'
         + '</div>'
-        + '<div class="bpe-fld-row">'
-          + '<div class="bpe-fld"><label>Taille texte</label>'+_cnum('textSize','13',10,20)+'</div>'
-          + '<div class="bpe-fld"><label>Taille nom</label>'+_cnum('nameSize','12',10,20)+'</div>'
-          + '<div class="bpe-fld"><label>Taille poste</label>'+_cnum('roleSize','10',8,16)+'</div>'
-          + '<div class="bpe-fld"><label>Bordure (px)</label>'+_cnum('borderWidth','2.5',1,6,'0.5')+'</div>'
-        + '</div>'
-        + '<div class="bpe-fld-row">'
-          + '<div class="bpe-fld"><label>Médaillons (px)</label><select onchange="_bpSetCit(\'avatarSize\',this.value)"><option value="">Défaut</option>'+[60,80,100,120].map(function(v){return '<option value="'+v+'"'+(String(cc.avatarSize)===String(v)?' selected':'')+'>'+v+'px</option>';}).join('')+'</select></div>'
-          + '<div class="bpe-fld"><label>Visibles avant accordéon</label>'+_cnum('visibleCount','6',1,20)+'</div>'
-        + '</div>'
-        + '<div class="bpe-fld-row">'
-          + '<div class="bpe-fld"><label>Fond citation vedette</label><input type="color" value="'+(cc.featuredBg||'#0F2B3C')+'" onchange="_bpSetCit(\'featuredBg\',this.value)"></div>'
-          + '<div class="bpe-toggle" style="flex:1"><span>Fond des boîtes personnalisé</span><label class="sw"><input type="checkbox" '+(cc.cardBgOn?'checked':'')+' onchange="_bpSetCit(\'cardBgOn\',this.checked)"><span class="tr"></span><span class="kn"></span></label></div>'
-          + (cc.cardBgOn?'<div class="bpe-fld"><label>Couleur des boîtes</label><input type="color" value="'+(cc.cardBg||'#0F2B3C')+'" onchange="_bpSetCit(\'cardBg\',this.value)"></div>':'')
-        + '</div>'
-        + '<div class="bpe-fld-row">'
-          + '<div class="bpe-fld"><label>Taille nom de rubrique (px)</label>'+_cnum('rubricSize','',10,48)+'</div>'
-          + '<div class="bpe-fld"><label>Police nom de rubrique</label><select onchange="_bpSetCit(\'rubricFont\',this.value)">'+_fontOpts(cc.rubricFont||'')+'</select></div>'
-        + '</div>'
-        + '<div class="bpe-hint" style="padding:4px 0">Les citations sont alimentées dans l\'onglet Citations. Champs vides = valeurs par défaut du thème.</div>';
+        + '<div class="bpe-fld"><label>Visibles avant accordéon</label>'+_cnum('visibleCount','6',1,20)+'</div>'
+        + '<div class="bpe-hint" style="padding:4px 0">Les citations sont alimentées dans l\'onglet Citations. L\'apparence (titre, tailles, couleurs, médaillons, fond…) se règle dans l\'onglet <b>Apparence</b> ci-dessus.</div>';
     }
     case 'sponsors': {
       var sp = c.sp || {};
