@@ -2868,11 +2868,13 @@ function render(data){
   // ===== GALERIE =====
   function mkGallery(opts){
     if(mod.gallery===false) return '';
+    opts=opts||{};
     const _rawPhotos = event.gallery || [];
     const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
     if(!photos.length) return '';
     let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
-    const galH = event.galleryHeight || 260;
+    // Priorité à la hauteur du bloc (opts), sinon réglage global de l'événement.
+    const galH = (opts.galleryHeight!=null&&opts.galleryHeight!=='')?parseInt(opts.galleryHeight,10):(event.galleryHeight || 260);
     function galImg(p){
       const url=typeof p==='string'?p:p.url||'';
       const cap=typeof p==='object'?p.caption||'':'';
@@ -5796,7 +5798,7 @@ function _bpRenderSection(sec, event, ctx){
   if(isDelegated){
     secId = 'bpsec-'+(sec.id||Math.random().toString(36).slice(2,8));
     // Programme, fil live et articles ont leur panneau d'apparence dédié → pas de socle générique.
-    if(type!=='programme' && type!=='live' && type!=='articles') overrideCss = _bpModuleOverrideCss(secId, ap);
+    if(type!=='programme' && type!=='live' && type!=='articles' && type!=='citations') overrideCss = _bpModuleOverrideCss(secId, ap);
   }
   // Réglages citations par bloc → variables CSS scopées sur cette section
   if(type==='citations' && ct.cit){
@@ -5841,6 +5843,10 @@ function _bpRenderSection(sec, event, ctx){
     // Hauteur de la zone déroulante (accordéon)
     var _aScrollH = sec.appearance&&sec.appearance.art&&sec.appearance.art.scrollH;
     if(_aScrollH) overrideCss += '<style>#'+secId+' .art-acc-scroll{max-height:'+parseInt(_aScrollH,10)+'px !important}</style>';
+  }
+  if(type==='citations'){
+    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
+    overrideCss += _bpCitCss(secId, (sec.appearance&&sec.appearance.cit)||{});
   }
   // Questions : couleurs par bloc
   if(type==='questions' && ct.qa){
@@ -5896,6 +5902,38 @@ function _bpArtCss(secId, a){
   var sp=[];
   if(a.padTop!=null && a.padTop!=='') sp.push('margin-top:'+parseInt(a.padTop,10)+'px !important');
   if(a.pad!=null && a.pad!=='') sp.push('margin-bottom:'+parseInt(a.pad,10)+'px !important');
+  if(sp.length) rules.push(sel+'{'+sp.join(';')+'}');
+  return rules.length ? '<style>'+rules.join('\n')+'</style>' : '';
+}
+// CSS d'apparence SPÉCIFIQUE au module CITATIONS / VERBATIMS.
+// c = appearance.cit = {title,name,role,text:{size,font,weight,color}, avatarSize, bg, padTop, pad}
+function _bpCitCss(secId, c){
+  c=c||{}; const sel='#'+secId; const rules=[];
+  function decl(r){ var d=[]; if(!r) r={};
+    if(r.font)   d.push("font-family:'"+r.font+"',sans-serif !important");
+    if(r.size)   d.push('font-size:'+parseInt(r.size,10)+'px !important');
+    if(r.weight) d.push('font-weight:'+r.weight+' !important');
+    if(r.color)  d.push('color:'+r.color+' !important');
+    return d;
+  }
+  // Titre de rubrique + titre de section
+  var t=decl(c.title); if(t.length) rules.push(sel+' .rubrique-name, '+sel+' .sec-title h2, '+sel+' .exp-section-head h2{'+t.join(';')+'}');
+  // Nom
+  var n=decl(c.name); if(n.length) rules.push(sel+' .cit-name, '+sel+' .cit-pm-name, '+sel+' .cit-hero-name, '+sel+' .exp-verbatim-name{'+n.join(';')+'}');
+  // Poste / sous-titre
+  var ro=decl(c.role); if(ro.length) rules.push(sel+' .cit-role, '+sel+' .cit-pm-role, '+sel+' .cit-hero-role, '+sel+' .exp-verbatim-role{'+ro.join(';')+'}');
+  // Texte de la citation
+  var tx=decl(c.text); if(tx.length) rules.push(sel+' .cit-text, '+sel+' .cit-pm-text, '+sel+' .cit-pm-quote, '+sel+' .cit-hero-text, '+sel+' .exp-verbatim-text{'+tx.join(';')+'}');
+  // Taille des médaillons
+  if(c.avatarSize){ var av=parseInt(c.avatarSize,10);
+    rules.push(sel+' .cit-pm-avatar, '+sel+' .cit-pm-avatar-ph, '+sel+' .cit-hero-avatar, '+sel+' .cit-hero-avatar-placeholder, '+sel+' .exp-verbatim-avatar, '+sel+' .exp-verbatim-avatar-ph, '+sel+' .cit-avatar{width:'+av+'px !important;height:'+av+'px !important}');
+  }
+  // Fond du bloc
+  if(c.bg) rules.push(sel+' .cit-hero, '+sel+' .cit-pm-inner, '+sel+' .exp-verbatim-card, '+sel+' .citation-card{background:'+c.bg+' !important}');
+  // Espacement
+  var sp=[];
+  if(c.padTop!=null && c.padTop!=='') sp.push('margin-top:'+parseInt(c.padTop,10)+'px !important');
+  if(c.pad!=null && c.pad!=='') sp.push('margin-bottom:'+parseInt(c.pad,10)+'px !important');
   if(sp.length) rules.push(sel+'{'+sp.join(';')+'}');
   return rules.length ? '<style>'+rules.join('\n')+'</style>' : '';
 }
