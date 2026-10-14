@@ -2880,8 +2880,8 @@ function render(data){
       const cap=typeof p==='object'?p.caption||'':'';
       const cr=typeof p==='object'?p.copyright||'':'';
       const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
-      const _hSty = ph_h?` style="height:${ph_h}px"`:'';
-      return `<div style="position:relative;overflow:hidden;border-radius:14px"${_hSty}><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
+      const _hSty = ph_h?`height:${ph_h}px;`:'';
+      return `<div style="${_hSty}position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
     }
     const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
     const _visP = photos.slice(0, _galVis);
@@ -5919,14 +5919,14 @@ function _bpCitCss(secId, c){
   // Titre de rubrique + titre de section
   var t=decl(c.title); if(t.length) rules.push(sel+' .rubrique-name, '+sel+' .sec-title h2, '+sel+' .exp-section-head h2{'+t.join(';')+'}');
   // Nom
-  var n=decl(c.name); if(n.length) rules.push(sel+' .cit-name, '+sel+' .cit-pm-name, '+sel+' .cit-hero-name, '+sel+' .exp-verbatim-name{'+n.join(';')+'}');
+  var n=decl(c.name); if(n.length) rules.push(sel+' .citation-name, '+sel+' .cit-name, '+sel+' .cit-pm-name, '+sel+' .cit-hero-name, '+sel+' .exp-verbatim-name{'+n.join(';')+'}');
   // Poste / sous-titre
-  var ro=decl(c.role); if(ro.length) rules.push(sel+' .cit-role, '+sel+' .cit-pm-role, '+sel+' .cit-hero-role, '+sel+' .exp-verbatim-role{'+ro.join(';')+'}');
+  var ro=decl(c.role); if(ro.length) rules.push(sel+' .citation-role, '+sel+' .cit-role, '+sel+' .cit-pm-role, '+sel+' .cit-hero-role, '+sel+' .exp-verbatim-role{'+ro.join(';')+'}');
   // Texte de la citation
-  var tx=decl(c.text); if(tx.length) rules.push(sel+' .cit-text, '+sel+' .cit-pm-text, '+sel+' .cit-pm-quote, '+sel+' .cit-hero-text, '+sel+' .exp-verbatim-text{'+tx.join(';')+'}');
+  var tx=decl(c.text); if(tx.length) rules.push(sel+' .citation-text, '+sel+' .cit-text, '+sel+' .cit-pm-text, '+sel+' .cit-pm-quote, '+sel+' .cit-hero-text, '+sel+' .exp-verbatim-text{'+tx.join(';')+'}');
   // Taille des médaillons
   if(c.avatarSize){ var av=parseInt(c.avatarSize,10);
-    rules.push(sel+' .cit-pm-avatar, '+sel+' .cit-pm-avatar-ph, '+sel+' .cit-hero-avatar, '+sel+' .cit-hero-avatar-placeholder, '+sel+' .exp-verbatim-avatar, '+sel+' .exp-verbatim-avatar-ph, '+sel+' .cit-avatar{width:'+av+'px !important;height:'+av+'px !important}');
+    rules.push(sel+' .citation-avatar, '+sel+' .citation-avatar-placeholder, '+sel+' .cit-pm-avatar, '+sel+' .cit-pm-avatar-ph, '+sel+' .cit-hero-avatar, '+sel+' .cit-hero-avatar-placeholder, '+sel+' .exp-verbatim-avatar, '+sel+' .exp-verbatim-avatar-ph, '+sel+' .cit-avatar{width:'+av+'px !important;height:'+av+'px !important}');
   }
   // Fond du bloc
   if(c.bg) rules.push(sel+' .cit-hero, '+sel+' .cit-pm-inner, '+sel+' .exp-verbatim-card, '+sel+' .citation-card{background:'+c.bg+' !important}');
