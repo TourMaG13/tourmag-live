@@ -808,6 +808,12 @@ img{display:block}a{text-decoration:none}
 .gallery-extra img{width:100%;height:calc(var(--gal-h,260px) * 0.65);object-fit:cover;border-radius:14px;transition:transform .2s}
 .gallery-extra img:hover{transform:scale(1.015)}
 @media(max-width:768px){.gallery-grid{grid-template-columns:1fr;grid-template-rows:auto}.gallery-grid img:first-child{grid-row:auto;height:180px}.gallery-grid img{height:150px}.gallery-extra{grid-template-columns:1fr 1fr}}
+/* Galerie flexible : hauteur + largeur réglables photo par photo (onglet Galerie). */
+.gallery-flex{display:flex;flex-wrap:wrap;gap:10px}
+.gallery-flex .gal-item{position:relative;overflow:hidden;border-radius:14px}
+.gallery-flex .gal-item img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.gallery-flex .gal-item img:hover{transform:scale(1.015)}
+@media(max-width:768px){.gallery-flex .gal-item{flex:1 1 calc(50% - 5px) !important;width:auto !important;max-width:calc(50% - 5px) !important}}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -2631,14 +2637,20 @@ function render(data){
   const CIT_VISIBLE = event.citVisibleCount || 6;
   var _citAccordionCounter = 0;
   // SVG quote icon for premium cards
-  function citQuoteSVG(){
+  function citQuoteSVG(_qs){
     const col = event.citationAccentColor || '#E8842C';
     const sizes = {small:{w:30,h:24,s:.68},medium:{w:44,h:36,s:1},large:{w:58,h:48,s:1.32}};
-    const sz = sizes[_citQuoteSize] || sizes.medium;
+    const sz = sizes[_qs||_citQuoteSize] || sizes.medium;
     return `<svg class="cit-pm-quote" width="${sz.w}" height="${sz.h}" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 21.6C0 10.08 6.72 2.16 17.28 0l1.92 4.32C12.48 6.24 9.12 11.52 8.64 17.28H17.28V36H0V21.6Z" fill="${col}"/><path d="M25.92 21.6C25.92 10.08 32.64 2.16 43.2 0l1.92 4.32c-6.72 1.92-10.08 7.2-10.56 12.96h8.64V36H25.92V21.6Z" fill="${col}"/></svg>`;
   }
-  function mkCitations(){
+  function mkCitations(opts){
     if(mod.citations===false || !citations || !citations.length) return '';
+    opts=opts||{};
+    // Réglages par bloc (builder) : style, guillemets, nombre visible. Sinon réglages globaux.
+    const _co = (opts && opts.cit) ? opts.cit : {};
+    const _style = (_co.style==='classic'||_co.style==='premium') ? _co.style : _citStyle;
+    const _qSize = _co.quoteSize || _citQuoteSize;
+    const _visible = (_co.visibleCount!=null && _co.visibleCount!=='') ? (parseInt(_co.visibleCount,10)||CIT_VISIBLE) : CIT_VISIBLE;
     const pubCitations=citations.filter(_isPublished);
     if(!pubCitations.length) return '';
     let o = `<div id="section-citations">${event.citationsShowTitle!==false?`<div class="sec-title sec-title-citations fi"><div class="sec-title-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">${ICO.msgCircle}</div><h2>${event.citationsTitle||'Verbatims'}</h2><div class="sec-title-line"></div><p>${event.citationsSubtitle||'Ce qu\'ils ont dit'}</p></div>`:""}</div>`;
@@ -2648,7 +2660,7 @@ function render(data){
     if(featured){
       const rubMatch = (rubriques||[]).find(r=>r.id===featured.rubrique);
 
-      if(_citStyle === 'premium'){
+      if(_style === 'premium'){
         // Premium featured citation
         const accentCol = event.citationAccentColor || '#E8842C';
         const bgCol = _citFeatBg;
@@ -2662,7 +2674,7 @@ function render(data){
         const avatarHtml = featured.avatar
           ? `<img class="cit-hero-avatar" src="${featured.avatar}" alt="" style="border-color:${accentCol};box-shadow:0 0 0 4px ${accentCol}33" onerror="this.style.display='none'">`
           : `<div class="cit-hero-avatar-placeholder" style="color:${roleCol}">${ini}</div>`;
-        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0;position:relative;overflow:hidden">${citQuoteSVG().replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.25"')}${avatarHtml}<div class="cit-hero-body" style="position:relative;z-index:1">`;
+        o += `<div class="cit-hero fi" style="background:${bgCol};border:var(--cit-bw,2.5px) solid ${accentCol};border-radius:18px 0 18px 0;position:relative;overflow:hidden">${citQuoteSVG(_qSize).replace('class="cit-pm-quote"','style="position:absolute;top:16px;right:20px;pointer-events:none;z-index:0;opacity:.25"')}${avatarHtml}<div class="cit-hero-body" style="position:relative;z-index:1">`;
         if(rubMatch) o += `<span class="cit-hero-badge" style="background:${accentCol}">${rubMatch.name||''}</span>`;
         o += `<div class="cit-hero-text" style="font-size:var(--cit-ts,16px);color:${txtCol}">${featured.text}</div><div class="cit-hero-name" style="font-size:var(--cit-ns,14px);color:${nameCol}">${featured.name}</div><div class="cit-hero-role" style="font-size:var(--cit-rs,11px);color:${roleCol}">${featured.role||''}</div></div></div>`;
       } else {
@@ -2684,12 +2696,12 @@ function render(data){
       const isLarge = c0.photoFormat === 'large';
 
       // ---- PREMIUM STYLE ----
-      if(_citStyle === 'premium'){
+      if(_style === 'premium'){
         const variant = (idx||0) % 2 === 0 ? 'citation-card-pm-a' : 'citation-card-pm-b';
         if(isLarge && c0.avatar){
-          out += `<div class="citation-card-pm ${variant} citation-card-large">${citQuoteSVG()}<div class="cit-pm-inner"><img class="cit-pm-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div style="margin-bottom:12px"><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div>`;
+          out += `<div class="citation-card-pm ${variant} citation-card-large">${citQuoteSVG(_qSize)}<div class="cit-pm-inner"><img class="cit-pm-photo-large" src="${c0.avatar}" alt="" onerror="this.remove()"><div style="margin-bottom:12px"><div class="cit-pm-name">${c0.name}</div><div class="cit-pm-role">${c0.role||''}</div></div>`;
         } else {
-          out += `<div class="citation-card-pm ${variant}">${citQuoteSVG()}<div class="cit-pm-inner">`;
+          out += `<div class="citation-card-pm ${variant}">${citQuoteSVG(_qSize)}<div class="cit-pm-inner">`;
           const rubMatch = (rubriques||[]).find(r=>r.id===c0.rubrique);
           if(rubMatch) out += `<div class="cit-pm-badge">${rubMatch.name||''}</div>`;
           out += `<div class="cit-pm-top">`;
@@ -2726,7 +2738,7 @@ function render(data){
       const accId = 'cit-acc-'+(_citAccordionCounter++);
       let out = `<div class="rubrique-block fi"><div class="rubrique-header"><div class="rubrique-icon" style="background:${rubBg};color:${rubColor}">${rubIcon}</div><div class="rubrique-name">${rubName}</div><span class="rubrique-count" style="background:${rubColor}">${rc.length}</span></div><div class="citation-grid">`;
       const cards = groups.map((g,gi) => mkCitGroup(g, gi));
-      const visCards = cards.slice(0,CIT_VISIBLE), extraCards = cards.slice(CIT_VISIBLE);
+      const visCards = cards.slice(0,_visible), extraCards = cards.slice(_visible);
       visCards.forEach(c => { out += c; });
       if(extraCards.length){
         out += `</div><div class="cd-expand" id="${accId}"><div class="citation-grid">`;
@@ -2873,35 +2885,30 @@ function render(data){
     const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
     if(!photos.length) return '';
     let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
-    // Priorité à la hauteur du bloc (opts), sinon réglage global de l'événement.
+    // Hauteur par défaut (bloc via opts, sinon réglage global). La hauteur ET la largeur
+    // se définissent photo par photo dans l'onglet Galerie (p.height / p.width).
     const galH = (opts.galleryHeight!=null&&opts.galleryHeight!=='')?parseInt(opts.galleryHeight,10):(event.galleryHeight || 260);
     function galImg(p){
       const url=typeof p==='string'?p:p.url||'';
       const cap=typeof p==='object'?p.caption||'':'';
       const cr=typeof p==='object'?p.copyright||'':'';
       const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
-      const _hSty = ph_h?`height:${ph_h}px;`:'';
-      return `<div style="${_hSty}position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
+      const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
+      const _h = ph_h || galH;
+      // Largeur fixe si définie, sinon ~3 par ligne (comportement par défaut).
+      const _wSty = ph_w
+        ? `flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`
+        : `flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`;
+      return `<div class="gal-item" style="${_wSty};height:${_h}px;position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
     }
     const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
     const _visP = photos.slice(0, _galVis);
     const _extraP = photos.slice(_galVis);
-    if(_visP.length >= 3){
-      o += `<div class="gallery-grid fi" style="--gal-h:${galH}px">`;
-      _visP.slice(0,3).forEach(p => { o += galImg(p); });
-      o += `</div>`;
-      if(_visP.length > 3){
-        o += `<div class="gallery-extra fi" style="--gal-h:${galH}px">`;
-        _visP.slice(3).forEach(p => { o += galImg(p); });
-        o += `</div>`;
-      }
-    } else {
-      o += `<div class="gallery-extra fi" style="--gal-h:${galH}px">`;
-      _visP.forEach(p => { o += galImg(p); });
-      o += `</div>`;
-    }
+    o += `<div class="gallery-flex fi">`;
+    _visP.forEach(p => { o += galImg(p); });
+    o += `</div>`;
     if(_extraP.length){
-      o += `<div class="expand-wrap" id="gal-expand"><div class="gallery-extra fi" style="--gal-h:${galH}px;margin-top:10px">`;
+      o += `<div class="expand-wrap" id="gal-expand"><div class="gallery-flex fi" style="margin-top:10px">`;
       _extraP.forEach(p => { o += galImg(p); });
       o += `</div></div><div style="text-align:center"><button class="voir-plus-btn" id="gal-btn" onclick="toggleExpand('gal-expand','gal-btn',${_extraP.length},'Réduire','Voir ${_extraP.length} photos de plus')">Voir ${_extraP.length} photos de plus ${_chevSvg}</button></div>`;
     }
@@ -5858,11 +5865,9 @@ function _bpRenderSection(sec, event, ctx){
     if(qa.textColor){ overrideCss += '<style>#'+secId+' .qa-item,#'+secId+' .question-item,#'+secId+' .qa-text{color:'+qa.textColor+' !important}</style>'; }
     if(qa.formBg){ overrideCss += '<style>#'+secId+' .qa-form,#'+secId+' .question-form{background:'+qa.formBg+' !important}</style>'; }
   }
-  // Galerie : hauteur par bloc
-  if((type==='gallery'||type==='gallerylive') && ct.galleryHeight){
-    if(!secId){ secId='bpsec-'+(sec.id||Math.random().toString(36).slice(2,8)); }
-    overrideCss += '<style>#'+secId+' .gallery-item,#'+secId+' .exp-gallery-item,#'+secId+' .gal-item{height:'+parseInt(ct.galleryHeight)+'px !important}</style>';
-  }
+  // Galerie : la hauteur par bloc est déjà appliquée via opts.galleryHeight (défaut des
+  // vignettes). On ne force plus .gal-item en !important : cela écraserait les hauteurs
+  // définies photo par photo.
   const idAttr = secId ? ' id="'+secId+'"' : '';
   const _mobCls = sec.hideMobile ? ' blk-mob-hidden' : '';
   var _themeAttr = (ct.theme) ? ' data-theme="'+_bpEsc(ct.theme)+'"' : '';
@@ -5916,8 +5921,12 @@ function _bpCitCss(secId, c){
     if(r.color)  d.push('color:'+r.color+' !important');
     return d;
   }
-  // Titre de rubrique + titre de section
-  var t=decl(c.title); if(t.length) rules.push(sel+' .rubrique-name, '+sel+' .sec-title h2, '+sel+' .exp-section-head h2{'+t.join(';')+'}');
+  // Titre du bloc (en-tête de section, ex. « VERBATIMS »)
+  var bt=decl(c.secTitle); if(bt.length) rules.push(sel+' .sec-title h2, '+sel+' .exp-section-head h2{'+bt.join(';')+'}');
+  // Sous-titre du bloc (ex. « Ce qu'ils ont dit »)
+  var bs=decl(c.subtitle); if(bs.length) rules.push(sel+' .sec-title p, '+sel+' .exp-section-sub{'+bs.join(';')+'}');
+  // Titre de rubrique UNIQUEMENT (étiquette de classement des citations) — découplé du titre de bloc
+  var t=decl(c.title); if(t.length) rules.push(sel+' .rubrique-name{'+t.join(';')+'}');
   // Nom
   var n=decl(c.name); if(n.length) rules.push(sel+' .citation-name, '+sel+' .cit-name, '+sel+' .cit-pm-name, '+sel+' .cit-hero-name, '+sel+' .exp-verbatim-name{'+n.join(';')+'}');
   // Poste / sous-titre
