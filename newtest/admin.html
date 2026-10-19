@@ -2584,6 +2584,8 @@ function modifyEvent(id){
     <div class="form-row" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)"><label class="form-label">Affichage chronologique</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="m-ev-chrono"${ev.afficheChrono?' checked':''}> Activer l'affichage chronologique (frise + fiches par date) pour cet événement</label>
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Remplace le rendu public habituel par une frise de dates cliquables, un panneau par édition et une colonne latérale. Les contenus se saisissent dans tes modules existants (timeline, interviews, articles par rubrique).</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;margin-top:8px"><input type="checkbox" id="m-ev-chrono-full"${ev.chronoFullWidth?' checked':''}> Frise sur toute la largeur de la page</label>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px">Par défaut la frise est centrée (largeur du contenu). Cochez pour qu'elle s'étende d'un bord à l'autre de l'écran.</div>
     </div>
     ${(function(){
       var sb=ev.secBanner||{};
@@ -2657,6 +2659,7 @@ async function updateEvent(id){
     logo_url:document.getElementById('m-ev-logo').value,
     publicUrl:(document.getElementById('m-ev-public-url')?.value||'').trim(),
     afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked,
+    chronoFullWidth:!!(document.getElementById('m-ev-chrono-full')||{}).checked,
     secBanner:(function(){
       var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
       var gi=function(id){var v=parseInt(g(id),10);return isNaN(v)?'':v;};
