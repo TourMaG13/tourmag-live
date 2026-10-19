@@ -3869,6 +3869,8 @@ function renderExpedition(data){
     } else {
       gp = activePhase ? _rawGp.filter(p=>!p.phase||p.phase===activePhase) : _rawGp;
     }
+    // Ciblage par page : une photo sans page s'affiche partout ; sinon uniquement sur sa page.
+    if(opts && opts.pageId){ gp = gp.filter(p=>!p.page||p.page===opts.pageId); }
     if(mod.gallery===false || !gp.length) return '';
     const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     let o=`<section class="exp-gallery">`;
