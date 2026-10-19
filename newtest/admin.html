@@ -9077,6 +9077,13 @@ function parseVideoUrl(url){
   m=url.match(/facebook\.com\/.+/);
   if(m) return {platform:'facebook',id:'fb_'+Date.now(),type:'video',url:url,embedUrl:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&t=0`};
 
+  // ===== VIMEO =====
+  m=url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if(m) return {platform:'vimeo',id:m[1],type:'video',url:url,embedUrl:`https://player.vimeo.com/video/${m[1]}`};
+
+  // ===== FICHIER VIDÉO AUTO-HÉBERGÉ (uploadé ou lien direct .mp4/.webm/.ogg/.mov/.m4v) =====
+  if(/\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(url)) return {platform:'file',id:'file_'+Date.now(),type:'video',url:url,embedUrl:url};
+
   return null;
 }
 // Backward compat alias
@@ -9106,7 +9113,7 @@ function renderVideos(el){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une vidéo</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook ou LinkedIn"><div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">Supporte : youtube.com, youtu.be, instagram.com/reel/…, instagram.com/p/…, facebook.com/…/videos/…, facebook.com/reel/…, linkedin.com/posts/…<br>⚠️ <strong>Facebook et LinkedIn</strong> : la vidéo/publication doit être <strong>publique</strong> pour s'afficher. Si l'embed échoue, un lien « Ouvrir sur… » sera affiché sous la vidéo.</div></div>
+      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><div style="display:flex;gap:6px"><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook, LinkedIn, Vimeo ou .mp4" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="uploadVideoFile()" title="Importer une vidéo depuis l'appareil" style="flex-shrink:0"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Upload vidéo</button></div><div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">Collez une URL (youtube.com, youtu.be, instagram.com, facebook.com, linkedin.com, vimeo.com) <strong>ou importez un fichier</strong> depuis votre ordinateur (.mp4, .webm, .mov…).<br>⚠️ <strong>Facebook et LinkedIn</strong> : la publication doit être <strong>publique</strong>. <strong>Upload</strong> : nécessite que le script <code>upload.php</code> accepte les vidéos (types + taille, voir note ci-dessous).</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
     </div>
     <div class="form-row-inline">
@@ -9129,9 +9136,9 @@ function renderVideos(el){
     if(!allVids.length) h+=`<div class="empty"><div class="text">Aucune vidéo</div></div>`;
     else allVids.forEach((v,i)=>{
       const platform=v.platform||'youtube';
-      const pLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
-      const pColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2'};
-      const pIcons={youtube:'▶️',instagram:'📸',facebook:'📘',linkedin:'💼'};
+      const pLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',vimeo:'Vimeo',file:'Fichier'};
+      const pColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2',vimeo:'#1AB7EA',file:'#0891B2'};
+      const pIcons={youtube:'▶️',instagram:'📸',facebook:'📘',linkedin:'💼',vimeo:'🎞️',file:'🎬'};
       const pc=pColors[platform]||'#475569';
       const thumb=platform==='youtube'&&v.ytId?'https://img.youtube.com/vi/'+v.ytId+'/mqdefault.jpg':(v.thumbnail||'');
       var row='<div class="list-item" style="align-items:center">';
@@ -9178,9 +9185,12 @@ function renderVideos(el){
     const prev=document.getElementById('vid-preview');
     const thumbRow=document.getElementById('vid-thumb-row');
     if(p&&prev){
-      const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
-      const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2'};
-      if(p.platform==='youtube'){
+      const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',vimeo:'Vimeo',file:'Fichier vidéo'};
+      const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2',vimeo:'#1AB7EA',file:'#0891B2'};
+      if(p.platform==='file'){
+        prev.innerHTML=`<video src="${(p.url||'').replace(/"/g,'&quot;')}" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>`;
+        if(thumbRow) thumbRow.style.display='none';
+      } else if(p.platform==='youtube'){
         const thumb=`https://img.youtube.com/vi/${p.id}/mqdefault.jpg`;
         prev.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"><img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"><div><div style="font-size:12px;font-weight:600;color:var(--text)">${p.id}</div><div style="font-size:10px;color:var(--text3)">Détecté : ${p.type==='short'?'YouTube Short (9:16)':'YouTube Vidéo (16:9)'}</div></div></div>`;
         if(thumbRow) thumbRow.style.display='none';
@@ -9270,14 +9280,48 @@ async function deleteVideoSection(idx){
   toast('Section supprimée');
 }
 
+let _uploadedVidUrl='';
+async function uploadVideoFile(){
+  const url=getUploadUrl();
+  if(!url){toast("Configurez l'URL d'upload dans l'onglet Intégration",'error');return;}
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='video/*';
+  input.onchange=async function(){
+    const file=input.files[0];
+    if(!file)return;
+    if(file.size>200*1024*1024){toast('Vidéo trop volumineuse (max 200 Mo)','error');return;}
+    const urlInput=document.getElementById('vid-url');
+    const prev=document.getElementById('vid-preview');
+    if(urlInput){urlInput.value='⏳ Upload en cours…';urlInput.disabled=true;}
+    try{
+      const fd=new FormData();
+      fd.append('image',file); // même champ que l'upload photo — le script upload.php doit accepter les vidéos
+      const resp=await fetch(url,{method:'POST',body:fd});
+      const data=await resp.json();
+      if(data.error){toast('Erreur: '+data.error,'error');if(urlInput){urlInput.value='';urlInput.disabled=false;}return;}
+      if(!data.url){toast('Réponse inattendue du serveur (pas d\'URL)','error');if(urlInput){urlInput.value='';urlInput.disabled=false;}return;}
+      if(urlInput){urlInput.value=data.url;urlInput.disabled=false;}
+      _uploadedVidUrl=data.url;
+      if(prev) prev.innerHTML='<video src="'+String(data.url).replace(/"/g,'&quot;')+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>';
+      toast('Vidéo importée — cliquez sur « Ajouter »');
+    }catch(e){
+      console.error('Upload vidéo error:',e);
+      toast("Erreur d'upload : "+e.message,'error');
+      if(urlInput){urlInput.value='';urlInput.disabled=false;}
+    }
+  };
+  input.click();
+}
 async function addVideo(){
   const url=document.getElementById('vid-url').value.trim();
   const caption=document.getElementById('vid-caption').value.trim();
   const section=document.getElementById('vid-section').value;
   const thumbInput=document.getElementById('vid-thumb');
   const thumbnail=thumbInput?thumbInput.value.trim():'';
-  const parsed=parseVideoUrl(url);
-  if(!parsed){toast('URL non reconnue (YouTube, Instagram, Facebook ou LinkedIn)','error');return;}
+  let parsed=parseVideoUrl(url);
+  if(!parsed && url && url===_uploadedVidUrl){ parsed={platform:'file',type:'video',url:url,embedUrl:url}; }
+  if(!parsed){toast('URL non reconnue (YouTube, Instagram, Facebook, LinkedIn, Vimeo ou fichier vidéo)','error');return;}
   // Duplicate check: for YouTube use ytId, for others use url
   if(parsed.platform==='youtube'){
     if(videosData.find(v=>v.ytId===parsed.ytId)){toast('Vidéo déjà ajoutée','error');return;}
@@ -9300,6 +9344,7 @@ async function addVideo(){
   if(parsed.embedUrl) docData.embedUrl=parsed.embedUrl;
   if(thumbnail) docData.thumbnail=thumbnail;
   await subCol('videos').add(docData);
+  _uploadedVidUrl='';
   document.getElementById('vid-url').value='';document.getElementById('vid-caption').value='';
   if(thumbInput) thumbInput.value='';
   document.getElementById('vid-preview').innerHTML='';
@@ -9313,7 +9358,7 @@ function editVideo(id){
   const sections=getVideoSections();
   const platform=v.platform||'youtube';
   const secOpts=sections.map(s=>`<option value="${s.id}"${v.section===s.id?' selected':''}>${s.title}</option>`).join('');
-  const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn'};
+  const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',vimeo:'Vimeo',file:'Fichier importé'};
   const thumbField=platform!=='youtube'?`<div class="form-row"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="m-vid-thumb" value="${(v.thumbnail||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>`:'';
   openModal(`<h3>Modifier la vidéo</h3>
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Plateforme : <strong style="color:var(--text)">${platformLabels[platform]||platform}</strong></div>
@@ -12510,7 +12555,7 @@ function renderWidgetClassique(el,ev,baseUrl,frontUrl,widgetUrl,iframeId){
 
     <div class="form-row" style="margin-top:14px"><label class="form-label">📷 URL du serveur d'upload d'images</label>
       <input class="form-input" id="w-upload-url" value="${(ev.uploadUrl||'').replace(/"/g,'&quot;')}" placeholder="https://votre-serveur.com/tools/upload.php" style="font-family:'IBM Plex Mono';font-size:12px">
-      <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script <code>upload.php</code> hébergé sur votre serveur. Active les boutons 📷 dans les champs image (fil live, citations, médiathèque, articles, logo). ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré — upload indisponible</span>'}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">URL du script <code>upload.php</code> hébergé sur votre serveur. Active les boutons 📷 dans les champs image (fil live, citations, médiathèque, articles, logo) et le bouton « Upload vidéo » du module Vidéos. Pour les vidéos, le script doit accepter les types vidéo (mp4, webm, mov…) et une taille suffisante (<code>upload_max_filesize</code> / <code>post_max_size</code> PHP). ${ev.uploadUrl?'<span style="color:#15803D">✅ Configuré</span>':'<span style="color:#92400E">⚠️ Non configuré — upload indisponible</span>'}</div>
     </div>
   </div>
 
