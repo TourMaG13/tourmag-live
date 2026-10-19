@@ -2254,7 +2254,7 @@ function renderTab(){
   const _settingsTabs=['live','citations','articles','essentiel','videos','interviews','gallery','journalistes','questions','quiz','programme','kpis','contact','etapes','sponsors'];
   if(_settingsTabs.includes(currentTab) && typeof _moduleSettingsButton==='function'){
     const _evG=eventsData.find(e=>e.id===currentEventId)||{};
-    const _hideGalApp=(currentTab==='gallery') && (currentUserRole==='client') && (_evG.gallerySimpleClient!==false);
+    const _hideGalApp=(currentTab==='gallery') && (typeof _galSimple==='function') && _galSimple(_evG);
     if(!_hideGalApp){
       const btn=_moduleSettingsButton(currentTab);
       if(btn) main.insertAdjacentHTML('beforeend', btn);
@@ -11985,9 +11985,23 @@ function _galCard(p, gi, o){
   +'</div>';
 }
 function _galIsAdmin(){ return currentUserRole!=='client'; }
-function _galSimple(ev){ return (currentUserRole==='client') && (ev.gallerySimpleClient!==false); }
+function _galSimple(ev){
+  const myEmail=(auth.currentUser?.email||'').toLowerCase();
+  const list=Array.isArray(ev.gallerySimpleUsers)?ev.gallerySimpleUsers.map(e=>(e||'').toLowerCase()):[];
+  if(myEmail && list.includes(myEmail)) return true;          // masqué pour ce compte précis
+  if(ev.gallerySimpleClient===true && currentUserRole==='client') return true; // option "tous les clients"
+  return false;
+}
+async function _toggleGallerySimpleUser(email, on){
+  email=(email||'').toLowerCase(); if(!email) return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  let list=Array.isArray(ev.gallerySimpleUsers)?ev.gallerySimpleUsers.map(e=>(e||'').toLowerCase()):[];
+  if(on){ if(!list.includes(email)) list.push(email); } else { list=list.filter(e=>e!==email); }
+  try{ await evRef().update({gallerySimpleUsers:list}); toast('Masquage mis à jour pour '+email); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 async function _saveGallerySimpleClient(on){
-  try{ await evRef().update({gallerySimpleClient:!!on}); toast(on?'Interface client simplifiée activée':'Interface client complète activée'); }
+  try{ await evRef().update({gallerySimpleClient:!!on}); toast(on?'Masquage activé pour tous les clients':'Masquage « tous les clients » désactivé'); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 let _galPickPage='', _galPickKey='none';
@@ -12065,9 +12079,32 @@ function renderGallery(el){
   </style>`;
   // Réglages avancés (masqués pour les clients en mode simplifié)
   if(!simple) h+=moduleConfigBlock('gallery');
-  if(isAdmin){
-    const on=ev.gallerySimpleClient!==false;
-    h+=`<div class="admin-card" style="padding:12px 16px"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" ${on?'checked':''} onchange="_saveGallerySimpleClient(this.checked)" style="margin-top:2px"><span style="font-size:13px"><strong>Interface simplifiée pour les clients</strong><br><span style="font-size:11px;color:var(--text3)">Masque le bloc « Taille des photos », le bouton « Personnaliser l'apparence » et les champs Hauteur/Largeur pour les comptes « client ». Vous (admin) gardez l'accès complet.</span></span></label></div>`;
+  const _myAcc=(adminsData||[]).find(a=>a.id===auth.currentUser?.uid)||null;
+  const isFullAdmin=(currentUserRole!=='client') && (!_myAcc || !_myAcc.accessProfile || _myAcc.accessProfile==='full' || _myAcc.seesAllEvents===true);
+  if(isFullAdmin){
+    const allClients = ev.gallerySimpleClient===true;
+    const simpleUsers = Array.isArray(ev.gallerySimpleUsers)?ev.gallerySimpleUsers.map(e=>(e||'').toLowerCase()):[];
+    const myEmailL=(auth.currentUser?.email||'').toLowerCase();
+    const accs=[];
+    (adminsData||[]).forEach(a=>{ const em=(a.email||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:(a.role||'admin')}); });
+    (ev.allowedUsers||[]).forEach(e=>{ const em=(e||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:'client'}); });
+    accs.sort((a,b)=>a.email.localeCompare(b.email));
+    let rows='';
+    if(accs.length){
+      rows=accs.map(a=>{
+        const checked=simpleUsers.includes(a.email)?' checked':'';
+        const me=(a.email===myEmailL)?' <span style="font-size:10px;color:var(--text3)">(vous)</span>':'';
+        return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;cursor:pointer"><input type="checkbox"'+checked+' onchange="_toggleGallerySimpleUser(\''+a.email+'\',this.checked)"><span>'+_escAdm(a.email)+' <span style="font-size:10px;color:var(--text3)">· '+(a.role==='client'?'client':'admin')+'</span>'+me+'</span></label>';
+      }).join('');
+    } else {
+      rows='<div style="font-size:11px;color:var(--text3)">Aucun compte connu. Créez des accès dans l\'onglet Accès.</div>';
+    }
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Affichage simplifié — pour qui ?</h3>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">Choisissez précisément <strong>pour qui</strong> l'interface est simplifiée : masque le bloc « Taille des photos », le bouton « Personnaliser l'apparence » et les champs Hauteur/Largeur. Les personnes non cochées gardent l'accès complet.</div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12.5px;cursor:pointer;padding-bottom:12px;border-bottom:1px solid var(--border)"><input type="checkbox" ${allClients?'checked':''} onchange="_saveGallerySimpleClient(this.checked)"><span>Raccourci : masquer pour <strong>tous les comptes « client »</strong></span></label>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Masquer pour des comptes précis</div>
+    ${rows}
+  </div>`;
   }
   if(!simple){
     h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Taille des photos</h3>
