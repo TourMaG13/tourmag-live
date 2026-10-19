@@ -2882,7 +2882,10 @@ function render(data){
     if(mod.gallery===false) return '';
     opts=opts||{};
     const _rawPhotos = event.gallery || [];
-    const photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
+    const _pageId = (opts && opts.pageId) || '';
+    let photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
+    // Ciblage par page : une photo sans page s'affiche partout ; sinon uniquement sur sa page.
+    if(_pageId) photos = photos.filter(p => !p.page || p.page === _pageId);
     if(!photos.length) return '';
     let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
     // Hauteur par défaut (bloc via opts, sinon réglage global). La hauteur ET la largeur
@@ -5753,6 +5756,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='interviews' && ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount);
       if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
       if((type==='gallery'||type==='gallerylive') && ct.galleryVisible!=null&&ct.galleryVisible!=='') _opts.galleryVisible=parseInt(ct.galleryVisible);
+      if(type==='gallerylive') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
@@ -6211,6 +6215,8 @@ function _bpRenderContentModule(sec, event, ctx){
 
 // Assemble la page complète (zones max/full/main/side) — même logique que le legacy.
 function _renderBuilderPage(page, event, ctx){
+  ctx = ctx || {};
+  ctx._pageId = (page && page.id) || '';
   const sections = Array.isArray(page.sections) ? page.sections : [];
   const zoneOf = s => (s.zone || (s.appearance&&s.appearance.zone) || 'full');
   const _isExp = (page.mode==='expedition') || (event && event.mode==='expedition');
@@ -6314,7 +6320,9 @@ function _renderBuilderPage(page, event, ctx){
             var sxCopy = JSON.parse(JSON.stringify(sx)); sxCopy.zone='full';
             sxCopy.content = sxCopy.content || {};
             sxCopy.content.showTitle = false;
+            var _savedPid = ctx._pageId; ctx._pageId = pg.id;
             agg += _bpRenderSection(sxCopy, event, ctx);
+            ctx._pageId = _savedPid;
           }
         });
       });
