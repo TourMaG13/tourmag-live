@@ -1411,6 +1411,9 @@ body.mode-expedition .social-float{display:none}
 .chr-ftitle{font-size:var(--chr-title-size,18px);font-weight:700;line-height:1.25}
 .chr-fitem.on .chr-ftitle{color:var(--pc,#6366F1)}
 .chr-fsub{font-size:12.5px;color:#64748B;margin-top:4px;line-height:1.45}
+/* Option « frise pleine largeur » : le scroller déborde du conteneur centré (.dash) */
+.phase-tabs.chr-frise.chr-frise-full .chr-frise-scroller{position:relative;width:100vw;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0 28px;box-sizing:border-box}
+@media(max-width:768px){.phase-tabs.chr-frise.chr-frise-full .chr-frise-scroller{padding:0 12px}}
 </style>
 </head>
 <body>
@@ -7128,6 +7131,7 @@ window._tmgResizeSettle=function(){
       });
       if(!cards.length) return;
       nav.classList.add('chr-frise');
+      if(ev.chronoFullWidth) nav.classList.add('chr-frise-full');
       // Structure : nav (relatif) > [flèches fixes] + [scroller (overflow) > track]
       nav.innerHTML='<div class="chr-frise-nav"><button type="button" class="chr-frise-arrow" data-dir="-1" aria-label="Précédent">‹</button><button type="button" class="chr-frise-arrow" data-dir="1" aria-label="Suivant">›</button></div>'
         +'<div class="chr-frise-scroller"><div class="chr-frise-track"><div class="chr-rail"></div>'+cards.join('')+'</div></div>';
@@ -7138,6 +7142,16 @@ window._tmgResizeSettle=function(){
           if(scroller) scroller.scrollBy({left:dir*Math.max(280,scroller.clientWidth*0.7),behavior:'smooth'});
         });
       });
+      // Recentre la frise sur la vignette active (utile quand on arrive sur une édition
+      // dont la carte était hors écran, cachée par le scroll).
+      var activeItem=nav.querySelector('.chr-fitem.on');
+      if(activeItem && scroller){
+        var _center=function(){
+          var target=activeItem.offsetLeft-(scroller.clientWidth-activeItem.offsetWidth)/2;
+          scroller.scrollLeft=Math.max(0,target);
+        };
+        requestAnimationFrame(_center); setTimeout(_center,120);
+      }
     });
   }
   var app=document.getElementById('app');
