@@ -813,7 +813,8 @@ img{display:block}a{text-decoration:none}
 .gallery-flex .gal-item{position:relative;overflow:hidden;border-radius:14px}
 .gallery-flex .gal-item img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .2s}
 .gallery-flex .gal-item img:hover{transform:scale(1.015)}
-@media(max-width:768px){.gallery-flex .gal-item{flex:1 1 calc(50% - 5px) !important;width:auto !important;max-width:calc(50% - 5px) !important}}
+.gallery-flex .gal-cap{position:absolute;left:0;right:0;bottom:0;padding:16px 12px 8px;background:linear-gradient(transparent,rgba(0,0,0,.68));color:#fff;font-size:12px;font-weight:500;line-height:1.3;z-index:1}
+@media(max-width:768px){.gallery-flex .gal-item-auto{flex:1 1 calc(50% - 5px) !important;width:auto !important;max-width:calc(50% - 5px) !important}.gallery-flex .gal-item-fixed{max-width:100% !important}}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -1218,6 +1219,10 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-gallery-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .exp-gallery-extra .exp-gal-item{height:var(--gal-h,180px)}
 .exp-gallery-extra .exp-gal-item img{height:100%}
+.exp-gallery-flex{display:flex;flex-wrap:wrap;gap:10px;margin-top:38px}
+.exp-gallery-flex.exp-expand{display:none}
+.exp-gallery-flex.exp-expand.open{display:flex}
+@media(max-width:768px){.exp-gallery-flex .exp-gal-auto{flex:1 1 calc(50% - 5px)!important;width:auto!important;max-width:calc(50% - 5px)!important}.exp-gallery-flex .exp-gal-fixed{max-width:100%!important}}
 /* Sponsors / Partenaires */
 .exp-sponsors{max-width:1200px;margin:0 auto;padding:0 32px 48px}
 /* Brand News (sidebar card) */
@@ -2901,10 +2906,11 @@ function render(data){
       const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
       const _h = ph_h || galH;
       // Largeur fixe si définie, sinon ~3 par ligne (comportement par défaut).
-      const _wSty = ph_w
+      const _fixedW = !!ph_w;
+      const _wSty = _fixedW
         ? `flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`
         : `flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`;
-      return `<div class="gal-item" style="${_wSty};height:${_h}px;position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)">© ${cr}</span>`:''}</div>`;
+      return `<div class="gal-item ${_fixedW?'gal-item-fixed':'gal-item-auto'}" style="${_wSty};height:${_h}px;position:relative;overflow:hidden;border-radius:14px"><img src="${url}" alt="${cap}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.remove()">${cap?`<div class="gal-cap">${cap}</div>`:''}${cr?`<span style="position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5);z-index:2">© ${cr}</span>`:''}</div>`;
     }
     const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
     const _visP = photos.slice(0, _galVis);
@@ -3879,13 +3885,13 @@ function renderExpedition(data){
     const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
-    function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+    const _gExpH = parseInt(event.galleryHeight)||260;
+    function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
     const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
     const extraPhotos = gp.slice(GALLERY_VIS);
-    if(visPhotos.length>=3){ o+=`<div class="exp-gallery-grid">${visPhotos.slice(0,3).map((p,i)=>gi(p,i,false)).join('')}</div>`; if(visPhotos.length>3) o+=`<div class="exp-gallery-extra">${visPhotos.slice(3).map((p,i)=>gi(p,i+3,false)).join('')}</div>`; }
-    else { o+=`<div class="exp-gallery-extra">${visPhotos.map((p,i)=>gi(p,i,false)).join('')}</div>`; }
+    o+=`<div class="exp-gallery-flex">${visPhotos.map((p,i)=>gi(p,i,false)).join('')}</div>`;
     if(extraPhotos.length){
-      o+=`<div class="exp-gallery-extra exp-expand" id="exp-gal-expand">${extraPhotos.map((p,i)=>gi(p,i+GALLERY_VIS,true)).join('')}</div>`;
+      o+=`<div class="exp-gallery-flex exp-expand" id="exp-gal-expand">${extraPhotos.map((p,i)=>gi(p,i+GALLERY_VIS,true)).join('')}</div>`;
       o+=`<button class="exp-voir-plus" id="exp-gal-btn" onclick="toggleExpGallery(${extraPhotos.length})">▾ Voir les ${extraPhotos.length} autres photos</button>`;
     }
     return o+`</section>`;
