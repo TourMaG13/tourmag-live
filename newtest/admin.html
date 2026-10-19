@@ -11879,6 +11879,12 @@ async function saveCountryMap(){
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
+function _galPageSelect(i, selected){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pgs=Array.isArray(ev.builderPages)?ev.builderPages:[];
+  if(!pgs.length) return '';
+  return '<select class="form-input" data-gal-page="'+i+'" title="Page du dashboard où afficher cette photo" style="width:auto;min-width:110px;font-size:10px;padding:3px 6px"><option value="">Toutes les pages</option>'+pgs.map(function(pg){return '<option value="'+pg.id+'"'+((selected||'')===pg.id?' selected':'')+'>'+_escAdm(pg.name||'(page)')+'</option>';}).join('')+'</select>';
+}
 function renderGallery(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const photos=ev.gallery||[];
@@ -11892,7 +11898,7 @@ function renderGallery(el){
         <input type="range" id="gal-global-h" min="120" max="420" step="10" value="${ev.galleryHeight||280}" oninput="document.getElementById('gal-global-h-val').textContent=this.value+'px'" style="flex:1">
         <span id="gal-global-h-val" style="font-size:13px;font-weight:600;min-width:56px">${ev.galleryHeight||280}px</span>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px">Hauteur par défaut, appliquée aux photos sans hauteur individuelle. Chaque photo peut avoir sa propre hauteur (« Haut. px ») et sa propre largeur (« Larg. px ») ci-dessous. Largeur vide = ~3 photos par ligne.</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Hauteur par défaut, appliquée aux photos sans hauteur individuelle. Chaque photo peut avoir sa propre hauteur (« Haut. px ») et sa propre largeur (« Larg. px ») ci-dessous. Largeur vide = ~3 photos par ligne. Le menu « Page » permet de choisir sur quelle page du dashboard la photo apparaît (« Toutes les pages » par défaut).</div>
       <div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="_saveGalleryHeight()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la taille</button></div>
     </div>
   </div>
@@ -11905,6 +11911,8 @@ function renderGallery(el){
     const phase=typeof p==='object'?p.phase||'':'';
     const ph_h=typeof p==='object'?(p.height||''):'';
     const ph_w=typeof p==='object'?(p.width||''):'';
+    const ph_pg=typeof p==='object'?(p.page||''):'';
+    const _gpgSel=_galPageSelect(i, ph_pg);
     const _gph=getPhases();
     const _gphSel=_gph.length?'<select class="form-input" data-gal-phase="'+i+'" style="width:auto;min-width:90px;font-size:10px;padding:3px 6px"><option value="">Toutes</option>'+_gph.map(ph=>'<option value="'+ph.id+'"'+(phase===ph.id?' selected':'')+'>'+ph.name+'</option>').join('')+'</select>':'';
     h+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px" data-gal-row>
@@ -11915,6 +11923,7 @@ function renderGallery(el){
       <input class="form-input" value="${copyright.replace(/"/g,'&quot;')}" placeholder="© Crédit" style="width:80px;font-size:11px" data-gal-cr="${i}">
       <input class="form-input" type="number" value="${ph_h}" placeholder="Haut. px" title="Hauteur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-h="${i}" min="80" max="600" step="10">
       <input class="form-input" type="number" value="${ph_w}" placeholder="Larg. px" title="Largeur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-w="${i}" min="80" max="1200" step="10">
+      ${_gpgSel}
       ${_gphSel}
       <button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>
     </div>`;
@@ -11982,9 +11991,10 @@ function addGalleryRow(url){
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px';
   div.setAttribute('data-gal-row','');
+  const _gpgSel=(typeof _galPageSelect==='function')?_galPageSelect(i,''):'';
   const _gph=(typeof getPhases==='function')?getPhases():[];
   const _gphSel=_gph.length?'<select class="form-input" data-gal-phase="'+i+'" style="width:auto;min-width:90px;font-size:10px;padding:3px 6px"><option value="">Toutes</option>'+_gph.map(ph=>'<option value="'+ph.id+'">'+ph.name+'</option>').join('')+'</select>':'';
-  div.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0"><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),-1)" title="Monter" style="padding:1px 4px;font-size:11px">▲</button><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),1)" title="Descendre" style="padding:1px 4px;font-size:11px">▼</button></div><img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:11px" data-gal-cr="${i}"><input class="form-input" type="number" value="" placeholder="Haut. px" title="Hauteur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-h="${i}" min="80" max="600" step="10"><input class="form-input" type="number" value="" placeholder="Larg. px" title="Largeur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-w="${i}" min="80" max="1200" step="10">${_gphSel}<button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>`;
+  div.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0"><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),-1)" title="Monter" style="padding:1px 4px;font-size:11px">▲</button><button class="btn btn-ghost btn-xs" onclick="moveGalRow(this.closest('[data-gal-row]'),1)" title="Descendre" style="padding:1px 4px;font-size:11px">▼</button></div><img src="${url||''}" style="width:60px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#F1F5F9;display:${url?'block':'none'}" onerror="this.style.display='none'"><input class="form-input" value="${url||''}" placeholder="URL de la photo" style="flex:1" data-gal-url="${i}" oninput="var img=this.previousElementSibling;img.src=this.value;img.style.display=this.value?'block':'none'"><input class="form-input" placeholder="Légende" style="width:120px" data-gal-cap="${i}"><input class="form-input" placeholder="© Crédit" style="width:100px;font-size:11px" data-gal-cr="${i}"><input class="form-input" type="number" value="" placeholder="Haut. px" title="Hauteur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-h="${i}" min="80" max="600" step="10"><input class="form-input" type="number" value="" placeholder="Larg. px" title="Largeur individuelle (optionnel)" style="width:70px;font-size:11px" data-gal-w="${i}" min="80" max="1200" step="10">${_gpgSel}${_gphSel}<button class="btn btn-danger btn-xs" onclick="this.closest('[data-gal-row]').remove();saveGallery()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>`;
   list.appendChild(div);
 }
 function uploadGalleryPhoto(){
@@ -12042,6 +12052,8 @@ async function saveGallery(){
     if(hv) obj.height=hv;
     const wv=ww?parseInt(ww.value,10):0;
     if(wv) obj.width=wv;
+    const pgEl=row.querySelector('[data-gal-page]');
+    if(pgEl && pgEl.value) obj.page=pgEl.value;
     gallery.push(obj);
   });
   saving(true);
