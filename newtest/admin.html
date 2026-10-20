@@ -5290,6 +5290,8 @@ function _bpContentFieldsHtml(s){
       return _phaseFld
         + _bpTitleFields('Galerie','En images')
         + '<div class="bpe-fld"><label>Présentation</label><select onchange="_bpSetCt(\'galleryDisplay\',this.value)" style="width:100%"><option value=""'+(_gd===''?' selected':'')+'>Réglage global</option><option value="grid"'+(_gd==='grid'?' selected':'')+'>Mur de photos (grille)</option><option value="carousel"'+(_gd==='carousel'?' selected':'')+'>Carrousel</option></select></div>'
+        + '<div class="bpe-fld-row"><div class="bpe-fld"><label>Carrousel : images visibles (≈)</label><input type="number" min="0" max="12" value="'+(c.galleryCarVis!=null&&c.galleryCarVis!==''?c.galleryCarVis:'')+'" placeholder="auto" onchange="_bpSetCt(\'galleryCarVis\',this.value)" style="width:90px"></div>'
+          + '<div class="bpe-fld"><label>Carrousel pleine largeur</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding-top:6px"><input type="checkbox" '+(c.galleryFull?'checked':'')+' onchange="_bpSetCt(\'galleryFull\',this.checked)"> Oui</label></div></div>'
         + '<div class="bpe-fld-row">'
           + '<div class="bpe-fld"><label>Hauteur de la galerie (px)</label><input type="number" min="100" max="600" value="'+(c.galleryHeight!=null&&c.galleryHeight!==''?c.galleryHeight:'')+'" placeholder="260" onchange="_bpSetCt(\'galleryHeight\',this.value)" style="width:100px"></div>'
           + '<div class="bpe-fld"><label>Photos avant « voir plus »</label><input type="number" min="3" max="60" value="'+(c.galleryVisible!=null&&c.galleryVisible!==''?c.galleryVisible:'')+'" placeholder="9" onchange="_bpSetCt(\'galleryVisible\',this.value)" style="width:100px"></div>'
@@ -12332,6 +12334,10 @@ function renderGallery(el){
       </select>
       <div style="font-size:10px;color:var(--text3);margin-top:4px">Réglage par défaut pour toutes les galeries. Chaque bloc galerie du builder peut le surcharger.</div>
     </div>
+    <div class="form-row-inline" style="max-width:520px">
+      <div class="form-row" style="max-width:240px"><label class="form-label">Carrousel : images visibles (≈)</label><input class="form-input" type="number" min="0" max="12" value="${ev.galleryCarouselVisible!=null?ev.galleryCarouselVisible:''}" placeholder="auto (hauteur)" onchange="_saveGalleryCarVis(this.value)"><div style="font-size:10px;color:var(--text3);margin-top:3px">Indicatif. Vide = c'est la hauteur ci-dessous qui décide.</div></div>
+      <div class="form-row"><label class="form-label">&nbsp;</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding-top:8px"><input type="checkbox" ${ev.galleryCarouselFull?'checked':''} onchange="_saveGalleryCarFull(this.checked)"> Carrousel en pleine largeur</label></div>
+    </div>
     <div class="form-row" style="max-width:420px"><label class="form-label">Hauteur des vignettes (globale)</label>
       <div style="display:flex;gap:10px;align-items:center">
         <input type="range" id="gal-global-h" min="120" max="420" step="10" value="${ev.galleryHeight||280}" oninput="document.getElementById('gal-global-h-val').textContent=this.value+'px'" style="flex:1">
@@ -12462,6 +12468,15 @@ async function saveGallery(){
 async function _saveGalleryDisplay(val){
   const v=(val==='carousel')?'carousel':'grid';
   try{ await evRef().update({galleryDisplay:v}); toast(v==='carousel'?'Galerie en carrousel':'Galerie en mur de photos'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _saveGalleryCarVis(val){
+  var n=parseInt(val,10); var v=(isNaN(n)||n<=0)?null:Math.min(12,n);
+  try{ await evRef().update({galleryCarouselVisible: v===null?firebase.firestore.FieldValue.delete():v}); toast('Carrousel mis à jour'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+async function _saveGalleryCarFull(on){
+  try{ await evRef().update({galleryCarouselFull:!!on}); toast(on?'Carrousel en pleine largeur':'Carrousel en largeur normale'); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 async function _saveGalleryHeight(){
