@@ -9108,8 +9108,9 @@ function renderVideos(el){
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg>Vidéos</div><div class="page-desc">Ajoutez une vidéo YouTube ou importez-la depuis votre ordinateur, choisissez son format et la page où elle apparaît.</div>`;
   h+=`<style>.vid-fmt-btn{border:1.5px solid var(--border)!important}.vid-fmt-btn.is-on{border-color:#2563EB!important;background:#2563EB!important;color:#fff!important}</style>`;
   if(!simple) h+=moduleConfigBlock('videos');
-  // Gestion des sections : réservée à l'admin. Les clients choisissent seulement une section existante.
-  if(isAdmin){
+  h+=_simpleAudiencePanelHtml();
+  // Gestion des sections : masquée pour les comptes en affichage simplifié (même principe que les photos).
+  if(!simple){
     h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Sections</h3>
       <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Vous définissez les sections ; vos clients choisissent simplement dans laquelle ranger leur vidéo.</div>
       <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
@@ -12068,6 +12069,37 @@ async function _saveGallerySimpleClient(on){
   try{ await evRef().update({gallerySimpleClient:!!on}); toast(on?'Masquage activé pour tous les clients':'Masquage « tous les clients » désactivé'); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
+// Panneau « pour qui ? » — partagé par les onglets Galerie et Vidéos. Visible seulement
+// pour un admin plein accès ; gouverne le masquage des réglages avancés dans les deux onglets.
+function _simpleAudiencePanelHtml(){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const _myAcc=(adminsData||[]).find(a=>a.id===auth.currentUser?.uid)||null;
+  const isFullAdmin=(currentUserRole!=='client') && (!_myAcc || !_myAcc.accessProfile || _myAcc.accessProfile==='full' || _myAcc.seesAllEvents===true);
+  if(!isFullAdmin) return '';
+  const allClients = ev.gallerySimpleClient===true;
+  const simpleUsers = Array.isArray(ev.gallerySimpleUsers)?ev.gallerySimpleUsers.map(e=>(e||'').toLowerCase()):[];
+  const myEmailL=(auth.currentUser?.email||'').toLowerCase();
+  const accs=[];
+  (adminsData||[]).forEach(a=>{ const em=(a.email||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:(a.role||'admin')}); });
+  (ev.allowedUsers||[]).forEach(e=>{ const em=(e||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:'client'}); });
+  accs.sort((a,b)=>a.email.localeCompare(b.email));
+  let rows='';
+  if(accs.length){
+    rows=accs.map(a=>{
+      const checked=simpleUsers.includes(a.email)?' checked':'';
+      const me=(a.email===myEmailL)?' <span style="font-size:10px;color:var(--text3)">(vous)</span>':'';
+      return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;cursor:pointer"><input type="checkbox"'+checked+' onchange="_toggleGallerySimpleUser(\''+a.email+'\',this.checked)"><span>'+_escAdm(a.email)+' <span style="font-size:10px;color:var(--text3)">· '+(a.role==='client'?'client':'admin')+'</span>'+me+'</span></label>';
+    }).join('');
+  } else {
+    rows='<div style="font-size:11px;color:var(--text3)">Aucun compte connu. Créez des accès dans l\'onglet Accès.</div>';
+  }
+  return `<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Affichage simplifié — pour qui ?</h3>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">Choisissez précisément <strong>pour qui</strong> l'interface des <strong>galeries et vidéos</strong> est simplifiée : masque la gestion des sections, les réglages de taille, le bouton « Personnaliser l'apparence » et les champs avancés. Ces personnes ne voient que l'ajout et la liste. Les autres gardent l'accès complet. (Réglage commun aux onglets Galerie et Vidéos.)</div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12.5px;cursor:pointer;padding-bottom:12px;border-bottom:1px solid var(--border)"><input type="checkbox" ${allClients?'checked':''} onchange="_saveGallerySimpleClient(this.checked)"><span>Raccourci : masquer pour <strong>tous les comptes « client »</strong></span></label>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Masquer pour des comptes précis</div>
+    ${rows}
+  </div>`;
+}
 let _galPickPage='', _galPickKey='none';
 function _galAppendRow(url, pageId, key){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -12143,33 +12175,7 @@ function renderGallery(el){
   </style>`;
   // Réglages avancés (masqués pour les clients en mode simplifié)
   if(!simple) h+=moduleConfigBlock('gallery');
-  const _myAcc=(adminsData||[]).find(a=>a.id===auth.currentUser?.uid)||null;
-  const isFullAdmin=(currentUserRole!=='client') && (!_myAcc || !_myAcc.accessProfile || _myAcc.accessProfile==='full' || _myAcc.seesAllEvents===true);
-  if(isFullAdmin){
-    const allClients = ev.gallerySimpleClient===true;
-    const simpleUsers = Array.isArray(ev.gallerySimpleUsers)?ev.gallerySimpleUsers.map(e=>(e||'').toLowerCase()):[];
-    const myEmailL=(auth.currentUser?.email||'').toLowerCase();
-    const accs=[];
-    (adminsData||[]).forEach(a=>{ const em=(a.email||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:(a.role||'admin')}); });
-    (ev.allowedUsers||[]).forEach(e=>{ const em=(e||'').toLowerCase(); if(em && !accs.find(x=>x.email===em)) accs.push({email:em, role:'client'}); });
-    accs.sort((a,b)=>a.email.localeCompare(b.email));
-    let rows='';
-    if(accs.length){
-      rows=accs.map(a=>{
-        const checked=simpleUsers.includes(a.email)?' checked':'';
-        const me=(a.email===myEmailL)?' <span style="font-size:10px;color:var(--text3)">(vous)</span>':'';
-        return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;cursor:pointer"><input type="checkbox"'+checked+' onchange="_toggleGallerySimpleUser(\''+a.email+'\',this.checked)"><span>'+_escAdm(a.email)+' <span style="font-size:10px;color:var(--text3)">· '+(a.role==='client'?'client':'admin')+'</span>'+me+'</span></label>';
-      }).join('');
-    } else {
-      rows='<div style="font-size:11px;color:var(--text3)">Aucun compte connu. Créez des accès dans l\'onglet Accès.</div>';
-    }
-    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Affichage simplifié — pour qui ?</h3>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">Choisissez précisément <strong>pour qui</strong> l'interface est simplifiée : masque le bloc « Taille des photos », le bouton « Personnaliser l'apparence » et les champs Hauteur/Largeur. Les personnes non cochées gardent l'accès complet.</div>
-    <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12.5px;cursor:pointer;padding-bottom:12px;border-bottom:1px solid var(--border)"><input type="checkbox" ${allClients?'checked':''} onchange="_saveGallerySimpleClient(this.checked)"><span>Raccourci : masquer pour <strong>tous les comptes « client »</strong></span></label>
-    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Masquer pour des comptes précis</div>
-    ${rows}
-  </div>`;
-  }
+  h+=_simpleAudiencePanelHtml();
   if(!simple){
     h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Taille des photos</h3>
     <div class="form-row" style="max-width:420px"><label class="form-label">Hauteur des vignettes (globale)</label>
