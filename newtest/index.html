@@ -7045,7 +7045,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); }
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
   // Compte, par collection, le nombre de déclenchements et de documents lus.
@@ -7668,6 +7668,110 @@ window._tmgResizeSettle=function(){
     });
   };
   setTimeout(function(){ if(window._commentsRefresh) window._commentsRefresh(); }, 1400);
+})();
+</script>
+<script>
+/* ============================================================
+   SONDAGE (pop-up) — bouton « Donner mon avis » + auto-ouverture.
+   Identité hybride (D) : compte connecté si dispo, sinon nom/e-mail
+   saisis + identifiant d'appareil. Réponses en direct dans le dashboard.
+   ============================================================ */
+(function(){
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.get('preview')==='1') return;
+  var EVENT_ID=_qs.get('event')||'';
+  if(!EVENT_ID) return;
+  var btn=null, autoScheduled=false;
+  function sv(){ var e=(window._rtState&&window._rtState.event)||{}; return e.survey||{}; }
+  function pubDb(){ return window._pubDb||null; }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function device(){ try{ var k='tmg_device',v=localStorage.getItem(k); if(!v){ v='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); } return v; }catch(_){ return ''; } }
+  function doneKey(){ return 'tmg_survey_done_'+EVENT_ID; }
+  function isDone(){ try{ return localStorage.getItem(doneKey())==='1'; }catch(_){ return false; } }
+  function markDone(){ try{ localStorage.setItem(doneKey(),'1'); }catch(_){ } }
+
+  var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
+  var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
+  var P='width:100%;margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:11px;border-radius:9px';
+  function modal(inner){ var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:440px;width:100%;max-height:90vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
+  function toast(msg){ var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:100001;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font:500 13px system-ui'; document.body.appendChild(t); setTimeout(function(){t.remove();},2600); }
+
+  function ensureBtn(){
+    var s=sv();
+    if(!s.enabled || s.showButton===false){ if(btn){btn.remove();btn=null;} return; }
+    if(!btn){ btn=document.createElement('button'); btn.id='sv-fab'; btn.onclick=openSurvey;
+      btn.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99990;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28)';
+      document.body.appendChild(btn); }
+    btn.textContent=s.buttonLabel||'Donner mon avis';
+  }
+
+  function qField(q){
+    if(q.type==='stars') return '<div class="sv-stars" style="display:flex;gap:6px;font-size:28px;cursor:pointer;color:#cbd5e1">'+[1,2,3,4,5].map(function(n){return '<span data-v="'+n+'">★</span>';}).join('')+'<input type="hidden" data-ans="'+esc(q.id)+'" value=""></div>';
+    if(q.type==='score') return '<div style="display:flex;align-items:center;gap:10px"><input type="range" min="0" max="10" value="5" data-ans="'+esc(q.id)+'" oninput="this.nextElementSibling.textContent=this.value" style="flex:1"><span style="font-weight:700;min-width:22px;text-align:center">5</span></div>';
+    if(q.type==='choice') return '<div data-choice="'+esc(q.id)+'">'+(q.options||[]).map(function(o){return '<label style="display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0;cursor:pointer"><input type="radio" name="svq-'+esc(q.id)+'" value="'+esc(o)+'"> '+esc(o)+'</label>';}).join('')+'</div>';
+    return '<textarea data-ans="'+esc(q.id)+'" rows="2" style="'+F+'" placeholder="Votre réponse…"></textarea>';
+  }
+  function wireStars(box){
+    box.querySelectorAll('.sv-stars').forEach(function(w){
+      var hid=w.querySelector('input[data-ans]');
+      w.querySelectorAll('span[data-v]').forEach(function(sp){
+        sp.onclick=function(){ var v=+sp.getAttribute('data-v'); if(hid) hid.value=v; w.querySelectorAll('span[data-v]').forEach(function(s2){ s2.style.color=(+s2.getAttribute('data-v')<=v)?'#F59E0B':'#cbd5e1'; }); };
+      });
+    });
+  }
+  function collect(box, qs){
+    var ans={};
+    qs.forEach(function(q){
+      if(q.type==='choice'){ var r=box.querySelector('input[name="svq-'+q.id+'"]:checked'); if(r) ans[q.id]=r.value; return; }
+      var el=box.querySelector('[data-ans="'+q.id+'"]'); if(!el) return;
+      var v=el.value;
+      if(q.type==='stars') v=v?parseInt(v,10):'';
+      else if(q.type==='score') v=(v!=='')?parseInt(v,10):'';
+      else v=(v||'').trim();
+      if(v!=='' && v!=null) ans[q.id]=v;
+    });
+    return ans;
+  }
+
+  function openSurvey(){
+    var s=sv(); if(!s.enabled) return; var qs=s.questions||[];
+    var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
+    var idBlock = u
+      ? '<div style="font-size:12px;color:#475569;margin-bottom:4px">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
+      : '<label style="'+L+'">Votre nom</label><input id="sv-name" style="'+F+'" placeholder="Prénom / nom"><label style="'+L+'">Votre e-mail (facultatif)</label><input id="sv-email" type="email" style="'+F+'">';
+    var qHtml=qs.map(function(q,i){ return '<div style="margin-top:14px"><label style="'+L+';font-weight:700;color:#0f172a">'+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+    var m=modal('<h3 style="margin:0 0 4px;font-size:18px">'+esc(s.title||'Votre avis')+'</h3>'
+      +(s.intro?'<p style="margin:0 0 10px;font-size:13px;color:#64748b">'+esc(s.intro)+'</p>':'')
+      +idBlock+qHtml
+      +'<div id="sv-err" style="color:#b91c1c;font-size:12px;margin-top:10px;display:none"></div>'
+      +'<button id="sv-send" style="'+P+'">Envoyer</button>');
+    wireStars(m.box);
+    var send=m.box.querySelector('#sv-send'), err=m.box.querySelector('#sv-err');
+    send.onclick=function(){
+      var ans=collect(m.box, qs);
+      if(!Object.keys(ans).length){ err.textContent='Merci de répondre à au moins une question.'; err.style.display='block'; return; }
+      var name='',email='',account='';
+      if(u){ account=u.email||''; email=u.email||''; name=(u.email||'').split('@')[0]; }
+      else { var ne=m.box.querySelector('#sv-name'), ee=m.box.querySelector('#sv-email'); name=ne?(ne.value||'').trim():''; email=ee?(ee.value||'').trim():''; }
+      var wdb=pubDb(); if(!wdb){ err.textContent='Service momentanément indisponible, réessayez.'; err.style.display='block'; return; }
+      send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
+      wdb.collection('events').doc(EVENT_ID).collection('surveyResponses').add({
+        answers:ans, name:name, email:email, account:account, deviceId:device(),
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){ markDone(); m.close(); toast('Merci pour votre avis !'); })
+        .catch(function(e){ send.disabled=false; send.textContent='Envoyer'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
+    };
+  }
+
+  window._surveyRefresh=function(){
+    var s=sv();
+    ensureBtn();
+    if(s.enabled && s.autoOpen && !autoScheduled && !isDone()){
+      autoScheduled=true;
+      setTimeout(function(){ if(!isDone() && sv().enabled && sv().autoOpen) openSurvey(); }, Math.max(0,(s.autoDelay||0))*1000);
+    }
+  };
+  setTimeout(function(){ if(window._surveyRefresh) window._surveyRefresh(); }, 1600);
 })();
 </script>
 </body>
