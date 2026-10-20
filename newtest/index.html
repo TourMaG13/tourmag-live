@@ -2805,8 +2805,12 @@ function render(data){
   }
 
   // ===== VIDEOS (kept from original) =====
-  function mkVideos(){
+  function mkVideos(opts){
     if(mod.videos===false || !videos || !videos.length) return '';
+    // Ciblage par page : une vidéo sans page s'affiche partout ; sinon uniquement sur sa page.
+    const _vidPage=(opts&&opts.pageId)||'';
+    const videosP = _vidPage ? videos.filter(v=>!v.page||v.page===_vidPage) : videos;
+    if(!videosP.length) return '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
     let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title sec-title-videos fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
@@ -2824,8 +2828,8 @@ function render(data){
     }
 
     sections.forEach(sec=>{
-      const secVids=videos.filter(v=>v.section===sec.id);
-      const orphans=sec.id==='default'?videos.filter(v=>!v.section||!sections.find(s=>s.id===v.section)):[];
+      const secVids=videosP.filter(v=>v.section===sec.id);
+      const orphans=sec.id==='default'?videosP.filter(v=>!v.section||!sections.find(s=>s.id===v.section)):[];
       const allVids=[...secVids,...orphans.filter(v=>!secVids.find(sv=>sv.id===v.id))].sort((a,b)=>(a.order||0)-(b.order||0));
       if(!allVids.length)return;
       const isCarousel=sec.display==='carousel';const visCount=sec.visibleCount||6;const accId='vid-acc-'+(_vidAccCounter++);
@@ -3846,7 +3850,9 @@ function renderExpedition(data){
   };
 
   _b.videos = function(opts){
-    const _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : videos;
+    let _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : videos;
+    const _vidPage=(opts&&opts.pageId)||'';
+    if(_vidPage) _vids = _vids.filter(v=>!v.page||v.page===_vidPage);
     if(mod.videos===false || !_vids || !_vids.length) return '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
     let o = `<section class="exp-videos">`;
@@ -5774,6 +5780,7 @@ function _bpRenderSection(sec, event, ctx){
       if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
       if((type==='gallery'||type==='gallerylive') && ct.galleryVisible!=null&&ct.galleryVisible!=='') _opts.galleryVisible=parseInt(ct.galleryVisible);
       if(type==='gallerylive') _opts.pageId = (ctx && ctx._pageId) || '';
+      if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
