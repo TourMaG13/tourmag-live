@@ -9120,7 +9120,7 @@ function renderVideos(el){
 
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une vidéo</h3>
     <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><div style="display:flex;gap:6px"><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook, LinkedIn, Vimeo ou .mp4" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="uploadVideoFile()" title="Importer une vidéo depuis l'appareil" style="flex-shrink:0"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Upload vidéo</button></div><div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">Collez une URL (youtube.com, youtu.be, instagram.com, facebook.com, linkedin.com, vimeo.com) <strong>ou importez un fichier</strong> depuis votre ordinateur (.mp4, .webm, .mov…).<br>⚠️ <strong>Facebook et LinkedIn</strong> : la publication doit être <strong>publique</strong>. <strong>Upload</strong> : nécessite que le script <code>upload.php</code> accepte les vidéos (types + taille, voir note ci-dessous).</div></div>
+      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><div style="display:flex;gap:6px"><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook, LinkedIn, Vimeo ou .mp4" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="uploadVideoFile()" title="Importer une vidéo depuis l'appareil" style="flex-shrink:0"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Upload vidéo</button></div><div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">Collez une URL (youtube.com, youtu.be, instagram.com, facebook.com, linkedin.com, vimeo.com) <strong>ou importez un fichier</strong> depuis votre ordinateur (MP4, MOV, WebM, AVI, MKV — <strong>125 Mo max</strong>).<br>⚠️ <strong>Facebook et LinkedIn</strong> : la publication doit être <strong>publique</strong>. <strong>Upload</strong> : la vidéo est convertie côté serveur après l'envoi — comptez quelques minutes, ne fermez pas la page pendant la conversion.</div></div>
       <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
     </div>
     <div class="form-row-inline">
@@ -9288,34 +9288,50 @@ async function deleteVideoSection(idx){
 }
 
 let _uploadedVidUrl='';
+// Upload vidéo asynchrone (script de Quentin) : envoi du fichier (champ "video" + "tool"),
+// puis la conversion se fait côté serveur. On interroge status_url toutes les 3 s jusqu'à
+// obtenir l'URL finale (toujours un .mp4 lisible partout, ou .webm si la conversion échoue).
+async function uploadVideo(file, tool){
+  const UPLOAD_URL=getUploadUrl();
+  if(!UPLOAD_URL) throw new Error("URL d'upload non configurée (onglet Intégration)");
+  const fd=new FormData();
+  fd.append('tool', tool);        // 'tourmag-live'
+  fd.append('video', file);       // MP4, MOV, WebM, AVI, MKV — 125 Mo max
+  const r=await (await fetch(UPLOAD_URL,{method:'POST',body:fd})).json();
+  if(!r.success) throw new Error(r.error||"Échec de l'envoi de la vidéo");
+  const t0=Date.now();
+  while(Date.now()-t0 < 20*60*1000){
+    await new Promise(res=>setTimeout(res,3000));
+    const s=await (await fetch(r.status_url,{cache:'no-store'})).json();
+    if(s.status==='done')  return s.url;
+    if(s.status==='error') throw new Error(s.error||'Erreur de conversion');
+  }
+  throw new Error('Délai de conversion dépassé');
+}
 async function uploadVideoFile(){
-  const url=getUploadUrl();
-  if(!url){toast("Configurez l'URL d'upload dans l'onglet Intégration",'error');return;}
+  if(!getUploadUrl()){toast("Configurez l'URL d'upload dans l'onglet Intégration",'error');return;}
   const input=document.createElement('input');
   input.type='file';
   input.accept='video/*';
   input.onchange=async function(){
     const file=input.files[0];
     if(!file)return;
-    if(file.size>200*1024*1024){toast('Vidéo trop volumineuse (max 200 Mo)','error');return;}
+    if(file.size>125*1024*1024){toast('Vidéo trop volumineuse (max 125 Mo)','error');return;}
     const urlInput=document.getElementById('vid-url');
     const prev=document.getElementById('vid-preview');
-    if(urlInput){urlInput.value='⏳ Upload en cours…';urlInput.disabled=true;}
+    if(urlInput){urlInput.value='⏳ Upload + conversion en cours…';urlInput.disabled=true;}
+    if(prev) prev.innerHTML='<div style="font-size:12px;color:var(--text2);line-height:1.5">⏳ Envoi de la vidéo, puis conversion côté serveur. Cela peut prendre quelques minutes selon la taille — ne fermez pas cette page.</div>';
     try{
-      const fd=new FormData();
-      fd.append('image',file); // même champ que l'upload photo — le script upload.php doit accepter les vidéos
-      const resp=await fetch(url,{method:'POST',body:fd});
-      const data=await resp.json();
-      if(data.error){toast('Erreur: '+data.error,'error');if(urlInput){urlInput.value='';urlInput.disabled=false;}return;}
-      if(!data.url){toast('Réponse inattendue du serveur (pas d\'URL)','error');if(urlInput){urlInput.value='';urlInput.disabled=false;}return;}
-      if(urlInput){urlInput.value=data.url;urlInput.disabled=false;}
-      _uploadedVidUrl=data.url;
-      if(prev) prev.innerHTML='<video src="'+String(data.url).replace(/"/g,'&quot;')+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>';
-      toast('Vidéo importée — cliquez sur « Ajouter »');
+      const url=await uploadVideo(file,'tourmag-live');
+      if(urlInput){urlInput.value=url;urlInput.disabled=false;}
+      _uploadedVidUrl=url;
+      if(prev) prev.innerHTML='<video src="'+String(url).replace(/"/g,'&quot;')+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>';
+      toast('Vidéo prête — cliquez sur « Ajouter »');
     }catch(e){
       console.error('Upload vidéo error:',e);
-      toast("Erreur d'upload : "+e.message,'error');
+      toast('Erreur : '+(e.message||e),'error');
       if(urlInput){urlInput.value='';urlInput.disabled=false;}
+      if(prev) prev.innerHTML='';
     }
   };
   input.click();
