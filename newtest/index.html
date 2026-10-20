@@ -4207,8 +4207,20 @@ function renderExpedition(data){
     return mkQuizBlock({quizzes:window._quizzes, activePhase:activePhase, event:event, exp:true});
   };
 
-  // Commentaires : même rendu (enveloppe) qu'en classique ; le contrôleur gère le reste.
-  _b.comments = function(opts){ return mkComments(opts); };
+  // Commentaires : enveloppe autonome (renderExpedition est une fonction séparée de render,
+  // mkComments n'y est pas accessible). Le contrôleur dédié gère temps réel/saisie/réactions.
+  _b.comments = function(opts){
+    if(mod.comments===false) return '';
+    opts=opts||{};
+    var tid=(opts.threadId||'').toString();
+    if(!tid) return '';
+    var mode=(opts.commentsMode==='B')?'B':'A';
+    var title=opts.sectionTitle||'Commentaires';
+    var sub=opts.sectionSub||'Échangez et réagissez';
+    var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+    return '<div id="section-comments-'+tid+'"><div class="sec-title sec-title-comments fi"><div class="sec-title-icon" style="background:rgba(99,102,241,.08);color:#6366F1">'+_ico+'</div><h2>'+title+'</h2><div class="sec-title-line"></div><p>'+sub+'</p></div>'
+      +'<div class="cmt-block fi" data-thread="'+tid+'" data-mode="'+mode+'"><div class="cmt-list"><div class="cmt-empty">Chargement…</div></div><div class="cmt-compose"></div></div></div>';
+  };
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
