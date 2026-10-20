@@ -3206,9 +3206,10 @@ function render(data){
       if(_builderPages.some(p=>p.id===event.builderHome)) _homeBp = event.builderHome;
     }
     const _bpId = _bpRaw || _defBp || _homeBp;
-    if(!_bpId) return; // pas de page-builder ciblée → legacy
+    if(!_bpId){ window._frontPageId=''; return; } // pas de page-builder ciblée → legacy
     const _bp = _builderPages.find(p=>p.id===_bpId);
     if(!_bp) return;
+    window._frontPageId = _bpId; // page courante, pour la contribution depuis le front
     // Page programmée non encore publiée (date future) : accès bloqué hors preview.
     if(!_bpPageAvailable(_bp)) return;
     // Barre d'onglets avec la page-builder courante marquée active
@@ -6946,7 +6947,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); }
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
   // Compte, par collection, le nombre de déclenchements et de documents lus.
@@ -7229,6 +7230,200 @@ window._tmgResizeSettle=function(){
   if(app && window.MutationObserver){ new MutationObserver(function(){ render(); }).observe(app,{childList:true}); }
   document.addEventListener('DOMContentLoaded',render);
   setTimeout(render,300); setTimeout(render,1000);
+})();
+</script>
+<script>
+/* ============================================================
+   CONTRIBUTION DEPUIS LE FRONT (photos + vidéos)
+   Actif uniquement si l'événement a frontEdit=true et hors aperçu.
+   Connexion avec les mêmes comptes que l'admin, via une app Firebase
+   ISOLÉE ("tmg-editor", persistante) — n'interfère pas avec l'auth
+   anonyme des likes/Q&A. Publication immédiate (le front est temps réel).
+   ============================================================ */
+(function(){
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.get('preview')==='1') return;             // pas d'édition dans l'aperçu admin (iframe)
+  var EVENT_ID=_qs.get('event')||'';
+  if(!EVENT_ID) return;
+
+  var eApp=null,eAuth=null,eDb=null,eUser=null,authInit=false,pill=null;
+  function ev(){ return (window._rtState && window._rtState.event) || {}; }
+  function pageId(){ return window._frontPageId || ''; }
+  function uploadUrl(){ return ev().uploadUrl || ''; }
+
+  function toast(msg,isErr){
+    var t=document.createElement('div');
+    t.textContent=msg;
+    t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:100001;background:'+(isErr?'#b91c1c':'#0f172a')+';color:#fff;padding:10px 16px;border-radius:10px;font:500 13px/1.4 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:90vw;text-align:center';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(function(){t.remove();},400); }, isErr?4500:2600);
+  }
+
+  function initAuth(){
+    if(authInit) return; authInit=true;
+    try{ eApp=firebase.app('tmg-editor'); }catch(_){ eApp=firebase.initializeApp(firebase.app().options,'tmg-editor'); }
+    eAuth=eApp.auth(); eDb=eApp.firestore();
+    eAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
+    eAuth.onAuthStateChanged(function(u){ eUser=(u && !u.isAnonymous)?u:null; paintPill(); });
+  }
+
+  function ensurePill(){
+    if(pill) return;
+    pill=document.createElement('div');
+    pill.id='fe-pill';
+    pill.style.cssText='position:fixed;left:16px;bottom:16px;z-index:100000;display:flex;gap:6px;align-items:center;background:#0f172a;color:#fff;padding:7px 9px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28);font:600 13px/1 system-ui,sans-serif;max-width:94vw;flex-wrap:wrap';
+    document.body.appendChild(pill);
+  }
+  function b(label,bg){ return '<button type="button" style="border:0;cursor:pointer;background:'+(bg||'rgba(255,255,255,.16)')+';color:#fff;padding:7px 12px;border-radius:999px;font:600 13px/1 system-ui,sans-serif">'+label+'</button>'; }
+  function paintPill(){
+    if(!ev().frontEdit){ if(pill){pill.remove();pill=null;} return; }
+    ensurePill();
+    if(eUser){
+      pill.innerHTML='<span style="opacity:.85;font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(eUser.email||'Contributeur')+'</span>'
+        +'<span data-fe="photo">'+b('＋ Photo','#2563eb')+'</span>'
+        +'<span data-fe="video">'+b('＋ Vidéo','#7c3aed')+'</span>'
+        +'<span data-fe="out">'+b('Quitter')+'</span>';
+      pill.querySelector('[data-fe="photo"]').onclick=openPhoto;
+      pill.querySelector('[data-fe="video"]').onclick=openVideo;
+      pill.querySelector('[data-fe="out"]').onclick=function(){ if(eAuth) eAuth.signOut(); toast('Déconnecté'); };
+    } else {
+      pill.innerHTML='<span data-fe="in">'+b('🔧 Contribuer','#2563eb')+'</span>';
+      pill.querySelector('[data-fe="in"]').onclick=openLogin;
+    }
+  }
+
+  var _fi='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
+  var _lbl='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
+  var _pbtn='width:100%;margin-top:16px;border:0;cursor:pointer;background:#2563eb;color:#fff;padding:11px;border-radius:9px;font:600 14px system-ui';
+  function modal(inner){
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
+    var box=document.createElement('div');
+    box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:420px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif';
+    box.innerHTML=inner; ov.appendChild(box);
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+    return {box:box, close:function(){ov.remove();}};
+  }
+
+  function openLogin(){
+    initAuth();
+    var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Connexion contributeur</h3>'
+      +'<p style="margin:0 0 8px;font-size:12px;color:#64748b">Utilisez vos identifiants d\'administration.</p>'
+      +'<label style="'+_lbl+'">E-mail</label><input id="fe-email" type="email" autocomplete="username" style="'+_fi+'">'
+      +'<label style="'+_lbl+'">Mot de passe</label><input id="fe-pw" type="password" autocomplete="current-password" style="'+_fi+'">'
+      +'<div id="fe-err" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
+      +'<button id="fe-go" style="'+_pbtn+'">Se connecter</button>');
+    var go=m.box.querySelector('#fe-go'),err=m.box.querySelector('#fe-err');
+    function submit(){
+      var em=(m.box.querySelector('#fe-email').value||'').trim(), pw=m.box.querySelector('#fe-pw').value||'';
+      if(!em||!pw){ err.textContent='E-mail et mot de passe requis.'; err.style.display='block'; return; }
+      go.disabled=true; go.textContent='Connexion…'; err.style.display='none';
+      eAuth.signInWithEmailAndPassword(em,pw)
+        .then(function(){ m.close(); toast('Connecté — mode contributeur'); })
+        .catch(function(e){ go.disabled=false; go.textContent='Se connecter'; var c=e&&e.code; err.textContent='Échec : '+((c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/user-not-found')?'identifiants incorrects':(e.message||e)); err.style.display='block'; });
+    }
+    go.onclick=submit;
+    m.box.querySelector('#fe-pw').addEventListener('keydown',function(e){ if(e.key==='Enter') submit(); });
+  }
+
+  function uploadImage(file){
+    var url=uploadUrl(); if(!url) return Promise.reject(new Error("URL d'upload non configurée"));
+    var fd=new FormData(); fd.append('image',file);
+    return fetch(url,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+      if(d.error) throw new Error(d.error); if(!d.url) throw new Error('Réponse serveur invalide'); return d.url;
+    });
+  }
+  function uploadVideoFile(file){
+    var url=uploadUrl(); if(!url) return Promise.reject(new Error("URL d'upload non configurée"));
+    var fd=new FormData(); fd.append('tool','tourmag-live'); fd.append('video',file);
+    return fetch(url,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(r){
+      if(!r.success) throw new Error(r.error||"Échec de l'envoi de la vidéo");
+      var t0=Date.now();
+      return (function poll(){
+        return new Promise(function(res){setTimeout(res,3000);}).then(function(){
+          if(Date.now()-t0>20*60*1000) throw new Error('Délai de conversion dépassé');
+          return fetch(r.status_url,{cache:'no-store'}).then(function(x){return x.json();}).then(function(s){
+            if(s.status==='done') return s.url;
+            if(s.status==='error') throw new Error(s.error||'Erreur de conversion');
+            return poll();
+          });
+        });
+      })();
+    });
+  }
+
+  function openPhoto(){
+    var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Ajouter une photo</h3>'
+      +'<p style="margin:0 0 8px;font-size:12px;color:#64748b">Publiée immédiatement sur la page affichée.</p>'
+      +'<label style="'+_lbl+'">Photo (depuis votre appareil)</label><input id="fe-img" type="file" accept="image/*" style="'+_fi+'">'
+      +'<label style="'+_lbl+'">Légende (optionnel)</label><input id="fe-cap" type="text" placeholder="Ex : Coucher de soleil sur le port" style="'+_fi+'">'
+      +'<div id="fe-perr" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
+      +'<button id="fe-pub" style="'+_pbtn+'">Publier la photo</button>');
+    var pub=m.box.querySelector('#fe-pub'),perr=m.box.querySelector('#fe-perr');
+    pub.onclick=function(){
+      var f=m.box.querySelector('#fe-img').files[0];
+      if(!f){ perr.textContent='Choisissez une photo.'; perr.style.display='block'; return; }
+      if(f.size>10*1024*1024){ perr.textContent='Photo trop lourde (max 10 Mo).'; perr.style.display='block'; return; }
+      pub.disabled=true; pub.textContent='Envoi…'; perr.style.display='none';
+      var cap=(m.box.querySelector('#fe-cap').value||'').trim();
+      uploadImage(f).then(function(url){
+        var obj={url:url,caption:cap,page:pageId(),addedBy:eUser.uid,addedByEmail:eUser.email||''};
+        return eDb.collection('events').doc(EVENT_ID).update({gallery:firebase.firestore.FieldValue.arrayUnion(obj)});
+      }).then(function(){ m.close(); toast('Photo publiée'); })
+      .catch(function(e){ pub.disabled=false; pub.textContent='Publier la photo'; perr.textContent='Erreur : '+(e.message||e); perr.style.display='block'; });
+    };
+  }
+
+  function parseYT(u){
+    var mm=(u||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if(!mm) return null;
+    return {platform:'youtube',ytId:mm[1],url:u,embedUrl:'https://www.youtube.com/embed/'+mm[1]};
+  }
+  function openVideo(){
+    var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Ajouter une vidéo</h3>'
+      +'<p style="margin:0 0 8px;font-size:12px;color:#64748b">Collez un lien YouTube, ou importez un fichier (AVI/MP4, 125 Mo max — conversion automatique de quelques minutes).</p>'
+      +'<label style="'+_lbl+'">Lien YouTube</label><input id="fe-vurl" type="text" placeholder="https://www.youtube.com/watch?v=…" style="'+_fi+'">'
+      +'<div style="text-align:center;color:#94a3b8;font-size:12px;margin:10px 0">— ou —</div>'
+      +'<label style="'+_lbl+'">Importer un fichier (AVI/MP4)</label><input id="fe-vfile" type="file" accept=".mp4,.avi,video/mp4,video/x-msvideo" style="'+_fi+'">'
+      +'<label style="'+_lbl+'">Format</label><div style="display:flex;gap:8px;margin-top:4px"><label style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:13px"><input type="radio" name="fe-fmt" value="video" checked> ▭ Horizontale</label><label style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:13px"><input type="radio" name="fe-fmt" value="short"> ▯ Short</label></div>'
+      +'<label style="'+_lbl+'">Légende (optionnel)</label><input id="fe-vcap" type="text" style="'+_fi+'">'
+      +'<div id="fe-verr" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
+      +'<button id="fe-vpub" style="'+_pbtn+'">Publier la vidéo</button>');
+    var pub=m.box.querySelector('#fe-vpub'),verr=m.box.querySelector('#fe-verr');
+    function fmt(){ var r=m.box.querySelector('input[name="fe-fmt"]:checked'); return (r&&r.value==='short')?'short':'video'; }
+    pub.onclick=function(){
+      var urlv=(m.box.querySelector('#fe-vurl').value||'').trim();
+      var f=m.box.querySelector('#fe-vfile').files[0];
+      if(!urlv && !f){ verr.textContent='Collez un lien YouTube ou choisissez un fichier.'; verr.style.display='block'; return; }
+      if(f && !/\.(mp4|avi)$/i.test(f.name||'')){ verr.textContent='Fichier : AVI ou MP4 uniquement.'; verr.style.display='block'; return; }
+      if(f && f.size>125*1024*1024){ verr.textContent='Vidéo trop lourde (max 125 Mo).'; verr.style.display='block'; return; }
+      pub.disabled=true; verr.style.display='none';
+      var cap=(m.box.querySelector('#fe-vcap').value||'').trim(), chosen=fmt();
+      var sec=(ev().videoSections&&ev().videoSections[0]&&ev().videoSections[0].id)||'default';
+      var order=((window._rtState&&window._rtState.videos)||[]).filter(function(v){return v.section===sec;}).length;
+      function build(base){
+        var doc={platform:base.platform,type:chosen,url:base.url,caption:cap,section:sec,page:pageId(),phase:'',order:order,addedBy:eUser.uid,addedByEmail:eUser.email||'',created_at:firebase.firestore.FieldValue.serverTimestamp()};
+        if(base.ytId) doc.ytId=base.ytId; if(base.embedUrl) doc.embedUrl=base.embedUrl;
+        return eDb.collection('events').doc(EVENT_ID).collection('videos').add(doc);
+      }
+      var go;
+      if(f){ pub.textContent='Envoi + conversion…'; go=uploadVideoFile(f).then(function(url){ return build({platform:'file',url:url}); }); }
+      else {
+        var yt=parseYT(urlv);
+        if(!yt){ pub.disabled=false; pub.textContent='Publier la vidéo'; verr.textContent='Lien YouTube non reconnu.'; verr.style.display='block'; return; }
+        pub.textContent='Publication…'; go=build({platform:'youtube',url:yt.url,ytId:yt.ytId,embedUrl:yt.embedUrl});
+      }
+      go.then(function(){ m.close(); toast('Vidéo publiée'); })
+        .catch(function(e){ pub.disabled=false; pub.textContent='Publier la vidéo'; verr.textContent='Erreur : '+(e.message||e); verr.style.display='block'; });
+    };
+  }
+
+  window._frontEditRefresh=function(){
+    if(!ev().frontEdit){ if(pill){pill.remove();pill=null;} return; }
+    initAuth(); paintPill();
+  };
+  setTimeout(function(){ if(window._frontEditRefresh) window._frontEditRefresh(); }, 1400);
 })();
 </script>
 </body>
