@@ -2254,7 +2254,7 @@ function renderTab(){
   const _settingsTabs=['live','citations','articles','essentiel','videos','interviews','gallery','journalistes','questions','quiz','programme','kpis','contact','etapes','sponsors'];
   if(_settingsTabs.includes(currentTab) && typeof _moduleSettingsButton==='function'){
     const _evG=eventsData.find(e=>e.id===currentEventId)||{};
-    const _hideGalApp=(currentTab==='gallery') && (typeof _galSimple==='function') && _galSimple(_evG);
+    const _hideGalApp=(currentTab==='gallery'||currentTab==='videos') && (typeof _galSimple==='function') && _galSimple(_evG);
     if(!_hideGalApp){
       const btn=_moduleSettingsButton(currentTab);
       if(btn) main.insertAdjacentHTML('beforeend', btn);
@@ -9100,36 +9100,55 @@ function renderVideos(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   const sections=ev.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
 
-  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg>Vidéos</div><div class="page-desc">Organisez vos vidéos en sections. YouTube, Instagram, Facebook et LinkedIn sont supportés.</div>
+  const isAdmin = currentUserRole!=='client';
+  const myUid = auth.currentUser?.uid||'';
+  const simple = (typeof _galSimple==='function') ? _galSimple(ev) : false;
+  const pages = Array.isArray(ev.builderPages)?ev.builderPages:[];
 
-  `+moduleConfigBlock('videos')+`
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg>Vidéos</div><div class="page-desc">Ajoutez une vidéo YouTube ou importez-la depuis votre ordinateur, choisissez son format et la page où elle apparaît.</div>`;
+  h+=`<style>.vid-fmt-btn{border:1.5px solid var(--border)!important}.vid-fmt-btn.is-on{border-color:#2563EB!important;background:#2563EB!important;color:#fff!important}</style>`;
+  if(!simple) h+=moduleConfigBlock('videos');
+  // Gestion des sections : réservée à l'admin. Les clients choisissent seulement une section existante.
+  if(isAdmin){
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Sections</h3>
+      <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Vous définissez les sections ; vos clients choisissent simplement dans laquelle ranger leur vidéo.</div>
+      <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
+    sections.forEach((s,i)=>{
+      h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+        <span style="font-size:12px;font-weight:600;flex:1">${s.title||'Sans titre'}</span>
+        <span style="font-size:10px;color:var(--text3)">${s.display==='carousel'?'Carrousel':'Grille '+(s.videoWidth||320)+'px'} · ${videosData.filter(v=>v.section===s.id).length} vidéos</span>
+        <button class="btn btn-ghost btn-xs" onclick="editVideoSection(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
+        ${sections.length>1?`<button class="btn btn-danger btn-xs" onclick="deleteVideoSection(${i})">✕</button>`:''}
+      </div>`;
+    });
+    h+=`</div><button class="btn btn-primary btn-sm" onclick="addVideoSection()">+ Nouvelle section</button></div>`;
+  }
 
-  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-folder2"/></svg> Sections</h3>
-    <div id="vid-sections-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
-  sections.forEach((s,i)=>{
-    h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-      <span style="font-size:12px;font-weight:600;flex:1">${s.title||'Sans titre'}</span>
-      <span style="font-size:10px;color:var(--text3)">${s.display==='carousel'?'Carrousel':'Grille '+(s.videoWidth||320)+'px'} · ${videosData.filter(v=>v.section===s.id).length} vidéos</span>
-      <button class="btn btn-ghost btn-xs" onclick="editVideoSection(${i})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>
-      ${sections.length>1?`<button class="btn btn-danger btn-xs" onclick="deleteVideoSection(${i})">✕</button>`:''}
-    </div>`;
-  });
-  h+=`</div>
-    <button class="btn btn-primary btn-sm" onclick="addVideoSection()">+ Nouvelle section</button>
-  </div>
-
-  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une vidéo</h3>
-    <div class="form-row-inline">
-      <div class="form-row" style="flex:2"><label class="form-label">URL vidéo</label><div style="display:flex;gap:6px"><input class="form-input" id="vid-url" placeholder="YouTube, Instagram, Facebook, LinkedIn, Vimeo ou .mp4" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="uploadVideoFile()" title="Importer une vidéo depuis l'appareil" style="flex-shrink:0"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Upload vidéo</button></div><div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.6">Collez une URL (youtube.com, youtu.be, instagram.com, facebook.com, linkedin.com, vimeo.com) <strong>ou importez un fichier</strong> depuis votre ordinateur (MP4, MOV, WebM, AVI, MKV — <strong>125 Mo max</strong>).<br>⚠️ <strong>Facebook et LinkedIn</strong> : la publication doit être <strong>publique</strong>. <strong>Upload</strong> : la vidéo est convertie côté serveur après l'envoi — comptez quelques minutes, ne fermez pas la page pendant la conversion.</div></div>
-      <div class="form-row" style="flex:1"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Description courte"></div>
-    </div>
-    <div class="form-row-inline">
-      <div class="form-row" style="max-width:300px"><label class="form-label">Section</label><select class="form-input" id="vid-section">${sections.map(s=>`<option value="${s.id}">${s.title}</option>`).join('')}</select></div>
-      <div class="form-row" id="vid-thumb-row" style="display:none"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="vid-thumb" placeholder="https://... (recommandé pour Instagram/LinkedIn/Facebook)"></div>
+  const _vHelp = simple
+    ? `Collez un lien <strong>YouTube</strong>, ou cliquez <strong>Importer</strong> pour envoyer une vidéo depuis votre ordinateur (AVI ou MP4, 125 Mo max — conversion automatique de quelques minutes, ne fermez pas la page).`
+    : `Collez un lien <strong>YouTube</strong> (ou Vimeo / Instagram / Facebook / LinkedIn), ou <strong>Importez</strong> un fichier depuis l'ordinateur (AVI ou MP4, 125 Mo max — conversion automatique). Facebook / LinkedIn : la publication doit être publique.`;
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-plus-c"/></svg> Ajouter une vidéo</h3>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin:-2px 0 12px">${_vHelp}</div>
+    <div class="form-row"><label class="form-label">Lien YouTube <span style="font-weight:400;color:var(--text3)">— ou importez un fichier →</span></label>
+      <div style="display:flex;gap:6px"><input class="form-input" id="vid-url" placeholder="https://www.youtube.com/watch?v=…" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="uploadVideoFile()" title="Importer une vidéo (AVI ou MP4)" style="flex-shrink:0"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Importer (AVI/MP4)</button></div>
     </div>
     <div id="vid-preview" style="margin-top:8px"></div>
+    <div class="form-row" style="margin-top:6px"><label class="form-label">Format d'affichage</label>
+      <input type="hidden" id="vid-format" value="video">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-ghost btn-sm vid-fmt-btn is-on" data-fmt="video" onclick="_setVidFormat('video')">▭ Horizontale (16:9)</button>
+        <button type="button" class="btn btn-ghost btn-sm vid-fmt-btn" data-fmt="short" onclick="_setVidFormat('short')">▯ Short / vertical (9:16)</button>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Comment la vidéo s'affiche. Détecté automatiquement pour les liens YouTube, mais vous pouvez corriger.</div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1;min-width:200px"><label class="form-label">Section</label><select class="form-input" id="vid-section">${sections.map(s=>`<option value="${s.id}">${_escAdm(s.title||'Section')}</option>`).join('')}</select></div>
+      ${pages.length?`<div class="form-row" style="flex:1;min-width:200px"><label class="form-label">Page du dashboard</label><select class="form-input" id="vid-page"><option value="">Toutes les pages</option>${pages.map(p=>`<option value="${p.id}">${_escAdm(p.name||'(page)')}</option>`).join('')}</select><div style="font-size:10px;color:var(--text3);margin-top:3px">Où la vidéo apparaît. « Toutes les pages » par défaut.</div></div>`:''}
+    </div>
+    <div class="form-row"><label class="form-label">Légende (optionnel)</label><input class="form-input" id="vid-caption" placeholder="Ex : Teaser du voyage"></div>
+    <div class="form-row" id="vid-thumb-row" style="display:none"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="vid-thumb" placeholder="https://… (recommandé pour Instagram/LinkedIn/Facebook)"></div>
     ${mkPhaseSelect('vid-phase','')}
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addVideo()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Ajouter</button></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="addVideo()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-film"/></svg> Ajouter la vidéo</button></div>
   </div>`;
 
   // Liste par section
@@ -9147,6 +9166,8 @@ function renderVideos(el){
       const pColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2',vimeo:'#1AB7EA',file:'#0891B2'};
       const pIcons={youtube:'▶️',instagram:'📸',facebook:'📘',linkedin:'💼',vimeo:'🎞️',file:'🎬'};
       const pc=pColors[platform]||'#475569';
+      const canEdit = isAdmin || (v.addedBy && v.addedBy===myUid);
+      const pageName = v.page ? ((pages.find(p=>p.id===v.page)||{}).name||'Page') : '';
       const thumb=platform==='youtube'&&v.ytId?'https://img.youtube.com/vi/'+v.ytId+'/mqdefault.jpg':(v.thumbnail||'');
       var row='<div class="list-item" style="align-items:center">';
       // Thumbnail
@@ -9167,15 +9188,20 @@ function renderVideos(el){
       row+='<div class="list-item-text">'+(v.caption||'Sans titre');
       row+=' <span style="font-size:8px;background:'+typeBg+';color:'+typeCol+';padding:2px 6px;border-radius:3px;font-weight:700">'+typeTag+'</span>';
       row+=' <span style="font-size:8px;background:rgba(0,0,0,.04);color:'+pc+';padding:2px 6px;border-radius:3px;font-weight:700">'+pLabels[platform]+'</span>';
+      if(pageName) row+=' <span style="font-size:8px;background:#EEF2FF;color:#4338CA;padding:2px 6px;border-radius:3px;font-weight:700">📄 '+_escAdm(pageName)+'</span>';
       row+='</div>';
       row+='<div class="list-item-meta"><a href="'+linkHref+'" target="_blank" style="color:var(--blue);font-size:11px">'+linkLabel+'</a></div>';
       row+='</div>';
       // Action buttons — using data-attributes (no escaping issues)
       row+='<div class="list-item-actions" style="display:flex;gap:4px;align-items:center">';
-      row+='<button class="btn btn-ghost btn-xs" data-act="moveVid" data-vid="'+v.id+'" data-sec="'+sec.id+'" data-dir="-1"'+(i===0?' disabled':'')+'>▲</button>';
-      row+='<button class="btn btn-ghost btn-xs" data-act="moveVid" data-vid="'+v.id+'" data-sec="'+sec.id+'" data-dir="1"'+(i===allVids.length-1?' disabled':'')+'>▼</button>';
-      row+='<button class="btn btn-ghost btn-xs" data-act="editVid" data-vid="'+v.id+'"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>';
-      row+='<button class="btn btn-danger btn-xs" data-act="delVid" data-vid="'+v.id+'">✕</button>';
+      if(canEdit){
+        row+='<button class="btn btn-ghost btn-xs" data-act="moveVid" data-vid="'+v.id+'" data-sec="'+sec.id+'" data-dir="-1"'+(i===0?' disabled':'')+'>▲</button>';
+        row+='<button class="btn btn-ghost btn-xs" data-act="moveVid" data-vid="'+v.id+'" data-sec="'+sec.id+'" data-dir="1"'+(i===allVids.length-1?' disabled':'')+'>▼</button>';
+        row+='<button class="btn btn-ghost btn-xs" data-act="editVid" data-vid="'+v.id+'"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg></button>';
+        row+='<button class="btn btn-danger btn-xs" data-act="delVid" data-vid="'+v.id+'">✕</button>';
+      } else {
+        row+='<span title="Ajoutée par une autre personne — lecture seule" style="font-size:15px;color:var(--text3)">🔒</span>';
+      }
       row+='</div>';
       row+='</div>';
       h+=row;
@@ -9191,6 +9217,7 @@ function renderVideos(el){
     const p=parseVideoUrl(urlInput.value);
     const prev=document.getElementById('vid-preview');
     const thumbRow=document.getElementById('vid-thumb-row');
+    if(p && p.type && typeof _setVidFormat==='function'){ _setVidFormat(p.type==='short'?'short':'video'); }
     if(p&&prev){
       const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',vimeo:'Vimeo',file:'Fichier vidéo'};
       const platformColors={youtube:'#DC2626',instagram:'#E4405F',facebook:'#1877F2',linkedin:'#0A66C2',vimeo:'#1AB7EA',file:'#0891B2'};
@@ -9296,7 +9323,7 @@ async function uploadVideo(file, tool){
   if(!UPLOAD_URL) throw new Error("URL d'upload non configurée (onglet Intégration)");
   const fd=new FormData();
   fd.append('tool', tool);        // 'tourmag-live'
-  fd.append('video', file);       // MP4, MOV, WebM, AVI, MKV — 125 Mo max
+  fd.append('video', file);       // AVI ou MP4 — 125 Mo max (converti en .mp4 côté serveur)
   const r=await (await fetch(UPLOAD_URL,{method:'POST',body:fd})).json();
   if(!r.success) throw new Error(r.error||"Échec de l'envoi de la vidéo");
   const t0=Date.now();
@@ -9312,10 +9339,11 @@ async function uploadVideoFile(){
   if(!getUploadUrl()){toast("Configurez l'URL d'upload dans l'onglet Intégration",'error');return;}
   const input=document.createElement('input');
   input.type='file';
-  input.accept='video/*';
+  input.accept='.mp4,.avi,video/mp4,video/x-msvideo,video/avi';
   input.onchange=async function(){
     const file=input.files[0];
     if(!file)return;
+    if(!/\.(mp4|avi)$/i.test(file.name||'')){toast('Format non accepté : choisissez un fichier AVI ou MP4.','error');return;}
     if(file.size>125*1024*1024){toast('Vidéo trop volumineuse (max 125 Mo)','error');return;}
     const urlInput=document.getElementById('vid-url');
     const prev=document.getElementById('vid-preview');
@@ -9336,15 +9364,22 @@ async function uploadVideoFile(){
   };
   input.click();
 }
+function _setVidFormat(fmt){
+  fmt=(fmt==='short')?'short':'video';
+  const inp=document.getElementById('vid-format'); if(inp) inp.value=fmt;
+  document.querySelectorAll('.vid-fmt-btn').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-fmt')===fmt); });
+}
 async function addVideo(){
   const url=document.getElementById('vid-url').value.trim();
   const caption=document.getElementById('vid-caption').value.trim();
   const section=document.getElementById('vid-section').value;
+  const page=(document.getElementById('vid-page')||{}).value||'';
+  const fmt=(document.getElementById('vid-format')||{}).value||'video';
   const thumbInput=document.getElementById('vid-thumb');
   const thumbnail=thumbInput?thumbInput.value.trim():'';
   let parsed=parseVideoUrl(url);
   if(!parsed && url && url===_uploadedVidUrl){ parsed={platform:'file',type:'video',url:url,embedUrl:url}; }
-  if(!parsed){toast('URL non reconnue (YouTube, Instagram, Facebook, LinkedIn, Vimeo ou fichier vidéo)','error');return;}
+  if(!parsed){toast('Collez un lien YouTube ou importez une vidéo depuis votre ordinateur.','error');return;}
   // Duplicate check: for YouTube use ytId, for others use url
   if(parsed.platform==='youtube'){
     if(videosData.find(v=>v.ytId===parsed.ytId)){toast('Vidéo déjà ajoutée','error');return;}
@@ -9355,12 +9390,15 @@ async function addVideo(){
   saving(true);
   const docData={
     platform:parsed.platform,
-    type:parsed.type,
+    type:(fmt==='short'?'short':'video'),   // format choisi explicitement par l'utilisateur
     url:url,
     caption:caption,
     section:section,
+    page:page,                               // page du dashboard ('' = toutes)
     phase:document.getElementById('vid-phase')?.value||'',
     order:secVids.length,
+    addedBy:(auth.currentUser?.uid||''),
+    addedByEmail:(auth.currentUser?.email||''),
     created_at:firebase.firestore.FieldValue.serverTimestamp()
   };
   if(parsed.platform==='youtube') docData.ytId=parsed.ytId;
@@ -9370,6 +9408,8 @@ async function addVideo(){
   _uploadedVidUrl='';
   document.getElementById('vid-url').value='';document.getElementById('vid-caption').value='';
   if(thumbInput) thumbInput.value='';
+  const _pg=document.getElementById('vid-page'); if(_pg) _pg.value='';
+  if(typeof _setVidFormat==='function') _setVidFormat('video');
   document.getElementById('vid-preview').innerHTML='';
   const thumbRow=document.getElementById('vid-thumb-row');
   if(thumbRow) thumbRow.style.display='none';
@@ -9378,9 +9418,12 @@ async function addVideo(){
 
 function editVideo(id){
   const v=videosData.find(x=>x.id===id);if(!v)return;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const pages=Array.isArray(ev.builderPages)?ev.builderPages:[];
   const sections=getVideoSections();
   const platform=v.platform||'youtube';
   const secOpts=sections.map(s=>`<option value="${s.id}"${v.section===s.id?' selected':''}>${s.title}</option>`).join('');
+  const pageField=pages.length?`<div class="form-row"><label class="form-label">Page du dashboard</label><select class="form-input" id="m-vid-page"><option value="">Toutes les pages</option>${pages.map(p=>`<option value="${p.id}"${(v.page||'')===p.id?' selected':''}>${_escAdm(p.name||'(page)')}</option>`).join('')}</select></div>`:'';
   const platformLabels={youtube:'YouTube',instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',vimeo:'Vimeo',file:'Fichier importé'};
   const thumbField=platform!=='youtube'?`<div class="form-row"><label class="form-label">Miniature (URL image)</label><input class="form-input" id="m-vid-thumb" value="${(v.thumbnail||'').replace(/"/g,'&quot;')}" placeholder="https://..."></div>`:'';
   openModal(`<h3>Modifier la vidéo</h3>
@@ -9391,6 +9434,7 @@ function editVideo(id){
       <div class="form-row"><label class="form-label">Type</label><select class="form-input" id="m-vid-type"><option value="video"${v.type==='video'?' selected':''}>Vidéo (16:9)</option><option value="short"${v.type==='short'?' selected':''}>Short/Reel (9:16)</option></select></div>
       <div class="form-row"><label class="form-label">Section</label><select class="form-input" id="m-vid-section">${secOpts}</select></div>
     </div>
+    ${pageField}
     ${mkPhaseSelect('m-vid-phase', v.phase||'')}
     ${platform==='linkedin'?`<div class="form-row"><label class="form-label">Hauteur de l'aperçu LinkedIn (px)</label><input type="number" class="form-input" id="m-vid-embedheight" value="${v.embedHeight||580}" min="300" max="1200" style="width:150px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Ajustez pour éviter l'ascenseur : plus haut pour un post long, plus bas pour un post court.</div></div>`:''}
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveVideoEdit('${id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>`);
@@ -9401,6 +9445,7 @@ async function saveVideoEdit(id){
     caption:document.getElementById('m-vid-caption').value.trim(),
     type:document.getElementById('m-vid-type').value,
     section:document.getElementById('m-vid-section').value,
+    page:(document.getElementById('m-vid-page')||{}).value||'',
     phase:document.getElementById('m-vid-phase')?document.getElementById('m-vid-phase').value:''
   };
   const thumbInput=document.getElementById('m-vid-thumb');
