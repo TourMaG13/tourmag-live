@@ -5281,13 +5281,15 @@ function _bpContentFieldsHtml(s){
         + '<div class="bpe-hint" style="padding:4px 0">Les interviews sont alimentées dans leur onglet dédié.</div>';
     }
     case 'gallery': case 'gallerylive': {
+      var _gd=c.galleryDisplay||'';
       return _phaseFld
         + _bpTitleFields('Galerie','En images')
+        + '<div class="bpe-fld"><label>Présentation</label><select onchange="_bpSetCt(\'galleryDisplay\',this.value)" style="width:100%"><option value=""'+(_gd===''?' selected':'')+'>Réglage global</option><option value="grid"'+(_gd==='grid'?' selected':'')+'>Mur de photos (grille)</option><option value="carousel"'+(_gd==='carousel'?' selected':'')+'>Carrousel</option></select></div>'
         + '<div class="bpe-fld-row">'
           + '<div class="bpe-fld"><label>Hauteur de la galerie (px)</label><input type="number" min="100" max="600" value="'+(c.galleryHeight!=null&&c.galleryHeight!==''?c.galleryHeight:'')+'" placeholder="260" onchange="_bpSetCt(\'galleryHeight\',this.value)" style="width:100px"></div>'
           + '<div class="bpe-fld"><label>Photos avant « voir plus »</label><input type="number" min="3" max="60" value="'+(c.galleryVisible!=null&&c.galleryVisible!==''?c.galleryVisible:'')+'" placeholder="9" onchange="_bpSetCt(\'galleryVisible\',this.value)" style="width:100px"></div>'
         + '</div>'
-        + '<div class="bpe-hint" style="padding:4px 0">Les photos sont alimentées dans la Galerie / Médiathèque. Au-delà du nombre affiché, un bouton « voir plus » apparaît.</div>';
+        + '<div class="bpe-hint" style="padding:4px 0">Les photos sont alimentées dans la Galerie / Médiathèque. En mur, au-delà du nombre affiché un bouton « voir plus » apparaît ; en carrousel, tout défile horizontalement.</div>';
     }
     case 'questions': {
       var qa = c.qa || {};
@@ -12180,7 +12182,14 @@ function renderGallery(el){
   if(!simple) h+=moduleConfigBlock('gallery');
   h+=_simpleAudiencePanelHtml();
   if(!simple){
-    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Taille des photos</h3>
+    h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Taille &amp; présentation des photos</h3>
+    <div class="form-row" style="max-width:420px"><label class="form-label">Présentation de la galerie</label>
+      <select class="form-input" onchange="_saveGalleryDisplay(this.value)" style="max-width:260px">
+        <option value="grid"${(ev.galleryDisplay||'grid')!=='carousel'?' selected':''}>Mur de photos (grille)</option>
+        <option value="carousel"${ev.galleryDisplay==='carousel'?' selected':''}>Carrousel (défilement horizontal)</option>
+      </select>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Réglage par défaut pour toutes les galeries. Chaque bloc galerie du builder peut le surcharger.</div>
+    </div>
     <div class="form-row" style="max-width:420px"><label class="form-label">Hauteur des vignettes (globale)</label>
       <div style="display:flex;gap:10px;align-items:center">
         <input type="range" id="gal-global-h" min="120" max="420" step="10" value="${ev.galleryHeight||280}" oninput="document.getElementById('gal-global-h-val').textContent=this.value+'px'" style="flex:1">
@@ -12307,6 +12316,11 @@ async function saveGallery(){
   saving(true);
   try{ await evRef().update({gallery}); toast('Galerie enregistrée ('+gallery.length+' photos)'); }
   catch(e){ toast('Erreur : '+e.message,'error'); console.error('saveGallery error:',e); }
+}
+async function _saveGalleryDisplay(val){
+  const v=(val==='carousel')?'carousel':'grid';
+  try{ await evRef().update({galleryDisplay:v}); toast(v==='carousel'?'Galerie en carrousel':'Galerie en mur de photos'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 async function _saveGalleryHeight(){
   const el=document.getElementById('gal-global-h'); if(!el) return;
