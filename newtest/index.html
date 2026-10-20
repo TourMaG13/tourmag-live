@@ -3932,6 +3932,15 @@ function renderExpedition(data){
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
     const _gExpH = parseInt(event.galleryHeight)||260;
     function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+    // Présentation en carrousel (option) — sinon mur (flex).
+    const _gDisp = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
+    if(_gDisp==='carousel'){
+      function giCar(p,defW){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH, _w=ph_w||defW; let out=`<div class="exp-gal-item" style="flex:0 0 ${_w}px;width:${_w}px;max-width:86vw;height:${_gh}px;scroll-snap-align:start" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}" loading="lazy" onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+      const _cid='exp-gal-car-'+Math.random().toString(36).slice(2,8);
+      const _cw=Math.round(_gExpH*1.5);
+      o+=`<div class="gal-carousel" id="${_cid}"><div class="gal-carousel-track">${gp.map(p=>giCar(p,_cw)).join('')}</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
+      return o+`</section>`;
+    }
     const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
     const extraPhotos = gp.slice(GALLERY_VIS);
     o+=`<div class="exp-gallery-flex">${visPhotos.map((p,i)=>gi(p,i,false)).join('')}</div>`;
