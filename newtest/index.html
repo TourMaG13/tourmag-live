@@ -817,6 +817,16 @@ img{display:block}a{text-decoration:none}
 .gallery-flex .gal-credit{position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .gallery-flex .gal-cap{font-size:12.5px;color:var(--text2);line-height:1.35;padding:7px 2px 0;font-weight:500}
 @media(max-width:768px){.gallery-flex .gal-item-auto{flex:1 1 calc(50% - 5px) !important;width:auto !important;max-width:calc(50% - 5px) !important}.gallery-flex .gal-item-fixed{max-width:100% !important}}
+/* Galerie — présentation en carrousel (option) */
+.gal-carousel{position:relative}
+.gal-carousel-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0}
+.gal-carousel-track::-webkit-scrollbar{display:none}
+.gal-carousel .gal-item{display:flex;flex-direction:column;scroll-snap-align:start}
+.gal-carousel .gal-media{position:relative;overflow:hidden;border-radius:14px}
+.gal-carousel .gal-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.gal-carousel .gal-media img:hover{transform:scale(1.015)}
+.gal-carousel .gal-credit{position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.gal-carousel .gal-cap{font-size:12.5px;color:var(--text2);line-height:1.35;padding:7px 2px 0;font-weight:500}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -1758,6 +1768,10 @@ window.toggleVidAcc = function(accId){
 window.scrollVidCar = function(carId,dir){
   const track=document.querySelector('#'+carId+' .vid-carousel-track');
   if(!track)return; track.scrollBy({left:dir*track.clientWidth*0.7,behavior:'smooth'});
+};
+window.scrollGalCar = function(carId,dir){
+  const track=document.querySelector('#'+carId+' .gal-carousel-track');
+  if(!track)return; track.scrollBy({left:dir*track.clientWidth*0.8,behavior:'smooth'});
 };
 
 // ============================================================
@@ -2920,6 +2934,25 @@ function render(data){
         ? `flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`
         : `flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`;
       return `<div class="gal-item ${_fixedW?'gal-item-fixed':'gal-item-auto'}" style="${_wSty}"><div class="gal-media" style="height:${_h}px"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+    }
+    // Présentation : 'carousel' (défilement horizontal) ou 'grid' (mur, défaut).
+    const galDisplay = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
+    if(galDisplay==='carousel'){
+      function galCarItem(p, defW){
+        const url=typeof p==='string'?p:p.url||'';
+        const cap=typeof p==='object'?p.caption||'':'';
+        const cr=typeof p==='object'?p.copyright||'':'';
+        const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
+        const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
+        const _h=ph_h||galH, _w=ph_w||defW;
+        return `<div class="gal-item" style="flex:0 0 ${_w}px;width:${_w}px;max-width:86vw"><div class="gal-media" style="height:${_h}px"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+      }
+      const _cid='gal-car-'+Math.random().toString(36).slice(2,8);
+      const _cw=Math.round(galH*1.5);
+      o += `<div class="gal-carousel fi" id="${_cid}"><div class="gal-carousel-track">`;
+      photos.forEach(p => { o += galCarItem(p,_cw); });
+      o += `</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
+      return o;
     }
     const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
     const _visP = photos.slice(0, _galVis);
@@ -5780,6 +5813,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='interviews' && ct.visibleCount!=null&&ct.visibleCount!=='') _opts.visibleCount=parseInt(ct.visibleCount);
       if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
       if((type==='gallery'||type==='gallerylive') && ct.galleryVisible!=null&&ct.galleryVisible!=='') _opts.galleryVisible=parseInt(ct.galleryVisible);
+      if((type==='gallery'||type==='gallerylive') && ct.galleryDisplay) _opts.galleryDisplay=ct.galleryDisplay;
       if(type==='gallerylive') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
