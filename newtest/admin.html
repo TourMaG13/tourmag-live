@@ -837,6 +837,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Citations<span class="badge" id="badge-cit">0</span></div>
           <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
+          <div class="sidebar-item" data-tab="survey"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 16.9 5.8 20.6l1.6-6.7L2.2 8.9l6.9-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Sondage (pop-up)</div>
           <div class="sidebar-item" data-tab="quiz"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg></span>Quiz / Sondage</div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
@@ -2244,6 +2245,7 @@ function renderTab(){
     case 'flash':renderFlash(main);break;
     case 'essentiel':renderEssentiel(main);break;
     case 'questions':renderQuestions(main);break;
+    case 'survey':renderSurvey(main);break;
     case 'quiz':renderQuiz(main);break;
     case 'widget':renderWidget(main);break;
     case 'access':renderAccess(main);break;
@@ -8663,6 +8665,135 @@ async function migrateOldQuiz(){
   }catch(e){ toast('Erreur : '+e.message,'error'); }
 }
 
+// ============================================================
+// SONDAGE (pop-up) — config, éditeur de questions, réponses, export
+// ============================================================
+let _svQ=[], _svResponses=[];
+function _svTs(t){ try{ return t&&t.toMillis?t.toMillis():(t&&t.seconds?t.seconds*1000:0);}catch(_){return 0;} }
+function _svFmtDate(t){ var ms=_svTs(t); if(!ms) return ''; var d=new Date(ms); return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function renderSurvey(el){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{}; const sv=ev.survey||{};
+  _svQ = JSON.parse(JSON.stringify(sv.questions||[]));
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Sondage (pop-up)</div><div class="page-desc">Une pop-up « Donner mon avis » sur le dashboard : étoiles, notes, choix, texte. Les réponses s'enregistrent ici et s'exportent en fichier Excel (CSV).</div>`;
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Configuration</h3>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="sv-enabled" ${sv.enabled?'checked':''}> <strong>Activer le sondage</strong> sur ce dashboard</label>
+    <div class="form-row" style="max-width:520px"><label class="form-label">Titre de la pop-up</label><input class="form-input" id="sv-title" value="${_escAdm(sv.title||'Votre avis')}"></div>
+    <div class="form-row" style="max-width:520px"><label class="form-label">Texte d'introduction (optionnel)</label><textarea class="form-input" id="sv-intro" rows="2" placeholder="Ex : Aidez-nous à améliorer ce voyage.">${_escAdm(sv.intro||'')}</textarea></div>
+    <div class="form-row-inline">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-showbtn" ${sv.showButton!==false?'checked':''}> Afficher le bouton « Donner mon avis »</label>
+      <div class="form-row" style="max-width:260px"><label class="form-label">Libellé du bouton</label><input class="form-input" id="sv-btnlabel" value="${_escAdm(sv.buttonLabel||'Donner mon avis')}"></div>
+    </div>
+    <div class="form-row-inline">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-autoopen" ${sv.autoOpen?'checked':''}> Ouvrir automatiquement après un délai</label>
+      <div class="form-row" style="max-width:200px"><label class="form-label">Délai (secondes)</label><input class="form-input" type="number" id="sv-autodelay" min="0" max="600" value="${sv.autoDelay!=null?sv.autoDelay:15}"></div>
+    </div>
+    <div class="bpe-cfg-sech" style="margin-top:14px">Questions</div>
+    <div id="sv-questions"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="_svAddQ('stars')">+ Étoiles</button>
+      <button class="btn btn-ghost btn-sm" onclick="_svAddQ('score')">+ Note</button>
+      <button class="btn btn-ghost btn-sm" onclick="_svAddQ('choice')">+ Choix multiple</button>
+      <button class="btn btn-ghost btn-sm" onclick="_svAddQ('text')">+ Texte libre</button>
+    </div>
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveSurvey()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer le sondage</button></div>
+  </div>`;
+  h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-pages"/></svg> Réponses</h3>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Identité : si la personne est connectée, son compte est enregistré ; sinon le nom/e-mail qu'elle a saisis. Un identifiant d'appareil limite les réponses multiples.</div>
+    <div id="sv-responses"></div></div>`;
+  el.innerHTML=h;
+  _svRenderQ();
+  _svLoadResponses();
+}
+function _svRenderQ(){
+  const c=document.getElementById('sv-questions'); if(!c) return;
+  if(!_svQ.length){ c.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 0">Aucune question. Ajoutez-en une ci-dessous.</div>'; return; }
+  c.innerHTML=_svQ.map(function(q,i){
+    var opts=(q.type==='choice')?('<div class="form-row"><label class="form-label">Choix (un par ligne)</label><textarea class="form-input" rows="3" data-sv-opts="'+i+'" placeholder="Oui\nNon\nPeut-être">'+_escAdm((q.options||[]).join('\n'))+'</textarea></div>'):'';
+    return '<div class="admin-card" style="padding:12px 14px;margin-bottom:8px;background:var(--bg)" data-sv-q="'+i+'">'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'
+        +'<span style="font-size:11px;font-weight:700;color:var(--text3)">Q'+(i+1)+'</span>'
+        +'<select class="form-input" data-sv-type="'+i+'" style="width:auto" onchange="_svReadQFromDom();_svRenderQ()"><option value="stars"'+(q.type==='stars'?' selected':'')+'>Étoiles (1–5)</option><option value="score"'+(q.type==='score'?' selected':'')+'>Note (0–10)</option><option value="choice"'+(q.type==='choice'?' selected':'')+'>Choix multiple</option><option value="text"'+(q.type==='text'?' selected':'')+'>Texte libre</option></select>'
+        +'<div style="margin-left:auto;display:flex;gap:4px"><button class="btn btn-ghost btn-xs" onclick="_svMoveQ('+i+',-1)">▲</button><button class="btn btn-ghost btn-xs" onclick="_svMoveQ('+i+',1)">▼</button><button class="btn btn-danger btn-xs" onclick="_svDelQ('+i+')">✕</button></div>'
+      +'</div>'
+      +'<div class="form-row"><label class="form-label">Question</label><input class="form-input" data-sv-label="'+i+'" value="'+_escAdm(q.label||'')+'" placeholder="Ex : Comment notez-vous cette étape ?"></div>'
+      +opts
+    +'</div>';
+  }).join('');
+}
+function _svReadQFromDom(){
+  const c=document.getElementById('sv-questions'); if(!c) return;
+  c.querySelectorAll('[data-sv-q]').forEach(function(row){
+    var i=+row.getAttribute('data-sv-q'); if(!_svQ[i]) return;
+    var t=row.querySelector('[data-sv-type]'); if(t) _svQ[i].type=t.value;
+    var l=row.querySelector('[data-sv-label]'); if(l) _svQ[i].label=l.value;
+    var o=row.querySelector('[data-sv-opts]'); if(o) _svQ[i].options=o.value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    if(_svQ[i].type!=='choice') delete _svQ[i].options;
+  });
+}
+function _svAddQ(type){ _svReadQFromDom(); _svQ.push({id:_uid(),type:type||'stars',label:'',options:type==='choice'?['','']:undefined}); _svRenderQ(); }
+function _svDelQ(i){ _svReadQFromDom(); _svQ.splice(i,1); _svRenderQ(); }
+function _svMoveQ(i,dir){ _svReadQFromDom(); var j=i+dir; if(j<0||j>=_svQ.length) return; var t=_svQ[i]; _svQ[i]=_svQ[j]; _svQ[j]=t; _svRenderQ(); }
+async function saveSurvey(){
+  _svReadQFromDom();
+  var g=function(id){return document.getElementById(id);};
+  var survey={
+    enabled: g('sv-enabled').checked,
+    title:(g('sv-title').value||'').trim()||'Votre avis',
+    intro:(g('sv-intro').value||'').trim(),
+    showButton: g('sv-showbtn').checked,
+    buttonLabel:(g('sv-btnlabel').value||'').trim()||'Donner mon avis',
+    autoOpen: g('sv-autoopen').checked,
+    autoDelay: Math.max(0, parseInt(g('sv-autodelay').value,10)||0),
+    questions: _svQ.map(function(q){ var o={id:q.id||_uid(),type:q.type||'stars',label:q.label||''}; if(q.type==='choice') o.options=(q.options||[]).filter(Boolean); return o; })
+  };
+  saving(true);
+  try{ await evRef().update({survey}); toast('Sondage enregistré'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+function _svLoadResponses(){
+  var box=document.getElementById('sv-responses'); if(!box) return;
+  box.innerHTML='<div style="font-size:12px;color:var(--text3)">Chargement…</div>';
+  subCol('surveyResponses').get().then(function(snap){
+    _svResponses=[]; snap.forEach(function(d){ var o=d.data()||{}; o.id=d.id; _svResponses.push(o); });
+    _svResponses.sort(function(a,b){ return _svTs(b.createdAt)-_svTs(a.createdAt); });
+    _svRenderResponses();
+  }).catch(function(e){ box.innerHTML='<div style="font-size:12px;color:#b91c1c">Erreur de chargement : '+_escAdm(e.message||e)+'</div>'; });
+}
+function _svRenderResponses(){
+  var box=document.getElementById('sv-responses'); if(!box) return;
+  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{}; var qs=(ev.survey&&ev.survey.questions)||[];
+  var n=_svResponses.length;
+  var h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><strong>'+n+' réponse'+(n>1?'s':'')+'</strong>'
+    +'<button class="btn btn-ghost btn-sm" onclick="_svLoadResponses()">↻ Rafraîchir</button>'
+    +'<button class="btn btn-primary btn-sm" onclick="_svExport()"'+(n?'':' disabled')+'>⬇ Exporter (Excel/CSV)</button></div>';
+  if(!n){ h+='<div style="font-size:12px;color:var(--text3)">Aucune réponse pour l\'instant.</div>'; box.innerHTML=h; return; }
+  h+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px"><thead><tr>'
+    +'<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap">Date</th>'
+    +'<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Nom</th>'
+    +'<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">E-mail</th>'
+    +qs.map(function(q){return '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">'+_escAdm(q.label||q.id)+'</th>';}).join('')+'</tr></thead><tbody>';
+  _svResponses.slice(0,30).forEach(function(r){
+    var a=r.answers||{};
+    h+='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--bg);white-space:nowrap">'+_escAdm(_svFmtDate(r.createdAt))+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bg)">'+_escAdm(r.name||r.account||'')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid var(--bg)">'+_escAdm(r.email||'')+'</td>'
+      +qs.map(function(q){ var v=a[q.id]; if(Array.isArray(v)) v=v.join(', '); return '<td style="padding:6px 8px;border-bottom:1px solid var(--bg)">'+_escAdm(v==null?'':String(v))+'</td>'; }).join('')+'</tr>';
+  });
+  h+='</tbody></table></div>';
+  if(n>30) h+='<div style="font-size:11px;color:var(--text3);margin-top:6px">Aperçu des 30 plus récentes — l\'export contient toutes les réponses.</div>';
+  box.innerHTML=h;
+}
+function _svExport(){
+  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{}; var qs=(ev.survey&&ev.survey.questions)||[];
+  var head=['Date','Nom','E-mail','Compte'].concat(qs.map(function(q){return q.label||q.id;}));
+  var rows=_svResponses.map(function(r){ var a=r.answers||{}; return [_svFmtDate(r.createdAt), r.name||'', r.email||'', r.account||''].concat(qs.map(function(q){ var v=a[q.id]; if(Array.isArray(v)) return v.join(' | '); return v==null?'':String(v); })); });
+  var esc=function(v){ v=String(v==null?'':v); return /[";\n\r]/.test(v)?('"'+v.replace(/"/g,'""')+'"'):v; };
+  var csv=[head].concat(rows).map(function(r){return r.map(esc).join(';');}).join('\r\n');
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob); var a=document.createElement('a');
+  a.href=url; a.download='sondage-'+(currentEventId||'export')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+}
 function renderQuestions(el){
   const pending=questionsData.filter(q=>(q.status||'pending')==='pending');
   const approved=questionsData.filter(q=>q.status==='approved');
