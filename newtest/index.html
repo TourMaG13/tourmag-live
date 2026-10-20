@@ -4207,6 +4207,9 @@ function renderExpedition(data){
     return mkQuizBlock({quizzes:window._quizzes, activePhase:activePhase, event:event, exp:true});
   };
 
+  // Commentaires : même rendu (enveloppe) qu'en classique ; le contrôleur gère le reste.
+  _b.comments = function(opts){ return mkComments(opts); };
+
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
   const expBlockRenderers = _b;
   const defaultExpOrder = ['phaseTabs','kpis','essential','etapes','live','reporters','itinerary','quiz','questions','programme','brandnews','citations','interviews','videos','gallery','articles','product','countrymap','sponsors','contact'];
