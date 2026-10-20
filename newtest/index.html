@@ -817,16 +817,21 @@ img{display:block}a{text-decoration:none}
 .gallery-flex .gal-credit{position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .gallery-flex .gal-cap{font-size:12.5px;color:var(--text2);line-height:1.35;padding:7px 2px 0;font-weight:500}
 @media(max-width:768px){.gallery-flex .gal-item-auto{flex:1 1 calc(50% - 5px) !important;width:auto !important;max-width:calc(50% - 5px) !important}.gallery-flex .gal-item-fixed{max-width:100% !important}}
-/* Galerie — présentation en carrousel (option) */
+/* Galerie — présentation en carrousel (option A : hauteur commune, largeur selon ratio) */
 .gal-carousel{position:relative}
-.gal-carousel-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0}
+.gal-carousel-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0;align-items:flex-start}
 .gal-carousel-track::-webkit-scrollbar{display:none}
-.gal-carousel .gal-item{display:flex;flex-direction:column;scroll-snap-align:start}
-.gal-carousel .gal-media{position:relative;overflow:hidden;border-radius:14px}
-.gal-carousel .gal-media img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.gal-carousel .gal-item{flex:0 0 auto;display:flex;flex-direction:column;scroll-snap-align:start;max-width:86vw}
+.gal-carousel .gal-media{position:relative;overflow:hidden;border-radius:14px;background:rgba(0,0,0,.05)}
+.gal-carousel .gal-media img{display:block;height:100%;transition:transform .2s}
 .gal-carousel .gal-media img:hover{transform:scale(1.015)}
+.gal-carousel .gal-ratio .gal-media{width:fit-content;min-width:56px}
+.gal-carousel .gal-ratio .gal-media img{width:auto}
+.gal-carousel .gal-fixed .gal-media img{width:100%;object-fit:cover}
 .gal-carousel .gal-credit{position:absolute;bottom:4px;right:6px;font-size:7px;color:rgba(255,255,255,.55);font-family:'IBM Plex Mono';letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.gal-carousel .gal-cap{font-size:12.5px;color:var(--text2);line-height:1.35;padding:7px 2px 0;font-weight:500}
+.gal-carousel .gal-cap{font-size:12.5px;color:var(--text2);line-height:1.35;padding:7px 2px 0;font-weight:500;max-width:70vw}
+.gal-carousel-full .gal-carousel-track{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:2px 28px;box-sizing:border-box}
+@media(max-width:768px){.gal-carousel-full .gal-carousel-track{padding:2px 12px}}
 /* ==================== COMMENTAIRES (discussion par bloc) ==================== */
 .cmt-block{max-width:760px}
 .cmt-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
@@ -1796,6 +1801,21 @@ window.scrollGalCar = function(carId,dir){
   const track=document.querySelector('#'+carId+' .gal-carousel-track');
   if(!track)return; track.scrollBy({left:dir*track.clientWidth*0.8,behavior:'smooth'});
 };
+// Carrousel « images visibles » (indicatif) : calcule une hauteur commune pour en faire
+// tenir ~N dans la largeur disponible (ratio paysage moyen ~1.4). Au rendu + au resize.
+window._galSizeCarousels = function(){
+  document.querySelectorAll('.gal-carousel[data-vis]').forEach(function(car){
+    var n=parseInt(car.getAttribute('data-vis'),10); if(!n||n<1) return;
+    var track=car.querySelector('.gal-carousel-track');
+    var w=(track&&track.clientWidth)||car.clientWidth||(car.parentElement&&car.parentElement.clientWidth)||0;
+    if(!w) return;
+    var gap=10, avg=1.4;
+    var h=Math.round((w-(n-1)*gap)/(n*avg));
+    h=Math.max(100,Math.min(560,h));
+    car.style.setProperty('--gal-ch', h+'px');
+  });
+};
+(function(){ var _t; window.addEventListener('resize',function(){ clearTimeout(_t); _t=setTimeout(function(){ if(window._galSizeCarousels) window._galSizeCarousels(); },150); }); })();
 
 // ============================================================
 // RENDER ENGINE
@@ -2961,19 +2981,27 @@ function render(data){
     // Présentation : 'carousel' (défilement horizontal) ou 'grid' (mur, défaut).
     const galDisplay = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
     if(galDisplay==='carousel'){
-      function galCarItem(p, defW){
+      // Option A : hauteur commune, largeur = ratio réel de la photo (sans recadrage).
+      // Une largeur forcée par photo => cadre fixe recadré.
+      function galCarItem(p){
         const url=typeof p==='string'?p:p.url||'';
         const cap=typeof p==='object'?p.caption||'':'';
         const cr=typeof p==='object'?p.copyright||'':'';
         const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
         const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
-        const _h=ph_h||galH, _w=ph_w||defW;
-        return `<div class="gal-item" style="flex:0 0 ${_w}px;width:${_w}px;max-width:86vw"><div class="gal-media" style="height:${_h}px"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+        const hSty = ph_h? (ph_h+'px') : 'var(--gal-ch,'+galH+'px)';
+        if(ph_w){ // largeur imposée -> cadre fixe, recadrage cover
+          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw"><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+        }
+        // ratio auto : la tuile épouse la photo (verticale = étroite, horizontale = large)
+        return `<div class="gal-item gal-ratio"><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
       }
       const _cid='gal-car-'+Math.random().toString(36).slice(2,8);
-      const _cw=Math.round(galH*1.5);
-      o += `<div class="gal-carousel fi" id="${_cid}"><div class="gal-carousel-track">`;
-      photos.forEach(p => { o += galCarItem(p,_cw); });
+      // « Images visibles » (indicatif) : si défini, la hauteur est calculée au rendu (JS) pour en faire tenir ~N.
+      const _cvis = (opts && opts.galleryCarVis!=null && opts.galleryCarVis!=='') ? parseInt(opts.galleryCarVis,10) : (parseInt(event.galleryCarouselVisible,10)||0);
+      const _cfull = (opts && opts.galleryFull!=null) ? !!opts.galleryFull : !!event.galleryCarouselFull;
+      o += `<div class="gal-carousel fi${_cfull?' gal-carousel-full':''}" id="${_cid}"${_cvis?(' data-vis="'+_cvis+'"'):''} style="--gal-ch:${galH}px"><div class="gal-carousel-track">`;
+      photos.forEach(p => { o += galCarItem(p); });
       o += `</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
       return o;
     }
@@ -3974,10 +4002,25 @@ function renderExpedition(data){
     // Présentation en carrousel (option) — sinon mur (flex).
     const _gDisp = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
     if(_gDisp==='carousel'){
-      function giCar(p,defW){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH, _w=ph_w||defW; let out=`<div class="exp-gal-item" style="flex:0 0 ${_w}px;width:${_w}px;max-width:86vw;height:${_gh}px;scroll-snap-align:start" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}" loading="lazy" onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+      function giCar(p){
+        const url=typeof p==='string'?p:p.url||'';
+        const cap=typeof p==='object'?p.caption||'':'';
+        const cr=typeof p==='object'?p.copyright||'':'';
+        const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0;
+        const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
+        const hSty = ph_h? (ph_h+'px') : 'var(--gal-ch,'+_gExpH+'px)';
+        const click = `onclick="openGalBg('${url.replace(/'/g,"\\'")}')"`;
+        const credit = cr?`<span class="gal-credit">© ${cr}</span>`:'';
+        const capHtml = cap?`<div class="gal-cap">${cap}</div>`:'';
+        if(ph_w){
+          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw;cursor:pointer" ${click}><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}</div>${capHtml}</div>`;
+        }
+        return `<div class="gal-item gal-ratio" style="cursor:pointer" ${click}><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}</div>${capHtml}</div>`;
+      }
       const _cid='exp-gal-car-'+Math.random().toString(36).slice(2,8);
-      const _cw=Math.round(_gExpH*1.5);
-      o+=`<div class="gal-carousel" id="${_cid}"><div class="gal-carousel-track">${gp.map(p=>giCar(p,_cw)).join('')}</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
+      const _cvis=(opts&&opts.galleryCarVis!=null&&opts.galleryCarVis!=='')?parseInt(opts.galleryCarVis,10):(parseInt(event.galleryCarouselVisible,10)||0);
+      const _cfull=(opts&&opts.galleryFull!=null)?!!opts.galleryFull:!!event.galleryCarouselFull;
+      o+=`<div class="gal-carousel${_cfull?' gal-carousel-full':''}" id="${_cid}"${_cvis?(' data-vis="'+_cvis+'"'):''} style="--gal-ch:${_gExpH}px"><div class="gal-carousel-track">${gp.map(giCar).join('')}</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
       return o+`</section>`;
     }
     const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
@@ -5877,6 +5920,8 @@ function _bpRenderSection(sec, event, ctx){
       if((type==='gallery'||type==='gallerylive') && ct.galleryHeight!=null&&ct.galleryHeight!=='') _opts.galleryHeight=parseInt(ct.galleryHeight);
       if((type==='gallery'||type==='gallerylive') && ct.galleryVisible!=null&&ct.galleryVisible!=='') _opts.galleryVisible=parseInt(ct.galleryVisible);
       if((type==='gallery'||type==='gallerylive') && ct.galleryDisplay) _opts.galleryDisplay=ct.galleryDisplay;
+      if((type==='gallery'||type==='gallerylive') && ct.galleryCarVis!=null&&ct.galleryCarVis!=='') _opts.galleryCarVis=parseInt(ct.galleryCarVis,10);
+      if((type==='gallery'||type==='gallerylive') && ct.galleryFull!=null) _opts.galleryFull=!!ct.galleryFull;
       if(type==='gallerylive') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
@@ -7045,7 +7090,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); }
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
   // Compte, par collection, le nombre de déclenchements et de documents lus.
