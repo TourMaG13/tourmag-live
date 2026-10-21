@@ -903,6 +903,13 @@ img{display:block}a{text-decoration:none}
 .ct-lock-btn{border:0;background:#0F2B3C;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:9px;cursor:pointer}
 .ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
 .ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
+/* ---- Boutons d'action « en contexte » (ajouter photo / vidéo dans la section) ---- */
+.sec-add-ctx{margin-top:16px}
+.sec-add-btn{border:0;cursor:pointer;background:#2563eb;color:#fff;font:600 14px system-ui;padding:11px 20px;border-radius:10px;box-shadow:0 2px 10px rgba(37,99,235,.25)}
+.sec-add-btn:hover{filter:brightness(.95)}
+.sec-add-empty{font-size:13px;color:var(--text2,#64748b);padding:6px 0 2px}
+body.mode-expedition .sec-add-btn{background:var(--exp-accent);border-radius:0;box-shadow:none;font-family:'Libre Caslon Text',serif}
+body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:var(--exp-grey)}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -2933,10 +2940,12 @@ function render(data){
     // Ciblage par page : une vidéo sans page s'affiche partout ; sinon uniquement sur sa page.
     const _vidPage=(opts&&opts.pageId)||'';
     const videosP = _vidPage ? videos.filter(v=>!v.page||v.page===_vidPage) : videos;
-    if(!videosP.length) return '';
+    const _vidTitle=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title sec-title-videos fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
+    const _feAddV=(window._feCtxAddHtml?window._feCtxAddHtml('video'):'');
+    if(!videosP.length) return _feAddV ? (_vidTitle+'<div class="sec-add-empty">Aucune vidéo pour l\'instant.</div>'+_feAddV) : '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
-    let o=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title sec-title-videos fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
+    let o=_vidTitle;
 
     function mkVidEmbed(v){
       const platform=v.platform||'youtube';const isShort=v.type==='short';
@@ -2974,7 +2983,7 @@ function render(data){
       }
       o+=`</div>`;
     });
-    return o;
+    return o+_feAddV;
   }
 
   // ===== JOURNALISTES =====
@@ -3025,8 +3034,10 @@ function render(data){
     let photos = activePhase ? _rawPhotos.filter(p => !p.phase || p.phase === activePhase) : _rawPhotos;
     // Ciblage par page : une photo sans page s'affiche partout ; sinon uniquement sur sa page.
     if(_pageId) photos = photos.filter(p => !p.page || p.page === _pageId);
-    if(!photos.length) return '';
-    let o = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
+    const _galTitle = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
+    const _feAddG = (window._feCtxAddHtml?window._feCtxAddHtml('photo'):'');
+    if(!photos.length) return _feAddG ? (_galTitle+'<div class="sec-add-empty">Aucune photo pour l\'instant.</div>'+_feAddG) : '';
+    let o = _galTitle;
     // Hauteur par défaut (bloc via opts, sinon réglage global). La hauteur ET la largeur
     // se définissent photo par photo dans l'onglet Galerie (p.height / p.width).
     const galH = (opts.galleryHeight!=null&&opts.galleryHeight!=='')?parseInt(opts.galleryHeight,10):(event.galleryHeight || 260);
@@ -3069,7 +3080,7 @@ function render(data){
       o += `<div class="gal-carousel fi${_cfull?' gal-carousel-full':''}" id="${_cid}"${_cvis?(' data-vis="'+_cvis+'"'):''} style="--gal-ch:${galH}px"><div class="gal-carousel-track">`;
       photos.forEach(p => { o += galCarItem(p); });
       o += `</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
-      return o;
+      return o+_feAddG;
     }
     const _galVis = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount)|| 9);
     const _visP = photos.slice(0, _galVis);
@@ -3082,7 +3093,7 @@ function render(data){
       _extraP.forEach(p => { o += galImg(p); });
       o += `</div></div><div style="text-align:center"><button class="voir-plus-btn" id="gal-btn" onclick="toggleExpand('gal-expand','gal-btn',${_extraP.length},'Réduire','Voir ${_extraP.length} photos de plus')">Voir ${_extraP.length} photos de plus ${_chevSvg}</button></div>`;
     }
-    return o;
+    return o+_feAddG;
   }
 
   // ===== SPONSORS =====
@@ -4037,10 +4048,12 @@ function renderExpedition(data){
     let _vids = (opts && opts.phaseFilter) ? _pfOpt(_rawVid, opts) : videos;
     const _vidPage=(opts&&opts.pageId)||'';
     if(_vidPage) _vids = _vids.filter(v=>!v.page||v.page===_vidPage);
-    if(mod.videos===false || !_vids || !_vids.length) return '';
-    const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
+    if(mod.videos===false) return '';
+    const _feAddEV=(window._feCtxAddHtml?window._feCtxAddHtml('video'):'');
     let o = `<section class="exp-videos">`;
     if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-videos"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
+    if(!_vids || !_vids.length) return _feAddEV ? (o+'<div class="sec-add-empty">Aucune vidéo pour l\'instant.</div>'+_feAddEV+'</section>') : '';
+    const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
       let out='';
@@ -4063,7 +4076,7 @@ function renderExpedition(data){
         o+=`<div class="exp-vid-grid">`; all.forEach(v=>{o+=`<div class="exp-vid-item${v.type==='short'?' is-short':''}">${expVidEmbed(v)}</div>`;});o+=`</div>`;
       }
     });
-    return o+`</section>`;
+    return o+_feAddEV+`</section>`;
   };
 
   _b.gallery = function(opts){
@@ -4076,10 +4089,12 @@ function renderExpedition(data){
     }
     // Ciblage par page : une photo sans page s'affiche partout ; sinon uniquement sur sa page.
     if(opts && opts.pageId){ gp = gp.filter(p=>!p.page||p.page===opts.pageId); }
-    if(mod.gallery===false || !gp.length) return '';
-    const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
+    if(mod.gallery===false) return '';
+    const _feAddEG=(window._feCtxAddHtml?window._feCtxAddHtml('photo'):'');
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
+    if(!gp.length) return _feAddEG ? (o+'<div class="sec-add-empty">Aucune photo pour l\'instant.</div>'+_feAddEG+'</section>') : '';
+    const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     const _gExpH = parseInt(event.galleryHeight)||260;
     function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
     // Présentation en carrousel (option) — sinon mur (flex).
@@ -4104,7 +4119,7 @@ function renderExpedition(data){
       const _cvis=(opts&&opts.galleryCarVis!=null&&opts.galleryCarVis!=='')?parseInt(opts.galleryCarVis,10):(parseInt(event.galleryCarouselVisible,10)||0);
       const _cfull=(opts&&opts.galleryFull!=null)?!!opts.galleryFull:!!event.galleryCarouselFull;
       o+=`<div class="gal-carousel${_cfull?' gal-carousel-full':''}" id="${_cid}"${_cvis?(' data-vis="'+_cvis+'"'):''} style="--gal-ch:${_gExpH}px"><div class="gal-carousel-track">${gp.map(giCar).join('')}</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar('${_cid}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar('${_cid}',1)">›</button></div>`;
-      return o+`</section>`;
+      return o+_feAddEG+`</section>`;
     }
     const visPhotos = gp.slice(0, Math.min(GALLERY_VIS, gp.length));
     const extraPhotos = gp.slice(GALLERY_VIS);
@@ -4113,7 +4128,7 @@ function renderExpedition(data){
       o+=`<div class="exp-gallery-flex exp-expand" id="exp-gal-expand">${extraPhotos.map((p,i)=>gi(p,i+GALLERY_VIS,true)).join('')}</div>`;
       o+=`<button class="exp-voir-plus" id="exp-gal-btn" onclick="toggleExpGallery(${extraPhotos.length})">▾ Voir les ${extraPhotos.length} autres photos</button>`;
     }
-    return o+`</section>`;
+    return o+_feAddEG+`</section>`;
   };
 
   _b.articles = function(opts){
@@ -7507,15 +7522,31 @@ window._tmgResizeSettle=function(){
     try{ eApp=firebase.app('tmg-editor'); }catch(_){ eApp=firebase.initializeApp(firebase.app().options,'tmg-editor'); }
     eAuth=eApp.auth(); eDb=eApp.firestore();
     eAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
-    eAuth.onAuthStateChanged(function(u){ eUser=(u && !u.isAnonymous)?u:null; paintPill(); _authCbs.forEach(function(cb){ try{cb(eUser);}catch(_){} }); });
+    eAuth.onAuthStateChanged(function(u){ eUser=(u && !u.isAnonymous)?u:null; if(eUser){ _fetchName(); } else { window._myAccountName=null; } paintPill(); _authCbs.forEach(function(cb){ try{cb(eUser);}catch(_){} }); if(window._rtRerender) setTimeout(window._rtRerender,0); });
   }
-  // API partagée (utilisée aussi par le module Commentaires en mode « connecté »).
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Récupère le vrai nom du compte (champ « nom » de l'onglet Accès → admins/{uid})
+  function _fetchName(){
+    if(!eUser || window._myAccountName!=null) return;
+    eDb.collection('admins').doc(eUser.uid).get()
+      .then(function(s){ var n=(s&&s.exists&&s.data()&&s.data().name)?String(s.data().name).trim():''; window._myAccountName=n||(eUser.email||'').split('@')[0]||'Connecté'; paintPill(); if(window._rtRerender) window._rtRerender(); })
+      .catch(function(){ window._myAccountName=(eUser.email||'').split('@')[0]||'Connecté'; paintPill(); });
+  }
+  // API partagée (connexion unique) + actions contextuelles exposées aux sections.
   window._tmgEditor = {
     ensure:function(){ initAuth(); },
     user:function(){ return eUser; },
     db:function(){ return eDb; },
     openLogin:function(){ initAuth(); openLogin(); },
     onAuth:function(cb){ if(typeof cb==='function') _authCbs.push(cb); }
+  };
+  window._feAddPhoto=function(){ initAuth(); if(eUser) openPhoto(); else openLogin(); };
+  window._feAddVideo=function(){ initAuth(); if(eUser) openVideo(); else openLogin(); };
+  // Bouton d'ajout « en contexte » rendu dans les sections galerie/vidéos (si connecté + frontEdit).
+  window._feCtxAddHtml=function(kind){
+    if(!(ev().frontEdit && eUser)) return '';
+    if(kind==='video') return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddVideo&&window._feAddVideo()">＋ Ajouter une vidéo</button></div>';
+    return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddPhoto&&window._feAddPhoto()">＋ Ajouter une photo</button></div>';
   };
 
   function ensurePill(){
@@ -7525,21 +7556,20 @@ window._tmgResizeSettle=function(){
     pill.style.cssText='position:fixed;left:16px;bottom:16px;z-index:100000;display:flex;gap:6px;align-items:center;background:#0f172a;color:#fff;padding:7px 9px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28);font:600 13px/1 system-ui,sans-serif;max-width:94vw;flex-wrap:wrap';
     document.body.appendChild(pill);
   }
-  function b(label,bg){ return '<button type="button" style="border:0;cursor:pointer;background:'+(bg||'rgba(255,255,255,.16)')+';color:#fff;padding:7px 12px;border-radius:999px;font:600 13px/1 system-ui,sans-serif">'+label+'</button>'; }
+  function b(label,bg){ return '<button type="button" style="border:0;cursor:pointer;background:'+(bg||'rgba(255,255,255,.16)')+';color:#fff;padding:7px 14px;border-radius:999px;font:600 13px/1 system-ui,sans-serif">'+label+'</button>'; }
+  // Le pill n'apparaît que si le dashboard propose de la contribution/connexion.
+  function needLogin(){ return !!(ev().frontEdit || document.querySelector('.cmt-block, .exc-block, .ct-lock')); }
   function paintPill(){
-    if(!ev().frontEdit){ if(pill){pill.remove();pill=null;} return; }
+    if(!needLogin()){ if(pill){pill.remove();pill=null;} return; }
     ensurePill();
     if(eUser){
-      pill.innerHTML='<span style="opacity:.85;font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(eUser.email||'Contributeur')+'</span>'
-        +'<span data-fe="photo">'+b('＋ Photo','#2563eb')+'</span>'
-        +'<span data-fe="video">'+b('＋ Vidéo','#7c3aed')+'</span>'
-        +'<span data-fe="out">'+b('Quitter')+'</span>';
-      pill.querySelector('[data-fe="photo"]').onclick=openPhoto;
-      pill.querySelector('[data-fe="video"]').onclick=openVideo;
+      var nm = window._myAccountName || (eUser.email||'').split('@')[0] || 'Connecté';
+      pill.innerHTML='<span style="font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">👤 '+esc(nm)+'</span>'
+        +'<span data-fe="out">'+b('Se déconnecter')+'</span>';
       pill.querySelector('[data-fe="out"]').onclick=function(){ if(eAuth) eAuth.signOut(); toast('Déconnecté'); };
     } else {
-      pill.innerHTML='<span data-fe="in">'+b('🔧 Contribuer','#2563eb')+'</span>';
-      pill.querySelector('[data-fe="in"]').onclick=openLogin;
+      pill.innerHTML='<span data-fe="in">'+b('🔐 Se connecter','#2563eb')+'</span>';
+      pill.querySelector('[data-fe="in"]').onclick=function(){ initAuth(); openLogin(); };
     }
   }
 
@@ -7571,7 +7601,7 @@ window._tmgResizeSettle=function(){
       if(!em||!pw){ err.textContent='E-mail et mot de passe requis.'; err.style.display='block'; return; }
       go.disabled=true; go.textContent='Connexion…'; err.style.display='none';
       eAuth.signInWithEmailAndPassword(em,pw)
-        .then(function(){ m.close(); toast('Connecté — mode contributeur'); })
+        .then(function(){ m.close(); toast('Connecté. Ajoutez vos contenus via les boutons ＋ de chaque section.'); })
         .catch(function(e){ go.disabled=false; go.textContent='Se connecter'; var c=e&&e.code; err.textContent='Échec : '+((c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/user-not-found')?'identifiants incorrects':(e.message||e)); err.style.display='block'; });
     }
     go.onclick=submit;
@@ -7739,8 +7769,8 @@ window._tmgResizeSettle=function(){
 
   function renderList(tid){
     var block=blockOf(tid); if(!block) return;
-    var t=threads[tid]; var mode=t.mode; var listEl=block.querySelector('.cmt-list'); if(!listEl) return;
-    var mu=myUid(mode);
+    var t=threads[tid]; var listEl=block.querySelector('.cmt-list'); if(!listEl) return;
+    var mu=edUser()?edUser().uid:'';
     var top=t.data.filter(function(c){return !c.parent;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
     if(!top.length){ listEl.innerHTML='<div class="cmt-empty">Aucun commentaire pour l\'instant. Lancez la discussion !</div>'; }
     else {
@@ -7753,64 +7783,54 @@ window._tmgResizeSettle=function(){
     }
   }
 
-  function formHtml(mode, ph){
-    var name=(mode==='B')?'<input class="cmt-name" type="text" placeholder="Votre prénom (facultatif)">':'';
-    return '<div class="cmt-form">'+name+'<textarea class="cmt-ta" rows="2" placeholder="'+ph+'"></textarea><button class="cmt-send-btn">Publier</button></div>';
+  function formHtml(ph){
+    return '<div class="cmt-form"><textarea class="cmt-ta" rows="2" placeholder="'+ph+'"></textarea><button class="cmt-send-btn">Publier</button></div>';
   }
   function wireForm(container, tid, parentId){
     var send=container.querySelector('.cmt-send-btn'); if(!send) return;
     send.onclick=function(){
       var ta=container.querySelector('.cmt-ta'); var txt=(ta.value||'').trim(); if(!txt) return;
-      var nameEl=container.querySelector('.cmt-name');
       send.disabled=true; var old=send.textContent; send.textContent='…';
-      post(tid, txt, parentId, nameEl?(nameEl.value||'').trim():'')
+      post(tid, txt, parentId)
         .then(function(){ if(parentId){ container.innerHTML=''; container._open=false; } else { ta.value=''; } send.disabled=false; send.textContent=old; })
         .catch(function(e){ send.disabled=false; send.textContent=old; alert('Erreur : '+(e.message||e)); });
     };
   }
   function renderCompose(tid){
     var block=blockOf(tid); if(!block) return;
-    var t=threads[tid]; var mode=t.mode; var el=block.querySelector('.cmt-compose'); if(!el) return;
-    if(mode==='A' && !edUser()){
-      el.innerHTML='<div class="cmt-login"><span>Connectez-vous pour participer à la discussion.</span><button class="cmt-login-btn">Se connecter</button></div>';
+    var el=block.querySelector('.cmt-compose'); if(!el) return;
+    if(!edUser()){
+      el.innerHTML='<div class="cmt-login"><span>🔒 Connectez-vous pour écrire un commentaire.</span><button class="cmt-login-btn">Se connecter</button></div>';
       var lb=el.querySelector('.cmt-login-btn'); if(lb) lb.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
       return;
     }
-    el.innerHTML=formHtml(mode,'Votre commentaire…');
+    el.innerHTML=formHtml('Votre commentaire…');
     wireForm(el, tid, '');
   }
   function openReply(tid,pid){
     var block=blockOf(tid); if(!block) return;
+    if(!edUser()){ if(ed()&&ed().openLogin) ed().openLogin(); return; }
     var box=block.querySelector('.cmt-replybox[data-parent="'+(window.CSS&&CSS.escape?CSS.escape(pid):pid)+'"]');
-    if(!box){ // repli : recherche manuelle
-      var boxes=block.querySelectorAll('.cmt-replybox'); for(var i=0;i<boxes.length;i++){ if(boxes[i].getAttribute('data-parent')===pid){ box=boxes[i]; break; } }
-    }
+    if(!box){ var boxes=block.querySelectorAll('.cmt-replybox'); for(var i=0;i<boxes.length;i++){ if(boxes[i].getAttribute('data-parent')===pid){ box=boxes[i]; break; } } }
     if(!box) return;
-    var mode=threads[tid].mode;
-    if(mode==='A' && !edUser()){ if(ed()&&ed().openLogin) ed().openLogin(); return; }
     if(box._open){ box.innerHTML=''; box._open=false; return; }
-    box._open=true; box.innerHTML=formHtml(mode,'Votre réponse…'); wireForm(box, tid, pid);
+    box._open=true; box.innerHTML=formHtml('Votre réponse…'); wireForm(box, tid, pid);
   }
 
-  function post(tid, text, parentId, typedName){
-    var mode=threads[tid].mode, wdb, author, uid;
-    if(mode==='A'){
-      var u=edUser(); if(!u) return Promise.reject(new Error('Connexion requise'));
-      wdb=ed().db(); uid=u.uid; author=((u.email||'').split('@')[0])||'Contributeur';
-    } else {
-      wdb=pubDb(); if(!wdb) return Promise.reject(new Error('Indisponible'));
-      uid=anonUid(); author=typedName||'Anonyme';
-    }
+  function post(tid, text, parentId){
+    var u=edUser(); if(!u) return Promise.reject(new Error('Connexion requise'));
+    var wdb=ed().db(); if(!wdb) return Promise.reject(new Error('Indisponible'));
+    var author=(window._myAccountName)||((u.email||'').split('@')[0])||'Contributeur';
     return wdb.collection('events').doc(EVENT_ID).collection('comments').add({
-      thread:tid, parent:parentId||'', text:text, author:author, authorUid:uid||'', mode:mode,
+      thread:tid, parent:parentId||'', text:text, author:author, authorUid:u.uid, mode:'A',
       likes:0, likedBy:[], createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
   }
   function toggleLike(tid,cid){
-    var mode=threads[tid].mode, mu=myUid(mode);
-    if(!mu){ if(mode==='A' && ed()&&ed().openLogin) ed().openLogin(); return; }
+    var u=edUser(); if(!u){ if(ed()&&ed().openLogin) ed().openLogin(); return; }
+    var mu=u.uid;
     var c=threads[tid].data.filter(function(x){return x.id===cid;})[0]; if(!c) return;
-    var wdb=(mode==='A')?(ed()&&ed().db&&ed().db()):pubDb(); if(!wdb) return;
+    var wdb=ed().db&&ed().db(); if(!wdb) return;
     var liked=(c.likedBy||[]).indexOf(mu)>=0, FV=firebase.firestore.FieldValue;
     wdb.collection('events').doc(EVENT_ID).collection('comments').doc(cid)
       .update({ likedBy: liked?FV.arrayRemove(mu):FV.arrayUnion(mu), likes: FV.increment(liked?-1:1) })
