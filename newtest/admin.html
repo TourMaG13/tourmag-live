@@ -9427,7 +9427,8 @@ function addVideoSection(){
       <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid">Grille</option><option value="carousel">Carrousel</option></select></div>
       <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="6"></div>
     </div>
-    <div class="form-row" style="max-width:340px"><label class="form-label">Largeur des vidéos (px)</label><input class="form-input" id="m-vsec-width" type="number" min="150" max="1200" value="320" step="10"><div style="font-size:10px;color:var(--text3);margin-top:3px">Largeur minimum de chaque vidéo. Plus la valeur est grande, moins il y a de vidéos par ligne. Ex : 200 = petit, 320 = standard, 500 = grand, 800 = très grand</div></div>
+    <div class="form-row" style="max-width:340px"><label class="form-label">Largeur des vidéos (px) <span style="font-weight:400;color:var(--text3)">— mode Grille</span></label><input class="form-input" id="m-vsec-width" type="number" min="150" max="1200" value="320" step="10"><div style="font-size:10px;color:var(--text3);margin-top:3px">Largeur minimum de chaque vidéo en grille. En carrousel, la hauteur est commune et la largeur suit le ratio (horizontal/vertical).</div></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:4px"><input type="checkbox" id="m-vsec-full"> Carrousel en pleine largeur de la page</label>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveNewVideoSection('${newId}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-check"/></svg> Créer</button></div>`);
 }
 async function saveNewVideoSection(newId){
@@ -9437,7 +9438,8 @@ async function saveNewVideoSection(newId){
     title:document.getElementById('m-vsec-title').value.trim()||'Nouvelle section',
     display:document.getElementById('m-vsec-display').value,
     visibleCount:parseInt(document.getElementById('m-vsec-count').value)||6,
-    videoWidth:parseInt(document.getElementById('m-vsec-width').value)||320
+    videoWidth:parseInt(document.getElementById('m-vsec-width').value)||320,
+    fullWidth:!!(document.getElementById('m-vsec-full')||{}).checked
   });
   saving(true);
   await evRef().update({videoSections:sections});
@@ -9454,7 +9456,8 @@ function editVideoSection(idx){
       <div class="form-row"><label class="form-label">Mode</label><select class="form-input" id="m-vsec-display"><option value="grid"${s.display==='grid'?' selected':''}>Grille</option><option value="carousel"${s.display==='carousel'?' selected':''}>Carrousel</option></select></div>
       <div class="form-row"><label class="form-label">Vidéos visibles (grille)</label><input class="form-input" id="m-vsec-count" type="number" min="1" max="20" value="${s.visibleCount||6}"></div>
     </div>
-    <div class="form-row" style="max-width:340px"><label class="form-label">Largeur des vidéos (px)</label><input class="form-input" id="m-vsec-width" type="number" min="150" max="1200" value="${w}" step="10"><div style="font-size:10px;color:var(--text3);margin-top:3px">200 = petit · 320 = standard · 500 = grand · 800 = très grand</div></div>
+    <div class="form-row" style="max-width:340px"><label class="form-label">Largeur des vidéos (px) <span style="font-weight:400;color:var(--text3)">— mode Grille</span></label><input class="form-input" id="m-vsec-width" type="number" min="150" max="1200" value="${w}" step="10"><div style="font-size:10px;color:var(--text3);margin-top:3px">En carrousel, hauteur commune et largeur selon le ratio (horizontal/vertical).</div></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:4px"><input type="checkbox" id="m-vsec-full" ${s.fullWidth?'checked':''}> Carrousel en pleine largeur de la page</label>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveEditVideoSection(${idx})"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>`);
 }
 async function saveEditVideoSection(idx){
@@ -9463,6 +9466,7 @@ async function saveEditVideoSection(idx){
   sections[idx].display=document.getElementById('m-vsec-display').value;
   sections[idx].visibleCount=parseInt(document.getElementById('m-vsec-count').value)||6;
   sections[idx].videoWidth=parseInt(document.getElementById('m-vsec-width').value)||320;
+  sections[idx].fullWidth=!!(document.getElementById('m-vsec-full')||{}).checked;
   saving(true);
   await evRef().update({videoSections:sections});
   closeModal();toast('Section modifiée');
