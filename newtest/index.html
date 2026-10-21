@@ -855,6 +855,22 @@ img{display:block}a{text-decoration:none}
 .cmt-send-btn:disabled{opacity:.6;cursor:default}
 .cmt-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .cmt-login-btn{border:0;background:#6366F1;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
+/* ==================== EXCURSIONS (photos participants) ==================== */
+.exc-block{max-width:920px}
+.exc-grp{margin-bottom:22px}
+.exc-grp-title{font-weight:700;font-size:15px;color:var(--text,#111);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.exc-grp-count{font-size:11px;font-weight:600;color:var(--text3,#9CA3AF)}
+.exc-grid{display:flex;flex-wrap:wrap;gap:12px}
+.exc-ph{width:190px;max-width:46vw}
+.exc-img{height:140px;border-radius:12px;overflow:hidden;position:relative;background:rgba(0,0,0,.05)}
+.exc-img img{width:100%;height:100%;object-fit:cover;display:block}
+.exc-author{font-size:12px;color:var(--text2,#475569);margin-top:5px;font-weight:600}
+.exc-cap{font-size:12px;color:var(--text3,#6b7280);line-height:1.3;margin-top:1px}
+.exc-empty{font-size:12px;color:var(--text3,#9CA3AF);padding:4px 0}
+.exc-add{margin-top:6px}
+.exc-add-btn{border:0;cursor:pointer;background:#0EA5A4;color:#fff;font:600 13px system-ui;padding:9px 16px;border-radius:9px}
+.exc-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.exc-login-btn{border:0;background:#0EA5A4;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -3180,6 +3196,21 @@ function render(data){
       +`<div class="cmt-block fi" data-thread="${tid}" data-mode="${mode}"><div class="cmt-list"><div class="cmt-empty">Chargement…</div></div><div class="cmt-compose"></div></div></div>`;
   }
 
+  // ===== EXCURSIONS (photos des participants, groupées par excursion) =====
+  function mkExcursions(opts){
+    if(mod.excursions===false) return '';
+    opts=opts||{};
+    var bid=(opts.blockId||'').toString(); if(!bid) return '';
+    var title=opts.sectionTitle||'Excursions du jour';
+    var sub=opts.sectionSub||'Partagez vos photos';
+    var exc=Array.isArray(opts.excursions)?opts.excursions:[];
+    var mx=parseInt(opts.maxPer,10)||2;
+    var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
+    var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
+    return `<div id="section-exc-${bid}"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(14,165,164,.08);color:#0EA5A4">${_ico}</div><h2>${title}</h2><div class="sec-title-line"></div><p>${sub}</p></div>`
+      +`<div class="exc-block fi" data-block="${bid}" data-max="${mx}" data-exc='${excAttr}'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>`;
+  }
+
   // ===== BRAND NEWS =====
   function mkBrandNews(){
     if(mod.brandnews===false) return '';
@@ -3220,7 +3251,7 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,excursions:mkExcursions,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
   const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','countrymap','sponsors','contact'];
@@ -4252,6 +4283,19 @@ function renderExpedition(data){
 
   // Commentaires : enveloppe autonome (renderExpedition est une fonction séparée de render,
   // mkComments n'y est pas accessible). Le contrôleur dédié gère temps réel/saisie/réactions.
+  _b.excursions = function(opts){
+    if(mod.excursions===false) return '';
+    opts=opts||{};
+    var bid=(opts.blockId||'').toString(); if(!bid) return '';
+    var title=opts.sectionTitle||'Excursions du jour';
+    var sub=opts.sectionSub||'Partagez vos photos';
+    var exc=Array.isArray(opts.excursions)?opts.excursions:[];
+    var mx=parseInt(opts.maxPer,10)||2;
+    var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
+    var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
+    return '<div id="section-exc-'+bid+'"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(14,165,164,.08);color:#0EA5A4">'+_ico+'</div><h2>'+title+'</h2><div class="sec-title-line"></div><p>'+sub+'</p></div>'
+      +'<div class="exc-block fi" data-block="'+bid+'" data-max="'+mx+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
+  };
   _b.comments = function(opts){
     if(mod.comments===false) return '';
     opts=opts||{};
@@ -5893,7 +5937,7 @@ function _bpRenderSection(sec, event, ctx){
   // --- Modules "riches"/"live" : on réutilise les renderers legacy ---
   const legacyDelegate = {
     hero:'hero', kpis:'kpis', live:'live', citations:'citations', quiz:'quiz',
-    faq:'questions', questions:'questions', comments:'comments', interviews:'interviews', videos:'videos',
+    faq:'questions', questions:'questions', comments:'comments', excursions:'excursions', interviews:'interviews', videos:'videos',
     articles:'articles', programme:'programme', journalists:'journalists',
     sponsors:'sponsors', brandnews:'brandnews', contact:'contact',
     product:'product', countrymap:'countrymap', gallery:'gallery',
@@ -5926,6 +5970,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -7090,7 +7135,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); if(typeof window._excursionsRefresh==='function') setTimeout(window._excursionsRefresh,0); }
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
   // Compte, par collection, le nombre de déclenchements et de documents lus.
@@ -7817,6 +7862,122 @@ window._tmgResizeSettle=function(){
     }
   };
   setTimeout(function(){ if(window._surveyRefresh) window._surveyRefresh(); }, 1600);
+})();
+</script>
+<script>
+/* ============================================================
+   EXCURSIONS — photos des participants, groupées par excursion.
+   Dépôt réservé aux personnes connectées (via _tmgEditor), limité à N
+   par personne et par excursion. Lecture ouverte à tous. Temps réel.
+   ============================================================ */
+(function(){
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.get('preview')==='1') return;
+  var EVENT_ID=_qs.get('event')||'';
+  if(!EVENT_ID) return;
+  var reg={};
+  function pubDb(){ return window._pubDb||null; }
+  function ed(){ return window._tmgEditor||null; }
+  function edUser(){ var e=ed(); return (e&&e.user)?e.user():null; }
+  function ev(){ return (window._rtState&&window._rtState.event)||{}; }
+  function uploadUrl(){ return ev().uploadUrl||''; }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function tsNum(t){ try{ return t&&t.toMillis?t.toMillis():(t&&t.seconds?t.seconds*1000:0);}catch(_){return 0;} }
+  function blockEl(bid){ var l=document.querySelectorAll('.exc-block'); for(var i=0;i<l.length;i++){ if(l[i].getAttribute('data-block')===bid) return l[i]; } return null; }
+  function parseExc(el){ try{ return JSON.parse((el.getAttribute('data-exc')||'[]').replace(/&#39;/g,"'")); }catch(_){ return []; } }
+  function readDb(){ return pubDb()||(ed()&&ed().db&&ed().db())||null; }
+
+  function attach(bid){
+    var rdb=readDb(); if(!rdb){ setTimeout(function(){ attach(bid); },600); return; }
+    reg[bid].unsub=rdb.collection('events').doc(EVENT_ID).collection('excursionPhotos').where('block','==',bid)
+      .onSnapshot(function(snap){ var a=[]; snap.forEach(function(d){ var o=d.data()||{}; o.id=d.id; a.push(o); }); reg[bid].data=a; renderBlock(bid); },
+        function(e){ console.warn('exc',e&&e.message); var b=blockEl(bid); if(b){ var bd=b.querySelector('.exc-body'); if(bd) bd.innerHTML='<div class="exc-empty">Photos momentanément indisponibles.</div>'; } });
+  }
+
+  function renderBlock(bid){
+    var block=blockEl(bid); if(!block) return;
+    var body=block.querySelector('.exc-body'); if(!body) return;
+    var exc=parseExc(block);
+    var data=(reg[bid]&&reg[bid].data)||[];
+    var u=edUser();
+    var html='';
+    if(!exc.length){ html+='<div class="exc-empty">Aucune excursion définie pour ce jour.</div>'; }
+    exc.forEach(function(e){
+      var ph=data.filter(function(p){return p.excursion===e.id;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
+      html+='<div class="exc-grp"><div class="exc-grp-title">'+esc(e.name||'Excursion')+' <span class="exc-grp-count">'+ph.length+' photo'+(ph.length>1?'s':'')+'</span></div>';
+      if(!ph.length){ html+='<div class="exc-empty">Aucune photo pour l\'instant.</div>'; }
+      else { html+='<div class="exc-grid">'+ph.map(function(p){ return '<div class="exc-ph"><div class="exc-img"><img src="'+esc(p.url)+'" alt="" onerror="var c=this.closest(\'.exc-ph\');if(c)c.style.display=\'none\'"></div><div class="exc-author">'+esc(p.author||'Participant')+'</div>'+(p.caption?'<div class="exc-cap">'+esc(p.caption)+'</div>':'')+'</div>'; }).join('')+'</div>'; }
+      html+='</div>';
+    });
+    var known={}; exc.forEach(function(e){known[e.id]=1;});
+    var orph=data.filter(function(p){return !known[p.excursion];});
+    if(orph.length){ html+='<div class="exc-grp"><div class="exc-grp-title">Autres</div><div class="exc-grid">'+orph.map(function(p){ return '<div class="exc-ph"><div class="exc-img"><img src="'+esc(p.url)+'" alt=""></div><div class="exc-author">'+esc(p.author||'Participant')+'</div></div>'; }).join('')+'</div></div>'; }
+    if(u){ html+='<div class="exc-add"><button class="exc-add-btn">＋ Ajouter mes photos</button></div>'; }
+    else { html+='<div class="exc-login"><span>Connectez-vous pour ajouter vos photos.</span><button class="exc-login-btn">Se connecter</button></div>'; }
+    body.innerHTML=html;
+    var addBtn=body.querySelector('.exc-add-btn'); if(addBtn) addBtn.onclick=function(){ openAdd(bid); };
+    var lg=body.querySelector('.exc-login-btn'); if(lg) lg.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
+  }
+
+  var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
+  var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
+  var P='width:100%;margin-top:18px;border:0;cursor:pointer;background:#0EA5A4;color:#fff;font:600 14px system-ui;padding:11px;border-radius:9px';
+  function modal(inner){ var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:440px;width:100%;max-height:90vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
+  function toast(msg){ var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:100001;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font:500 13px system-ui'; document.body.appendChild(t); setTimeout(function(){t.remove();},2600); }
+  function uploadImage(file){ var url=uploadUrl(); if(!url) return Promise.reject(new Error("URL d'upload non configurée")); var fd=new FormData(); fd.append('image',file); return fetch(url,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){ if(d.error) throw new Error(d.error); if(!d.url) throw new Error('Réponse serveur invalide'); return d.url; }); }
+
+  function openAdd(bid){
+    var u=edUser(); if(!u){ if(ed()&&ed().openLogin) ed().openLogin(); return; }
+    var block=blockEl(bid); if(!block) return;
+    var exc=parseExc(block); var max=parseInt(block.getAttribute('data-max'),10)||2;
+    var data=(reg[bid]&&reg[bid].data)||[];
+    if(!exc.length){ toast('Aucune excursion définie.'); return; }
+    var opts=exc.map(function(e){ var mine=data.filter(function(p){return p.excursion===e.id && p.addedBy===u.uid;}).length; var left=max-mine; return '<option value="'+esc(e.id)+'" data-left="'+left+'">'+esc(e.name||'Excursion')+(left<=0?' (max atteint)':'')+'</option>'; }).join('');
+    var m=modal('<h3 style="margin:0 0 4px;font-size:18px">Ajouter mes photos</h3>'
+      +'<p style="margin:0 0 6px;font-size:12px;color:#64748b">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></p>'
+      +'<label style="'+L+'">Votre excursion</label><select id="exc-sel" style="'+F+'">'+opts+'</select>'
+      +'<div id="exc-left" style="font-size:12px;color:#0EA5A4;margin-top:4px"></div>'
+      +'<label style="'+L+'">Photos (jusqu\'à '+max+')</label><input id="exc-files" type="file" accept="image/*" multiple style="'+F+'">'
+      +'<label style="'+L+'">Légende (facultatif)</label><input id="exc-cap" type="text" style="'+F+'">'
+      +'<div id="exc-err" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
+      +'<button id="exc-send" style="'+P+'">Publier mes photos</button>');
+    var sel=m.box.querySelector('#exc-sel'), leftEl=m.box.querySelector('#exc-left'), send=m.box.querySelector('#exc-send'), err=m.box.querySelector('#exc-err');
+    function updLeft(){ var o=sel.options[sel.selectedIndex]; var left=o?parseInt(o.getAttribute('data-left'),10):max; leftEl.textContent = left<=0 ? 'Limite atteinte pour cette excursion.' : ('Il vous reste '+left+' photo'+(left>1?'s':'')+' pour cette excursion.'); }
+    sel.onchange=updLeft; updLeft();
+    send.onclick=function(){
+      var excId=sel.value; var o=sel.options[sel.selectedIndex]; var left=o?parseInt(o.getAttribute('data-left'),10):max;
+      var files=Array.prototype.slice.call(m.box.querySelector('#exc-files').files||[]);
+      if(!files.length){ err.textContent='Choisissez au moins une photo.'; err.style.display='block'; return; }
+      if(left<=0){ err.textContent='Limite atteinte pour cette excursion.'; err.style.display='block'; return; }
+      if(files.length>left){ err.textContent='Vous ne pouvez ajouter que '+left+' photo(s) ici.'; err.style.display='block'; return; }
+      var excName=(exc.filter(function(e){return e.id===excId;})[0]||{}).name||'';
+      var cap=(m.box.querySelector('#exc-cap').value||'').trim();
+      var wdb=ed()&&ed().db&&ed().db(); if(!wdb){ err.textContent='Service indisponible.'; err.style.display='block'; return; }
+      send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
+      var author=((u.email||'').split('@')[0])||'Participant';
+      var chain=Promise.resolve(), ok=0;
+      files.forEach(function(f){
+        chain=chain.then(function(){
+          if(f.size>10*1024*1024) throw new Error(f.name+' trop lourd (max 10 Mo)');
+          return uploadImage(f).then(function(url){
+            return wdb.collection('events').doc(EVENT_ID).collection('excursionPhotos').add({ block:bid, excursion:excId, excursionName:excName, url:url, caption:cap, addedBy:u.uid, author:author, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+          }).then(function(){ ok++; });
+        });
+      });
+      chain.then(function(){ m.close(); toast(ok+' photo'+(ok>1?'s':'')+' publiée'+(ok>1?'s':'')); })
+        .catch(function(e){ send.disabled=false; send.textContent='Publier mes photos'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
+    };
+  }
+
+  window._excursionsRefresh=function(){
+    document.querySelectorAll('.exc-block').forEach(function(block){
+      var bid=block.getAttribute('data-block'); if(!bid) return;
+      if(!reg[bid]){ reg[bid]={data:[],unsub:null,authHooked:false}; attach(bid); }
+      renderBlock(bid);
+      if(!reg[bid].authHooked && ed()){ reg[bid].authHooked=true; if(ed().ensure) ed().ensure(); if(ed().onAuth) ed().onAuth(function(){ renderBlock(bid); }); }
+    });
+  };
+  setTimeout(function(){ if(window._excursionsRefresh) window._excursionsRefresh(); }, 1500);
 })();
 </script>
 </body>
