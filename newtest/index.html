@@ -8048,14 +8048,27 @@ window._tmgResizeSettle=function(){
     return '<div id="section-contact">'+head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 Contacts réservés — connectez-vous pour les afficher.</span><button class="ct-lock-btn" onclick="window._tmgEditor&&window._tmgEditor.openLogin&&window._tmgEditor.openLogin()">Se connecter</button></div></div>';
   };
   var _unsub=null;
+  function _legacy(){ return (window._rtState && window._rtState.event && window._rtState.event.contact) || null; }
+  function apply(data, denied){
+    var connected=!!edUser();
+    if(data){ window._contactData=data; window._contactLocked=false; }
+    else {
+      // Pas de document protégé lisible. Pour un connecté, on retombe sur les contacts
+      // existants de l'événement (migration pas encore faite) ; sinon cadenas.
+      var lg=_legacy();
+      if(connected && lg){ window._contactData=lg; window._contactLocked=false; }
+      else { window._contactData=null; window._contactLocked = denied ? !connected : false; }
+    }
+    if(window._rtRerender) window._rtRerender();
+  }
   function load(){
     var connected=!!edUser();
     var db = connected ? (ed().db&&ed().db()) : pubDb();
     if(!db){ setTimeout(load,600); return; }
     if(_unsub){ try{_unsub();}catch(_){} _unsub=null; }
     _unsub = db.collection('contactsPrivate').doc(EVENT_ID).onSnapshot(
-      function(snap){ window._contactData=(snap&&snap.exists)?(snap.data()||null):null; window._contactLocked=false; if(window._rtRerender) window._rtRerender(); },
-      function(){ window._contactData=null; window._contactLocked=!connected; if(window._rtRerender) window._rtRerender(); }
+      function(snap){ apply((snap&&snap.exists)?(snap.data()||null):null, false); },
+      function(){ apply(null, true); }
     );
   }
   setTimeout(function(){
