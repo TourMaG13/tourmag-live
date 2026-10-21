@@ -839,7 +839,7 @@ img{display:block}a{text-decoration:none}
 .gal-carousel-full .gal-carousel-track{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:2px 28px;box-sizing:border-box}
 @media(max-width:768px){.gal-carousel-full .gal-carousel-track{padding:2px 12px}}
 /* ==================== COMMENTAIRES (discussion par bloc) ==================== */
-.cmt-block{max-width:760px}
+.cmt-block{max-width:100%}
 .cmt-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
 .cmt-empty{color:var(--text3,#9CA3AF);font-size:13px;padding:8px 0}
 .cmt-item{background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 14px}
@@ -854,15 +854,15 @@ img{display:block}a{text-decoration:none}
 .cmt-like.on{color:#6366F1;font-weight:700}
 .cmt-reply-btn:hover,.cmt-like:hover{text-decoration:underline}
 .cmt-replybox{margin-top:4px}
-.cmt-form{display:flex;flex-direction:column;gap:8px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px}
+.cmt-form{display:flex;flex-direction:column;gap:10px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:16px}
 .cmt-name{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
-.cmt-ta{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px;resize:vertical;min-height:44px}
-.cmt-send-btn{align-self:flex-end;border:0;background:#6366F1;color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer}
+.cmt-ta{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:11px 13px;font:inherit;font-size:15px;resize:vertical;min-height:96px;line-height:1.5}
+.cmt-send-btn{align-self:flex-end;border:0;background:#6366F1;color:#fff;font-weight:600;font-size:14px;padding:10px 24px;border-radius:9px;cursor:pointer}
 .cmt-send-btn:disabled{opacity:.6;cursor:default}
 .cmt-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .cmt-login-btn{border:0;background:#6366F1;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
 /* ==================== EXCURSIONS (photos participants) ==================== */
-.exc-block{max-width:920px}
+.exc-block{max-width:100%}
 .exc-grp{margin-bottom:22px}
 .exc-grp-title{font-weight:700;font-size:15px;color:var(--text,#111);margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .exc-grp-count{font-size:11px;font-weight:600;color:var(--text3,#9CA3AF)}
@@ -899,7 +899,7 @@ img{display:block}a{text-decoration:none}
 .exc-exp .exc-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
 .exc-exp .exc-login-btn{background:var(--exp-accent);border-radius:0}
 /* ---- Contacts réservés (verrouillés) ---- */
-.ct-lock{max-width:720px;background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:16px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;color:var(--text2,#475569)}
+.ct-lock{max-width:100%;background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:16px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;color:var(--text2,#475569)}
 .ct-lock-btn{border:0;background:#0F2B3C;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:9px;cursor:pointer}
 .ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
 .ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
@@ -2967,7 +2967,7 @@ function render(data){
       const isCarousel=sec.display==='carousel';const visCount=sec.visibleCount||6;const accId='vid-acc-'+(_vidAccCounter++);
       o+=`<div class="vid-block fi"><div class="vid-hd"><span class="vid-icon">${ICO.play}</span><span class="vid-title">${sec.title||'Vidéos'}</span></div>`;
       if(isCarousel){
-        o+=`<div class="vid-carousel${sec.fullWidth?' vid-carousel-full':''}" id="vid-car-${accId}"><div class="vid-carousel-track">`;
+        o+=`<div class="vid-carousel${sec.fullWidth?' vid-carousel-full':''}" id="vid-car-${accId}" style="--vid-ch:${parseInt(sec.carHeight,10)||240}px"><div class="vid-carousel-track">`;
         allVids.forEach(v=>{const isShort=v.type==='short';o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">${mkVidEmbed(v)}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
         o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
       } else {
@@ -4069,7 +4069,7 @@ function renderExpedition(data){
       const all=[...sv,...orph.filter(v=>!sv.find(s=>s.id===v.id))].sort((a,b)=>(a.order||0)-(b.order||0)); if(!all.length) return;
       if(sec.display==='carousel'){
         const cid='exp-vid-car-'+(_vc++);
-        o+=`<div class="exp-vid-carousel${sec.fullWidth?' exp-vid-carousel-full':''}" id="${cid}"><div class="exp-vid-carousel-track">`;
+        o+=`<div class="exp-vid-carousel${sec.fullWidth?' exp-vid-carousel-full':''}" id="${cid}" style="--vid-ch:${parseInt(sec.carHeight,10)||240}px"><div class="exp-vid-carousel-track">`;
         all.forEach(v=>{o+=`<div class="exp-vid-carousel-item ${v.type==='short'?'is-short':'is-classic'}">${expVidEmbed(v)}</div>`;});
         o+=`</div><button class="exp-vid-nav exp-vid-nav-l" onclick="scrollExpVidCar('${cid}',-1)">‹</button><button class="exp-vid-nav exp-vid-nav-r" onclick="scrollExpVidCar('${cid}',1)">›</button></div>`;
       } else {
@@ -7563,11 +7563,14 @@ window._tmgResizeSettle=function(){
     if(!needLogin()){ if(pill){pill.remove();pill=null;} return; }
     ensurePill();
     if(eUser){
+      pill.style.background='#0f172a'; pill.style.padding='7px 9px'; pill.style.boxShadow='0 6px 24px rgba(0,0,0,.28)';
       var nm = window._myAccountName || (eUser.email||'').split('@')[0] || 'Connecté';
       pill.innerHTML='<span style="font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">👤 '+esc(nm)+'</span>'
         +'<span data-fe="out">'+b('Se déconnecter')+'</span>';
       pill.querySelector('[data-fe="out"]').onclick=function(){ if(eAuth) eAuth.signOut(); toast('Déconnecté'); };
     } else {
+      // Déconnecté : pas d'entourage sombre, juste le bouton.
+      pill.style.background='transparent'; pill.style.padding='0'; pill.style.boxShadow='none';
       pill.innerHTML='<span data-fe="in">'+b('🔐 Se connecter','#2563eb')+'</span>';
       pill.querySelector('[data-fe="in"]').onclick=function(){ initAuth(); openLogin(); };
     }
@@ -8012,7 +8015,7 @@ window._tmgResizeSettle=function(){
     var orph=data.filter(function(p){return !known[p.excursion];});
     if(orph.length){ html+='<div class="exc-grp"><div class="exc-grp-title">Autres</div>'+carousel(orph)+'</div>'; }
     if(u){ html+='<div class="exc-add"><button class="exc-add-btn">＋ Ajouter mes photos</button></div>'; }
-    else { html+='<div class="exc-login"><span>Connectez-vous pour ajouter vos photos.</span><button class="exc-login-btn">Se connecter</button></div>'; }
+    else { html+='<div class="exc-login"><span>🔒 Connectez-vous pour ajouter vos photos.</span><button class="exc-login-btn">Se connecter</button></div>'; }
     body.innerHTML=html;
     var addBtn=body.querySelector('.exc-add-btn'); if(addBtn) addBtn.onclick=function(){ openAdd(bid); };
     var lg=body.querySelector('.exc-login-btn'); if(lg) lg.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
