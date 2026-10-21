@@ -8772,7 +8772,7 @@ async function saveSurvey(){
 function _svLoadResponses(){
   var box=document.getElementById('sv-responses'); if(!box) return;
   box.innerHTML='<div style="font-size:12px;color:var(--text3)">Chargement…</div>';
-  subCol('surveyResponses').get().then(function(snap){
+  db.collection('surveyResponses').where('eventId','==',currentEventId).get().then(function(snap){
     _svResponses=[]; snap.forEach(function(d){ var o=d.data()||{}; o.id=d.id; _svResponses.push(o); });
     _svResponses.sort(function(a,b){ return _svTs(b.createdAt)-_svTs(a.createdAt); });
     _svRenderResponses();
@@ -11094,9 +11094,19 @@ function _ctPersonRow(p, i){
 }
 function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  const ct=_normalizeContact(ev.contact);
+  el.innerHTML='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div style="padding:18px;color:var(--text3);font-size:13px">Chargement…</div>';
+  var seed=function(){ var s=ev.contact?JSON.parse(JSON.stringify(ev.contact)):{}; s.public=false; return s; };
+  db.collection('contactsPrivate').doc(currentEventId).get()
+    .then(function(snap){ _renderContactUI(el, snap.exists?(snap.data()||seed()):seed()); })
+    .catch(function(){ _renderContactUI(el, seed()); });
+}
+function _renderContactUI(el, raw){
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  const isPublic = raw && raw.public===true;
+  const ct=_normalizeContact(raw);
   let peopleHtml=ct.people.length?ct.people.map((p,i)=>_ctPersonRow(p,i)).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
+  <div class="admin-card" style="padding:12px 16px"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="ct-public" ${isPublic?'checked':''} style="margin-top:2px"><span style="font-size:13px"><strong>Rendre les contacts publics</strong><br><span style="font-size:11px;color:var(--text3)">Par défaut, les contacts (données sensibles) ne sont visibles que par les personnes <strong>connectées</strong> sur le dashboard. Cochez pour les afficher à tous les visiteurs.</span></span></label></div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">📅 Lien de prise de RDV global (optionnel)</label><input class="form-input" id="ct-booking-global" value="${(ct.bookingUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/votre-equipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Bouton « Prendre rendez-vous » affiché une fois pour tout le bloc, en plus des liens propres à chaque contact.</div></div>
@@ -11250,9 +11260,15 @@ async function saveContact(){
   contact.name=first.name||''; contact.role=first.role||''; contact.photo_url=first.photo_url||'';
   contact.message=first.message||''; contact.email=first.email||''; contact.phone=first.phone||'';
   contact.website=first.website||''; contact.website_label=first.website_label||''; contact.booking_url=first.booking_url||'';
-  await evRef().update({contact});
-  if(ev) ev.contact=contact;
-  toast('Contact enregistré');
+  // Confidentialité : les contacts vivent dans une collection PROTÉGÉE (contactsPrivate),
+  // lisible seulement par les connectés — sauf si marqués publics.
+  contact.public = !!(document.getElementById('ct-public')||{}).checked;
+  try{
+    await db.collection('contactsPrivate').doc(currentEventId).set(contact);
+    // On retire les contacts du document d'événement (public) pour ne pas les exposer.
+    if(ev && ev.contact){ await evRef().update({contact: firebase.firestore.FieldValue.delete()}); if(ev) delete ev.contact; }
+    toast(contact.public?'Contacts enregistrés (publics)':'Contacts enregistrés (réservés aux connectés)');
+  }catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 
 // ==================== DÉCOR ====================
