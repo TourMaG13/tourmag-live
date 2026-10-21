@@ -871,6 +871,27 @@ img{display:block}a{text-decoration:none}
 .exc-add-btn{border:0;cursor:pointer;background:#0EA5A4;color:#fff;font:600 13px system-ui;padding:9px 16px;border-radius:9px}
 .exc-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .exc-login-btn{border:0;background:#0EA5A4;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
+/* ---- Charte « carnet de route » (mode expédition) : commentaires & excursions ---- */
+.cmt-exp .cmt-item{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0}
+.cmt-exp .cmt-reply{background:transparent;border:none;border-left:2px solid var(--exp-line)}
+.cmt-exp .cmt-author{font-family:'Libre Caslon Text',serif;color:var(--exp-ink);font-weight:700}
+.cmt-exp .cmt-time{color:var(--exp-grey)}
+.cmt-exp .cmt-text{color:var(--exp-ink)}
+.cmt-exp .cmt-actions button{color:var(--exp-grey)}
+.cmt-exp .cmt-like.on{color:var(--exp-accent)}
+.cmt-exp .cmt-form{background:var(--exp-stone);border:1px solid var(--exp-line);border-radius:0}
+.cmt-exp .cmt-ta,.cmt-exp .cmt-name{border-color:var(--exp-line);border-radius:0;background:var(--exp-paper)}
+.cmt-exp .cmt-send-btn{background:var(--exp-accent);border-radius:0}
+.cmt-exp .cmt-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
+.cmt-exp .cmt-login-btn{background:var(--exp-accent);border-radius:0}
+.exc-exp .exc-grp-title{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:21px;color:var(--exp-ink)}
+.exc-exp .exc-grp-count{color:var(--exp-grey)}
+.exc-exp .exc-img{border-radius:0;border:1px solid var(--exp-line)}
+.exc-exp .exc-author{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
+.exc-exp .exc-cap{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-grey)}
+.exc-exp .exc-add-btn{background:var(--exp-accent);border-radius:0}
+.exc-exp .exc-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
+.exc-exp .exc-login-btn{background:var(--exp-accent);border-radius:0}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -4293,8 +4314,8 @@ function renderExpedition(data){
     var mx=parseInt(opts.maxPer,10)||2;
     var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
-    return '<div id="section-exc-'+bid+'"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(14,165,164,.08);color:#0EA5A4">'+_ico+'</div><h2>'+title+'</h2><div class="sec-title-line"></div><p>'+sub+'</p></div>'
-      +'<div class="exc-block fi" data-block="'+bid+'" data-max="'+mx+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
+    return '<div id="section-exc-'+bid+'"><div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div><p class="exp-section-sub">'+sub+'</p>'
+      +'<div class="exc-block fi exc-exp" data-block="'+bid+'" data-max="'+mx+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
   };
   _b.comments = function(opts){
     if(mod.comments===false) return '';
@@ -4305,8 +4326,8 @@ function renderExpedition(data){
     var title=opts.sectionTitle||'Commentaires';
     var sub=opts.sectionSub||'Échangez et réagissez';
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-    return '<div id="section-comments-'+tid+'"><div class="sec-title sec-title-comments fi"><div class="sec-title-icon" style="background:rgba(99,102,241,.08);color:#6366F1">'+_ico+'</div><h2>'+title+'</h2><div class="sec-title-line"></div><p>'+sub+'</p></div>'
-      +'<div class="cmt-block fi" data-thread="'+tid+'" data-mode="'+mode+'"><div class="cmt-list"><div class="cmt-empty">Chargement…</div></div><div class="cmt-compose"></div></div></div>';
+    return '<div id="section-comments-'+tid+'"><div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div><p class="exp-section-sub">'+sub+'</p>'
+      +'<div class="cmt-block fi cmt-exp" data-thread="'+tid+'" data-mode="'+mode+'"><div class="cmt-list"><div class="cmt-empty">Chargement…</div></div><div class="cmt-compose"></div></div></div>';
   };
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
@@ -7845,8 +7866,8 @@ window._tmgResizeSettle=function(){
       else { var ne=m.box.querySelector('#sv-name'), ee=m.box.querySelector('#sv-email'); name=ne?(ne.value||'').trim():''; email=ee?(ee.value||'').trim():''; }
       var wdb=pubDb(); if(!wdb){ err.textContent='Service momentanément indisponible, réessayez.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
-      wdb.collection('events').doc(EVENT_ID).collection('surveyResponses').add({
-        answers:ans, name:name, email:email, account:account, deviceId:device(),
+      wdb.collection('surveyResponses').add({
+        eventId:EVENT_ID, answers:ans, name:name, email:email, account:account, deviceId:device(),
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
       }).then(function(){ markDone(); m.close(); toast('Merci pour votre avis !'); })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
