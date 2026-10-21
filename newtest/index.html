@@ -892,6 +892,11 @@ img{display:block}a{text-decoration:none}
 .exc-exp .exc-add-btn{background:var(--exp-accent);border-radius:0}
 .exc-exp .exc-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
 .exc-exp .exc-login-btn{background:var(--exp-accent);border-radius:0}
+/* ---- Contacts réservés (verrouillés) ---- */
+.ct-lock{max-width:720px;background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:16px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;color:var(--text2,#475569)}
+.ct-lock-btn{border:0;background:#0F2B3C;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:9px;cursor:pointer}
+.ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
+.ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -3103,8 +3108,9 @@ function render(data){
 
   // ===== CONTACT (mode classique) =====
   function mkContact(){
-    const ctRaw = event.contact;
-    if(mod.contact===false || !ctRaw) return '';
+    const ctRaw = window._contactData;
+    if(mod.contact===false) return '';
+    if(!ctRaw){ return window._contactLocked ? (window._contactLockHtml?window._contactLockHtml(false):'') : ''; }
     let people = Array.isArray(ctRaw.people) ? ctRaw.people : null;
     if(!people){
       const hasSolo = ctRaw.name||ctRaw.role||ctRaw.photo_url||ctRaw.message||ctRaw.email||ctRaw.phone||ctRaw.website;
@@ -4201,8 +4207,9 @@ function renderExpedition(data){
   _b.product = function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); };
   _b.countrymap = function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); };
   _b.contact = function(){
-    const ctRaw = event.contact;
-    if(mod.contact===false || !ctRaw) return '';
+    const ctRaw = window._contactData;
+    if(mod.contact===false) return '';
+    if(!ctRaw){ return window._contactLocked ? (window._contactLockHtml?window._contactLockHtml(true):'') : ''; }
     // Normalisation : nouveau format (people[]) ou ancien (contact à plat)
     let people = Array.isArray(ctRaw.people) ? ctRaw.people : null;
     if(!people){
@@ -7157,6 +7164,7 @@ async function init(){
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
   function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); if(typeof window._excursionsRefresh==='function') setTimeout(window._excursionsRefresh,0); }
+  window._rtRerender = rtRender;
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
   // Compte, par collection, le nombre de déclenchements et de documents lus.
@@ -7999,6 +8007,45 @@ window._tmgResizeSettle=function(){
     });
   };
   setTimeout(function(){ if(window._excursionsRefresh) window._excursionsRefresh(); }, 1500);
+})();
+</script>
+<script>
+/* ============================================================
+   CONTACTS — données sensibles stockées dans une collection protégée
+   (contactsPrivate/{eventId}). Lues uniquement si l'événement est marqué
+   « public » OU si la personne est connectée (compte, non anonyme).
+   Sinon : cadenas « connectez-vous ». Mise à jour en direct.
+   ============================================================ */
+(function(){
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.get('preview')==='1') return;
+  var EVENT_ID=_qs.get('event')||'';
+  if(!EVENT_ID) return;
+  window._contactLocked=false;
+  function pubDb(){ return window._pubDb||null; }
+  function ed(){ return window._tmgEditor||null; }
+  function edUser(){ var e=ed(); return (e&&e.user)?e.user():null; }
+  window._contactLockHtml=function(exp){
+    var head = exp
+      ? '<div class="exp-section-head fi"><h2>Contact</h2><div class="rule"></div></div>'
+      : '<div class="sec-title fi"><h2>Contact</h2><div class="sec-title-line"></div></div>';
+    return '<div id="section-contact">'+head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 Contacts réservés — connectez-vous pour les afficher.</span><button class="ct-lock-btn" onclick="window._tmgEditor&&window._tmgEditor.openLogin&&window._tmgEditor.openLogin()">Se connecter</button></div></div>';
+  };
+  var _unsub=null;
+  function load(){
+    var connected=!!edUser();
+    var db = connected ? (ed().db&&ed().db()) : pubDb();
+    if(!db){ setTimeout(load,600); return; }
+    if(_unsub){ try{_unsub();}catch(_){} _unsub=null; }
+    _unsub = db.collection('contactsPrivate').doc(EVENT_ID).onSnapshot(
+      function(snap){ window._contactData=(snap&&snap.exists)?(snap.data()||null):null; window._contactLocked=false; if(window._rtRerender) window._rtRerender(); },
+      function(){ window._contactData=null; window._contactLocked=!connected; if(window._rtRerender) window._rtRerender(); }
+    );
+  }
+  setTimeout(function(){
+    var e=ed(); if(e){ if(e.ensure) e.ensure(); if(e.onAuth) e.onAuth(function(){ load(); }); }
+    load();
+  }, 1000);
 })();
 </script>
 </body>
