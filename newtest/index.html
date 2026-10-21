@@ -780,8 +780,10 @@ img{display:block}a{text-decoration:none}
 .vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
 .vid-carousel-item.vid-classic{width:320px}.vid-carousel-item.vid-short{width:200px}
 @media(max-width:560px){.vid-carousel-item.vid-classic{width:260px}.vid-carousel-item.vid-short{width:160px}}
-.vid-nav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;z-index:2}
-.vid-nav:hover{background:rgba(0,0,0,.75)}.vid-nav-l{left:6px}.vid-nav-r{right:6px}
+.vid-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:#0F2B3C;color:#fff;border:2px solid #fff;font-size:24px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,background .15s;z-index:4;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.vid-nav:hover{background:#000;transform:translateY(-50%) scale(1.08)}.vid-nav-l{left:8px}.vid-nav-r{right:8px}
+/* Carrousels qui tiennent sans défiler : on centre et on masque les flèches (géré en JS). */
+.gal-carousel.car-fit .gal-carousel-track,.vid-carousel.car-fit .vid-carousel-track,.exp-vid-carousel.car-fit .exp-vid-carousel-track{justify-content:center}
 .vid-popup-link{font-family:'IBM Plex Mono';font-size:9px;color:var(--text3);text-align:center;padding:4px 0;cursor:pointer;transition:color .15s;user-select:none}
 .vid-popup-link:hover{color:var(--acc)}
 .vid-ig-wrap{border-radius:10px;overflow:hidden;background:#000;min-height:200px;display:flex;align-items:center;justify-content:center}
@@ -1857,7 +1859,21 @@ window._galSizeCarousels = function(){
     car.style.setProperty('--gal-ch', h+'px');
   });
 };
-(function(){ var _t; window.addEventListener('resize',function(){ clearTimeout(_t); _t=setTimeout(function(){ if(window._galSizeCarousels) window._galSizeCarousels(); },150); }); })();
+// Masque les flèches et centre le contenu quand le carrousel n'a pas besoin de défiler
+// (ex. une seule photo). Réévalué au rendu, au resize et au chargement des images.
+window._galCarArrows = function(){
+  var sets=[['.gal-carousel','.gal-carousel-track'],['.vid-carousel','.vid-carousel-track'],['.exp-vid-carousel','.exp-vid-carousel-track']];
+  sets.forEach(function(pair){
+    document.querySelectorAll(pair[0]).forEach(function(car){
+      var track=car.querySelector(pair[1]); if(!track) return;
+      var over=(track.scrollWidth - track.clientWidth) > 4;
+      car.querySelectorAll('.vid-nav').forEach(function(a){ a.style.display = over?'flex':'none'; });
+      car.classList.toggle('car-fit', !over);
+      track.querySelectorAll('img').forEach(function(im){ if(!im._carHooked){ im._carHooked=true; im.addEventListener('load', function(){ if(window._galCarArrows) window._galCarArrows(); }); } });
+    });
+  });
+};
+(function(){ var _t; window.addEventListener('resize',function(){ clearTimeout(_t); _t=setTimeout(function(){ if(window._galSizeCarousels) window._galSizeCarousels(); if(window._galCarArrows) window._galCarArrows(); },150); }); })();
 
 // ============================================================
 // RENDER ENGINE
@@ -7163,7 +7179,7 @@ async function init(){
 
   var rtState={event:ev,essential:ess,live:li,rubriques:ru,citations:ci,articles:ar,programme:pr,timeline:tl,videos:vi,journalists:jr,interviews:iw,etapes:et,questions:qu};
   window._rtState = rtState;
-  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); if(typeof window._excursionsRefresh==='function') setTimeout(window._excursionsRefresh,0); }
+  function rtRender(){ rtState.journalists=resolveJournalists(rtState.event,_allGlobalJournalists); render(rtState); if(typeof _refreshLikeButtons==='function') setTimeout(_refreshLikeButtons,0); if(typeof _refreshQuizResults==='function') setTimeout(_refreshQuizResults,0); if(typeof window._tmgResize==='function') window._tmgResize(); if(typeof window._frontEditRefresh==='function') setTimeout(window._frontEditRefresh,0); if(typeof window._commentsRefresh==='function') setTimeout(window._commentsRefresh,0); if(typeof window._surveyRefresh==='function') setTimeout(window._surveyRefresh,0); if(typeof window._galSizeCarousels==='function') setTimeout(window._galSizeCarousels,30); if(typeof window._galCarArrows==='function'){ setTimeout(window._galCarArrows,80); setTimeout(window._galCarArrows,500); } if(typeof window._excursionsRefresh==='function') setTimeout(window._excursionsRefresh,0); }
   window._rtRerender = rtRender;
 
   // ── DIAGNOSTIC LECTURES (temporaire) ─────────────────────────────
