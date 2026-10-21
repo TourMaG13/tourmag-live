@@ -778,8 +778,12 @@ img{display:block}a{text-decoration:none}
 .vid-carousel-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0}
 .vid-carousel-track::-webkit-scrollbar{display:none}
 .vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
-.vid-carousel-item.vid-classic{width:320px}.vid-carousel-item.vid-short{width:200px}
-@media(max-width:560px){.vid-carousel-item.vid-classic{width:260px}.vid-carousel-item.vid-short{width:160px}}
+.vid-carousel{--vid-ch:240px}
+.vid-carousel .vid-carousel-item.vid-classic{width:calc(var(--vid-ch)*1.7778)}
+.vid-carousel .vid-carousel-item.vid-short{width:calc(var(--vid-ch)*0.5625)}
+.vid-carousel .vid-frame,.vid-carousel .vid-frame-short{padding-top:0;height:var(--vid-ch)}
+.vid-carousel-full .vid-carousel-track{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:4px 28px;box-sizing:border-box}
+@media(max-width:768px){.vid-carousel{--vid-ch:190px}.vid-carousel-full .vid-carousel-track{padding:4px 12px}}
 .vid-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:#0F2B3C;color:#fff;border:2px solid #fff;font-size:24px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,background .15s;z-index:4;box-shadow:0 4px 16px rgba(0,0,0,.35)}
 .vid-nav:hover{background:#000;transform:translateY(-50%) scale(1.08)}.vid-nav-l{left:8px}.vid-nav-r{right:8px}
 /* Carrousels qui tiennent sans défiler : on centre et on masque les flèches (géré en JS). */
@@ -1255,12 +1259,16 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-vid-carousel-track{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0}
 .exp-vid-carousel-track::-webkit-scrollbar{display:none}
 .exp-vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
-.exp-vid-carousel-item.is-classic{width:340px}
-.exp-vid-carousel-item.is-short{width:220px}
-.exp-vid-nav{position:absolute;top:50%;transform:translateY(-50%);background:var(--exp-paper);border:1px solid var(--exp-line);width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;z-index:2;transition:border-color .2s}
-.exp-vid-nav:hover{border-color:var(--exp-ink)}
-.exp-vid-nav-l{left:-16px}
-.exp-vid-nav-r{right:-16px}
+.exp-vid-carousel{--vid-ch:240px}
+.exp-vid-carousel .exp-vid-carousel-item.is-classic{width:calc(var(--vid-ch)*1.7778)}
+.exp-vid-carousel .exp-vid-carousel-item.is-short{width:calc(var(--vid-ch)*0.5625)}
+.exp-vid-carousel .exp-vid-frame,.exp-vid-carousel .exp-vid-frame-short{padding-top:0;height:var(--vid-ch)}
+.exp-vid-carousel-full .exp-vid-carousel-track{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:4px 28px;box-sizing:border-box}
+@media(max-width:768px){.exp-vid-carousel{--vid-ch:190px}.exp-vid-carousel-full .exp-vid-carousel-track{padding:4px 12px}}
+.exp-vid-nav{position:absolute;top:50%;transform:translateY(-50%);background:var(--exp-ink);color:var(--exp-paper);border:2px solid var(--exp-paper);width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;line-height:1;cursor:pointer;z-index:4;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:transform .12s,background .15s}
+.exp-vid-nav:hover{background:var(--exp-accent);transform:translateY(-50%) scale(1.08)}
+.exp-vid-nav-l{left:8px}
+.exp-vid-nav-r{right:8px}
 .exp-vid-caption{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--exp-grey);margin-top:8px;letter-spacing:.04em}
 
 /* Verbatims section */
@@ -1867,7 +1875,7 @@ window._galCarArrows = function(){
     document.querySelectorAll(pair[0]).forEach(function(car){
       var track=car.querySelector(pair[1]); if(!track) return;
       var over=(track.scrollWidth - track.clientWidth) > 4;
-      car.querySelectorAll('.vid-nav').forEach(function(a){ a.style.display = over?'flex':'none'; });
+      car.querySelectorAll('.vid-nav, .exp-vid-nav').forEach(function(a){ a.style.display = over?'flex':'none'; });
       car.classList.toggle('car-fit', !over);
       track.querySelectorAll('img').forEach(function(im){ if(!im._carHooked){ im._carHooked=true; im.addEventListener('load', function(){ if(window._galCarArrows) window._galCarArrows(); }); } });
     });
@@ -2950,7 +2958,7 @@ function render(data){
       const isCarousel=sec.display==='carousel';const visCount=sec.visibleCount||6;const accId='vid-acc-'+(_vidAccCounter++);
       o+=`<div class="vid-block fi"><div class="vid-hd"><span class="vid-icon">${ICO.play}</span><span class="vid-title">${sec.title||'Vidéos'}</span></div>`;
       if(isCarousel){
-        o+=`<div class="vid-carousel" id="vid-car-${accId}"><div class="vid-carousel-track">`;
+        o+=`<div class="vid-carousel${sec.fullWidth?' vid-carousel-full':''}" id="vid-car-${accId}"><div class="vid-carousel-track">`;
         allVids.forEach(v=>{const isShort=v.type==='short';o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">${mkVidEmbed(v)}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
         o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
       } else {
@@ -4047,7 +4055,7 @@ function renderExpedition(data){
       const all=[...sv,...orph.filter(v=>!sv.find(s=>s.id===v.id))].sort((a,b)=>(a.order||0)-(b.order||0)); if(!all.length) return;
       if(sec.display==='carousel'){
         const cid='exp-vid-car-'+(_vc++);
-        o+=`<div class="exp-vid-carousel" id="${cid}"><div class="exp-vid-carousel-track">`;
+        o+=`<div class="exp-vid-carousel${sec.fullWidth?' exp-vid-carousel-full':''}" id="${cid}"><div class="exp-vid-carousel-track">`;
         all.forEach(v=>{o+=`<div class="exp-vid-carousel-item ${v.type==='short'?'is-short':'is-classic'}">${expVidEmbed(v)}</div>`;});
         o+=`</div><button class="exp-vid-nav exp-vid-nav-l" onclick="scrollExpVidCar('${cid}',-1)">‹</button><button class="exp-vid-nav exp-vid-nav-r" onclick="scrollExpVidCar('${cid}',1)">›</button></div>`;
       } else {
@@ -7633,6 +7641,22 @@ window._tmgResizeSettle=function(){
       +'<button id="fe-vpub" style="'+_pbtn+'">Publier la vidéo</button>');
     var pub=m.box.querySelector('#fe-vpub'),verr=m.box.querySelector('#fe-verr');
     function fmt(){ var r=m.box.querySelector('input[name="fe-fmt"]:checked'); return (r&&r.value==='short')?'short':'video'; }
+    function setFmt(v){ var r=m.box.querySelector('input[name="fe-fmt"][value="'+(v==='short'?'short':'video')+'"]'); if(r) r.checked=true; }
+    // Détection auto de l'orientation à l'import d'un fichier (lecture des dimensions réelles).
+    var vf=m.box.querySelector('#fe-vfile');
+    if(vf) vf.onchange=function(){
+      var file=vf.files[0]; if(!file) return;
+      try{
+        var tmp=document.createElement('video'); tmp.preload='metadata';
+        var u=URL.createObjectURL(file);
+        tmp.onloadedmetadata=function(){ if(tmp.videoWidth&&tmp.videoHeight){ setFmt(tmp.videoHeight>tmp.videoWidth?'short':'video'); } URL.revokeObjectURL(u); };
+        tmp.onerror=function(){ URL.revokeObjectURL(u); };
+        tmp.src=u;
+      }catch(_){}
+    };
+    // Détection auto depuis un lien YouTube (Shorts = vertical).
+    var vu=m.box.querySelector('#fe-vurl');
+    if(vu) vu.oninput=function(){ var s=vu.value||''; if(/youtube\.com\/shorts\//i.test(s)) setFmt('short'); else if(/youtu/i.test(s)) setFmt('video'); };
     pub.onclick=function(){
       var urlv=(m.box.querySelector('#fe-vurl').value||'').trim();
       var f=m.box.querySelector('#fe-vfile').files[0];
