@@ -3256,10 +3256,11 @@ function render(data){
     var sub=opts.sectionSub||'Partagez vos photos';
     var exc=Array.isArray(opts.excursions)?opts.excursions:[];
     var mx=parseInt(opts.maxPer,10)||2;
+    var ph=parseInt(opts.photoHeight,10)||240;
     var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
     return `<div id="section-exc-${bid}"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(14,165,164,.08);color:#0EA5A4">${_ico}</div><h2>${title}</h2><div class="sec-title-line"></div><p>${sub}</p></div>`
-      +`<div class="exc-block fi" data-block="${bid}" data-max="${mx}" data-exc='${excAttr}'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>`;
+      +`<div class="exc-block fi" data-block="${bid}" data-max="${mx}" data-h="${ph}" data-exc='${excAttr}'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>`;
   }
 
   // ===== BRAND NEWS =====
@@ -4343,10 +4344,11 @@ function renderExpedition(data){
     var sub=opts.sectionSub||'Partagez vos photos';
     var exc=Array.isArray(opts.excursions)?opts.excursions:[];
     var mx=parseInt(opts.maxPer,10)||2;
+    var ph=parseInt(opts.photoHeight,10)||240;
     var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
     return '<div id="section-exc-'+bid+'"><div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div><p class="exp-section-sub">'+sub+'</p>'
-      +'<div class="exc-block fi exc-exp" data-block="'+bid+'" data-max="'+mx+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
+      +'<div class="exc-block fi exc-exp" data-block="'+bid+'" data-max="'+mx+'" data-h="'+ph+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
   };
   _b.comments = function(opts){
     if(mod.comments===false) return '';
@@ -6022,7 +6024,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
-      if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -7967,25 +7969,34 @@ window._tmgResizeSettle=function(){
     var block=blockEl(bid); if(!block) return;
     var body=block.querySelector('.exc-body'); if(!body) return;
     var exc=parseExc(block);
+    var H=parseInt(block.getAttribute('data-h'),10)||240;
     var data=(reg[bid]&&reg[bid].data)||[];
     var u=edUser();
+    function tile(p){
+      var cap='<strong>'+esc(p.author||'Participant')+'</strong>'+(p.caption?' · '+esc(p.caption):'');
+      return '<div class="gal-item gal-ratio"><div class="gal-media" style="height:var(--gal-ch,'+H+'px)"><img src="'+esc(p.url)+'" alt="" onerror="var c=this.closest(\'.gal-item\');if(c)c.style.display=\'none\'"></div><div class="gal-cap">'+cap+'</div></div>';
+    }
+    function carousel(list){
+      var cid='exc-car-'+Math.random().toString(36).slice(2,7);
+      return '<div class="gal-carousel" id="'+cid+'" style="--gal-ch:'+H+'px"><div class="gal-carousel-track">'+list.map(tile).join('')+'</div><button class="vid-nav vid-nav-l" onclick="scrollGalCar(\''+cid+'\',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollGalCar(\''+cid+'\',1)">›</button></div>';
+    }
     var html='';
     if(!exc.length){ html+='<div class="exc-empty">Aucune excursion définie pour ce jour.</div>'; }
     exc.forEach(function(e){
       var ph=data.filter(function(p){return p.excursion===e.id;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
       html+='<div class="exc-grp"><div class="exc-grp-title">'+esc(e.name||'Excursion')+' <span class="exc-grp-count">'+ph.length+' photo'+(ph.length>1?'s':'')+'</span></div>';
-      if(!ph.length){ html+='<div class="exc-empty">Aucune photo pour l\'instant.</div>'; }
-      else { html+='<div class="exc-grid">'+ph.map(function(p){ return '<div class="exc-ph"><div class="exc-img"><img src="'+esc(p.url)+'" alt="" onerror="var c=this.closest(\'.exc-ph\');if(c)c.style.display=\'none\'"></div><div class="exc-author">'+esc(p.author||'Participant')+'</div>'+(p.caption?'<div class="exc-cap">'+esc(p.caption)+'</div>':'')+'</div>'; }).join('')+'</div>'; }
+      html += ph.length ? carousel(ph) : '<div class="exc-empty">Aucune photo pour l\'instant.</div>';
       html+='</div>';
     });
     var known={}; exc.forEach(function(e){known[e.id]=1;});
     var orph=data.filter(function(p){return !known[p.excursion];});
-    if(orph.length){ html+='<div class="exc-grp"><div class="exc-grp-title">Autres</div><div class="exc-grid">'+orph.map(function(p){ return '<div class="exc-ph"><div class="exc-img"><img src="'+esc(p.url)+'" alt=""></div><div class="exc-author">'+esc(p.author||'Participant')+'</div></div>'; }).join('')+'</div></div>'; }
+    if(orph.length){ html+='<div class="exc-grp"><div class="exc-grp-title">Autres</div>'+carousel(orph)+'</div>'; }
     if(u){ html+='<div class="exc-add"><button class="exc-add-btn">＋ Ajouter mes photos</button></div>'; }
     else { html+='<div class="exc-login"><span>Connectez-vous pour ajouter vos photos.</span><button class="exc-login-btn">Se connecter</button></div>'; }
     body.innerHTML=html;
     var addBtn=body.querySelector('.exc-add-btn'); if(addBtn) addBtn.onclick=function(){ openAdd(bid); };
     var lg=body.querySelector('.exc-login-btn'); if(lg) lg.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
+    if(window._galCarArrows) setTimeout(window._galCarArrows,30);
   }
 
   var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
@@ -8023,7 +8034,7 @@ window._tmgResizeSettle=function(){
       var cap=(m.box.querySelector('#exc-cap').value||'').trim();
       var wdb=ed()&&ed().db&&ed().db(); if(!wdb){ err.textContent='Service indisponible.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
-      var author=((u.email||'').split('@')[0])||'Participant';
+      var author=(window._myAccountName)||((u.email||'').split('@')[0])||'Participant';
       var chain=Promise.resolve(), ok=0;
       files.forEach(function(f){
         chain=chain.then(function(){
@@ -8038,12 +8049,22 @@ window._tmgResizeSettle=function(){
     };
   }
 
+  // Récupère le vrai nom du compte connecté (champ "nom" de l'onglet Accès → admins/{uid})
+  function fetchMyName(){
+    var u=edUser(); if(!u || window._myAccountName!=null || fetchMyName._busy) return;
+    var db=ed().db&&ed().db(); if(!db) return;
+    fetchMyName._busy=true;
+    db.collection('admins').doc(u.uid).get()
+      .then(function(s){ var n=(s&&s.exists&&s.data()&&s.data().name)?String(s.data().name).trim():''; window._myAccountName=n||u.displayName||((u.email||'').split('@')[0])||'Participant'; fetchMyName._busy=false; })
+      .catch(function(){ window._myAccountName=u.displayName||((u.email||'').split('@')[0])||'Participant'; fetchMyName._busy=false; });
+  }
   window._excursionsRefresh=function(){
+    fetchMyName();
     document.querySelectorAll('.exc-block').forEach(function(block){
       var bid=block.getAttribute('data-block'); if(!bid) return;
       if(!reg[bid]){ reg[bid]={data:[],unsub:null,authHooked:false}; attach(bid); }
       renderBlock(bid);
-      if(!reg[bid].authHooked && ed()){ reg[bid].authHooked=true; if(ed().ensure) ed().ensure(); if(ed().onAuth) ed().onAuth(function(){ renderBlock(bid); }); }
+      if(!reg[bid].authHooked && ed()){ reg[bid].authHooked=true; if(ed().ensure) ed().ensure(); if(ed().onAuth) ed().onAuth(function(){ window._myAccountName=null; fetchMyName(); renderBlock(bid); }); }
     });
   };
   setTimeout(function(){ if(window._excursionsRefresh) window._excursionsRefresh(); }, 1500);
