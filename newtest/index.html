@@ -904,6 +904,23 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .ct-lock-btn{border:0;background:#0F2B3C;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:9px;cursor:pointer}
 .ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
 .ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
+/* ---- Enquête de satisfaction (questionnaire inline) ---- */
+.sat-block{max-width:760px;margin-top:4px}
+.sat-q{margin-top:16px}
+.sat-ql{display:block;font:600 14px system-ui;color:var(--text,#0f172a);margin-bottom:6px}
+.sat-l{display:block;font:600 12px system-ui;color:var(--text2,#475569);margin-top:12px}
+.sat-f{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#cbd5e1);border-radius:8px;font:400 14px system-ui;margin-top:4px}
+.sat-send{margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:11px 24px;border-radius:9px}
+.sat-done{font-size:15px;color:var(--text,#0f172a);padding:12px 2px;line-height:1.5;white-space:pre-wrap}
+.sat-note{font-size:13px;color:var(--text3,#94a3b8);padding:8px 0}
+.sat-id{font-size:12px;color:var(--text2,#475569);margin-bottom:4px}
+.sat-block .sv-grid th{font-weight:600}
+.exp-satisfaction{max-width:1200px;margin:0 auto;padding:0 0 40px}
+.sat-exp{max-width:100%}
+.sat-exp .sat-ql{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
+.sat-exp .sat-f{border-radius:0;border-color:var(--exp-line)}
+.sat-exp .sat-send{background:var(--exp-accent);border-radius:0;font-family:'Libre Caslon Text',serif}
+.sat-exp .sat-done{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
 /* ---- Boutons d'action « en contexte » (ajouter photo / vidéo dans la section) ---- */
 .sec-add-ctx{margin-top:16px}
 .sec-add-btn{border:0;cursor:pointer;background:#2563eb;color:#fff;font:600 14px system-ui;padding:11px 20px;border-radius:10px;box-shadow:0 2px 10px rgba(37,99,235,.25)}
@@ -3324,7 +3341,18 @@ function render(data){
   // side  = sidebar droite
   // full  = pleine largeur dans le conteneur .dash (1200px)
   // max   = pleine largeur viewport (sort du .dash)
-  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,excursions:mkExcursions,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
+  function mkSatisfaction(opts){
+    opts=opts||{};
+    if(mod.satisfaction===false) return '';
+    var s=event.survey||{}; if(!s.enabled || !(s.questions||[]).length) return '';
+    var title=(opts.title!=null&&opts.title!=='')?opts.title:(s.title||'Enquête de satisfaction');
+    var sub=(opts.sectionSub!=null&&opts.sectionSub!=='')?opts.sectionSub:(s.intro||'');
+    var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
+    if(opts.connectedOnly && !connected){ return '<div id="section-sat">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',false):'')+'</div>'; }
+    var head='<div class="sec-title fi"><h2>'+title+'</h2><div class="sec-title-line"></div>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
+    return '<div id="section-sat">'+head+'<div class="sat-block"><div class="sat-host" data-exp="0"></div></div></div>';
+  }
+  const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,excursions:mkExcursions,satisfaction:mkSatisfaction,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
   const allBlockKeys = Object.keys(blockRenderers);
   const defaultOrder = ['hero','phaseTabs','kpis','essential','flash','live','quiz','citations','questions','articles','interviews','videos','gallery','programme','journalists','brandnews','product','countrymap','sponsors','contact'];
@@ -4388,6 +4416,18 @@ function renderExpedition(data){
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
     return '<div id="section-comments-'+tid+'"><div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div><p class="exp-section-sub">'+sub+'</p>'
       +'<div class="cmt-block fi cmt-exp" data-thread="'+tid+'" data-mode="'+mode+'"><div class="cmt-list"><div class="cmt-empty">Chargement…</div></div><div class="cmt-compose"></div></div></div>';
+  };
+
+  _b.satisfaction = function(opts){
+    opts=opts||{};
+    if(mod.satisfaction===false) return '';
+    var s=event.survey||{}; if(!s.enabled || !(s.questions||[]).length) return '';
+    var title=(opts.title!=null&&opts.title!=='')?opts.title:(s.title||'Enquête de satisfaction');
+    var sub=(opts.sectionSub!=null&&opts.sectionSub!=='')?opts.sectionSub:(s.intro||'');
+    var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
+    if(opts.connectedOnly && !connected){ return '<section class="exp-satisfaction">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',true):'')+'</section>'; }
+    var head='<div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div>'+(sub?'<p class="exp-section-sub">'+sub+'</p>':'');
+    return '<section class="exp-satisfaction">'+head+'<div class="sat-block sat-exp"><div class="sat-host" data-exp="1"></div></div></section>';
   };
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
@@ -6019,7 +6059,7 @@ function _bpRenderSection(sec, event, ctx){
   // --- Modules "riches"/"live" : on réutilise les renderers legacy ---
   const legacyDelegate = {
     hero:'hero', kpis:'kpis', live:'live', citations:'citations', quiz:'quiz',
-    faq:'questions', questions:'questions', comments:'comments', excursions:'excursions', interviews:'interviews', videos:'videos',
+    faq:'questions', questions:'questions', comments:'comments', excursions:'excursions', satisfaction:'satisfaction', interviews:'interviews', videos:'videos',
     articles:'articles', programme:'programme', journalists:'journalists',
     sponsors:'sponsors', brandnews:'brandnews', contact:'contact',
     product:'product', countrymap:'countrymap', gallery:'gallery',
@@ -6052,6 +6092,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
       if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
@@ -6832,7 +6873,9 @@ window._quizChangeVote = function(quizId, qId){
 function mkQuizBlock(opts){
   opts=opts||{};
   if(opts.event && opts.event.mod && opts.event.mod.quiz===false) return '';
-  if(opts.event && opts.event.quizConnectedOnly && !(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user())) return '';
+  if(opts.event && opts.event.quizConnectedOnly && !(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user())){
+    return window._lockBlockHtml ? window._lockBlockHtml(opts.event.quizTitle||'Quiz / Sondage', 'Connectez-vous pour participer au questionnaire.', !!opts.exp) : '';
+  }
   const quizzes=(opts.quizzes||window._quizzes||[]).filter(qz=>qz.active===true && (qz.questions||[]).length);
   const activePhase=opts.activePhase||'';
   const shown=quizzes.filter(qz=>!qz.phase || qz.phase===activePhase || !activePhase);
@@ -7989,14 +8032,45 @@ window._tmgResizeSettle=function(){
       wdb.collection('surveyResponses').add({
         eventId:EVENT_ID, answers:ans, name:name, email:email, account:account, deviceId:device(),
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ markDone(); m.close(); toast('Merci pour votre avis !'); })
+      }).then(function(){ markDone(); var th=(sv().thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; m.box.innerHTML='<div style="text-align:center;padding:14px 4px"><div style="font-size:40px;line-height:1;margin-bottom:10px">✓</div><div style="font-size:15px;color:#0f172a;white-space:pre-wrap">'+esc(th)+'</div><button id="sv-ok" style="margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:10px 26px;border-radius:9px">Fermer</button></div>'; var ok=m.box.querySelector('#sv-ok'); if(ok) ok.onclick=m.close; })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
     };
   }
 
+  window._surveyInline=function(container, exp){
+    if(!container) return;
+    var s=sv(), qs=s.questions||[];
+    function thanks(){ var th=(sv().thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; container.innerHTML='<div class="sat-done">✓ '+esc(th)+'</div>'; }
+    if(!s.enabled){ container.innerHTML='<div class="sat-note">Questionnaire non activé.</div>'; return; }
+    if(!qs.length){ container.innerHTML='<div class="sat-note">Aucune question configurée (onglet « Sondage »).</div>'; return; }
+    if(isDone()){ thanks(); return; }
+    var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
+    var idBlock = u ? '<div class="sat-id">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
+      : '<label class="sat-l">Votre nom</label><input class="sat-f" data-sat="name" placeholder="Prénom / nom"><label class="sat-l">Votre e-mail (facultatif)</label><input class="sat-f" data-sat="email" type="email">';
+    var qHtml=qs.map(function(q,i){ return '<div class="sat-q"><label class="sat-ql">'+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+    container.innerHTML=idBlock+qHtml+'<div class="sat-err" style="display:none;color:#b91c1c;font-size:12px;margin-top:10px"></div><button class="sat-send">Envoyer mes réponses</button>';
+    wireStars(container);
+    var send=container.querySelector('.sat-send'), err=container.querySelector('.sat-err');
+    send.onclick=function(){
+      var ans=collect(container, qs);
+      if(!Object.keys(ans).length){ err.textContent='Merci de répondre à au moins une question.'; err.style.display='block'; return; }
+      var name='',email='',account='';
+      if(u){ account=u.email||''; email=u.email||''; name=(window._myAccountName)||(u.email||'').split('@')[0]; }
+      else { var ne=container.querySelector('[data-sat="name"]'), ee=container.querySelector('[data-sat="email"]'); name=ne?(ne.value||'').trim():''; email=ee?(ee.value||'').trim():''; }
+      var wdb=pubDb(); if(!wdb){ err.textContent='Service indisponible, réessayez.'; err.style.display='block'; return; }
+      send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
+      wdb.collection('surveyResponses').add({ eventId:EVENT_ID, answers:ans, name:name, email:email, account:account, deviceId:device(), source:'inline', createdAt:firebase.firestore.FieldValue.serverTimestamp() })
+        .then(function(){ markDone(); thanks(); })
+        .catch(function(e){ send.disabled=false; send.textContent='Envoyer mes réponses'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
+    };
+  };
+  window._surveyInlineFill=function(){
+    document.querySelectorAll('.sat-host').forEach(function(host){ if(host.getAttribute('data-filled')==='1') return; host.setAttribute('data-filled','1'); window._surveyInline(host, host.getAttribute('data-exp')==='1'); });
+  };
   window._surveyRefresh=function(){
     var s=sv();
     ensureBtn();
+    if(window._surveyInlineFill) setTimeout(window._surveyInlineFill,0);
     if(s.enabled && s.autoOpen && !autoScheduled && !isDone() && !sessionSeen()){
       autoScheduled=true;
       setTimeout(function(){ if(!isDone() && !sessionSeen() && sv().enabled && sv().autoOpen){ markSeen(); openSurvey(); } }, Math.max(0,(s.autoDelay||0))*1000);
@@ -8156,6 +8230,11 @@ window._tmgResizeSettle=function(){
   function pubDb(){ return window._pubDb||null; }
   function ed(){ return window._tmgEditor||null; }
   function edUser(){ var e=ed(); return (e&&e.user)?e.user():null; }
+  window._lockBlockHtml=function(title,msg,exp){
+    function e(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    var head=exp?'<div class="exp-section-head fi"><h2>'+e(title)+'</h2><div class="rule"></div></div>':'<div class="sec-title fi"><h2>'+e(title)+'</h2><div class="sec-title-line"></div></div>';
+    return head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 '+e(msg||'Connectez-vous pour participer.')+'</span><button class="ct-lock-btn" onclick="window._tmgEditor&&window._tmgEditor.openLogin&&window._tmgEditor.openLogin()">Se connecter</button></div>';
+  };
   window._ctStyleVars=function(st){
     if(!st||typeof st!=='object') return '';
     var out='';
