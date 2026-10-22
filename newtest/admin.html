@@ -5341,6 +5341,12 @@ function _bpContentFieldsHtml(s){
         + (excs.length<6?'<button class="btn btn-ghost btn-sm" onclick="_bpExcAdd()">+ Ajouter une excursion</button>':'')
         + '<div class="bpe-fld-row" style="margin-top:12px"><div class="bpe-fld"><label>Photos max par personne / excursion</label><input type="number" min="1" max="10" value="'+(c.maxPerPerson!=null&&c.maxPerPerson!==''?c.maxPerPerson:2)+'" onchange="_bpSetCt(\'maxPerPerson\',this.value)" style="width:90px"></div>'
           + '<div class="bpe-fld"><label>Hauteur des photos (px)</label><input type="number" min="120" max="520" step="10" value="'+(c.photoHeight!=null&&c.photoHeight!==''?c.photoHeight:240)+'" onchange="_bpSetCt(\'photoHeight\',this.value)" style="width:90px"><div style="font-size:10px;color:var(--text3);margin-top:2px">Carrousel : hauteur commune, largeur selon le ratio.</div></div></div>'
+        + '<div class="bpe-cfg-sech" style="margin-top:12px">Nom des excursions — style</div>'
+        + '<div class="bpe-fld-row">'
+          + '<div class="bpe-fld"><label>Police</label><select onchange="_bpSetCt(\'nameFont\',this.value)">'+['','Josefin Sans','Playfair Display','Libre Caslon Text','Libre Caslon Display','IBM Plex Mono','Archivo','Inter','Georgia','Arial'].map(function(f){return '<option value="'+f+'"'+(((c.nameFont||'')===f)?' selected':'')+'>'+(f||'(par défaut)')+'</option>';}).join('')+'</select></div>'
+          + '<div class="bpe-fld"><label>Taille (px)</label><input type="number" min="10" max="48" value="'+(c.nameSize||'')+'" placeholder="auto" onchange="_bpSetCt(\'nameSize\',this.value)" style="width:80px"></div>'
+          + '<div class="bpe-fld"><label>Graisse</label><select onchange="_bpSetCt(\'nameWeight\',this.value)">'+[['','(défaut)'],['300','Fin'],['400','Normal'],['500','Moyen'],['600','Semi-gras'],['700','Gras'],['800','Extra-gras']].map(function(w){return '<option value="'+w[0]+'"'+(((c.nameWeight||'')===w[0])?' selected':'')+'>'+w[1]+'</option>';}).join('')+'</select></div>'
+        + '</div>'
         + '<div class="bpe-hint" style="padding:4px 0">Les participants <strong>connectés</strong> choisissent leur excursion et déposent leurs photos (limite ci-dessus). Affichage groupé par excursion, avec le nom de l\'auteur. Chaque bloc = sa propre liste (donc propre à la page/jour).</div>';
     }
     case 'comments': {
