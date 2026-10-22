@@ -4450,6 +4450,7 @@ function renderExpedition(data){
     if(!_bpId) return;
     const _bp=_bpPagesExp.find(p=>p.id===_bpId);
     if(!_bp) return;
+    window._frontPageId = _bpId; // page courante (expédition) — pour la contribution front
     const _tabsHtml = '<div class="exp-dash">' + _b.phaseTabs(_bp) + '</div>';
     const html = _renderBuilderPage(_bp, event, {
       blockRenderers: _b, getZone: getExpZone,
