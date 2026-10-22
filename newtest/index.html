@@ -3359,13 +3359,14 @@ function render(data){
   function mkSatisfaction(opts){
     opts=opts||{};
     if(mod.satisfaction===false) return '';
-    var s=event.survey||{}; if(!s.enabled || !(s.questions||[]).length) return '';
+    var s=(window._surveyResolve?window._surveyResolve(opts.surveyId):null)||event.survey||{};
+    if(!s || !(s.questions||[]).length) return '';
     var title=(opts.title!=null&&opts.title!=='')?opts.title:(s.title||'Enquête de satisfaction');
     var sub=(opts.sectionSub!=null&&opts.sectionSub!=='')?opts.sectionSub:(s.intro||'');
     var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
     if(opts.connectedOnly && !connected){ return '<div id="section-sat">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',false):'')+'</div>'; }
     var head='<div class="sec-title fi"><h2>'+title+'</h2><div class="sec-title-line"></div>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
-    return '<div id="section-sat">'+head+'<div class="sat-block"><div class="sat-host" data-exp="0"></div></div></div>';
+    return '<div id="section-sat">'+head+'<div class="sat-block"><div class="sat-host" data-exp="0" data-survey-id="'+(s.id||'')+'"></div></div></div>';
   }
   const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,excursions:mkExcursions,satisfaction:mkSatisfaction,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
@@ -4436,13 +4437,14 @@ function renderExpedition(data){
   _b.satisfaction = function(opts){
     opts=opts||{};
     if(mod.satisfaction===false) return '';
-    var s=event.survey||{}; if(!s.enabled || !(s.questions||[]).length) return '';
+    var s=(window._surveyResolve?window._surveyResolve(opts.surveyId):null)||event.survey||{};
+    if(!s || !(s.questions||[]).length) return '';
     var title=(opts.title!=null&&opts.title!=='')?opts.title:(s.title||'Enquête de satisfaction');
     var sub=(opts.sectionSub!=null&&opts.sectionSub!=='')?opts.sectionSub:(s.intro||'');
     var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
     if(opts.connectedOnly && !connected){ return '<section class="exp-satisfaction">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',true):'')+'</section>'; }
     var head='<div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div>'+(sub?'<p class="exp-section-sub">'+sub+'</p>':'');
-    return '<section class="exp-satisfaction">'+head+'<div class="sat-block sat-exp"><div class="sat-host" data-exp="1"></div></div></section>';
+    return '<section class="exp-satisfaction">'+head+'<div class="sat-block sat-exp"><div class="sat-host" data-exp="1" data-survey-id="'+(s.id||'')+'"></div></div></section>';
   };
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
@@ -6107,7 +6109,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
-      if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.surveyId = ct.surveyId||''; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
       if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
@@ -7958,16 +7960,19 @@ window._tmgResizeSettle=function(){
   var EVENT_ID=_qs.get('event')||'';
   if(!EVENT_ID) return;
   var btn=null, autoScheduled=false;
-  function sv(){ var e=(window._rtState&&window._rtState.event)||{}; return e.survey||{}; }
+  function allSurveys(){ var e=(window._rtState&&window._rtState.event)||{}; if(Array.isArray(e.surveys)&&e.surveys.length) return e.surveys; return e.survey?[Object.assign({id:'main',isPopup:true},e.survey)]:[]; }
+  function popupSurvey(){ var l=allSurveys(); return l.filter(function(s){return s.isPopup;})[0] || l.filter(function(s){return s.enabled;})[0] || l[0] || {}; }
+  function surveyById(id){ var l=allSurveys(); if(!id) return popupSurvey(); return l.filter(function(s){return s.id===id;})[0] || null; }
+  function sv(){ return popupSurvey(); }
   function pubDb(){ return window._pubDb||null; }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function device(){ try{ var k='tmg_device',v=localStorage.getItem(k); if(!v){ v='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); } return v; }catch(_){ return ''; } }
-  function doneKey(){ return 'tmg_survey_done_'+EVENT_ID; }
-  function isDone(){ try{ return localStorage.getItem(doneKey())==='1'; }catch(_){ return false; } }
-  function markDone(){ try{ localStorage.setItem(doneKey(),'1'); }catch(_){ } }
-  function seenKey(){ return 'tmg_survey_seen_'+EVENT_ID; }
-  function sessionSeen(){ try{ return sessionStorage.getItem(seenKey())==='1'; }catch(_){ return false; } }
-  function markSeen(){ try{ sessionStorage.setItem(seenKey(),'1'); }catch(_){ } }
+  function doneKey(sid){ return 'tmg_survey_done_'+EVENT_ID+'_'+(sid||'main'); }
+  function isDone(sid){ try{ return localStorage.getItem(doneKey(sid))==='1'; }catch(_){ return false; } }
+  function markDone(sid){ try{ localStorage.setItem(doneKey(sid),'1'); }catch(_){ } }
+  function seenKey(sid){ return 'tmg_survey_seen_'+EVENT_ID+'_'+(sid||'main'); }
+  function sessionSeen(sid){ try{ return sessionStorage.getItem(seenKey(sid))==='1'; }catch(_){ return false; } }
+  function markSeen(sid){ try{ sessionStorage.setItem(seenKey(sid),'1'); }catch(_){ } }
 
   var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
   var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
@@ -8045,20 +8050,22 @@ window._tmgResizeSettle=function(){
       var wdb=pubDb(); if(!wdb){ err.textContent='Service momentanément indisponible, réessayez.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
       wdb.collection('surveyResponses').add({
-        eventId:EVENT_ID, answers:ans, name:name, email:email, account:account, deviceId:device(),
+        eventId:EVENT_ID, surveyId:(s.id||'main'), surveyTitle:(s.title||''), source:'popup', answers:ans, name:name, email:email, account:account, deviceId:device(),
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ markDone(); var th=(sv().thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; m.box.innerHTML='<div style="text-align:center;padding:14px 4px"><div style="font-size:40px;line-height:1;margin-bottom:10px">✓</div><div style="font-size:15px;color:#0f172a;white-space:pre-wrap">'+esc(th)+'</div><button id="sv-ok" style="margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:10px 26px;border-radius:9px">Fermer</button></div>'; var ok=m.box.querySelector('#sv-ok'); if(ok) ok.onclick=m.close; })
+      }).then(function(){ markDone(s.id); var th=(s.thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; m.box.innerHTML='<div style="text-align:center;padding:14px 4px"><div style="font-size:40px;line-height:1;margin-bottom:10px">✓</div><div style="font-size:15px;color:#0f172a;white-space:pre-wrap">'+esc(th)+'</div><button id="sv-ok" style="margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:10px 26px;border-radius:9px">Fermer</button></div>'; var ok=m.box.querySelector('#sv-ok'); if(ok) ok.onclick=m.close; })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
     };
   }
 
-  window._surveyInline=function(container, exp){
+  window._surveyResolve=function(sid){ return sid?surveyById(sid):popupSurvey(); };
+  window._surveyList=function(){ return allSurveys(); };
+  window._surveyInline=function(container, exp, survey){
     if(!container) return;
-    var s=sv(), qs=s.questions||[];
-    function thanks(){ var th=(sv().thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; container.innerHTML='<div class="sat-done">✓ '+esc(th)+'</div>'; }
-    if(!s.enabled){ container.innerHTML='<div class="sat-note">Questionnaire non activé.</div>'; return; }
-    if(!qs.length){ container.innerHTML='<div class="sat-note">Aucune question configurée (onglet « Sondage »).</div>'; return; }
-    if(isDone()){ thanks(); return; }
+    var s=survey||sv(), qs=s.questions||[];
+    function thanks(){ var th=(s.thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; container.innerHTML='<div class="sat-done">✓ '+esc(th)+'</div>'; }
+    if(!s || s.enabled===false){ container.innerHTML='<div class="sat-note">Questionnaire non activé.</div>'; return; }
+    if(!qs.length){ container.innerHTML='<div class="sat-note">Aucune question configurée.</div>'; return; }
+    if(isDone(s.id)){ thanks(); return; }
     var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
     var idBlock = u ? '<div class="sat-id">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
       : '<label class="sat-l">Votre nom</label><input class="sat-f" data-sat="name" placeholder="Prénom / nom"><label class="sat-l">Votre e-mail (facultatif)</label><input class="sat-f" data-sat="email" type="email">';
@@ -8076,21 +8083,21 @@ window._tmgResizeSettle=function(){
       else { var ne=container.querySelector('[data-sat="name"]'), ee=container.querySelector('[data-sat="email"]'); name=ne?(ne.value||'').trim():''; email=ee?(ee.value||'').trim():''; }
       var wdb=pubDb(); if(!wdb){ err.textContent='Service indisponible, réessayez.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
-      wdb.collection('surveyResponses').add({ eventId:EVENT_ID, answers:ans, name:name, email:email, account:account, deviceId:device(), source:'inline', createdAt:firebase.firestore.FieldValue.serverTimestamp() })
-        .then(function(){ markDone(); thanks(); })
+      wdb.collection('surveyResponses').add({ eventId:EVENT_ID, surveyId:(s.id||'main'), surveyTitle:(s.title||''), answers:ans, name:name, email:email, account:account, deviceId:device(), source:'inline', createdAt:firebase.firestore.FieldValue.serverTimestamp() })
+        .then(function(){ markDone(s.id); thanks(); })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer mes réponses'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
     };
   };
   window._surveyInlineFill=function(){
-    document.querySelectorAll('.sat-host').forEach(function(host){ if(host.getAttribute('data-filled')==='1') return; host.setAttribute('data-filled','1'); window._surveyInline(host, host.getAttribute('data-exp')==='1'); });
+    document.querySelectorAll('.sat-host').forEach(function(host){ if(host.getAttribute('data-filled')==='1') return; host.setAttribute('data-filled','1'); var sid=host.getAttribute('data-survey-id')||''; var surv=sid?surveyById(sid):popupSurvey(); window._surveyInline(host, host.getAttribute('data-exp')==='1', surv); });
   };
   window._surveyRefresh=function(){
     var s=sv();
     ensureBtn();
     if(window._surveyInlineFill) setTimeout(window._surveyInlineFill,0);
-    if(s.enabled && s.autoOpen && !autoScheduled && !isDone() && !sessionSeen()){
+    if(s.enabled && s.autoOpen && !autoScheduled && !isDone(s.id) && !sessionSeen(s.id)){
       autoScheduled=true;
-      setTimeout(function(){ if(!isDone() && !sessionSeen() && sv().enabled && sv().autoOpen){ markSeen(); openSurvey(); } }, Math.max(0,(s.autoDelay||0))*1000);
+      setTimeout(function(){ var p=sv(); if(!isDone(p.id) && !sessionSeen(p.id) && p.enabled && p.autoOpen){ markSeen(p.id); openSurvey(); } }, Math.max(0,(s.autoDelay||0))*1000);
     }
   };
   setTimeout(function(){ if(window._surveyRefresh) window._surveyRefresh(); }, 1600);
