@@ -905,21 +905,36 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
 .ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
 /* ---- Enquête de satisfaction (questionnaire inline) ---- */
-.sat-block{max-width:760px;margin-top:4px}
-.sat-q{margin-top:16px}
-.sat-ql{display:block;font:600 14px system-ui;color:var(--text,#0f172a);margin-bottom:6px}
-.sat-l{display:block;font:600 12px system-ui;color:var(--text2,#475569);margin-top:12px}
-.sat-f{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#cbd5e1);border-radius:8px;font:400 14px system-ui;margin-top:4px}
-.sat-send{margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:11px 24px;border-radius:9px}
-.sat-done{font-size:15px;color:var(--text,#0f172a);padding:12px 2px;line-height:1.5;white-space:pre-wrap}
+.sat-block{max-width:860px;margin:4px auto 0}
+.sat-id-wrap:not(:empty){margin-bottom:14px}
+.sat-q{position:relative;overflow:hidden;background:#fff;border:1px solid var(--border,#e5e7eb);border-left:3px solid #6366F1;border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.sat-q::after{content:attr(data-qnum);position:absolute;top:-14px;right:14px;font:800 72px system-ui;color:#6366F1;opacity:.07;line-height:1;pointer-events:none}
+.sat-hint{font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--text3,#94a3b8);margin-bottom:6px}
+.sat-ql{display:block;font:700 17px system-ui;color:var(--text,#0f172a);margin-bottom:12px}
+.sv-opt{display:flex;align-items:center;gap:10px;padding:12px 15px;border:1px solid var(--border,#e5e7eb);border-radius:8px;margin-top:8px;cursor:pointer;font-size:14px;background:#fff;transition:border-color .15s,background .15s}
+.sv-opt:hover{border-color:#6366F1}
+.sv-opt:has(input:checked){border-color:#6366F1;border-left-width:3px;background:#f5f5ff}
+.sv-ta{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#cbd5e1);border-radius:8px;font:400 14px system-ui;margin-top:6px}
+.sat-send{margin-top:6px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:12px 28px;border-radius:9px}
+.sat-done{font-size:15px;color:var(--text,#0f172a);padding:16px 2px;line-height:1.5;white-space:pre-wrap}
 .sat-note{font-size:13px;color:var(--text3,#94a3b8);padding:8px 0}
-.sat-id{font-size:12px;color:var(--text2,#475569);margin-bottom:4px}
+.sat-id{font-size:12px;color:var(--text2,#475569)}
+.sat-l{display:block;font:600 12px system-ui;color:var(--text2,#475569);margin-top:10px}
+.sat-f{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#cbd5e1);border-radius:8px;font:400 14px system-ui;margin-top:4px}
 .sat-block .sv-grid th{font-weight:600}
-.exp-satisfaction{max-width:1200px;margin:0 auto;padding:0 0 40px}
+/* Expédition — reprend la charte « carnet de route » du quiz */
+.exp-satisfaction{max-width:1200px;margin:0 auto;padding:0 32px 48px}
 .sat-exp{max-width:100%}
-.sat-exp .sat-ql{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
-.sat-exp .sat-f{border-radius:0;border-color:var(--exp-line)}
-.sat-exp .sat-send{background:var(--exp-accent);border-radius:0;font-family:'Libre Caslon Text',serif}
+.sat-exp .sat-q{background:linear-gradient(180deg,#fffdf9 0%,var(--exp-stone,#f5f3f0) 100%);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:3px;box-shadow:0 6px 22px -12px rgba(60,40,20,.35),0 1px 2px rgba(60,40,20,.06);padding:24px 26px;margin-bottom:22px}
+.sat-exp .sat-q::after{font-family:'Libre Caslon Display',serif;font-size:82px;color:var(--exp-accent);opacity:.06}
+.sat-exp .sat-hint{color:var(--exp-grey)}
+.sat-exp .sat-ql{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:21px;color:var(--exp-ink)}
+.sat-exp .sv-opt{border:1px solid var(--exp-line);border-radius:0;font-family:'Archivo',sans-serif;color:var(--exp-ink);background:#fff}
+.sat-exp .sv-opt:hover{border-color:var(--exp-accent);background:var(--exp-stone)}
+.sat-exp .sv-opt:has(input:checked){border-color:var(--exp-accent);border-left-width:3px;background:#fff}
+.sat-exp .sv-ta{border-radius:0;border-color:var(--exp-line)}
+.sat-exp .sat-send{background:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:12px 28px}
+.sat-exp .sat-send:hover{background:var(--exp-accent)}
 .sat-exp .sat-done{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
 /* ---- Boutons d'action « en contexte » (ajouter photo / vidéo dans la section) ---- */
 .sec-add-ctx{margin-top:16px}
@@ -7972,8 +7987,8 @@ window._tmgResizeSettle=function(){
   function qField(q){
     if(q.type==='stars') return '<div class="sv-stars" style="display:flex;gap:6px;font-size:28px;cursor:pointer;color:#cbd5e1">'+[1,2,3,4,5].map(function(n){return '<span data-v="'+n+'">★</span>';}).join('')+'<input type="hidden" data-ans="'+esc(q.id)+'" value=""></div>';
     if(q.type==='score') return '<div style="display:flex;align-items:center;gap:10px"><input type="range" min="0" max="10" value="5" data-ans="'+esc(q.id)+'" oninput="this.nextElementSibling.textContent=this.value" style="flex:1"><span style="font-weight:700;min-width:22px;text-align:center">5</span></div>';
-    if(q.type==='choice') return '<div data-choice="'+esc(q.id)+'">'+(q.options||[]).map(function(o){return '<label style="display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0;cursor:pointer"><input type="radio" name="svq-'+esc(q.id)+'" value="'+esc(o)+'"> '+esc(o)+'</label>';}).join('')+'</div>';
-    if(q.type==='multi') return '<div data-multi="'+esc(q.id)+'">'+(q.options||[]).map(function(o){return '<label style="display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0;cursor:pointer"><input type="checkbox" value="'+esc(o)+'"> '+esc(o)+'</label>';}).join('')+'</div>';
+    if(q.type==='choice') return '<div data-choice="'+esc(q.id)+'">'+(q.options||[]).map(function(o){return '<label class="sv-opt"><input type="radio" name="svq-'+esc(q.id)+'" value="'+esc(o)+'"><span>'+esc(o)+'</span></label>';}).join('')+'</div>';
+    if(q.type==='multi') return '<div data-multi="'+esc(q.id)+'">'+(q.options||[]).map(function(o){return '<label class="sv-opt"><input type="checkbox" value="'+esc(o)+'"><span>'+esc(o)+'</span></label>';}).join('')+'</div>';
     if(q.type==='grid'){
       var rows=q.rows||[], cols=q.cols||[];
       var t='<div style="overflow-x:auto"><table class="sv-grid" style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left;padding:4px 8px"></th>'+cols.map(function(c){return '<th style="padding:4px 6px;font-weight:600;text-align:center;white-space:nowrap">'+esc(c)+'</th>';}).join('')+'</tr></thead><tbody>';
@@ -7981,7 +7996,7 @@ window._tmgResizeSettle=function(){
       t+='</tbody></table></div>';
       return '<div data-grid="'+esc(q.id)+'">'+t+'</div>';
     }
-    return '<textarea data-ans="'+esc(q.id)+'" rows="2" style="'+F+'" placeholder="Votre réponse…"></textarea>';
+    return '<textarea data-ans="'+esc(q.id)+'" rows="2" class="sv-ta" placeholder="Votre réponse…"></textarea>';
   }
   function wireStars(box){
     box.querySelectorAll('.sv-stars').forEach(function(w){
@@ -8047,8 +8062,10 @@ window._tmgResizeSettle=function(){
     var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
     var idBlock = u ? '<div class="sat-id">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
       : '<label class="sat-l">Votre nom</label><input class="sat-f" data-sat="name" placeholder="Prénom / nom"><label class="sat-l">Votre e-mail (facultatif)</label><input class="sat-f" data-sat="email" type="email">';
-    var qHtml=qs.map(function(q,i){ return '<div class="sat-q"><label class="sat-ql">'+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
-    container.innerHTML=idBlock+qHtml+'<div class="sat-err" style="display:none;color:#b91c1c;font-size:12px;margin-top:10px"></div><button class="sat-send">Envoyer mes réponses</button>';
+    function hint(t){ return t==='multi'?'PLUSIEURS RÉPONSES':t==='choice'?'UNE SEULE RÉPONSE':t==='grid'?'UN CHOIX PAR LIGNE':t==='stars'?'NOTE EN ÉTOILES':t==='score'?'NOTE SUR 10':'RÉPONSE LIBRE'; }
+    function pad(n){ n=String(n); return n.length<2?('0'+n):n; }
+    var qHtml=qs.map(function(q,i){ return '<div class="sat-q" data-qnum="'+pad(i+1)+'"><div class="sat-hint">'+hint(q.type)+'</div><label class="sat-ql">'+(i+1)+'. '+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+    container.innerHTML='<div class="sat-id-wrap">'+idBlock+'</div>'+qHtml+'<div class="sat-err" style="display:none;color:#b91c1c;font-size:12px;margin-top:10px"></div><button class="sat-send">Envoyer mes réponses</button>';
     wireStars(container);
     var send=container.querySelector('.sat-send'), err=container.querySelector('.sat-err');
     send.onclick=function(){
