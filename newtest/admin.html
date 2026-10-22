@@ -2595,6 +2595,10 @@ function modifyEvent(id){
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><input type="checkbox" id="m-ev-frontedit"${ev.frontEdit?' checked':''}> Contribution depuis le front (ce dashboard)</label>
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Affiche un bouton de connexion sur le dashboard public : un contributeur connecté (mêmes identifiants que l'admin) peut ajouter photos et vidéos directement depuis la page, publiées immédiatement. Désactivé par défaut — n'affecte que cet événement.</div>
       <div class="form-row" style="max-width:360px;margin-top:10px"><label class="form-label">Texte du bouton de connexion (en bas à gauche)</label><input class="form-input" id="m-ev-loginlabel" value="${_escAdm(ev.loginLabel||'')}" placeholder="🔐 Se connecter"></div>
+      <div class="form-row-inline">
+        <div class="form-row" style="max-width:150px"><label class="form-label">Couleur du bouton</label><input class="form-input" type="color" id="m-ev-logincolor" value="${ev.loginBtnColor||'#2563eb'}" style="height:38px;padding:3px"></div>
+        <div class="form-row" style="max-width:170px"><label class="form-label">Taille</label><select class="form-input" id="m-ev-loginsize"><option value="s"${ev.loginBtnSize==='s'?' selected':''}>Petit</option><option value="m"${(!ev.loginBtnSize||ev.loginBtnSize==='m')?' selected':''}>Normal</option><option value="l"${ev.loginBtnSize==='l'?' selected':''}>Grand</option></select></div>
+      </div>
     </div>
     ${(function(){
       var sb=ev.secBanner||{};
@@ -2671,6 +2675,8 @@ async function updateEvent(id){
     chronoFullWidth:!!(document.getElementById('m-ev-chrono-full')||{}).checked,
     frontEdit:!!(document.getElementById('m-ev-frontedit')||{}).checked,
     loginLabel:((document.getElementById('m-ev-loginlabel')||{}).value||'').trim(),
+    loginBtnColor:((document.getElementById('m-ev-logincolor')||{}).value||'').trim(),
+    loginBtnSize:((document.getElementById('m-ev-loginsize')||{}).value||'m'),
     secBanner:(function(){
       var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
       var gi=function(id){var v=parseInt(g(id),10);return isNaN(v)?'':v;};
@@ -8729,6 +8735,9 @@ function _svReadCurrentInto(){
   s.thanks=(g('sv-thanks').value||'').trim();
   s.showButton=g('sv-showbtn').checked;
   s.buttonLabel=(g('sv-btnlabel').value||'').trim()||'Donner mon avis';
+  s.btnColor=(g('sv-btncolor')?g('sv-btncolor').value:'')||'#6366F1';
+  s.btnSize=(g('sv-btnsize')?g('sv-btnsize').value:'')||'m';
+  s.pulse=g('sv-btnpulse')?g('sv-btnpulse').checked:false;
   s.autoOpen=g('sv-autoopen').checked;
   s.autoDelay=Math.max(0,parseInt(g('sv-autodelay').value,10)||0);
   s.isPopup=g('sv-ispopup').checked;
@@ -8766,6 +8775,11 @@ function renderSurvey(el){
     <div class="form-row-inline">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-showbtn" ${sv.showButton!==false?'checked':''}> Afficher le bouton « Donner mon avis »</label>
       <div class="form-row" style="max-width:260px"><label class="form-label">Libellé du bouton</label><input class="form-input" id="sv-btnlabel" value="${_escAdm(sv.buttonLabel||'Donner mon avis')}"></div>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="max-width:150px"><label class="form-label">Couleur du bouton</label><input class="form-input" type="color" id="sv-btncolor" value="${sv.btnColor||'#6366F1'}" style="height:38px;padding:3px"></div>
+      <div class="form-row" style="max-width:170px"><label class="form-label">Taille</label><select class="form-input" id="sv-btnsize"><option value="s"${sv.btnSize==='s'?' selected':''}>Petit</option><option value="m"${(!sv.btnSize||sv.btnSize==='m')?' selected':''}>Normal</option><option value="l"${sv.btnSize==='l'?' selected':''}>Grand</option></select></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;align-self:center"><input type="checkbox" id="sv-btnpulse" ${sv.pulse?'checked':''}> Bouton pulsant (clignote pour attirer l'œil)</label>
     </div>
     <div class="form-row-inline">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-autoopen" ${sv.autoOpen?'checked':''}> Ouvrir automatiquement après un délai</label>
