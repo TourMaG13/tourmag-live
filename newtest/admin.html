@@ -10208,6 +10208,20 @@ async function deleteAccessPreset(presetId,name){
   catch(err){ console.error('[Admin] deleteAccessPreset failed:',err); toast('Erreur : '+(err&&err.message||'échec'),'error'); }
 }
 
+let _accSearch='';
+function _accApplyFilter(q){
+  _accSearch=q||'';
+  var qq=_accSearch.trim().toLowerCase();
+  document.querySelectorAll('.acc-group').forEach(function(g){
+    var any=false;
+    g.querySelectorAll('.acc-row').forEach(function(r){
+      var hit=!qq || (r.getAttribute('data-acc-search')||'').indexOf(qq)>=0;
+      r.style.display=hit?'':'none'; if(hit) any=true;
+    });
+    g.style.display=any?'':'none';
+    if(qq && any) g.open=true;
+  });
+}
 function renderAccess(el){
   if(!isSuperAdmin()){el.innerHTML='<div class="page-title">Accès refusé</div>';return;}
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -10268,24 +10282,25 @@ function renderAccess(el){
 
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-key"/></svg> Comptes utilisateurs</h3>
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">Chaque compte a un <strong>profil d'accès</strong> (« Accès complet » = tous les droits, y compris cette page) et une liste d'<strong>événements autorisés</strong>. Un compte en accès complet voit tout ; sinon il ne voit que les événements cochés.</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">`;
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input id="acc-search" class="form-input" placeholder="🔍 Rechercher un nom ou un e-mail…" oninput="_accApplyFilter(this.value)" style="max-width:360px" value="${_escAdm(_accSearch)}">
+      <span style="font-size:11px;color:var(--text3)">${adminsData.length} compte${adminsData.length>1?'s':''}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">`;
   const currentEmail=(auth.currentUser?.email||'').toLowerCase();
-  if(adminsData.length){
-    adminsData.forEach(a=>{
-      const email=(a.email||a.id).toLowerCase();
-      const isMe=email===currentEmail;
-      const displayName=a.name||a.email||'';
-      const hasName=!!displayName;
-      const initials=(displayName||a.id).split(/[\s@.]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
-      const isFull=a.accessProfile==='full';
-      const seesAll=isFull||a.seesAllEvents===true;
-
-      // Menu profil : "full" + presets
-      let profOpts=`<option value="full"${isFull?' selected':''}>Accès complet</option>`;
-      accessPresetsData.forEach(p=>{ profOpts+=`<option value="preset:${p.id}"${a.accessProfile==='preset:'+p.id?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
-      if(!a.accessProfile) profOpts=`<option value="" selected>— À configurer —</option>`+profOpts;
-
-      h+=`<div style="border:1px solid var(--border);border-radius:10px;background:var(--bg);overflow:hidden">
+  const _accRowHtml=(a)=>{
+    const email=(a.email||a.id).toLowerCase();
+    const isMe=email===currentEmail;
+    const displayName=a.name||a.email||'';
+    const hasName=!!displayName;
+    const initials=(displayName||a.id).split(/[\s@.]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+    const isFull=a.accessProfile==='full';
+    const seesAll=isFull||a.seesAllEvents===true;
+    const _srch=((a.name||'')+' '+(a.email||'')+' '+(a.id||'')).toLowerCase().replace(/[<>"]/g,'');
+    let profOpts=`<option value="full"${isFull?' selected':''}>Accès complet</option>`;
+    accessPresetsData.forEach(p=>{ profOpts+=`<option value="preset:${p.id}"${a.accessProfile==='preset:'+p.id?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
+    if(!a.accessProfile) profOpts=`<option value="" selected>— À configurer —</option>`+profOpts;
+    return `<div class="acc-row" data-acc-search="${_srch}" style="border:1px solid var(--border);border-radius:10px;background:var(--bg);overflow:hidden">
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;flex-wrap:wrap">
           <div style="width:34px;height:34px;border-radius:50%;background:${isFull?'#EEF2FF':'var(--card)'};border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${isFull?'#6366F1':'var(--text3)'};flex-shrink:0">${initials}</div>
           <div style="flex:1;min-width:150px">
@@ -10310,6 +10325,17 @@ function renderAccess(el){
           </div></details>`:''}
         </div>
       </div>`;
+  };
+  if(adminsData.length){
+    const _gkey=(a)=> !a.accessProfile ? '__unconf' : (a.accessProfile==='full' ? '__full' : a.accessProfile);
+    const _glabel=(k)=>{ if(k==='__unconf') return '⚙️ À configurer'; if(k==='__full') return '🔑 Accès complet'; const p=accessPresetsData.find(x=>'preset:'+x.id===k); return '🎫 '+((p&&p.name)||'Profil'); };
+    const _gmap={}, _groups=[];
+    adminsData.forEach(a=>{ const k=_gkey(a); if(!_gmap[k]){ _gmap[k]={key:k,label:_glabel(k),items:[]}; _groups.push(_gmap[k]); } _gmap[k].items.push(a); });
+    _groups.sort((x,y)=>{ const o={'__unconf':0,'__full':1}; return ((o[x.key]!=null?o[x.key]:2)-(o[y.key]!=null?o[y.key]:2)); });
+    _groups.forEach(g=>{
+      h+=`<details class="acc-group" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><summary style="cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;background:var(--bg);user-select:none">${g.label} <span style="color:var(--text3);font-weight:500">(${g.items.length})</span></summary><div style="display:flex;flex-direction:column;gap:8px;padding:8px">`;
+      g.items.forEach(a=>{ h+=_accRowHtml(a); });
+      h+=`</div></details>`;
     });
   } else {
     h+=`<div style="font-size:12px;color:var(--text3);padding:8px">Chargement…</div>`;
@@ -10417,6 +10443,7 @@ function renderAccess(el){
   h+=`</div></div>`;
 
   el.innerHTML=h;
+  if(_accSearch) _accApplyFilter(_accSearch);
 }
 
 // ── Cases à cocher des événements pour un compte (pilote allowedUsers de chaque événement) ──
