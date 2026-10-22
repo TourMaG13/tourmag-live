@@ -837,7 +837,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Citations<span class="badge" id="badge-cit">0</span></div>
           <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
-          <div class="sidebar-item" data-tab="survey"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 16.9 5.8 20.6l1.6-6.7L2.2 8.9l6.9-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Sondage (pop-up)</div>
+          <div class="sidebar-item" data-tab="survey"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 16.9 5.8 20.6l1.6-6.7L2.2 8.9l6.9-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Questionnaires</div>
           <div class="sidebar-item" data-tab="quiz"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg></span>Quiz / Sondage</div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
@@ -5341,10 +5341,14 @@ function _bpContentFieldsHtml(s){
         + '<div class="bpe-hint" style="padding:4px 0">Chaque bloc a sa propre discussion (indépendante par page, et plusieurs blocs possibles par page). <strong>La participation nécessite d\'être connecté</strong> (chaque message est signé du vrai nom). Commentaires, réponses et réactions 👍 en temps réel, publiés immédiatement. La lecture reste ouverte à tous.</div>';
     }
     case 'satisfaction': {
+      var _evS=eventsData.find(function(e){return e.id===currentEventId;})||{};
+      var _surv=Array.isArray(_evS.surveys)&&_evS.surveys.length?_evS.surveys:(_evS.survey?[Object.assign({id:'main',isPopup:true},_evS.survey)]:[]);
+      var _optsSv='<option value="">(questionnaire pop-up par défaut)</option>'+_surv.map(function(s){return '<option value="'+_escAdm(s.id||'')+'"'+(((c.surveyId||'')===(s.id||''))?' selected':'')+'>'+_escAdm(s.title||'Questionnaire')+(s.isPopup?' · pop-up':'')+'</option>';}).join('');
       return _phaseFld
         + _bpTitleFields('Enquête de satisfaction','Votre avis compte')
+        + '<div class="bpe-fld" style="margin-top:10px"><label>Questionnaire affiché</label><select onchange="_bpSetCt(\'surveyId\',this.value)">'+_optsSv+'</select></div>'
         + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:10px"><input type="checkbox" '+(c.connectedOnly?'checked':'')+' onchange="_bpSetCt(\'connectedOnly\',this.checked)"> Visible seulement par les personnes connectées</label>'
-        + '<div class="bpe-hint" style="padding:6px 0">Le questionnaire inline reprend les <strong>questions définies dans l\'onglet « Sondage (pop-up) »</strong> (étoiles, note, choix, QCM, grille, texte). Les réponses ne sont pas publiques et se récupèrent/exportent dans cet onglet « Sondage ». Pour n\'avoir que la version inline, désactivez le bouton et l\'ouverture auto de la pop-up.</div>';
+        + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, titres) se gèrent dans l\'onglet <strong>« Questionnaires »</strong>. Choisissez ci-dessus lequel afficher dans ce bloc. Les réponses ne sont pas publiques et s\'exportent par questionnaire dans cet onglet.</div>';
     }
     case 'articles': {
       return _phaseFld
@@ -8704,15 +8708,56 @@ async function migrateOldQuiz(){
 // ============================================================
 // SONDAGE (pop-up) — config, éditeur de questions, réponses, export
 // ============================================================
-let _svQ=[], _svResponses=[];
+let _svQ=[], _svResponses=[], _svList=[], _svSel=0, _svEl=null;
+function _svMigrate(ev){
+  var list = Array.isArray(ev.surveys) ? JSON.parse(JSON.stringify(ev.surveys)) : [];
+  if(!list.length){ var s=ev.survey?JSON.parse(JSON.stringify(ev.survey)):{}; s.id=s.id||'main'; s.isPopup=true; s.title=s.title||'Votre avis'; s.questions=s.questions||[]; list=[s]; }
+  list.forEach(function(s){ if(!s.id) s.id=_uid(); });
+  if(!list.some(function(s){return s.isPopup;})) list[0].isPopup=true;
+  return list;
+}
+function _svReadCurrentInto(){
+  var s=_svList[_svSel]; if(!s) return;
+  var g=function(id){return document.getElementById(id);};
+  if(!g('sv-title')) return;
+  _svReadQFromDom();
+  s.enabled=g('sv-enabled').checked;
+  s.title=(g('sv-title').value||'').trim()||('Questionnaire '+(_svSel+1));
+  s.intro=(g('sv-intro').value||'').trim();
+  s.thanks=(g('sv-thanks').value||'').trim();
+  s.showButton=g('sv-showbtn').checked;
+  s.buttonLabel=(g('sv-btnlabel').value||'').trim()||'Donner mon avis';
+  s.autoOpen=g('sv-autoopen').checked;
+  s.autoDelay=Math.max(0,parseInt(g('sv-autodelay').value,10)||0);
+  s.isPopup=g('sv-ispopup').checked;
+  if(s.isPopup){ _svList.forEach(function(o,i){ if(i!==_svSel) o.isPopup=false; }); }
+  s.questions=_svQ.map(function(q){ var o={id:q.id||_uid(),type:q.type||'stars',label:q.label||''}; if(q.type==='choice'||q.type==='multi') o.options=(q.options||[]).filter(Boolean); if(q.type==='grid'){ o.rows=(q.rows||[]).filter(Boolean); o.cols=(q.cols||[]).filter(Boolean); } return o; });
+}
+function _svSelect(i){ _svReadCurrentInto(); _svSel=i; if(_svEl) renderSurvey(_svEl); }
+function _svNew(){ _svReadCurrentInto(); _svList.push({id:_uid(),title:'Questionnaire '+(_svList.length+1),enabled:true,isPopup:false,questions:[]}); _svSel=_svList.length-1; if(_svEl) renderSurvey(_svEl); }
+async function _svDelSurvey(){
+  if(_svList.length<=1) return;
+  if(!confirm('Supprimer ce questionnaire ?')) return;
+  _svList.splice(_svSel,1); if(!_svList.some(function(s){return s.isPopup;})) _svList[0].isPopup=true; _svSel=0;
+  saving(true);
+  try{ await evRef().update({surveys:_svList, survey:(_svList.filter(function(s){return s.isPopup;})[0]||_svList[0])}); var ev=eventsData.find(function(e){return e.id===currentEventId;}); if(ev){ev.surveys=_svList; ev.survey=_svList.filter(function(s){return s.isPopup;})[0]||_svList[0];} toast('Questionnaire supprimé'); if(_svEl) renderSurvey(_svEl); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function _svTs(t){ try{ return t&&t.toMillis?t.toMillis():(t&&t.seconds?t.seconds*1000:0);}catch(_){return 0;} }
 function _svFmtDate(t){ var ms=_svTs(t); if(!ms) return ''; var d=new Date(ms); return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
 function renderSurvey(el){
-  const ev=eventsData.find(e=>e.id===currentEventId)||{}; const sv=ev.survey||{};
+  _svEl=el;
+  const ev=eventsData.find(e=>e.id===currentEventId)||{};
+  _svList=_svMigrate(ev);
+  if(_svSel>=_svList.length||_svSel<0) _svSel=0;
+  const sv=_svList[_svSel]||{};
   _svQ = JSON.parse(JSON.stringify(sv.questions||[]));
-  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Sondage (pop-up)</div><div class="page-desc">Une pop-up « Donner mon avis » sur le dashboard : étoiles, notes, choix, texte. Les réponses s'enregistrent ici et s'exportent en fichier Excel (CSV).</div>`;
+  var tabs=_svList.map(function(s,i){ return '<button class="btn '+(i===_svSel?'btn-primary':'btn-ghost')+' btn-sm" onclick="_svSelect('+i+')">'+_escAdm(s.title||('Questionnaire '+(i+1)))+(s.isPopup?' · pop-up':'')+'</button>'; }).join('');
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Questionnaires</div><div class="page-desc">Créez un ou plusieurs questionnaires (étoiles, notes, choix, QCM, grille, texte). L'un sert de <strong>pop-up</strong> ; les autres s'affichent dans les pages via le module « Enquête de satisfaction ». Les réponses s'exportent en Excel (CSV), par questionnaire.</div>`;
+  h+='<div class="admin-card" style="padding:12px 14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+tabs+'<button class="btn btn-ghost btn-sm" onclick="_svNew()">+ Nouveau questionnaire</button>'+(_svList.length>1?'<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="_svDelSurvey()">Supprimer ce questionnaire</button>':'')+'</div></div>';
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Configuration</h3>
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="sv-enabled" ${sv.enabled?'checked':''}> <strong>Activer le sondage</strong> sur ce dashboard</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="sv-enabled" ${sv.enabled?'checked':''}> <strong>Activer ce questionnaire</strong></label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="sv-ispopup" ${sv.isPopup?'checked':''}> Utiliser comme <strong>pop-up</strong> du dashboard (un seul à la fois)</label>
     <div class="form-row" style="max-width:520px"><label class="form-label">Titre de la pop-up</label><input class="form-input" id="sv-title" value="${_escAdm(sv.title||'Votre avis')}"></div>
     <div class="form-row" style="max-width:520px"><label class="form-label">Texte d'introduction (optionnel)</label><textarea class="form-input" id="sv-intro" rows="2" placeholder="Ex : Aidez-nous à améliorer ce voyage.">${_escAdm(sv.intro||'')}</textarea></div>
     <div class="form-row" style="max-width:520px"><label class="form-label">Message de remerciement (après envoi)</label><textarea class="form-input" id="sv-thanks" rows="2" placeholder="Merci, vos réponses ont bien été enregistrées.">${_escAdm(sv.thanks||'')}</textarea></div>
@@ -8778,21 +8823,11 @@ function _svAddQ(type){ _svReadQFromDom(); var q={id:_uid(),type:type||'stars',l
 function _svDelQ(i){ _svReadQFromDom(); _svQ.splice(i,1); _svRenderQ(); }
 function _svMoveQ(i,dir){ _svReadQFromDom(); var j=i+dir; if(j<0||j>=_svQ.length) return; var t=_svQ[i]; _svQ[i]=_svQ[j]; _svQ[j]=t; _svRenderQ(); }
 async function saveSurvey(){
-  _svReadQFromDom();
-  var g=function(id){return document.getElementById(id);};
-  var survey={
-    enabled: g('sv-enabled').checked,
-    title:(g('sv-title').value||'').trim()||'Votre avis',
-    intro:(g('sv-intro').value||'').trim(),
-    thanks:(g('sv-thanks').value||'').trim(),
-    showButton: g('sv-showbtn').checked,
-    buttonLabel:(g('sv-btnlabel').value||'').trim()||'Donner mon avis',
-    autoOpen: g('sv-autoopen').checked,
-    autoDelay: Math.max(0, parseInt(g('sv-autodelay').value,10)||0),
-    questions: _svQ.map(function(q){ var o={id:q.id||_uid(),type:q.type||'stars',label:q.label||''}; if(q.type==='choice'||q.type==='multi') o.options=(q.options||[]).filter(Boolean); if(q.type==='grid'){ o.rows=(q.rows||[]).filter(Boolean); o.cols=(q.cols||[]).filter(Boolean); } return o; })
-  };
+  _svReadCurrentInto();
+  if(!_svList.some(function(s){return s.isPopup;})&&_svList[0]) _svList[0].isPopup=true;
+  var popup=_svList.filter(function(s){return s.isPopup;})[0]||_svList[0]||{};
   saving(true);
-  try{ await evRef().update({survey}); toast('Sondage enregistré'); }
+  try{ await evRef().update({surveys:_svList, survey:popup}); var ev=eventsData.find(function(e){return e.id===currentEventId;}); if(ev){ev.surveys=_svList; ev.survey=popup;} toast('Questionnaire enregistré'); if(_svEl) renderSurvey(_svEl); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 function _svLoadResponses(){
@@ -8804,15 +8839,20 @@ function _svLoadResponses(){
     _svRenderResponses();
   }).catch(function(e){ box.innerHTML='<div style="font-size:12px;color:#b91c1c">Erreur de chargement : '+_escAdm(e.message||e)+'</div>'; });
 }
+function _svCurRespList(){
+  var s=_svList[_svSel]||{}; var sid=s.id;
+  return _svResponses.filter(function(r){ if(r.surveyId) return r.surveyId===sid; return !!s.isPopup; });
+}
 function _svRenderResponses(){
   var box=document.getElementById('sv-responses'); if(!box) return;
-  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{}; var qs=(ev.survey&&ev.survey.questions)||[];
-  var n=_svResponses.length;
-  var h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><strong>'+n+' réponse'+(n>1?'s':'')+'</strong>'
+  var s=_svList[_svSel]||{}; var qs=s.questions||[];
+  var list=_svCurRespList();
+  var n=list.length;
+  var h='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><strong>'+n+' réponse'+(n>1?'s':'')+'</strong><span style="font-size:11px;color:var(--text3)">pour « '+_escAdm(s.title||'')+' »</span>'
     +'<button class="btn btn-ghost btn-sm" onclick="_svLoadResponses()">↻ Rafraîchir</button>'
     +'<button class="btn btn-primary btn-sm" onclick="_svExport()"'+(n?'':' disabled')+'>⬇ Exporter (Excel/CSV)</button>'
     +'<button class="btn btn-danger btn-sm" onclick="_svClearResp()"'+(n?'':' disabled')+'>🗑 Tout effacer</button></div>';
-  if(!n){ h+='<div style="font-size:12px;color:var(--text3)">Aucune réponse pour l\'instant.</div>'; box.innerHTML=h; return; }
+  if(!n){ h+='<div style="font-size:12px;color:var(--text3)">Aucune réponse pour ce questionnaire.</div>'; box.innerHTML=h; return; }
   var _fmtV=function(v){ if(v==null) return ''; if(Array.isArray(v)) return v.join(', '); if(typeof v==='object') return Object.keys(v).map(function(k){return k+': '+v[k];}).join(' · '); return String(v); };
   h+='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px"><thead><tr>'
     +'<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap">Date</th>'
@@ -8820,7 +8860,7 @@ function _svRenderResponses(){
     +'<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">E-mail</th>'
     +qs.map(function(q){return '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">'+_escAdm(q.label||q.id)+'</th>';}).join('')
     +'<th style="border-bottom:1px solid var(--border)"></th></tr></thead><tbody>';
-  _svResponses.slice(0,30).forEach(function(r){
+  list.slice(0,30).forEach(function(r){
     var a=r.answers||{};
     h+='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--bg);white-space:nowrap">'+_escAdm(_svFmtDate(r.createdAt))+'</td>'
       +'<td style="padding:6px 8px;border-bottom:1px solid var(--bg)">'+_escAdm(r.name||r.account||'')+'</td>'
@@ -8837,14 +8877,14 @@ function _svDelResp(id){
   db.collection('surveyResponses').doc(id).delete().then(function(){ _svResponses=_svResponses.filter(function(r){return r.id!==id;}); _svRenderResponses(); toast('Réponse supprimée'); }).catch(function(e){ toast('Erreur : '+(e.message||e),'error'); });
 }
 async function _svClearResp(){
-  if(!_svResponses.length) return;
-  if(!confirm('Effacer TOUTES les '+_svResponses.length+' réponses ? Cette action est irréversible.')) return;
+  var list=_svCurRespList(); if(!list.length) return;
+  if(!confirm('Effacer les '+list.length+' réponses de ce questionnaire ? Cette action est irréversible.')) return;
   saving(true);
-  try{ for(var i=0;i<_svResponses.length;i++){ await db.collection('surveyResponses').doc(_svResponses[i].id).delete(); } _svResponses=[]; _svRenderResponses(); toast('Réponses effacées'); }
+  try{ for(var i=0;i<list.length;i++){ await db.collection('surveyResponses').doc(list[i].id).delete(); } var ids={}; list.forEach(function(r){ids[r.id]=1;}); _svResponses=_svResponses.filter(function(r){return !ids[r.id];}); _svRenderResponses(); toast('Réponses effacées'); }
   catch(e){ toast('Erreur : '+(e.message||e),'error'); }
 }
 function _svExport(){
-  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{}; var qs=(ev.survey&&ev.survey.questions)||[];
+  var s=_svList[_svSel]||{}; var qs=s.questions||[]; var _list=_svCurRespList();
   var cols=[];
   cols.push({h:'Date',g:function(r){return _svFmtDate(r.createdAt);}});
   cols.push({h:'Nom',g:function(r){return r.name||'';}});
@@ -8855,7 +8895,7 @@ function _svExport(){
     else { cols.push({h:q.label||q.id, g:function(r){ var v=(r.answers||{})[q.id]; if(Array.isArray(v)) return v.join(' | '); if(v&&typeof v==='object') return Object.keys(v).map(function(k){return k+': '+v[k];}).join(' | '); return v==null?'':String(v); }}); }
   });
   var head=cols.map(function(c){return c.h;});
-  var rows=_svResponses.map(function(r){ return cols.map(function(c){return c.g(r);}); });
+  var rows=_list.map(function(r){ return cols.map(function(c){return c.g(r);}); });
   var esc=function(v){ v=String(v==null?'':v); return /[";\n\r]/.test(v)?('"'+v.replace(/"/g,'""')+'"'):v; };
   var csv=[head].concat(rows).map(function(r){return r.map(esc).join(';');}).join('\r\n');
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
