@@ -904,6 +904,8 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .ct-lock-btn{border:0;background:#0F2B3C;color:#fff;font-weight:600;font-size:13px;padding:8px 16px;border-radius:9px;cursor:pointer}
 .ct-lock-exp{border-radius:0;background:var(--exp-stone);border:1px dashed var(--exp-line);color:var(--exp-ink)}
 .ct-lock-exp .ct-lock-btn{background:var(--exp-accent);border-radius:0}
+@keyframes svFabPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+#sv-fab.sv-fab-pulse{animation:svFabPulse 1.4s ease-in-out infinite}
 /* ---- Enquête de satisfaction (questionnaire inline) ---- */
 .sat-block{max-width:860px;margin:4px auto 0}
 .sat-id-wrap:not(:empty){margin-bottom:14px}
@@ -7678,8 +7680,12 @@ window._tmgResizeSettle=function(){
       // Déconnecté : pas d'entourage sombre, juste le bouton.
       pill.style.background='transparent'; pill.style.padding='0'; pill.style.boxShadow='none';
       var _lbl=(ev().loginLabel||'').trim()||'🔐 Se connecter';
-      pill.innerHTML='<span data-fe="in">'+b(esc(_lbl),'#2563eb')+'</span>';
-      pill.querySelector('[data-fe="in"]').onclick=function(){ initAuth(); openLogin(); };
+      var _lc=(ev().loginBtnColor||'').trim()||'#2563eb';
+      var _lsz=ev().loginBtnSize||'m';
+      var _lpad=_lsz==='l'?'12px 22px':_lsz==='s'?'6px 11px':'8px 15px';
+      var _lfs=_lsz==='l'?'16px':_lsz==='s'?'12px':'13px';
+      pill.innerHTML='<span data-fe="in"><button type="button" style="border:0;cursor:pointer;background:'+_lc+';color:#fff;border-radius:999px;font-weight:600;font-family:system-ui,sans-serif;padding:'+_lpad+';font-size:'+_lfs+'">'+esc(_lbl)+'</button></span>';
+      pill.querySelector('[data-fe="in"] button').onclick=function(){ initAuth(); openLogin(); };
     }
   }
 
@@ -7995,9 +8001,13 @@ window._tmgResizeSettle=function(){
   function ensureBtn(){
     var s=sv();
     if(!s.enabled || s.showButton===false){ if(btn){btn.remove();btn=null;} return; }
-    if(!btn){ btn=document.createElement('button'); btn.id='sv-fab'; btn.onclick=openSurvey;
-      btn.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99990;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28)';
-      document.body.appendChild(btn); }
+    var color=(s.btnColor||'').trim()||'#6366F1';
+    var size=s.btnSize||'m';
+    var pad=size==='l'?'16px 26px':size==='s'?'9px 14px':'12px 18px';
+    var fs=size==='l'?'16px':size==='s'?'12px':'13px';
+    if(!btn){ btn=document.createElement('button'); btn.id='sv-fab'; btn.onclick=openSurvey; document.body.appendChild(btn); }
+    btn.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99990;border:0;cursor:pointer;color:#fff;font-weight:600;font-family:system-ui,sans-serif;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28);background:'+color+';padding:'+pad+';font-size:'+fs;
+    btn.classList.toggle('sv-fab-pulse', !!s.pulse);
     btn.textContent=s.buttonLabel||'Donner mon avis';
   }
 
