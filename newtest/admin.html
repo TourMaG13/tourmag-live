@@ -2594,6 +2594,7 @@ function modifyEvent(id){
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Par défaut la frise est centrée (largeur du contenu). Cochez pour qu'elle s'étende d'un bord à l'autre de l'écran.</div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><input type="checkbox" id="m-ev-frontedit"${ev.frontEdit?' checked':''}> Contribution depuis le front (ce dashboard)</label>
       <div style="font-size:10px;color:var(--text3);margin-top:3px">Affiche un bouton de connexion sur le dashboard public : un contributeur connecté (mêmes identifiants que l'admin) peut ajouter photos et vidéos directement depuis la page, publiées immédiatement. Désactivé par défaut — n'affecte que cet événement.</div>
+      <div class="form-row" style="max-width:360px;margin-top:10px"><label class="form-label">Texte du bouton de connexion (en bas à gauche)</label><input class="form-input" id="m-ev-loginlabel" value="${_escAdm(ev.loginLabel||'')}" placeholder="🔐 Se connecter"></div>
     </div>
     ${(function(){
       var sb=ev.secBanner||{};
@@ -2669,6 +2670,7 @@ async function updateEvent(id){
     afficheChrono:!!(document.getElementById('m-ev-chrono')||{}).checked,
     chronoFullWidth:!!(document.getElementById('m-ev-chrono-full')||{}).checked,
     frontEdit:!!(document.getElementById('m-ev-frontedit')||{}).checked,
+    loginLabel:((document.getElementById('m-ev-loginlabel')||{}).value||'').trim(),
     secBanner:(function(){
       var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
       var gi=function(id){var v=parseInt(g(id),10);return isNaN(v)?'':v;};
