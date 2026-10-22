@@ -11132,10 +11132,10 @@ function _renderContactUI(el, raw){
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card" style="padding:12px 16px"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="ct-public" ${isPublic?'checked':''} style="margin-top:2px"><span style="font-size:13px"><strong>Rendre les contacts publics</strong><br><span style="font-size:11px;color:var(--text3)">Par défaut, les contacts (données sensibles) ne sont visibles que par les personnes <strong>connectées</strong> sur le dashboard. Cochez pour les afficher à tous les visiteurs.</span></span></label></div>
   <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
-    ${_ctStyRow('Nom','name',(raw&&raw.styles&&raw.styles.name))}
-    ${_ctStyRow('Rôle','role',(raw&&raw.styles&&raw.styles.role))}
-    ${_ctStyRow('E-mail','email',(raw&&raw.styles&&raw.styles.email))}
-    ${_ctStyRow('Téléphone','phone',(raw&&raw.styles&&raw.styles.phone))}
+    ${_ctStyRow('Nom','name',((ev.contactStyles||(raw&&raw.styles)||{}).name))}
+    ${_ctStyRow('Rôle','role',((ev.contactStyles||(raw&&raw.styles)||{}).role))}
+    ${_ctStyRow('E-mail','email',((ev.contactStyles||(raw&&raw.styles)||{}).email))}
+    ${_ctStyRow('Téléphone','phone',((ev.contactStyles||(raw&&raw.styles)||{}).phone))}
   </div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
@@ -11293,14 +11293,17 @@ async function saveContact(){
   // Confidentialité : les contacts vivent dans une collection PROTÉGÉE (contactsPrivate),
   // lisible seulement par les connectés — sauf si marqués publics.
   contact.public = !!(document.getElementById('ct-public')||{}).checked;
-  contact.styles={};
+  var _cstyles={};
   ['name','role','email','phone'].forEach(function(k){
     var f=document.getElementById('ct-sty-'+k+'-font'), s=document.getElementById('ct-sty-'+k+'-size'), w=document.getElementById('ct-sty-'+k+'-weight');
-    var o={}; if(f&&f.value)o.font=f.value; if(s&&s.value)o.size=parseInt(s.value,10)||''; if(w&&w.value)o.weight=w.value;
-    if(o.font||o.size||o.weight) contact.styles[k]=o;
+    var o={}; if(f&&f.value)o.font=f.value; if(s&&s.value&&parseInt(s.value,10))o.size=parseInt(s.value,10); if(w&&w.value)o.weight=w.value;
+    if(o.font||o.size||o.weight) _cstyles[k]=o;
   });
+  contact.styles=_cstyles;
   try{
     await db.collection('contactsPrivate').doc(currentEventId).set(contact);
+    // Les styles (non sensibles) vivent AUSSI dans le document d'événement, toujours lisible côté front.
+    await evRef().update({contactStyles:_cstyles}); if(ev) ev.contactStyles=_cstyles;
     // On retire les contacts du document d'événement (public) pour ne pas les exposer.
     if(ev && ev.contact){ await evRef().update({contact: firebase.firestore.FieldValue.delete()}); if(ev) delete ev.contact; }
     toast(contact.public?'Contacts enregistrés (publics)':'Contacts enregistrés (réservés aux connectés)');
