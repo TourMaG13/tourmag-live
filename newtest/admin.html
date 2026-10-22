@@ -843,6 +843,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
           <div class="sidebar-item" data-tab="gallery"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-gallery"/></svg></span>Galerie photos</div>
           <div class="sidebar-item" data-tab="excursions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Photos excursions</div>
+          <div class="sidebar-item" data-tab="commentsmod"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Commentaires</div>
           <div class="sidebar-item" data-tab="product"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4 8 4 8-4zM4 7v10l8 4 8-4V7M12 11v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Produit</div>
           <div class="sidebar-item" data-tab="countrymap"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span>Carte pays</div>
           <div class="sidebar-item" data-tab="articles"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-articles"/></svg></span>Articles liés</div>
@@ -2239,6 +2240,7 @@ function renderTab(){
     case 'kpis':renderKpis(main);break;
     case 'gallery':renderGallery(main);break;
     case 'excursions':renderExcursionsAdmin(main);break;
+    case 'commentsmod':renderCommentsAdmin(main);break;
     case 'product':renderProductTab(main);break;
     case 'countrymap':renderCountryMapTab(main);break;
     case 'sponsors':renderSponsors(main);break;
@@ -12330,6 +12332,53 @@ async function galAddUpload(pageId, key){
   };
   input.click();
 }
+// ============================================================
+// COMMENTAIRES — vue back-office : retrouver / modérer / supprimer
+// ============================================================
+let _cmtAdminData=[];
+function _cmtTs(ts){ try{ if(ts&&ts.seconds!=null) return ts.seconds; if(ts&&ts.toDate) return ts.toDate().getTime()/1000; if(ts) return new Date(ts).getTime()/1000; }catch(_){ } return 0; }
+function _cmtDate(ts){ try{ var d=ts&&ts.toDate?ts.toDate():(ts?new Date(ts):null); return d?d.toLocaleString('fr-FR'):''; }catch(_){ return ''; } }
+function renderCommentsAdmin(el){
+  el.innerHTML='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Commentaires</div><div class="page-desc">Commentaires et réponses déposés par les participants, regroupés par bloc/page. Vous pouvez les supprimer.</div><div id="cmt-admin-body"><div style="padding:16px;color:var(--text3);font-size:13px">Chargement…</div></div>';
+  _cmtAdminLoad();
+}
+function _cmtAdminLoad(){
+  var box=document.getElementById('cmt-admin-body'); if(!box) return;
+  box.innerHTML='<div style="padding:12px;color:var(--text3);font-size:13px">Chargement…</div>';
+  subCol('comments').get().then(function(snap){
+    _cmtAdminData=[]; snap.forEach(function(d){ var o=d.data()||{}; o.id=d.id; _cmtAdminData.push(o); });
+    _cmtAdminRender();
+  }).catch(function(e){ box.innerHTML='<div style="font-size:12px;color:#b91c1c">Erreur de chargement : '+_escAdm(e.message||e)+'</div>'; });
+}
+function _cmtAdminRender(){
+  var box=document.getElementById('cmt-admin-body'); if(!box) return;
+  var ev=eventsData.find(function(e){return e.id===currentEventId;})||{};
+  var pages=Array.isArray(ev.builderPages)?ev.builderPages:[];
+  var blockPage={}; pages.forEach(function(pg){ (pg.sections||[]).forEach(function(s){ if(s.type==='comments') blockPage[s.id]=pg.name||'(page sans nom)'; }); });
+  var n=_cmtAdminData.length;
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><strong>'+n+' message'+(n>1?'s':'')+'</strong><button class="btn btn-ghost btn-sm" onclick="_cmtAdminLoad()">↻ Rafraîchir</button></div>';
+  if(!n){ h+='<div style="font-size:12px;color:var(--text3)">Aucun commentaire pour l\'instant.</div>'; box.innerHTML=h; return; }
+  var byThread={}; _cmtAdminData.forEach(function(c){ var t=c.thread||'?'; (byThread[t]=byThread[t]||[]).push(c); });
+  Object.keys(byThread).forEach(function(t){
+    var list=byThread[t].sort(function(a,b){return _cmtTs(a.createdAt)-_cmtTs(b.createdAt);});
+    h+='<div class="admin-card"><h3>'+_escAdm(blockPage[t]||'Bloc introuvable')+' <span style="color:var(--text3);font-weight:500;font-size:12px">('+list.length+')</span></h3>';
+    list.forEach(function(c){
+      var isReply=!!c.parent;
+      h+='<div style="padding:8px 10px;border-left:3px solid '+(isReply?'#cbd5e1':'#6366F1')+';margin:'+(isReply?'4px 0 4px 26px':'8px 0')+';background:#f8fafc;border-radius:6px">'
+        +'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:12px">'+(isReply?'↳ ':'')+_escAdm(c.author||'?')+'</strong><button class="btn btn-danger btn-xs" onclick="_cmtAdminDel(\''+c.id+'\')">Supprimer</button></div>'
+        +'<div style="font-size:13px;margin-top:3px;white-space:pre-wrap;line-height:1.4">'+_escAdm(c.text||'')+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:3px">'+_escAdm(_cmtDate(c.createdAt))+(c.likes?' · 👍 '+c.likes:'')+'</div></div>';
+    });
+    h+='</div>';
+  });
+  box.innerHTML=h;
+}
+async function _cmtAdminDel(id){
+  if(!confirm('Supprimer définitivement ce commentaire ?')) return;
+  try{ await subCol('comments').doc(id).delete(); _cmtAdminData=_cmtAdminData.filter(function(c){return c.id!==id;}); _cmtAdminRender(); toast('Commentaire supprimé'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
+
 // ============================================================
 // PHOTOS EXCURSIONS — vue back-office : retrouver / supprimer
 // ============================================================
