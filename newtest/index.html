@@ -865,7 +865,7 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 /* ==================== EXCURSIONS (photos participants) ==================== */
 .exc-block{max-width:100%}
 .exc-grp{margin-bottom:22px}
-.exc-grp-title{font-weight:700;font-size:15px;color:var(--text,#111);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.exc-grp-title{font-family:var(--exc-name-font,inherit);font-weight:var(--exc-name-weight,700);font-size:var(--exc-name-size,15px);color:var(--text,#111);margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .exc-grp-count{font-size:11px;font-weight:600;color:var(--text3,#9CA3AF)}
 .exc-grid{display:flex;flex-wrap:wrap;gap:12px}
 .exc-ph{width:190px;max-width:46vw}
@@ -891,7 +891,7 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .cmt-exp .cmt-send-btn{background:var(--exp-accent);border-radius:0}
 .cmt-exp .cmt-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
 .cmt-exp .cmt-login-btn{background:var(--exp-accent);border-radius:0}
-.exc-exp .exc-grp-title{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:21px;color:var(--exp-ink)}
+.exc-exp .exc-grp-title{font-family:var(--exc-name-font,'Libre Caslon Display',serif);font-weight:var(--exc-name-weight,400);font-size:var(--exc-name-size,21px);color:var(--exp-ink)}
 .exc-exp .exc-grp-count{color:var(--exp-grey)}
 .exc-exp .exc-img{border-radius:0;border:1px solid var(--exp-line)}
 .exc-exp .exc-author{font-family:'Libre Caslon Text',serif;color:var(--exp-ink)}
@@ -3317,7 +3317,7 @@ function render(data){
     var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
     return `<div id="section-exc-${bid}"><div class="sec-title fi"><div class="sec-title-icon" style="background:rgba(14,165,164,.08);color:#0EA5A4">${_ico}</div><h2>${title}</h2><div class="sec-title-line"></div><p>${sub}</p></div>`
-      +`<div class="exc-block fi" data-block="${bid}" data-max="${mx}" data-h="${ph}" data-exc='${excAttr}'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>`;
+      +`<div class="exc-block fi" data-block="${bid}" data-max="${mx}" data-h="${ph}" data-nfont="${opts.nameFont||''}" data-nsize="${opts.nameSize||''}" data-nweight="${opts.nameWeight||''}" data-exc='${excAttr}'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>`;
   }
 
   // ===== BRAND NEWS =====
@@ -4425,7 +4425,7 @@ function renderExpedition(data){
     var excAttr=JSON.stringify(exc.map(function(e){return {id:e.id||'',name:e.name||''};})).replace(/'/g,'&#39;');
     var _ico='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="9"/><polygon points="16 8 10.5 10.5 8 16 13.5 13.5 16 8"/></svg>';
     return '<div id="section-exc-'+bid+'"><div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div><p class="exp-section-sub">'+sub+'</p>'
-      +'<div class="exc-block fi exc-exp" data-block="'+bid+'" data-max="'+mx+'" data-h="'+ph+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
+      +'<div class="exc-block fi exc-exp" data-block="'+bid+'" data-max="'+mx+'" data-h="'+ph+'" data-nfont="'+(opts.nameFont||'')+'" data-nsize="'+(opts.nameSize||'')+'" data-nweight="'+(opts.nameWeight||'')+'" data-exc=\''+excAttr+'\'><div class="exc-body"><div class="cmt-empty">Chargement…</div></div></div></div>';
   };
   _b.comments = function(opts){
     if(mod.comments===false) return '';
@@ -6116,7 +6116,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
       if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.surveyId = ct.surveyId||''; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
-      if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.nameFont = ct.nameFont||''; _opts.nameSize = ct.nameSize||''; _opts.nameWeight = ct.nameWeight||''; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
       if(inner && type!=='hero'){
@@ -8160,6 +8160,10 @@ window._tmgResizeSettle=function(){
     var body=block.querySelector('.exc-body'); if(!body) return;
     var exc=parseExc(block);
     var H=parseInt(block.getAttribute('data-h'),10)||240;
+    var _nf=block.getAttribute('data-nfont')||'', _nsz=parseInt(block.getAttribute('data-nsize'),10)||0, _nw=block.getAttribute('data-nweight')||'';
+    if(_nf) block.style.setProperty('--exc-name-font',_nf); else block.style.removeProperty('--exc-name-font');
+    if(_nsz) block.style.setProperty('--exc-name-size',_nsz+'px'); else block.style.removeProperty('--exc-name-size');
+    if(_nw) block.style.setProperty('--exc-name-weight',_nw); else block.style.removeProperty('--exc-name-weight');
     var data=(reg[bid]&&reg[bid].data)||[];
     var u=edUser();
     function tile(p){
@@ -8174,7 +8178,7 @@ window._tmgResizeSettle=function(){
     if(!exc.length){ html+='<div class="exc-empty">Aucune excursion définie pour ce jour.</div>'; }
     exc.forEach(function(e){
       var ph=data.filter(function(p){return p.excursion===e.id;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
-      html+='<div class="exc-grp"><div class="exc-grp-title">'+esc(e.name||'Excursion')+' <span class="exc-grp-count">'+ph.length+' photo'+(ph.length>1?'s':'')+'</span></div>';
+      html+='<div class="exc-grp"><div class="exc-grp-title">'+esc(e.name||'Excursion')+'</div>';
       html += ph.length ? carousel(ph) : '<div class="exc-empty">Aucune photo pour l\'instant.</div>';
       html+='</div>';
     });
