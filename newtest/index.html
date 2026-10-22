@@ -777,7 +777,7 @@ img{display:block}a{text-decoration:none}
 .vid-carousel{position:relative;padding:14px 18px}
 .vid-carousel-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0}
 .vid-carousel-track::-webkit-scrollbar{display:none}
-.vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
+.vid-carousel-item{scroll-snap-align:start;flex-shrink:0;position:relative}
 .vid-carousel{--vid-ch:240px}
 .vid-carousel .vid-carousel-item.vid-classic{width:calc(var(--vid-ch)*1.7778)}
 .vid-carousel .vid-carousel-item.vid-short{width:calc(var(--vid-ch)*0.5625)}
@@ -910,6 +910,9 @@ img{display:block}a{text-decoration:none}
 .sec-add-empty{font-size:13px;color:var(--text2,#64748b);padding:6px 0 2px}
 body.mode-expedition .sec-add-btn{background:var(--exp-accent);border-radius:0;box-shadow:none;font-family:'Libre Caslon Text',serif}
 body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:var(--exp-grey)}
+/* Bouton ✕ de suppression (propriétaire) sur une vignette photo/vidéo */
+.ctx-del{position:absolute;top:6px;right:6px;z-index:5;width:26px;height:26px;border-radius:50%;border:0;background:rgba(220,38,38,.92);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.ctx-del:hover{background:#b91c1c}
 
 /* ==================== JOURNALISTES ==================== */
 .jr-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow);border-top:3px solid var(--pri);margin-top:30px;margin-bottom:14px}
@@ -1265,7 +1268,7 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-vid-carousel{position:relative;margin-top:38px}
 .exp-vid-carousel-track{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0}
 .exp-vid-carousel-track::-webkit-scrollbar{display:none}
-.exp-vid-carousel-item{scroll-snap-align:start;flex-shrink:0}
+.exp-vid-carousel-item{scroll-snap-align:start;flex-shrink:0;position:relative}
 .exp-vid-carousel{--vid-ch:240px}
 .exp-vid-carousel .exp-vid-carousel-item.is-classic{width:calc(var(--vid-ch)*1.7778)}
 .exp-vid-carousel .exp-vid-carousel-item.is-short{width:calc(var(--vid-ch)*0.5625)}
@@ -2968,16 +2971,16 @@ function render(data){
       o+=`<div class="vid-block fi"><div class="vid-hd"><span class="vid-icon">${ICO.play}</span><span class="vid-title">${sec.title||'Vidéos'}</span></div>`;
       if(isCarousel){
         o+=`<div class="vid-carousel${sec.fullWidth?' vid-carousel-full':''}" id="vid-car-${accId}" style="--vid-ch:${parseInt(sec.carHeight,10)||240}px"><div class="vid-carousel-track">`;
-        allVids.forEach(v=>{const isShort=v.type==='short';o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">${mkVidEmbed(v)}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
+        allVids.forEach(v=>{const isShort=v.type==='short';o+=`<div class="vid-carousel-item ${isShort?'vid-short':'vid-classic'}">${mkVidEmbed(v)}${window._feDelBtn?window._feDelBtn('video',v.id,v.addedBy):''}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
         o+=`</div><button class="vid-nav vid-nav-l" onclick="scrollVidCar('vid-car-${accId}',-1)">‹</button><button class="vid-nav vid-nav-r" onclick="scrollVidCar('vid-car-${accId}',1)">›</button></div>`;
       } else {
         const vw=sec.videoWidth||320;const visible=allVids.slice(0,visCount);const extra=allVids.slice(visCount);
         o+=`<div class="vid-gcol" style="--vw:${vw}px">`;
-        visible.forEach(v=>{o+=`<div>${mkVidEmbed(v)}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
+        visible.forEach(v=>{o+=`<div style="position:relative">${mkVidEmbed(v)}${window._feDelBtn?window._feDelBtn('video',v.id,v.addedBy):''}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
         o+=`</div>`;
         if(extra.length){
           o+=`<div class="cd-expand" id="${accId}"><div class="vid-gcol" style="--vw:${vw}px">`;
-          extra.forEach(v=>{o+=`<div>${mkVidEmbed(v)}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
+          extra.forEach(v=>{o+=`<div style="position:relative">${mkVidEmbed(v)}${window._feDelBtn?window._feDelBtn('video',v.id,v.addedBy):''}${v.caption?`<div class="vid-caption">${v.caption}</div>`:''}</div>`;});
           o+=`</div></div><div class="voir-plus" id="${accId}-btn" data-extra="${extra.length}" onclick="toggleVidAcc('${accId}')">Voir les ${extra.length} autres vidéos ▾</div>`;
         }
       }
@@ -3053,7 +3056,7 @@ function render(data){
       const _wSty = _fixedW
         ? `flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`
         : `flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`;
-      return `<div class="gal-item ${_fixedW?'gal-item-fixed':'gal-item-auto'}" style="${_wSty}"><div class="gal-media" style="height:${_h}px"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+      return `<div class="gal-item ${_fixedW?'gal-item-fixed':'gal-item-auto'}" style="${_wSty}"><div class="gal-media" style="height:${_h}px"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}${window._feDelBtn?window._feDelBtn('photo',p.id,p.addedBy):''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
     }
     // Présentation : 'carousel' (défilement horizontal) ou 'grid' (mur, défaut).
     const galDisplay = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
@@ -3068,10 +3071,10 @@ function render(data){
         const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0;
         const hSty = ph_h? (ph_h+'px') : 'var(--gal-ch,'+galH+'px)';
         if(ph_w){ // largeur imposée -> cadre fixe, recadrage cover
-          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw"><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw"><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}${window._feDelBtn?window._feDelBtn('photo',p.id,p.addedBy):''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
         }
         // ratio auto : la tuile épouse la photo (verticale = étroite, horizontale = large)
-        return `<div class="gal-item gal-ratio"><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
+        return `<div class="gal-item gal-ratio"><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${cr?`<span class="gal-credit">© ${cr}</span>`:''}${window._feDelBtn?window._feDelBtn('photo',p.id,p.addedBy):''}</div>${cap?`<div class="gal-cap">${cap}</div>`:''}</div>`;
       }
       const _cid='gal-car-'+Math.random().toString(36).slice(2,8);
       // « Images visibles » (indicatif) : si défini, la hauteur est calculée au rendu (JS) pour en faire tenir ~N.
@@ -4070,10 +4073,10 @@ function renderExpedition(data){
       if(sec.display==='carousel'){
         const cid='exp-vid-car-'+(_vc++);
         o+=`<div class="exp-vid-carousel${sec.fullWidth?' exp-vid-carousel-full':''}" id="${cid}" style="--vid-ch:${parseInt(sec.carHeight,10)||240}px"><div class="exp-vid-carousel-track">`;
-        all.forEach(v=>{o+=`<div class="exp-vid-carousel-item ${v.type==='short'?'is-short':'is-classic'}">${expVidEmbed(v)}</div>`;});
+        all.forEach(v=>{o+=`<div class="exp-vid-carousel-item ${v.type==='short'?'is-short':'is-classic'}">${expVidEmbed(v)}${window._feDelBtn?window._feDelBtn('video',v.id,v.addedBy):''}</div>`;});
         o+=`</div><button class="exp-vid-nav exp-vid-nav-l" onclick="scrollExpVidCar('${cid}',-1)">‹</button><button class="exp-vid-nav exp-vid-nav-r" onclick="scrollExpVidCar('${cid}',1)">›</button></div>`;
       } else {
-        o+=`<div class="exp-vid-grid">`; all.forEach(v=>{o+=`<div class="exp-vid-item${v.type==='short'?' is-short':''}">${expVidEmbed(v)}</div>`;});o+=`</div>`;
+        o+=`<div class="exp-vid-grid">`; all.forEach(v=>{o+=`<div class="exp-vid-item${v.type==='short'?' is-short':''}">${expVidEmbed(v)}${window._feDelBtn?window._feDelBtn('video',v.id,v.addedBy):''}</div>`;});o+=`</div>`;
       }
     });
     return o+_feAddEV+`</section>`;
@@ -4096,7 +4099,7 @@ function renderExpedition(data){
     if(!gp.length) return _feAddEG ? (o+'<div class="sec-add-empty">Aucune photo pour l\'instant.</div>'+_feAddEG+'</section>') : '';
     const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     const _gExpH = parseInt(event.galleryHeight)||260;
-    function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; return out+`</div>`; }
+    function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; if(window._feDelBtn&&typeof p==='object')out+=window._feDelBtn('photo',p.id,p.addedBy); return out+`</div>`; }
     // Présentation en carrousel (option) — sinon mur (flex).
     const _gDisp = (opts && opts.galleryDisplay) || event.galleryDisplay || 'grid';
     if(_gDisp==='carousel'){
@@ -4111,9 +4114,9 @@ function renderExpedition(data){
         const credit = cr?`<span class="gal-credit">© ${cr}</span>`:'';
         const capHtml = cap?`<div class="gal-cap">${cap}</div>`:'';
         if(ph_w){
-          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw;cursor:pointer" ${click}><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}</div>${capHtml}</div>`;
+          return `<div class="gal-item gal-fixed" style="width:${ph_w}px;max-width:86vw;cursor:pointer" ${click}><div class="gal-media" style="height:${hSty};width:${ph_w}px;max-width:86vw"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}${window._feDelBtn?window._feDelBtn('photo',p.id,p.addedBy):''}</div>${capHtml}</div>`;
         }
-        return `<div class="gal-item gal-ratio" style="cursor:pointer" ${click}><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}</div>${capHtml}</div>`;
+        return `<div class="gal-item gal-ratio" style="cursor:pointer" ${click}><div class="gal-media" style="height:${hSty}"><img src="${url}" alt="${cap}" loading="lazy" onerror="var c=this.closest('.gal-item');if(c)c.remove()">${credit}${window._feDelBtn?window._feDelBtn('photo',p.id,p.addedBy):''}</div>${capHtml}</div>`;
       }
       const _cid='exp-gal-car-'+Math.random().toString(36).slice(2,8);
       const _cvis=(opts&&opts.galleryCarVis!=null&&opts.galleryCarVis!=='')?parseInt(opts.galleryCarVis,10):(parseInt(event.galleryCarouselVisible,10)||0);
@@ -7543,6 +7546,26 @@ window._tmgResizeSettle=function(){
   };
   window._feAddPhoto=function(){ initAuth(); if(eUser) openPhoto(); else openLogin(); };
   window._feAddVideo=function(){ initAuth(); if(eUser) openVideo(); else openLogin(); };
+  // Suppression par le propriétaire de SES contributions.
+  window._feDelPhoto=function(id){
+    initAuth(); if(!eUser){ openLogin(); return; }
+    if(!confirm('Supprimer cette photo ?')) return;
+    var gal=(window._rtState&&window._rtState.event&&window._rtState.event.gallery)||[];
+    var next=gal.filter(function(p){ return !(p && p.id===id && p.addedBy===eUser.uid); });
+    if(next.length===gal.length){ toast('Photo introuvable'); return; }
+    eDb.collection('events').doc(EVENT_ID).update({gallery:next}).then(function(){ toast('Photo supprimée'); }).catch(function(e){ toast('Erreur : '+(e.message||e)); });
+  };
+  window._feDelVideo=function(id){
+    initAuth(); if(!eUser){ openLogin(); return; }
+    if(!confirm('Supprimer cette vidéo ?')) return;
+    eDb.collection('events').doc(EVENT_ID).collection('videos').doc(id).delete().then(function(){ toast('Vidéo supprimée'); }).catch(function(e){ toast('Erreur : '+(e.message||e)); });
+  };
+  // Bouton ✕ affiché UNIQUEMENT au propriétaire de la contribution.
+  window._feDelBtn=function(kind,id,addedBy){
+    if(!(eUser && id && addedBy && addedBy===eUser.uid)) return '';
+    var fn=(kind==='video')?'_feDelVideo':'_feDelPhoto';
+    return '<button class="ctx-del" title="Supprimer" onclick="event.stopPropagation();window.'+fn+'(\''+id+'\')">✕</button>';
+  };
   // Bouton d'ajout « en contexte » rendu dans les sections galerie/vidéos (si connecté + frontEdit).
   window._feCtxAddHtml=function(kind){
     if(!(ev().frontEdit && eUser)) return '';
@@ -7653,7 +7676,7 @@ window._tmgResizeSettle=function(){
       pub.disabled=true; pub.textContent='Envoi…'; perr.style.display='none';
       var cap=(m.box.querySelector('#fe-cap').value||'').trim();
       uploadImage(f).then(function(url){
-        var obj={url:url,caption:cap,page:pageId(),addedBy:eUser.uid,addedByEmail:eUser.email||''};
+        var obj={id:'ph_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),url:url,caption:cap,page:pageId(),addedBy:eUser.uid,addedByEmail:eUser.email||''};
         return eDb.collection('events').doc(EVENT_ID).update({gallery:firebase.firestore.FieldValue.arrayUnion(obj)});
       }).then(function(){ m.close(); toast('Photo publiée'); })
       .catch(function(e){ pub.disabled=false; pub.textContent='Publier la photo'; perr.textContent='Erreur : '+(e.message||e); perr.style.display='block'; });
