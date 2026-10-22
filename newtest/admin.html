@@ -3400,6 +3400,7 @@ function renderApparence(el){
   _gcInner += '<div class="form-row" style="max-width:220px"><label class="form-label">Fond bandeau Interviews</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-itw-bg" value="'+(ev.interviewsBgColor||'#FFF4EC')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"><label class="form-label" style="margin:0;font-size:11px"><input type="checkbox" id="app-itw-bg-on" '+(ev.interviewsBgColor?'checked':'')+'> Personnaliser</label></div></div>';
   _gcInner += '<div class="form-row" style="max-width:220px"><label class="form-label">Trait des titres de rubrique</label><div style="display:flex;align-items:center;gap:8px"><input type="color" id="app-sec-rule" value="'+(ev.sectionRuleColor||ev.accentColor||'#E8842C')+'" style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"><label class="form-label" style="margin:0;font-size:11px"><input type="checkbox" id="app-sec-rule-on" '+(ev.sectionRuleColor?'checked':'')+'> Personnaliser</label></div></div>';
   _gcInner += '</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Décoché = couleur par défaut du thème. La couleur de fond du bloc Contact se règle dans l\'onglet <b>Contact</b>.</div></div>';
+  _gcInner += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="app-hide-subtitles" '+(ev.hideSubtitles?'checked':'')+'> Masquer les sous-titres sous les titres de section</label><div style="font-size:10px;color:var(--text3);margin-top:3px">S\'applique à tout le dashboard (galerie, vidéos, citations, etc.).</div></div>';
   _gcInner += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="saveGlobalColors()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>';
   h+=_det('🎨','Couleurs globales',_gcInner, true);
 
@@ -3845,7 +3846,8 @@ async function saveGlobalColors(){
       accentColor:document.getElementById('app-accent-color').value||'',
       liveColor:document.getElementById('app-live-color').value||'',
       interviewsBgColor:_on('app-itw-bg-on')?_v('app-itw-bg'):'',
-      sectionRuleColor:_on('app-sec-rule-on')?_v('app-sec-rule'):''
+      sectionRuleColor:_on('app-sec-rule-on')?_v('app-sec-rule'):'',
+      hideSubtitles:_on('app-hide-subtitles')
     });
     toast('Couleurs globales enregistrées');
   }catch(err){
@@ -11102,6 +11104,18 @@ function _ctPersonRow(p, i){
     </div>
   </div>`;
 }
+function _ctStyRow(label, key, st){
+  st=st||{};
+  var fonts=['','Josefin Sans','Playfair Display','Libre Caslon Text','Libre Caslon Display','IBM Plex Mono','Archivo','Inter','Georgia','Arial'];
+  var fopts=fonts.map(function(f){return '<option value="'+f+'"'+(((st.font||'')===f)?' selected':'')+'>'+(f||'(police par défaut)')+'</option>';}).join('');
+  var weights=[['','Graisse (défaut)'],['300','Fin (300)'],['400','Normal (400)'],['500','Moyen (500)'],['600','Semi-gras (600)'],['700','Gras (700)'],['800','Extra-gras (800)']];
+  var wopts=weights.map(function(w){return '<option value="'+w[0]+'"'+(((st.weight||'')===w[0])?' selected':'')+'>'+w[1]+'</option>';}).join('');
+  return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">'
+    +'<span style="width:88px;font-size:12px;font-weight:600">'+label+'</span>'
+    +'<select id="ct-sty-'+key+'-font" style="min-width:160px;flex:0 0 auto">'+fopts+'</select>'
+    +'<input id="ct-sty-'+key+'-size" type="number" min="8" max="60" placeholder="px" value="'+(st.size||'')+'" style="width:72px" title="Taille en px">'
+    +'<select id="ct-sty-'+key+'-weight" style="min-width:150px">'+wopts+'</select></div>';
+}
 function renderContact(el){
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
   el.innerHTML='<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div style="padding:18px;color:var(--text3);font-size:13px">Chargement…</div>';
@@ -11117,6 +11131,12 @@ function _renderContactUI(el, raw){
   let peopleHtml=ct.people.length?ct.people.map((p,i)=>_ctPersonRow(p,i)).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card" style="padding:12px 16px"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="ct-public" ${isPublic?'checked':''} style="margin-top:2px"><span style="font-size:13px"><strong>Rendre les contacts publics</strong><br><span style="font-size:11px;color:var(--text3)">Par défaut, les contacts (données sensibles) ne sont visibles que par les personnes <strong>connectées</strong> sur le dashboard. Cochez pour les afficher à tous les visiteurs.</span></span></label></div>
+  <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
+    ${_ctStyRow('Nom','name',(raw&&raw.styles&&raw.styles.name))}
+    ${_ctStyRow('Rôle','role',(raw&&raw.styles&&raw.styles.role))}
+    ${_ctStyRow('E-mail','email',(raw&&raw.styles&&raw.styles.email))}
+    ${_ctStyRow('Téléphone','phone',(raw&&raw.styles&&raw.styles.phone))}
+  </div>
   <div class="admin-card"><h3>Informations de contact</h3>
     <div class="form-group"><label class="form-label">Titre du bloc</label><input class="form-input" id="ct-title" value="${(ct.title||'Contact').replace(/"/g,'&quot;')}" placeholder="Contact"></div>
     <div class="form-group"><label class="form-label">📅 Lien de prise de RDV global (optionnel)</label><input class="form-input" id="ct-booking-global" value="${(ct.bookingUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/votre-equipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Bouton « Prendre rendez-vous » affiché une fois pour tout le bloc, en plus des liens propres à chaque contact.</div></div>
@@ -11273,6 +11293,12 @@ async function saveContact(){
   // Confidentialité : les contacts vivent dans une collection PROTÉGÉE (contactsPrivate),
   // lisible seulement par les connectés — sauf si marqués publics.
   contact.public = !!(document.getElementById('ct-public')||{}).checked;
+  contact.styles={};
+  ['name','role','email','phone'].forEach(function(k){
+    var f=document.getElementById('ct-sty-'+k+'-font'), s=document.getElementById('ct-sty-'+k+'-size'), w=document.getElementById('ct-sty-'+k+'-weight');
+    var o={}; if(f&&f.value)o.font=f.value; if(s&&s.value)o.size=parseInt(s.value,10)||''; if(w&&w.value)o.weight=w.value;
+    if(o.font||o.size||o.weight) contact.styles[k]=o;
+  });
   try{
     await db.collection('contactsPrivate').doc(currentEventId).set(contact);
     // On retire les contacts du document d'événement (public) pour ne pas les exposer.
