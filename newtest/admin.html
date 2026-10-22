@@ -8708,7 +8708,7 @@ async function migrateOldQuiz(){
 // ============================================================
 // SONDAGE (pop-up) — config, éditeur de questions, réponses, export
 // ============================================================
-let _svQ=[], _svResponses=[], _svList=[], _svSel=0, _svEl=null;
+let _svQ=[], _svResponses=[], _svList=[], _svSel=0, _svEl=null, _svLoadedEvent=null;
 function _svMigrate(ev){
   var list = Array.isArray(ev.surveys) ? JSON.parse(JSON.stringify(ev.surveys)) : [];
   if(!list.length){ var s=ev.survey?JSON.parse(JSON.stringify(ev.survey)):{}; s.id=s.id||'main'; s.isPopup=true; s.title=s.title||'Votre avis'; s.questions=s.questions||[]; list=[s]; }
@@ -8748,7 +8748,7 @@ function _svFmtDate(t){ var ms=_svTs(t); if(!ms) return ''; var d=new Date(ms); 
 function renderSurvey(el){
   _svEl=el;
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
-  _svList=_svMigrate(ev);
+  if(_svLoadedEvent!==currentEventId){ _svList=_svMigrate(ev); _svSel=0; _svLoadedEvent=currentEventId; }
   if(_svSel>=_svList.length||_svSel<0) _svSel=0;
   const sv=_svList[_svSel]||{};
   _svQ = JSON.parse(JSON.stringify(sv.questions||[]));
