@@ -2983,7 +2983,8 @@ function render(data){
     const videosP = _vidPage ? videos.filter(v=>!v.page||v.page===_vidPage) : videos;
     const _vidTitle=`<div id="section-videos">${event.videosShowTitle!==false?`<div class="sec-title sec-title-videos fi"><div class="sec-title-icon" style="background:rgba(220,38,38,.08);color:#DC2626">${ICO.playCircle}</div><h2>${event.videosTitle||'Vidéos'}</h2><div class="sec-title-line"></div><p>${event.videosSubtitle||'Reportages et temps forts en images'}</p></div>`:""}</div>`;
     const _feAddV=(window._feCtxAddHtml?window._feCtxAddHtml('video'):'');
-    if(!videosP.length) return _feAddV ? (_vidTitle+'<div class="sec-add-empty">Aucune vidéo pour l\'instant.</div>'+_feAddV) : '';
+    const _feEmptyV=(window._feCtxEmptyHtml?window._feCtxEmptyHtml('video'):'');
+    if(!videosP.length) return _feEmptyV ? (_vidTitle+_feEmptyV) : '';
     const sections=event.videoSections||[{id:'default',title:'Vidéos',display:'grid',visibleCount:6}];
     var _vidAccCounter=0;
     let o=_vidTitle;
@@ -3077,7 +3078,8 @@ function render(data){
     if(_pageId) photos = photos.filter(p => !p.page || p.page === _pageId);
     const _galTitle = `<div id="section-gallery">${event.galleryShowTitle!==false?`<div class="sec-title sec-title-gallery fi"><div class="sec-title-icon" style="background:rgba(8,145,178,.08);color:#0891B2">${ICO.image}</div><h2>${event.galleryTitle||'Galerie'}</h2><div class="sec-title-line"></div><p>${event.gallerySubtitle||'En images'}</p></div>`:""}</div>`;
     const _feAddG = (window._feCtxAddHtml?window._feCtxAddHtml('photo'):'');
-    if(!photos.length) return _feAddG ? (_galTitle+'<div class="sec-add-empty">Aucune photo pour l\'instant.</div>'+_feAddG) : '';
+    const _feEmptyG = (window._feCtxEmptyHtml?window._feCtxEmptyHtml('photo'):'');
+    if(!photos.length) return _feEmptyG ? (_galTitle+_feEmptyG) : '';
     let o = _galTitle;
     // Hauteur par défaut (bloc via opts, sinon réglage global). La hauteur ET la largeur
     // se définissent photo par photo dans l'onglet Galerie (p.height / p.width).
@@ -4107,7 +4109,8 @@ function renderExpedition(data){
     const _feAddEV=(window._feCtxAddHtml?window._feCtxAddHtml('video'):'');
     let o = `<section class="exp-videos">`;
     if(event.videosShowTitle!==false) o += `<div class="exp-section-head exp-sec-videos"><h2>${event.videosTitle||'Vidéos'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.videosSubtitle||'En images, depuis le terrain'}</p>`;
-    if(!_vids || !_vids.length) return _feAddEV ? (o+'<div class="sec-add-empty">Aucune vidéo pour l\'instant.</div>'+_feAddEV+'</section>') : '';
+    var _feEmptyEV=(window._feCtxEmptyHtml?window._feCtxEmptyHtml('video'):'');
+    if(!_vids || !_vids.length) return _feEmptyEV ? (o+_feEmptyEV+'</section>') : '';
     const vSections = event.videoSections || [{id:'default',title:event.videosTitle||'Vidéos',display:'grid',visibleCount:6}];
     function expVidEmbed(v){
       const isShort=v.type==='short'; const fc=`exp-vid-frame${isShort?' exp-vid-frame-short':''}`;
@@ -4148,7 +4151,8 @@ function renderExpedition(data){
     const _feAddEG=(window._feCtxAddHtml?window._feCtxAddHtml('photo'):'');
     let o=`<section class="exp-gallery">`;
     if(event.galleryShowTitle!==false){ o+=`<div class="exp-section-head exp-sec-gallery"><h2>${event.galleryTitle||'Galerie'}</h2><div class="rule"></div></div><p class="exp-section-sub">${event.gallerySubtitle||'En images'}</p>`; }
-    if(!gp.length) return _feAddEG ? (o+'<div class="sec-add-empty">Aucune photo pour l\'instant.</div>'+_feAddEG+'</section>') : '';
+    var _feEmptyEG=(window._feCtxEmptyHtml?window._feCtxEmptyHtml('photo'):'');
+    if(!gp.length) return _feEmptyEG ? (o+_feEmptyEG+'</section>') : '';
     const GALLERY_VIS = (opts && opts.galleryVisible!=null && opts.galleryVisible!=='') ? parseInt(opts.galleryVisible) : (parseInt(event.galleryVisibleCount) || 9);
     const _gExpH = parseInt(event.galleryHeight)||260;
     function gi(p,idx,lazy){ const url=typeof p==='string'?p:p.url||'';const cap=typeof p==='object'?p.caption||'':'';const cr=typeof p==='object'?p.copyright||'':''; const ph_h=(typeof p==='object'&&p.height)?parseInt(p.height,10):0; const ph_w=(typeof p==='object'&&p.width)?parseInt(p.width,10):0; const _gh=ph_h||_gExpH; const _fixedW=!!ph_w; const _wSty=_fixedW?`flex:0 0 ${ph_w}px;width:${ph_w}px;max-width:100%`:`flex:0 1 calc(33.333% - 7px);max-width:calc(33.333% - 7px)`; const lz=lazy?' loading="lazy"':''; let out=`<div class="exp-gal-item ${_fixedW?'exp-gal-fixed':'exp-gal-auto'}" style="${_wSty};height:${_gh}px" onclick="openGalBg('${url.replace(/'/g,"\\'")}')"><img src="${url}" alt="${cap}"${lz} onerror="this.parentElement.remove()">`; if(cap)out+=`<div class="exp-gal-caption">${cap}</div>`; if(cr)out+=`<span class="exp-gal-credit">© ${cr}</span>`; if(window._feDelBtn&&typeof p==='object')out+=window._feDelBtn('photo',p.id,p.addedBy); return out+`</div>`; }
@@ -7642,6 +7646,14 @@ window._tmgResizeSettle=function(){
     if(kind==='video') return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddVideo&&window._feAddVideo()">＋ Ajouter une vidéo</button></div>';
     return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddPhoto&&window._feAddPhoto()">＋ Ajouter une photo</button></div>';
   };
+  // État « vide » : si contribution activée, on affiche le titre + soit le bouton (connecté),
+  // soit une invitation à se connecter (le bouton de connexion est en bas à gauche).
+  window._feCtxEmptyHtml=function(kind){
+    if(!ev().frontEdit) return '';
+    var word=kind==='video'?'vidéo':'photo';
+    if(eUser) return '<div class="sec-add-empty">Aucune '+word+' pour l\'instant.</div>'+window._feCtxAddHtml(kind);
+    return '<div class="sec-add-empty">🔒 Aucune '+word+' pour l\'instant — connectez-vous pour en ajouter (bouton en bas à gauche).</div>';
+  };
 
   function ensurePill(){
     if(pill) return;
@@ -7665,7 +7677,8 @@ window._tmgResizeSettle=function(){
     } else {
       // Déconnecté : pas d'entourage sombre, juste le bouton.
       pill.style.background='transparent'; pill.style.padding='0'; pill.style.boxShadow='none';
-      pill.innerHTML='<span data-fe="in">'+b('🔐 Se connecter','#2563eb')+'</span>';
+      var _lbl=(ev().loginLabel||'').trim()||'🔐 Se connecter';
+      pill.innerHTML='<span data-fe="in">'+b(esc(_lbl),'#2563eb')+'</span>';
       pill.querySelector('[data-fe="in"]').onclick=function(){ initAuth(); openLogin(); };
     }
   }
@@ -7897,8 +7910,7 @@ window._tmgResizeSettle=function(){
     var block=blockOf(tid); if(!block) return;
     var el=block.querySelector('.cmt-compose'); if(!el) return;
     if(!edUser()){
-      el.innerHTML='<div class="cmt-login"><span>🔒 Connectez-vous pour écrire un commentaire.</span><button class="cmt-login-btn">Se connecter</button></div>';
-      var lb=el.querySelector('.cmt-login-btn'); if(lb) lb.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
+      el.innerHTML='<div class="cmt-login"><span>🔒 Connectez-vous pour écrire un commentaire (bouton en bas à gauche).</span></div>';
       return;
     }
     el.innerHTML=formHtml('Votre commentaire…');
@@ -8160,7 +8172,7 @@ window._tmgResizeSettle=function(){
     var orph=data.filter(function(p){return !known[p.excursion];});
     if(orph.length){ html+='<div class="exc-grp"><div class="exc-grp-title">Autres</div>'+carousel(orph)+'</div>'; }
     if(u){ html+='<div class="exc-add"><button class="exc-add-btn">＋ Ajouter mes photos</button></div>'; }
-    else { html+='<div class="exc-login"><span>🔒 Connectez-vous pour ajouter vos photos.</span><button class="exc-login-btn">Se connecter</button></div>'; }
+    else { html+='<div class="exc-login"><span>🔒 Connectez-vous pour ajouter vos photos (bouton en bas à gauche).</span></div>'; }
     body.innerHTML=html;
     var addBtn=body.querySelector('.exc-add-btn'); if(addBtn) addBtn.onclick=function(){ openAdd(bid); };
     var lg=body.querySelector('.exc-login-btn'); if(lg) lg.onclick=function(){ if(ed()&&ed().openLogin) ed().openLogin(); };
@@ -8257,7 +8269,7 @@ window._tmgResizeSettle=function(){
   window._lockBlockHtml=function(title,msg,exp){
     function e(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     var head=exp?'<div class="exp-section-head fi"><h2>'+e(title)+'</h2><div class="rule"></div></div>':'<div class="sec-title fi"><h2>'+e(title)+'</h2><div class="sec-title-line"></div></div>';
-    return head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 '+e(msg||'Connectez-vous pour participer.')+'</span><button class="ct-lock-btn" onclick="window._tmgEditor&&window._tmgEditor.openLogin&&window._tmgEditor.openLogin()">Se connecter</button></div>';
+    return head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 '+e(msg||'Connectez-vous pour participer.')+'</span></div>';
   };
   window._ctStyleVars=function(st){
     if(!st||typeof st!=='object') return '';
@@ -8274,7 +8286,7 @@ window._tmgResizeSettle=function(){
     var head = exp
       ? '<div class="exp-section-head fi"><h2>Contact</h2><div class="rule"></div></div>'
       : '<div class="sec-title fi"><h2>Contact</h2><div class="sec-title-line"></div></div>';
-    return '<div id="section-contact">'+head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 Contacts réservés — connectez-vous pour les afficher.</span><button class="ct-lock-btn" onclick="window._tmgEditor&&window._tmgEditor.openLogin&&window._tmgEditor.openLogin()">Se connecter</button></div></div>';
+    return '<div id="section-contact">'+head+'<div class="ct-lock'+(exp?' ct-lock-exp':'')+'"><span>🔒 Contacts réservés — connectez-vous pour les afficher (bouton en bas à gauche).</span></div></div>';
   };
   var _unsub=null;
   function _legacy(){ return (window._rtState && window._rtState.event && window._rtState.event.contact) || null; }
