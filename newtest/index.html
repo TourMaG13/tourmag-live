@@ -383,6 +383,7 @@ img{display:block}a{text-decoration:none}
 .sec-title h2{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
 .sec-title-line{width:60px;height:3px;background:var(--sec-rule,var(--pri));margin:8px auto;border-radius:2px}
 .sec-title p{font-family:'Playfair Display';font-style:italic;font-size:13px;color:var(--text3)}
+body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:none !important}
 @media(max-width:768px){.sec-title{padding:36px 0 20px}.sec-title h2{font-size:18px;letter-spacing:1px}}
 
 /* Old section label fallback */
@@ -969,8 +970,12 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .contact-card-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0}
 .contact-card-photo-ph{width:72px;height:72px;border-radius:50%;background:#E2E8F0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Josefin Sans';font-size:24px;font-weight:700;color:#94A3B8}
 .contact-card-body{flex:1;min-width:0}
-.contact-card-name{font-family:'Josefin Sans';font-size:19px;font-weight:700;color:var(--_ct-name-color,var(--pri));line-height:1.2}
-.contact-card-role{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--_ct-role-color,var(--text3));margin-top:2px;margin-bottom:8px}
+.contact-card-name{font-family:var(--ct-name-font,'Josefin Sans');font-size:var(--ct-name-size,19px);font-weight:var(--ct-name-weight,700);color:var(--_ct-name-color,var(--pri));line-height:1.2}
+.contact-card-role{font-family:var(--ct-role-font,inherit);font-size:var(--ct-role-size,11px);font-weight:var(--ct-role-weight,400);text-transform:uppercase;letter-spacing:.1em;color:var(--_ct-role-color,var(--text3));margin-top:2px;margin-bottom:8px}
+.contact-btn-email span{font-family:var(--ct-email-font,inherit);font-size:var(--ct-email-size,inherit);font-weight:var(--ct-email-weight,inherit)}
+.contact-btn-phone span{font-family:var(--ct-phone-font,inherit);font-size:var(--ct-phone-size,inherit);font-weight:var(--ct-phone-weight,inherit)}
+.exp-contact-btn-email span{font-family:var(--ct-email-font,inherit);font-size:var(--ct-email-size,inherit);font-weight:var(--ct-email-weight,inherit)}
+.exp-contact-btn-phone span{font-family:var(--ct-phone-font,inherit);font-size:var(--ct-phone-size,inherit);font-weight:var(--ct-phone-weight,inherit)}
 .contact-card-msg{font-size:13.5px;line-height:1.6;color:var(--text2);margin-bottom:12px}
 .contact-card-actions{display:flex;gap:10px;flex-wrap:wrap}
 .contact-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;font-size:12.5px;font-weight:600;border:1.5px solid var(--_ct-btn-color,var(--acc));color:var(--_ct-btn-color,var(--acc));background:transparent;border-radius:100px;text-decoration:none;transition:all .18s;white-space:nowrap}
@@ -1124,8 +1129,8 @@ body.mode-expedition .exp-seg-tip .leaflet-tooltip-content{padding:14px 18px}
 .exp-contact-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--exp-line);flex-shrink:0}
 .exp-contact-photo-ph{width:80px;height:80px;border-radius:50%;background:var(--exp-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Archivo',sans-serif;font-size:28px;font-weight:600;color:var(--exp-grey)}
 .exp-contact-body{flex:1;min-width:0}
-.exp-contact-name{font-family:'Libre Caslon Display',serif;font-size:22px;margin-bottom:2px;color:var(--_ct-name-color,inherit)}
-.exp-contact-role{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;color:var(--_ct-role-color,inherit)}
+.exp-contact-name{font-family:var(--ct-name-font,'Libre Caslon Display',serif);font-size:var(--ct-name-size,22px);font-weight:var(--ct-name-weight,400);margin-bottom:2px;color:var(--_ct-name-color,inherit)}
+.exp-contact-role{font-family:var(--ct-role-font,'IBM Plex Mono',monospace);font-size:var(--ct-role-size,11px);font-weight:var(--ct-role-weight,400);letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px;color:var(--_ct-role-color,inherit)}
 .exp-contact-msg{font-family:'Libre Caslon Text',serif;font-style:italic;opacity:.8;font-size:14.5px;line-height:1.6;margin-bottom:14px}
 .exp-contact-actions{display:flex;gap:12px;flex-wrap:wrap}
 .exp-contact-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;border:1px solid var(--_ct-btn-color,currentColor);background:transparent;color:var(--_ct-btn-color,inherit);text-decoration:none;transition:all .2s}
@@ -2454,6 +2459,7 @@ function render(data){
   // Ensure live mode styling
   document.body.classList.remove('mode-expedition');
   document.body.classList.add('mode-live');
+  document.body.classList.toggle('hide-subtitles', !!(event && event.hideSubtitles));
 
   // Apply hero color
   if(event.color) applyHeroColor(event.color);
@@ -3169,6 +3175,7 @@ function render(data){
     if(nameC) cardStyle += `--_ct-name-color:${nameC};`;
     if(roleC) cardStyle += `--_ct-role-color:${roleC};`;
     if(btnC) cardStyle += `--_ct-btn-color:${btnC};`;
+    cardStyle += (window._ctStyleVars?window._ctStyleVars(ctRaw.styles):'');
 
     const svgMail = '<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>';
     const svgPhone = '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
@@ -3185,8 +3192,8 @@ function render(data){
       if(p.role) c += `<div class="contact-card-role">${p.role}</div>`;
       if(p.message) c += `<div class="contact-card-msg">${p.message}</div>`;
       c += `<div class="contact-card-actions">`;
-      if(p.email) c += `<a class="contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
-      if(p.phone) c += `<a class="contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
+      if(p.email) c += `<a class="contact-btn contact-btn-email" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
+      if(p.phone) c += `<a class="contact-btn contact-btn-phone" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
       if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl=(p.website_label||'').trim(); if(!_lbl){ try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } } c += `<a class="contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="contact-btn contact-btn-book" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
@@ -3608,6 +3615,7 @@ function renderExpedition(data){
   // Apply expedition mode to body
   document.body.classList.add('mode-expedition');
   document.body.classList.remove('mode-live');
+  document.body.classList.toggle('hide-subtitles', !!(event && event.hideSubtitles));
   document.documentElement.style.setProperty('--exp-accent', accent);
   document.documentElement.style.setProperty('--acc', accent);
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||48)+'px');
@@ -4275,6 +4283,7 @@ function renderExpedition(data){
     if(nameC) cardStyle += `--_ct-name-color:${nameC};`;
     if(roleC) cardStyle += `--_ct-role-color:${roleC};`;
     if(btnC) cardStyle += `--_ct-btn-color:${btnC};`;
+    cardStyle += (window._ctStyleVars?window._ctStyleVars(ctRaw.styles):'');
     if(!bgC) cardStyle += '--_ct-bg:var(--exp-stone);';
 
     const svgMail = '<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>';
@@ -4292,8 +4301,8 @@ function renderExpedition(data){
       if(p.role) c += `<div class="exp-contact-role">${p.role}</div>`;
       if(p.message) c += `<div class="exp-contact-msg">${p.message}</div>`;
       c += `<div class="exp-contact-actions">`;
-      if(p.email) c += `<a class="exp-contact-btn" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
-      if(p.phone) c += `<a class="exp-contact-btn" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
+      if(p.email) c += `<a class="exp-contact-btn exp-contact-btn-email" href="mailto:${p.email}">${svgMail}<span>${p.email}</span></a>`;
+      if(p.phone) c += `<a class="exp-contact-btn exp-contact-btn-phone" href="tel:${p.phone}">${svgPhone}<span>${p.phone}</span></a>`;
       if(p.website){ const _w=String(p.website).trim(); const _href=/^https?:\/\//i.test(_w)?_w:('https://'+_w); let _lbl=(p.website_label||'').trim(); if(!_lbl){ try{ _lbl=new URL(_href).hostname.replace(/^www\./,''); }catch(e){ _lbl=_w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; } } c += `<a class="exp-contact-btn" href="${_href}" target="_blank" rel="noopener">${svgWeb}<span>${_lbl}</span></a>`; }
       if(p.booking_url) c += `<a class="exp-contact-btn" href="${p.booking_url}" target="_blank" rel="noopener">${svgCal}<span>Prendre rendez-vous</span></a>`;
       c += `</div></div></div>`;
@@ -8133,6 +8142,17 @@ window._tmgResizeSettle=function(){
   function pubDb(){ return window._pubDb||null; }
   function ed(){ return window._tmgEditor||null; }
   function edUser(){ var e=ed(); return (e&&e.user)?e.user():null; }
+  window._ctStyleVars=function(st){
+    if(!st||typeof st!=='object') return '';
+    var out='';
+    ['name','role','email','phone'].forEach(function(k){
+      var s=st[k]; if(!s) return;
+      if(s.font) out+='--ct-'+k+'-font:'+s.font+';';
+      if(s.size) out+='--ct-'+k+'-size:'+parseInt(s.size,10)+'px;';
+      if(s.weight) out+='--ct-'+k+'-weight:'+s.weight+';';
+    });
+    return out;
+  };
   window._contactLockHtml=function(exp){
     var head = exp
       ? '<div class="exp-section-head fi"><h2>Contact</h2><div class="rule"></div></div>'
