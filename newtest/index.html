@@ -1038,6 +1038,47 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .contact-btn-book{background:var(--_ct-btn-color,var(--acc));color:#fff}
 .contact-btn-book:hover{opacity:.88}
 .contact-book-global{text-align:center;margin-top:20px}
+/* ---- Annuaire compact (mode directory) : adaptatif à la largeur du conteneur ---- */
+.ct-dir{container-type:inline-size;width:100%;max-width:760px;margin:0 auto}
+.ct-dir-search{position:sticky;top:8px;z-index:3;display:flex;align-items:center;gap:8px;background:var(--card,#fff);border:1.5px solid var(--border);border-radius:100px;padding:8px 14px;box-shadow:var(--shadow)}
+.ct-dir-search svg{width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0}
+.ct-dir-search input{flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:14px;color:var(--text,#111);min-width:0}
+.ct-dir-count{font-size:11px;color:var(--text3);white-space:nowrap}
+.ct-dir-list{margin-top:10px;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card,#fff)}
+.ct-dir-group{position:sticky;top:54px;z-index:2;background:var(--bg,#f1f5f9);color:var(--text3);font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 16px;border-top:1px solid var(--border)}
+.ct-dir-row{border-top:1px solid var(--border)}
+.ct-dir-row:first-child{border-top:0}
+.ct-dir-head{display:flex;align-items:center;gap:12px;padding:9px 14px;cursor:pointer}
+.ct-dir-head:hover{background:color-mix(in srgb,var(--acc,#E8842C) 6%,transparent)}
+.ct-dir-av{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#E2E8F0}
+.ct-dir-av-ph{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#E2E8F0;color:#64748B;font:700 12px 'Josefin Sans',sans-serif}
+.ct-dir-id{flex:1;min-width:0}
+.ct-dir-name{font-size:14px;font-weight:600;color:var(--pri,#111);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-dir-role{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-dir-quick{display:flex;gap:6px;flex-shrink:0}
+.ct-dir-ic{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);color:var(--acc,#E8842C);background:transparent;text-decoration:none}
+.ct-dir-ic:hover{background:var(--acc,#E8842C);color:#fff}
+.ct-dir-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.ct-dir-caret{flex-shrink:0;color:var(--text3);transition:transform .15s;font-size:12px}
+.ct-dir-row.open .ct-dir-caret{transform:rotate(180deg)}
+.ct-dir-detail{display:none;padding:0 14px 14px 60px}
+.ct-dir-row.open .ct-dir-detail{display:block}
+.ct-dir-msg{font-size:13px;line-height:1.55;color:var(--text2);margin:2px 0 10px}
+.ct-dir-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0;font-size:13px}
+.ct-dir-line svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0}
+.ct-dir-line a{color:var(--acc,#E8842C);text-decoration:none;word-break:break-word}
+.ct-dir-line a:hover{text-decoration:underline}
+.ct-dir-copy{font:600 10px system-ui;border:1px solid var(--border);background:transparent;color:var(--text3);border-radius:6px;padding:2px 7px;cursor:pointer}
+.ct-dir-copy:hover{color:var(--text,#111)}
+.ct-dir-more{display:block;width:100%;margin-top:10px;border:1px dashed var(--border);background:transparent;color:var(--text2);font:600 13px system-ui;padding:9px;border-radius:10px;cursor:pointer}
+.ct-dir-more:hover{background:var(--bg,#f1f5f9)}
+.ct-dir-empty{padding:18px;text-align:center;color:var(--text3);font-size:13px}
+.ct-hide{display:none !important}
+@container (max-width:430px){
+  .ct-dir-detail{padding-left:14px}
+  .ct-dir-ic{width:28px;height:28px}
+  .ct-dir-group{top:52px}
+}
 @media(max-width:640px){.contact-card{flex-direction:column;text-align:center;padding:20px 16px;gap:14px}.contact-card-actions{justify-content:center}.contact-btn{justify-content:center}}
 .bn-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s;text-decoration:none;display:block;color:inherit}
 .bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
@@ -3207,6 +3248,51 @@ function render(data){
   }
 
   // ===== CONTACT (mode classique) =====
+  function _ctDirListHtml(people, ctRaw, svg){
+    var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+    var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
+    var svgSearch = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    var list = (people||[]).filter(function(p){ return p && (p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message); });
+    list.sort(function(x,y){ return String(x.name||'').localeCompare(String(y.name||''),'fr',{sensitivity:'base'}); });
+    var total = list.length;
+    var cap = parseInt(ctRaw.directoryVisible,10)||20;
+    var grp = ctRaw.directoryGroup||'auto';
+    var doGroup = (grp==='always') || (grp==='auto' && total>=30);
+    var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
+    var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
+    var rowsHtml='', curL='', rowIdx=0;
+    list.forEach(function(p){
+      if(doGroup){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } }
+      var capped = (!doGroup && rowIdx>=cap);
+      rowIdx++;
+      var hay = a([p.name,p.role,p.email,p.phone,p.website_label,p.website].filter(Boolean).join(' ').toLowerCase());
+      var av = p.photo_url
+        ? '<img class="ct-dir-av" src="'+a(p.photo_url)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'ct-dir-av-ph\\\'>'+a(ini(p.name))+'</div>\'">'
+        : '<div class="ct-dir-av-ph">'+a(ini(p.name))+'</div>';
+      var quick='';
+      if(p.email) quick += '<a class="ct-dir-ic" href="mailto:'+a(p.email)+'" title="E-mail" onclick="event.stopPropagation()">'+svg.mail+'</a>';
+      if(p.phone) quick += '<a class="ct-dir-ic" href="tel:'+a(p.phone)+'" title="Téléphone" onclick="event.stopPropagation()">'+svg.phone+'</a>';
+      var det='';
+      if(p.message) det += '<div class="ct-dir-msg">'+a(p.message)+'</div>';
+      if(p.email) det += '<div class="ct-dir-line">'+svg.mail+'<a href="mailto:'+a(p.email)+'" onclick="event.stopPropagation()">'+a(p.email)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.email)+'\',this)">Copier</button></div>';
+      if(p.phone) det += '<div class="ct-dir-line">'+svg.phone+'<a href="tel:'+a(p.phone)+'" onclick="event.stopPropagation()">'+a(p.phone)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.phone)+'\',this)">Copier</button></div>';
+      if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); var lbl=(p.website_label||'').trim()||w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; det += '<div class="ct-dir-line">'+svg.web+'<a href="'+a(href)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+a(lbl)+'</a></div>'; }
+      if(p.booking_url) det += '<div class="ct-dir-line">'+svg.cal+'<a href="'+a(p.booking_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Prendre rendez-vous</a></div>';
+      rowsHtml += '<div class="ct-dir-row'+(capped?' ct-cap ct-hide':'')+'" data-search="'+hay+'" onclick="_ctDirToggle(this)">'
+        + '<div class="ct-dir-head">'+av+'<div class="ct-dir-id"><div class="ct-dir-name">'+a(p.name||'\u2014')+'</div>'+(p.role?'<div class="ct-dir-role">'+a(p.role)+'</div>':'')+'</div><div class="ct-dir-quick">'+quick+'</div><span class="ct-dir-caret">\u25BE</span></div>'
+        + '<div class="ct-dir-detail">'+(det||'<div class="ct-dir-msg" style="opacity:.7">Pas de coordonnées renseignées.</div>')+'</div>'
+        + '</div>';
+    });
+    var moreBtn = (!doGroup && total>cap)
+      ? '<button type="button" class="ct-dir-more" onclick="_ctDirMore(this)">Voir plus ('+(total-cap)+' de plus)</button>'
+      : '';
+    return '<div class="ct-dir">'
+      + '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>'
+      + '<div class="ct-dir-list">'+rowsHtml+'</div>'
+      + moreBtn
+      + '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>'
+      + '</div>';
+  }
   function mkContact(){
     const ctRaw = window._contactData;
     if(mod.contact===false) return '';
@@ -3270,6 +3356,12 @@ function render(data){
       ? `<p style="${_ctTextStyle(_subSt,'var(--text3)',13)}">${_subTxt}</p>`
       : `<p>${_subTxt}</p>`;
     o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div>${_subHtml}</div>`;
+    if((ctRaw.displayMode||'cards')==='directory'){
+      o += _ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal});
+      if(globalBooking){ o += `<div class="contact-book-global"><a class="contact-btn contact-btn-book" href="${globalBooking}" target="_blank" rel="noopener"${cardStyle?` style="${cardStyle}"`:''}>${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
+      o += `</div>`;
+      return o;
+    }
     o += `<div class="contact-cards">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
     o += `</div>`;
@@ -8423,6 +8515,52 @@ window._tmgResizeSettle=function(){
     load();
   }, 1000);
 })();
+</script>
+<script>
+/* Annuaire compact (bloc contact) — recherche, accordéon à volet unique, « voir plus », copie */
+window._ctDirToggle=function(row){
+  if(!row) return;
+  var open=row.classList.contains('open');
+  var list=row.closest('.ct-dir-list');
+  if(list) list.querySelectorAll('.ct-dir-row.open').forEach(function(r){ if(r!==row) r.classList.remove('open'); });
+  row.classList.toggle('open', !open);
+  if(!open){ try{ row.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(_){ } }
+};
+window._ctDirFilter=function(inp){
+  var wrap=inp.closest('.ct-dir'); if(!wrap) return;
+  var list=wrap.querySelector('.ct-dir-list'); if(!list) return;
+  var q=(inp.value||'').trim().toLowerCase();
+  var searching=q.length>0;
+  var shown=0;
+  list.querySelectorAll('.ct-dir-row').forEach(function(r){
+    var hay=r.getAttribute('data-search')||'';
+    var capped=r.classList.contains('ct-cap');
+    var match=!q || hay.indexOf(q)!==-1;
+    var vis = searching ? match : (match && !capped);
+    r.classList.toggle('ct-hide', !vis);
+    if(vis) shown++;
+  });
+  list.querySelectorAll('.ct-dir-group').forEach(function(h){
+    var any=false, n=h.nextElementSibling;
+    while(n && !n.classList.contains('ct-dir-group')){ if(n.classList.contains('ct-dir-row') && !n.classList.contains('ct-hide')){ any=true; break; } n=n.nextElementSibling; }
+    h.classList.toggle('ct-hide', !any);
+  });
+  var more=wrap.querySelector('.ct-dir-more'); if(more) more.classList.toggle('ct-hide', searching || list.getAttribute('data-expanded')==='1');
+  var empty=wrap.querySelector('.ct-dir-empty'); if(empty) empty.classList.toggle('ct-hide', shown>0);
+  var cnt=wrap.querySelector('.ct-dir-count'); if(cnt) cnt.textContent=shown+(shown>1?' contacts':' contact');
+};
+window._ctDirMore=function(btn){
+  var wrap=btn.closest('.ct-dir'); if(!wrap) return;
+  var list=wrap.querySelector('.ct-dir-list');
+  if(list){ list.setAttribute('data-expanded','1'); list.querySelectorAll('.ct-cap').forEach(function(r){ r.classList.remove('ct-cap'); r.classList.remove('ct-hide'); }); }
+  btn.classList.add('ct-hide');
+};
+window._ctCopy=function(ev,txt,btn){
+  try{ ev.stopPropagation(); }catch(_){ }
+  function ok(){ var o=btn.textContent; btn.textContent='Copié ✓'; setTimeout(function(){ btn.textContent=o; },1200); }
+  try{ navigator.clipboard.writeText(txt).then(ok,function(){ ok(); }); }catch(_){ ok(); }
+  return false;
+};
 </script>
 </body>
 </html>
