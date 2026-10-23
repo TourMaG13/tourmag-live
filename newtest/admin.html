@@ -837,7 +837,7 @@ select.form-input{cursor:pointer}
           <div class="sidebar-item" data-tab="live"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-live"/></svg></span>Fil live<span class="badge" id="badge-live">0</span></div>
           <div class="sidebar-item" data-tab="citations"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-citations"/></svg></span>Citations<span class="badge" id="badge-cit">0</span></div>
           <div class="sidebar-item" data-tab="questions"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-qa"/></svg></span>Questions<span class="badge" id="badge-qa">0</span></div>
-          <div class="sidebar-item" data-tab="survey"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 16.9 5.8 20.6l1.6-6.7L2.2 8.9l6.9-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Questionnaires</div>
+          <div class="sidebar-item" data-tab="survey"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 16.9 5.8 20.6l1.6-6.7L2.2 8.9l6.9-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Satisfaction</div>
           <div class="sidebar-item" data-tab="quiz"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg></span>Quiz / Sondage</div>
           <div class="sidebar-item" data-tab="interviews"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-interviews"/></svg></span>Interviews</div>
           <div class="sidebar-item" data-tab="videos"><span class="icon"><svg class="tab-ic" viewBox="0 0 24 24"><use href="#ti-videos"/></svg></span>Vidéos</div>
@@ -1187,7 +1187,7 @@ function tabIconId(tab, variant){
     interviews:'ti-interviews', videos:'ti-videos', gallery:'ti-gallery', articles:'ti-articles',
     sponsors:'ti-sponsors', contact:'ti-contact', programme:'ti-programme', flash:'ti-flash',
     essentiel:'ti-essentiel', kpis:'ti-kpis', journalistes:'ti-reporters', etapes:'ti-etapes',
-    questions:'ti-qa', quiz:'ti-quiz',
+    questions:'ti-qa', quiz:'ti-quiz', survey:'ti-quiz', excursions:'ti-gallery', commentsmod:'ti-qa',
     apparence:'ti-apparence', decor:'ti-decor', modules:'ti-modules', media:'ti-media',
     tags:'ti-tags', rubriques:'ti-rubriques', widget:'ti-widget', access:'ti-access', guide:'ti-guide',
     pages:'ti-pages', product:'ti-sponsors', countrymap:'ti-map', builder:'ti-modules'
@@ -5367,7 +5367,7 @@ function _bpContentFieldsHtml(s){
         + '<div class="bpe-fld"><label>Titre de la carte (facultatif)</label><input value="'+_escAdm(c.ctaTitle||'')+'" placeholder="Votre avis compte" onchange="_bpSetCt(\'ctaTitle\',this.value)"></div>'
         + '<div class="bpe-fld"><label>Texte de la carte</label><textarea rows="2" placeholder="Votre avis nous intéresse — répondez à notre court questionnaire." onchange="_bpSetCt(\'ctaText\',this.value)">'+_escAdm(c.ctaText||'')+'</textarea></div>'
         + '<div class="bpe-fld"><label>Texte du bouton</label><input value="'+_escAdm(c.ctaBtn||'')+'" placeholder="Répondre au questionnaire" onchange="_bpSetCt(\'ctaBtn\',this.value)"></div>'
-        + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, intro, remerciement) se gèrent dans l\'onglet <strong>« Questionnaires »</strong>. Ici : le questionnaire affiché, le mode, et le texte de la carte d\'invitation (pop-up / accordéon). Les réponses s\'exportent par questionnaire dans cet onglet.</div>';
+        + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, intro, remerciement) se gèrent dans l\'onglet <strong>« Satisfaction »</strong>. Ici : le questionnaire affiché, le mode, et le texte de la carte d\'invitation (pop-up / accordéon). Les réponses s\'exportent par questionnaire dans cet onglet.</div>';
     }
     case 'articles': {
       return _phaseFld
@@ -8793,7 +8793,7 @@ function renderSurvey(el){
   const sv=_svList[_svSel]||{};
   _svQ = JSON.parse(JSON.stringify(sv.questions||[]));
   var tabs=_svList.map(function(s,i){ return '<button class="btn '+(i===_svSel?'btn-primary':'btn-ghost')+' btn-sm" onclick="_svSelect('+i+')">'+_escAdm(s.title||('Questionnaire '+(i+1)))+(s.isPopup?' · pop-up':'')+'</button>'; }).join('');
-  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Questionnaires</div><div class="page-desc">Créez un ou plusieurs questionnaires (étoiles, notes, choix, QCM, grille, texte). L'un sert de <strong>pop-up</strong> ; les autres s'affichent dans les pages via le module « Enquête de satisfaction ». Les réponses s'exportent en Excel (CSV), par questionnaire.</div>`;
+  let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-quiz"/></svg>Satisfaction</div><div class="page-desc">Créez un ou plusieurs questionnaires (étoiles, notes, choix, QCM, grille, texte). L'un sert de <strong>pop-up</strong> ; les autres s'affichent dans les pages via le module « Enquête de satisfaction ». Les réponses s'exportent en Excel (CSV), par questionnaire.</div>`;
   h+='<div class="admin-card" style="padding:12px 14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+tabs+'<button class="btn btn-ghost btn-sm" onclick="_svNew()">+ Nouveau questionnaire</button>'+(_svList.length>1?'<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="_svDelSurvey()">Supprimer ce questionnaire</button>':'')+'</div></div>';
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Configuration</h3>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="sv-enabled" ${sv.enabled?'checked':''}> <strong>Activer ce questionnaire</strong></label>
@@ -10269,11 +10269,14 @@ function renderAccess(el){
     {key:'citations',icon:'💬',label:'Citations'},
     {key:'questions',icon:'❓',label:'Questions du public'},
     {key:'quiz',icon:'📊',label:'Quiz / Sondage'},
+    {key:'survey',icon:'⭐',label:'Satisfaction'},
     {key:'articles',icon:'📰',label:'Articles liés'},
     {key:'videos',icon:'🎬',label:'Vidéos'},
     {key:'interviews',icon:'🎙️',label:'Interviews'},
     {key:'journalistes',icon:'👤',label:'Journalistes'},
     {key:'gallery',icon:'📸',label:'Galerie photos'},
+    {key:'excursions',icon:'🧭',label:'Photos excursions'},
+    {key:'commentsmod',icon:'🗨️',label:'Commentaires'},
     {key:'product',icon:'📦',label:'Produit'},
     {key:'countrymap',icon:'🌍',label:'Carte pays'},
     {key:'sponsors',icon:'🤝',label:'Partenaires'},
