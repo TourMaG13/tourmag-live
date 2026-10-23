@@ -11344,9 +11344,9 @@ function _renderContactUI(el, raw){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px">
       <div class="form-group"><label class="form-label">Lignes avant « Voir plus »</label><input type="number" class="form-input" id="ct-dir-visible" value="${ct.directoryVisible||20}" min="5" max="300" style="width:110px"></div>
       <div class="form-group"><label class="form-label">Regroupement A‑Z</label><select class="form-input" id="ct-dir-group"><option value="auto"${(ct.directoryGroup||'auto')==='auto'?' selected':''}>Automatique (longue liste)</option><option value="always"${ct.directoryGroup==='always'?' selected':''}>Toujours</option><option value="never"${ct.directoryGroup==='never'?' selected':''}>Jamais</option></select></div>
-      <div class="form-group"><label class="form-label">Hauteur max de la liste (px)</label><input type="number" class="form-input" id="ct-dir-maxh" value="${ct.directoryMaxH||0}" min="0" max="2000" placeholder="0 = illimité" style="width:120px"></div>
+      <div class="form-group"><label class="form-label">Hauteur de la zone « Voir plus » (px)</label><input type="number" class="form-input" id="ct-dir-maxh" value="${ct.directoryMaxH||300}" min="120" max="2000" style="width:140px"></div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces réglages ne concernent que le mode « Annuaire compact ». « Hauteur max » : au‑delà, la liste défile à l'intérieur au lieu de pousser la page vers le bas (0 = illimité ; idéal en colonne, ex. 420).</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces réglages ne concernent que le mode « Annuaire compact ». Les « Lignes avant Voir plus » restent toujours affichées ; « Voir plus » ouvre en dessous une zone de cette hauteur qui défile à l'intérieur (repliable par « Voir moins »).</div>
   </div>
   <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
     ${_ctStyRow('Nom','name',((ev.contactStyles||(raw&&raw.styles)||{}).name))}
