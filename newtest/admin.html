@@ -12408,7 +12408,7 @@ function _galCard(p, gi, o){
     phaseSel='<select class="form-input" data-gal-phase="'+gi+'"'+dis+'><option value="">Toutes</option>'+o.phases.map(pp=>'<option value="'+pp.id+'"'+(ph_phase===pp.id?' selected':'')+'>'+_escAdm(pp.name||'')+'</option>').join('')+'</select>';
   }
   let sizeFields='';
-  if(o.simple){
+  if(false){ /* champs taille désormais toujours visibles, y compris en mode simplifié */
     sizeFields='<input type="hidden" data-gal-h="'+gi+'" value="'+esc(ph_h)+'"><input type="hidden" data-gal-w="'+gi+'" value="'+esc(ph_w)+'">';
   } else {
     sizeFields='<div class="gal-ph-field"><label>Hauteur (px)</label><input class="form-input" type="number" value="'+esc(ph_h)+'" placeholder="auto" title="Vide = hauteur globale" data-gal-h="'+gi+'" min="80" max="600" step="10"'+dis+'></div>'
@@ -12523,7 +12523,7 @@ async function galAddUpload(pageId, key){
         uploaded++;
       }catch(e){ console.error('Upload error:',e); toast('Erreur pour '+file.name+': '+e.message,'error'); }
     }
-    if(uploaded){ await saveGallery(); toast(uploaded+' photo'+(uploaded>1?'s':'')+' ajoutée'+(uploaded>1?'s':'')); }
+    if(uploaded){ await saveGallery(); try{ await _loadColOnce('media','mediaData',{silent:true}); }catch(_){ } toast(uploaded+' photo'+(uploaded>1?'s':'')+' ajoutée'+(uploaded>1?'s':'')+' (et dans la médiathèque)'); }
   };
   input.click();
 }
@@ -12682,7 +12682,11 @@ function renderGallery(el){
   let groupDefs=[];
   if(pages.length){
     pages.forEach(pg=>groupDefs.push({key:pg.id,pageId:pg.id,title:pg.name||'(page sans nom)'}));
-    groupDefs.push({key:'none',pageId:'',title:'Toutes les pages (affichée partout)'});
+    // « Toutes les pages (affichée partout) » n'a de sens qu'avec PLUSIEURS pages.
+    // On le garde malgré tout si une page unique a déjà des photos « partout » (sinon elles deviendraient inaccessibles).
+    if(pages.length>1 || photos.filter(p=>keyOf(p)==='none').length>0){
+      groupDefs.push({key:'none',pageId:'',title:'Toutes les pages (affichée partout)'});
+    }
     const orphanIds=[...new Set(photos.filter(p=>p&&typeof p==='object'&&p.page&&!known.has(p.page)).map(p=>p.page))];
     orphanIds.forEach(id=>groupDefs.push({key:'orph_'+id,pageId:id,title:'Page introuvable',orphan:true}));
   } else {
