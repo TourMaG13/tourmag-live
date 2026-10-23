@@ -4535,7 +4535,7 @@ function _bpConvertBlock(b){
   if(t==='text'){ s.zone='main'; s.content={ title:b.title||'', text:b.text||'', image:b.image||'', imagePos:b.imagePos||'none', imageWidth:b.imageWidth||'', imageCredit:b.imageCredit||'' }; }
   else if(t==='image'){ s.content={ image:b.image||'', caption:b.caption||'', credit:b.credit||'', width:b.width||'', align:b.align||'center' }; }
   else if(t==='gallery'){ s.content={ galSize:b.galSize||'m', galH:b.galH, galMin:b.galMin, images:Array.isArray(b.images)?b.images:[] }; }
-  else if(t==='video'){ s.content={ url:b.url||'' }; }
+  else if(t==='video'){ s.content={ url:b.url||'', poster:b.poster||'' }; }
   else if(t==='buttons'){ s.content={ align:b.align||'left', buttons:Array.isArray(b.buttons)?b.buttons:[] }; }
   else if(t==='separator'){ s.content={ height:(b.height!=null?parseInt(b.height,10):24), line:!!b.line }; }
   else if(t==='html'){ s.content={ html:b.html||'' }; }
@@ -5241,6 +5241,7 @@ function _bpContentFieldsHtml(s){
           +'<button type="button" class="btn btn-ghost btn-sm" onclick="_bpUploadVideo(this)">⬆️ Importer une vidéo (MP4 / AVI, 125 Mo max)</button>'
           +'<div class="bpe-hint" id="bpct-video-status">Conversion automatique côté serveur (quelques minutes) — ne fermez pas la page pendant l\'envoi.</div>'
         +'</div>'
+        +'<div class="bpe-fld"><label>Vignette d\'ouverture (optionnelle)</label><div style="display:flex;gap:6px"><input type="text" id="bpct-video-poster" value="'+_escAdm(c.poster||'')+'" oninput="_bpSetCt(\'poster\',this.value)" style="flex:1" placeholder="URL d\'une image (ou Médiathèque)">'+mkMediaPickerBtn('bpct-video-poster')+'</div><div class="bpe-hint">Image affichée avant lecture — évite l\'écran noir sur une vidéo importée.</div></div>'
         +'<div class="bpe-fld" id="bpct-video-prev">'+((c.url&&/\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(c.url))?'<video src="'+_escAdm(c.url)+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>':'')+'</div>';
     case 'buttons':
       return _bpButtonsEditorHtml(s);
@@ -11343,8 +11344,9 @@ function _renderContactUI(el, raw){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px">
       <div class="form-group"><label class="form-label">Lignes avant « Voir plus »</label><input type="number" class="form-input" id="ct-dir-visible" value="${ct.directoryVisible||20}" min="5" max="300" style="width:110px"></div>
       <div class="form-group"><label class="form-label">Regroupement A‑Z</label><select class="form-input" id="ct-dir-group"><option value="auto"${(ct.directoryGroup||'auto')==='auto'?' selected':''}>Automatique (longue liste)</option><option value="always"${ct.directoryGroup==='always'?' selected':''}>Toujours</option><option value="never"${ct.directoryGroup==='never'?' selected':''}>Jamais</option></select></div>
+      <div class="form-group"><label class="form-label">Hauteur max de la liste (px)</label><input type="number" class="form-input" id="ct-dir-maxh" value="${ct.directoryMaxH||0}" min="0" max="2000" placeholder="0 = illimité" style="width:120px"></div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces deux réglages ne concernent que le mode « Annuaire compact ».</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces réglages ne concernent que le mode « Annuaire compact ». « Hauteur max » : au‑delà, la liste défile à l'intérieur au lieu de pousser la page vers le bas (0 = illimité ; idéal en colonne, ex. 420).</div>
   </div>
   <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
     ${_ctStyRow('Nom','name',((ev.contactStyles||(raw&&raw.styles)||{}).name))}
@@ -11483,6 +11485,7 @@ async function saveContact(){
     displayMode:(document.getElementById('ct-display-mode')?.value==='directory')?'directory':'cards',
     directoryVisible:parseInt(document.getElementById('ct-dir-visible')?.value,10)||20,
     directoryGroup:document.getElementById('ct-dir-group')?.value||'auto',
+    directoryMaxH:parseInt(document.getElementById('ct-dir-maxh')?.value,10)||0,
     bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
     bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
