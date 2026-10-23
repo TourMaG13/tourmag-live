@@ -907,15 +907,22 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 @keyframes svFabPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 #sv-fab.sv-fab-pulse{animation:svFabPulse 1.4s ease-in-out infinite}
 /* Carte d'appel à l'action de l'enquête (modes pop-up / accordéon) */
-.sat-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-left:3px solid #6366F1;border-radius:12px;padding:16px 20px}
+.sat-cta{display:flex;flex-wrap:wrap;align-items:center;gap:18px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-left:3px solid #6366F1;border-radius:12px;padding:20px 24px}
+.sat-cta-body{flex:1;min-width:240px}
+.sat-cta-title{font-size:16px;font-weight:700;color:var(--text,#0f172a);margin-bottom:6px}
+.sat-cta-text{font-size:14px;line-height:1.65;color:var(--text2,#475569)}
+.sat-cta-meta{font-size:12px;color:var(--text3,#94a3b8);margin-top:8px}
 .sat-cta-info{font-size:13px;color:var(--text2,#64748b)}
-.sat-cta-btn{margin-left:auto;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:12px 22px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(99,102,241,.3)}
+.sat-cta-btn{flex-shrink:0;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:13px 24px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(99,102,241,.3)}
 .sat-cta-btn:hover{filter:brightness(.96)}
 .sat-arrow{display:inline-block;animation:satArrow 1.1s ease-in-out infinite}
 @keyframes satArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
 .sat-arrow-down{animation:satArrowDown 1.1s ease-in-out infinite}
 @keyframes satArrowDown{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 .sat-cta-exp{background:linear-gradient(180deg,#fffdf9,var(--exp-stone,#f5f3f0));border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:3px}
+.sat-cta-exp .sat-cta-title{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:19px;color:var(--exp-ink)}
+.sat-cta-exp .sat-cta-text{color:var(--exp-ink)}
+.sat-cta-exp .sat-cta-meta{font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--exp-grey)}
 .sat-cta-exp .sat-cta-btn{background:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;box-shadow:none}
 .sat-cta-exp .sat-cta-btn:hover{background:var(--exp-accent)}
 /* ---- Enquête de satisfaction (questionnaire inline) ---- */
@@ -3383,7 +3390,8 @@ function render(data){
     var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
     if(opts.connectedOnly && !connected){ return '<div id="section-sat">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',false):'')+'</div>'; }
     var head='<div class="sec-title fi"><h2>'+title+'</h2><div class="sec-title-line"></div>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
-    return '<div id="section-sat">'+head+'<div class="sat-block"><div class="sat-host" data-exp="0" data-mode="'+(opts.displayMode||'popup')+'" data-survey-id="'+(s.id||'')+'"></div></div></div>';
+    var _ca=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;');};
+    return '<div id="section-sat">'+head+'<div class="sat-block"><div class="sat-host" data-exp="0" data-mode="'+(opts.displayMode||'popup')+'" data-survey-id="'+(s.id||'')+'" data-cta-title="'+_ca(opts.ctaTitle)+'" data-cta-text="'+_ca(opts.ctaText)+'" data-cta-btn="'+_ca(opts.ctaBtn)+'"></div></div></div>';
   }
   const blockRenderers = {hero:mkHero,phaseTabs:mkPhaseTabs,kpis:mkKpis,essential:mkEssential,flash:mkFlash,live:mkLive,citations:mkCitations,videos:mkVideos,programme:mkProgramme,articles:mkArticles,journalists:mkJournalists,interviews:mkInterviews,gallery:mkGallery,sponsors:mkSponsors,brandnews:mkBrandNews,contact:mkContact,questions:mkQuestions,comments:mkComments,excursions:mkExcursions,satisfaction:mkSatisfaction,quiz:mkQuiz,product:function(opts){ if(mod.product===false) return ''; return (opts&&opts.productId)?_renderProductById(opts.productId,event):_renderProducts(event); },countrymap:function(opts){ if(mod.countrymap===false) return ''; return _renderCountryMap(event, opts&&opts.countryMapId); }};
   const defaultZones = {hero:'max',phaseTabs:'max',kpis:'max',essential:'main',flash:'main',live:'main',citations:'full',articles:'full',interviews:'max',videos:'full',gallery:'full',programme:'side',journalists:'side',sponsors:'full',brandnews:'side',contact:'full',questions:'full',quiz:'full'};
@@ -4464,7 +4472,8 @@ function renderExpedition(data){
     var connected=!!(window._tmgEditor&&window._tmgEditor.user&&window._tmgEditor.user());
     if(opts.connectedOnly && !connected){ return '<section class="exp-satisfaction">'+(window._lockBlockHtml?window._lockBlockHtml(title,'Connectez-vous pour répondre au questionnaire de satisfaction.',true):'')+'</section>'; }
     var head='<div class="exp-section-head fi"><h2>'+title+'</h2><div class="rule"></div></div>'+(sub?'<p class="exp-section-sub">'+sub+'</p>':'');
-    return '<section class="exp-satisfaction">'+head+'<div class="sat-block sat-exp"><div class="sat-host" data-exp="1" data-mode="'+(opts.displayMode||'popup')+'" data-survey-id="'+(s.id||'')+'"></div></div></section>';
+    var _ca=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;');};
+    return '<section class="exp-satisfaction">'+head+'<div class="sat-block sat-exp"><div class="sat-host" data-exp="1" data-mode="'+(opts.displayMode||'popup')+'" data-survey-id="'+(s.id||'')+'" data-cta-title="'+_ca(opts.ctaTitle)+'" data-cta-text="'+_ca(opts.ctaText)+'" data-cta-btn="'+_ca(opts.ctaBtn)+'"></div></div></section>';
   };
 
   // ===== ZONE-BASED LAYOUT ASSEMBLY (full / main / side) =====
@@ -6129,7 +6138,7 @@ function _bpRenderSection(sec, event, ctx){
       if(type==='videos') _opts.pageId = (ctx && ctx._pageId) || '';
       if(type==='questions' && ct.qa){ _opts.qa = ct.qa; }
       if(type==='comments'){ _opts.threadId = sec.id; _opts.commentsMode = ct.commentsMode||'A'; _opts.sectionSub = ct.subtitle||''; }
-      if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.surveyId = ct.surveyId||''; _opts.displayMode = ct.displayMode||'popup'; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
+      if(type==='satisfaction'){ _opts.connectedOnly = !!ct.connectedOnly; _opts.surveyId = ct.surveyId||''; _opts.displayMode = ct.displayMode||'popup'; _opts.ctaTitle = ct.ctaTitle||''; _opts.ctaText = ct.ctaText||''; _opts.ctaBtn = ct.ctaBtn||''; _opts.title = ct.secTitle||ct.title||''; _opts.sectionSub = ct.subtitle||''; }
       if(type==='excursions'){ _opts.blockId = sec.id; _opts.excursions = ct.excursions||[]; _opts.maxPer = ct.maxPerPerson; _opts.photoHeight = ct.photoHeight; _opts.nameFont = ct.nameFont||''; _opts.nameSize = ct.nameSize||''; _opts.nameWeight = ct.nameWeight||''; _opts.sectionSub = ct.subtitle||''; }
       inner = ctx.blockRenderers[legacyDelegate[type]](_opts) || '';
       // Surcharge titre/sous-titre/taille/visibilité (réglages par bloc du builder)
@@ -8063,14 +8072,19 @@ window._tmgResizeSettle=function(){
     return ans;
   }
 
-  function openSurvey(survey){
+  function _satQuestionsHtml(qs){
+    function hint(t){ return t==='multi'?'PLUSIEURS RÉPONSES':t==='choice'?'UNE SEULE RÉPONSE':t==='grid'?'UN CHOIX PAR LIGNE':t==='stars'?'NOTE EN ÉTOILES':t==='score'?'NOTE SUR 10':'RÉPONSE LIBRE'; }
+    function pad(n){ n=String(n); return n.length<2?('0'+n):n; }
+    return qs.map(function(q,i){ return '<div class="sat-q" data-qnum="'+pad(i+1)+'"><div class="sat-hint">'+hint(q.type)+'</div><label class="sat-ql">'+(i+1)+'. '+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+  }
+  function openSurvey(survey, exp){
     var s=survey||sv(); if(!s || s.enabled===false || !(s.questions||[]).length) return; var qs=s.questions||[];
     try{ markSeen(popupSurvey().id); }catch(_){}   // neutralise la pop-up automatique
     var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
     var idBlock = u
       ? '<div style="font-size:12px;color:#475569;margin-bottom:4px">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
       : '<label style="'+L+'">Votre nom</label><input id="sv-name" style="'+F+'" placeholder="Prénom / nom"><label style="'+L+'">Votre e-mail (facultatif)</label><input id="sv-email" type="email" style="'+F+'">';
-    var qHtml=qs.map(function(q,i){ return '<div style="margin-top:14px"><div class="sv-qtitle">'+esc(q.label||('Question '+(i+1)))+'</div>'+qField(q)+'</div>'; }).join('');
+    var qHtml='<div class="sat-block'+(exp?' sat-exp':'')+'" style="max-width:100%;margin-top:6px">'+_satQuestionsHtml(qs)+'</div>';
     var m=modal('<h3 style="margin:0 0 4px;font-size:18px">'+esc(s.title||'Votre avis')+'</h3>'
       +(s.intro?'<p style="margin:0 0 10px;font-size:13px;color:#64748b">'+esc(s.intro)+'</p>':'')
       +idBlock+qHtml
@@ -8115,9 +8129,7 @@ window._tmgResizeSettle=function(){
     var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
     var idBlock = u ? '<div class="sat-id">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
       : '<label class="sat-l">Votre nom</label><input class="sat-f" data-sat="name" placeholder="Prénom / nom"><label class="sat-l">Votre e-mail (facultatif)</label><input class="sat-f" data-sat="email" type="email">';
-    function hint(t){ return t==='multi'?'PLUSIEURS RÉPONSES':t==='choice'?'UNE SEULE RÉPONSE':t==='grid'?'UN CHOIX PAR LIGNE':t==='stars'?'NOTE EN ÉTOILES':t==='score'?'NOTE SUR 10':'RÉPONSE LIBRE'; }
-    function pad(n){ n=String(n); return n.length<2?('0'+n):n; }
-    var qHtml=qs.map(function(q,i){ return '<div class="sat-q" data-qnum="'+pad(i+1)+'"><div class="sat-hint">'+hint(q.type)+'</div><label class="sat-ql">'+(i+1)+'. '+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+    var qHtml=_satQuestionsHtml(qs);
     container.innerHTML='<div class="sat-id-wrap">'+idBlock+'</div>'+qHtml+'<div class="sat-err" style="display:none;color:#b91c1c;font-size:12px;margin-top:10px"></div><button class="sat-send">Envoyer mes réponses</button>';
     wireStars(container);
     var send=container.querySelector('.sat-send'), err=container.querySelector('.sat-err');
@@ -8146,14 +8158,17 @@ window._tmgResizeSettle=function(){
       if(!surv || !(surv.questions||[]).length){ host.innerHTML=''; return; }
       if(isDone(surv.id)){ host.innerHTML=_satThanksHtml(surv); return; }
       if(mode==='inline'){ window._surveyInline(host, exp, surv); return; }
-      // popup / accordion → carte d'appel à l'action
+      // popup / accordion → carte d'appel à l'action personnalisable
       var n=(surv.questions||[]).length;
-      var info=(surv.intro?esc(surv.intro)+' · ':'')+n+' question'+(n>1?'s':'');
-      var label=(mode==='accordion')?'Répondre au questionnaire':'Répondre au questionnaire';
+      var ctaTitle=(host.getAttribute('data-cta-title')||'').trim();
+      var ctaText=(host.getAttribute('data-cta-text')||'').trim()||'Votre avis nous intéresse — répondez à notre court questionnaire.';
+      var ctaBtn=(host.getAttribute('data-cta-btn')||'').trim()||'Répondre au questionnaire';
       var arrow=(mode==='accordion')?'<span class="sat-arrow sat-arrow-down">▾</span>':'<span class="sat-arrow">→</span>';
-      host.innerHTML='<div class="sat-cta'+(exp?' sat-cta-exp':'')+'"><div class="sat-cta-info">'+info+'</div><button class="sat-cta-btn" type="button">'+label+' '+arrow+'</button></div>';
+      host.innerHTML='<div class="sat-cta'+(exp?' sat-cta-exp':'')+'">'
+        +'<div class="sat-cta-body">'+(ctaTitle?'<div class="sat-cta-title">'+esc(ctaTitle)+'</div>':'')+'<div class="sat-cta-text">'+esc(ctaText)+'</div><div class="sat-cta-meta">'+n+' question'+(n>1?'s':'')+'</div></div>'
+        +'<button class="sat-cta-btn" type="button">'+esc(ctaBtn)+' '+arrow+'</button></div>';
       var btn=host.querySelector('.sat-cta-btn');
-      if(mode==='popup'){ btn.onclick=function(){ openSurvey(surv); }; }
+      if(mode==='popup'){ btn.onclick=function(){ openSurvey(surv, exp); }; }
       else { btn.onclick=function(){ window._surveyInline(host, exp, surv); }; }
     });
   };
