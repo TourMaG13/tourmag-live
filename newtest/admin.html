@@ -5360,7 +5360,8 @@ function _bpContentFieldsHtml(s){
       var _optsSv='<option value="">(questionnaire pop-up par défaut)</option>'+_surv.map(function(s){return '<option value="'+_escAdm(s.id||'')+'"'+(((c.surveyId||'')===(s.id||''))?' selected':'')+'>'+_escAdm(s.title||'Questionnaire')+(s.isPopup?' · pop-up':'')+'</option>';}).join('');
       return _phaseFld
         + _bpTitleFields('Enquête de satisfaction','Votre avis compte')
-        + '<div class="bpe-fld" style="margin-top:10px"><label>Questionnaire affiché</label><select onchange="_bpSetCt(\'surveyId\',this.value)">'+_optsSv+'</select></div>'
+        + '<div class="bpe-fld-row" style="margin-top:10px"><div class="bpe-fld"><label>Questionnaire affiché</label><select onchange="_bpSetCt(\'surveyId\',this.value)">'+_optsSv+'</select></div>'
+        + '<div class="bpe-fld"><label>Affichage</label><select onchange="_bpSetCt(\'displayMode\',this.value)"><option value="popup"'+(((c.displayMode||'popup')==='popup')?' selected':'')+'>Pop-up (bouton + fenêtre)</option><option value="accordion"'+((c.displayMode==='accordion')?' selected':'')+'>Accordéon (déplier sur la page)</option><option value="inline"'+((c.displayMode==='inline')?' selected':'')+'>Questionnaire complet (toujours affiché)</option></select><div style="font-size:10px;color:var(--text3);margin-top:2px">Pop-up / accordéon = page plus courte.</div></div></div>'
         + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:10px"><input type="checkbox" '+(c.connectedOnly?'checked':'')+' onchange="_bpSetCt(\'connectedOnly\',this.checked)"> Visible seulement par les personnes connectées</label>'
         + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, titres) se gèrent dans l\'onglet <strong>« Questionnaires »</strong>. Choisissez ci-dessus lequel afficher dans ce bloc. Les réponses ne sont pas publiques et s\'exportent par questionnaire dans cet onglet.</div>';
     }
@@ -8762,6 +8763,24 @@ async function _svDelSurvey(){
 }
 function _svTs(t){ try{ return t&&t.toMillis?t.toMillis():(t&&t.seconds?t.seconds*1000:0);}catch(_){return 0;} }
 function _svFmtDate(t){ var ms=_svTs(t); if(!ms) return ''; var d=new Date(ms); return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function _satTyRow(label, key, st){
+  st=st||{};
+  var fonts=['','Josefin Sans','Playfair Display','Libre Caslon Text','Libre Caslon Display','IBM Plex Mono','Archivo','Inter','Georgia','Arial'];
+  var fo=fonts.map(function(f){return '<option value="'+f+'"'+(((st.font||'')===f)?' selected':'')+'>'+(f||'(police par défaut)')+'</option>';}).join('');
+  var wts=[['','Graisse (défaut)'],['300','Fin (300)'],['400','Normal (400)'],['500','Moyen (500)'],['600','Semi-gras (600)'],['700','Gras (700)'],['800','Extra-gras (800)']];
+  var wo=wts.map(function(w){return '<option value="'+w[0]+'"'+(((st.weight||'')===w[0])?' selected':'')+'>'+w[1]+'</option>';}).join('');
+  return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px"><span style="width:88px;font-size:12px;font-weight:600">'+label+'</span>'
+    +'<select id="sat-ty-'+key+'-font" style="min-width:160px;flex:0 0 auto">'+fo+'</select>'
+    +'<input id="sat-ty-'+key+'-size" type="number" min="8" max="48" placeholder="px" value="'+(st.size||'')+'" style="width:72px" title="Taille en px">'
+    +'<select id="sat-ty-'+key+'-weight" style="min-width:150px">'+wo+'</select></div>';
+}
+async function _saveSatTypo(){
+  var read=function(k){ var f=document.getElementById('sat-ty-'+k+'-font'), s=document.getElementById('sat-ty-'+k+'-size'), w=document.getElementById('sat-ty-'+k+'-weight'); var o={}; if(f&&f.value)o.font=f.value; if(s&&s.value&&parseInt(s.value,10))o.size=parseInt(s.value,10); if(w&&w.value)o.weight=w.value; return o; };
+  var satTypo={q:read('q'),a:read('a')};
+  saving(true);
+  try{ await evRef().update({satTypo:satTypo}); var ev=eventsData.find(function(e){return e.id===currentEventId;}); if(ev) ev.satTypo=satTypo; toast('Typographie enregistrée'); }
+  catch(e){ toast('Erreur : '+(e.message||e),'error'); }
+}
 function renderSurvey(el){
   _svEl=el;
   const ev=eventsData.find(e=>e.id===currentEventId)||{};
@@ -8806,6 +8825,11 @@ function renderSurvey(el){
   h+=`<div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-pages"/></svg> Réponses</h3>
     <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Identité : si la personne est connectée, son compte est enregistré ; sinon le nom/e-mail qu'elle a saisis. Un identifiant d'appareil limite les réponses multiples.</div>
     <div id="sv-responses"></div></div>`;
+  var _sty=(ev.satTypo||{});
+  h+=`<div class="admin-card"><h3>Typographie des enquêtes (global)</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">S'applique à <strong>toutes</strong> les enquêtes de satisfaction (inline, accordéon et pop-up), en classique comme en expédition. « Par défaut » = style du thème.</div>
+    ${_satTyRow('Questions','q',_sty.q)}
+    ${_satTyRow('Réponses','a',_sty.a)}
+    <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="_saveSatTypo()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer la typographie</button></div></div>`;
   el.innerHTML=h;
   _svRenderQ();
   _svLoadResponses();
