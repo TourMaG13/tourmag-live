@@ -5236,7 +5236,12 @@ function _bpContentFieldsHtml(s){
         +'<div class="bpe-hint">« Étirer » : les vignettes s\'élargissent pour occuper toute la largeur, sans trou. « Centrer » : garde la taille des vignettes mais centre le groupe (utile avec peu de photos).</div>'
         +_bpGalleryEditorHtml(s);
     case 'video':
-      return '<div class="bpe-fld"><label>Lien vidéo</label><input type="text" value="'+_escAdm(c.url||'')+'" onchange="_bpSetCt(\'url\',this.value)" placeholder="YouTube, Vimeo ou .mp4"></div>';
+      return '<div class="bpe-fld"><label>Lien vidéo</label><input type="text" id="bpct-video-url" value="'+_escAdm(c.url||'')+'" onchange="_bpSetCt(\'url\',this.value)" placeholder="YouTube, Vimeo ou .mp4"></div>'
+        +'<div class="bpe-fld"><label>…ou importer depuis votre ordinateur</label>'
+          +'<button type="button" class="btn btn-ghost btn-sm" onclick="_bpUploadVideo(this)">⬆️ Importer une vidéo (MP4 / AVI, 125 Mo max)</button>'
+          +'<div class="bpe-hint" id="bpct-video-status">Conversion automatique côté serveur (quelques minutes) — ne fermez pas la page pendant l\'envoi.</div>'
+        +'</div>'
+        +'<div class="bpe-fld" id="bpct-video-prev">'+((c.url&&/\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(c.url))?'<video src="'+_escAdm(c.url)+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>':'')+'</div>';
     case 'buttons':
       return _bpButtonsEditorHtml(s);
     case 'separator':
@@ -9675,6 +9680,36 @@ async function uploadVideoFile(){
       toast('Erreur : '+(e.message||e),'error');
       if(urlInput){urlInput.value='';urlInput.disabled=false;}
       if(prev) prev.innerHTML='';
+    }
+  };
+  input.click();
+}
+async function _bpUploadVideo(btn){
+  if(typeof getUploadUrl==='function' && !getUploadUrl()){ toast("Configurez l'URL d'upload dans l'onglet Intégration",'error'); return; }
+  var input=document.createElement('input');
+  input.type='file'; input.accept='.mp4,.avi,video/mp4,video/x-msvideo,video/avi';
+  input.onchange=async function(){
+    var file=input.files[0]; if(!file) return;
+    if(!/\.(mp4|avi)$/i.test(file.name||'')){ toast('Format non accepté : choisissez un fichier AVI ou MP4.','error'); return; }
+    if(file.size>125*1024*1024){ toast('Vidéo trop volumineuse (max 125 Mo)','error'); return; }
+    var status=document.getElementById('bpct-video-status');
+    var urlInp=document.getElementById('bpct-video-url');
+    var prev=document.getElementById('bpct-video-prev');
+    var old=btn.textContent; btn.disabled=true; btn.textContent='⏳ Envoi + conversion…';
+    if(status) status.textContent='⏳ Envoi de la vidéo puis conversion côté serveur. Cela peut prendre quelques minutes — ne fermez pas la page.';
+    try{
+      var url=await uploadVideo(file,'tourmag-live');
+      if(urlInp) urlInp.value=url;
+      if(typeof _bpSetCt==='function') _bpSetCt('url',url);
+      if(status) status.textContent='✓ Vidéo importée et enregistrée.';
+      if(prev) prev.innerHTML='<video src="'+String(url).replace(/"/g,'&quot;')+'" controls preload="metadata" style="max-width:320px;width:100%;border-radius:8px;background:#000"></video>';
+      toast('Vidéo importée');
+    }catch(e){
+      console.error('Upload vidéo (bloc éditorial):',e);
+      if(status) status.textContent='Erreur : '+(e.message||e);
+      toast('Erreur : '+(e.message||e),'error');
+    }finally{
+      btn.disabled=false; btn.textContent=old;
     }
   };
   input.click();
