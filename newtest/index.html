@@ -8028,7 +8028,7 @@ window._tmgResizeSettle=function(){
     var size=s.btnSize||'m';
     var pad=size==='l'?'16px 26px':size==='s'?'9px 14px':'12px 18px';
     var fs=size==='l'?'16px':size==='s'?'12px':'13px';
-    if(!btn){ btn=document.createElement('button'); btn.id='sv-fab'; btn.onclick=openSurvey; document.body.appendChild(btn); }
+    if(!btn){ btn=document.createElement('button'); btn.id='sv-fab'; btn.onclick=function(){ openSurvey(); }; document.body.appendChild(btn); }
     btn.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99990;border:0;cursor:pointer;color:#fff;font-weight:600;font-family:system-ui,sans-serif;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.28);background:'+color+';padding:'+pad+';font-size:'+fs;
     btn.classList.toggle('sv-fab-pulse', !!s.pulse);
     btn.textContent=s.buttonLabel||'Donner mon avis';
