@@ -1094,6 +1094,10 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-extra{display:none;margin-top:8px;max-height:var(--ct-maxh,300px);overflow-y:auto;overscroll-behavior:contain;border:1.5px solid var(--border);border-radius:14px;background:var(--card,#fff)}
 .ct-dir.ct-open .ct-dir-extra,.ct-dir.ct-searching .ct-dir-extra{display:block}
 .ct-dir.ct-searching .ct-dir-more{display:none}
+.ct-dir-fixed{display:flex;flex-direction:column;height:var(--ct-blockh,420px)}
+.ct-dir-fixed .ct-dir-search{position:static}
+.ct-dir-fixed .ct-dir-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.ct-dir-fixed .ct-dir-group{top:0}
 @container (max-width:430px){
   .ct-dir-head{gap:8px;padding:8px 8px}
   .ct-dir-detail{padding-left:12px}
@@ -8554,7 +8558,7 @@ window._tmgResizeSettle=function(){
 })();
 </script>
 <script>
-/* Annuaire compact (bloc contact) — recherche, accordéon, zone « Voir plus » scrollable, copie */
+/* Annuaire compact (bloc contact) — recherche, accordéon, « Voir plus » OU bloc à hauteur fixe, copie */
 window._ctDirListHtml=function(people, ctRaw, svg){
   var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
@@ -8566,6 +8570,7 @@ window._ctDirListHtml=function(people, ctRaw, svg){
   var grp = ctRaw.directoryGroup||'auto';
   var doGroup = (grp==='always') || (grp==='auto' && total>=30);
   var maxH = parseInt(ctRaw.directoryMaxH,10)||0;
+  var mode = (ctRaw.directoryScrollMode==='block') ? 'block' : 'more';
   var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
   var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
   function rowHtml(p){
@@ -8587,14 +8592,24 @@ window._ctDirListHtml=function(people, ctRaw, svg){
       + '<div class="ct-dir-detail">'+(det||'<div class="ct-dir-msg" style="opacity:.7">Pas de coordonnées renseignées.</div>')+'</div>'
       + '</div>';
   }
+  function allRows(){
+    if(doGroup){ var h='', cl=''; list.forEach(function(p){ var L=firstLetter(p.name); if(L!==cl){ cl=L; h+='<div class="ct-dir-group">'+a(L)+'</div>'; } h+=rowHtml(p); }); return h; }
+    return list.map(rowHtml).join('');
+  }
   var searchHtml = '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>';
   var emptyHtml = '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>';
+
+  // MODE « BLOC À HAUTEUR FIXE » : tout le bloc est à la hauteur voulue, ascenseur interne.
+  if(mode==='block'){
+    var hb = maxH>0 ? maxH : 420;
+    return '<div class="ct-dir ct-dir-fixed" style="--ct-blockh:'+hb+'px">'+searchHtml+'<div class="ct-dir-list">'+allRows()+'</div>'+emptyHtml+'</div>';
+  }
+
+  // MODE « VOIR PLUS » (défaut)
   var wrapSty = maxH>0 ? ' style="--ct-maxh:'+maxH+'px"' : '';
   if(doGroup){
-    var rowsHtml='', curL='';
-    list.forEach(function(p){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } rowsHtml += rowHtml(p); });
     var wrapCls='ct-dir'+(maxH>0?' ct-dir-scroll':'');
-    return '<div class="'+wrapCls+'"'+wrapSty+'>'+searchHtml+'<div class="ct-dir-list">'+rowsHtml+'</div>'+emptyHtml+'</div>';
+    return '<div class="'+wrapCls+'"'+wrapSty+'>'+searchHtml+'<div class="ct-dir-list">'+allRows()+'</div>'+emptyHtml+'</div>';
   }
   var firstHtml='', extraHtml='';
   list.forEach(function(p,i){ if(i<cap) firstHtml+=rowHtml(p); else extraHtml+=rowHtml(p); });
