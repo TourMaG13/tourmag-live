@@ -11297,6 +11297,20 @@ function _renderContactUI(el, raw){
   let peopleHtml=ct.people.length?ct.people.map((p,i)=>_ctPersonRow(p,i)).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun contact pour le moment. Cliquez sur « ＋ Ajouter un contact ».</div>';
   let h=`<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg>Contact</div><div class="page-desc">Ajoutez un ou plusieurs contacts pour que les visiteurs puissent vous joindre (demande de photos, informations, prise de rendez-vous…). Activez via le module "Contact" dans l'onglet Modules.</div>
   <div class="admin-card" style="padding:12px 16px"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="ct-public" ${isPublic?'checked':''} style="margin-top:2px"><span style="font-size:13px"><strong>Rendre les contacts publics</strong><br><span style="font-size:11px;color:var(--text3)">Par défaut, les contacts (données sensibles) ne sont visibles que par les personnes <strong>connectées</strong> sur le dashboard. Cochez pour les afficher à tous les visiteurs.</span></span></label></div>
+  <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg> Affichage de l'annuaire</h3>
+    <div class="form-group"><label class="form-label">Mode d'affichage</label>
+      <select class="form-input" id="ct-display-mode" style="max-width:340px">
+        <option value="cards"${(ct.displayMode||'cards')!=='directory'?' selected':''}>Fiches (cartes détaillées)</option>
+        <option value="directory"${ct.displayMode==='directory'?' selected':''}>Annuaire compact (recherche + accordéon)</option>
+      </select>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">« Fiches » : une carte par personne (idéal pour quelques contacts). « Annuaire compact » : liste cherchable d'une ligne par personne, coordonnées au clic — idéal quand il y a beaucoup de contacts ou pour une colonne étroite.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px">
+      <div class="form-group"><label class="form-label">Lignes avant « Voir plus »</label><input type="number" class="form-input" id="ct-dir-visible" value="${ct.directoryVisible||20}" min="5" max="300" style="width:110px"></div>
+      <div class="form-group"><label class="form-label">Regroupement A‑Z</label><select class="form-input" id="ct-dir-group"><option value="auto"${(ct.directoryGroup||'auto')==='auto'?' selected':''}>Automatique (longue liste)</option><option value="always"${ct.directoryGroup==='always'?' selected':''}>Toujours</option><option value="never"${ct.directoryGroup==='never'?' selected':''}>Jamais</option></select></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces deux réglages ne concernent que le mode « Annuaire compact ».</div>
+  </div>
   <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
     ${_ctStyRow('Nom','name',((ev.contactStyles||(raw&&raw.styles)||{}).name))}
     ${_ctStyRow('Rôle','role',((ev.contactStyles||(raw&&raw.styles)||{}).role))}
@@ -11431,6 +11445,9 @@ async function saveContact(){
     title:document.getElementById('ct-title').value.trim()||'Contact',
     bookingUrl:document.getElementById('ct-booking-global')?.value.trim()||'',
     people,
+    displayMode:(document.getElementById('ct-display-mode')?.value==='directory')?'directory':'cards',
+    directoryVisible:parseInt(document.getElementById('ct-dir-visible')?.value,10)||20,
+    directoryGroup:document.getElementById('ct-dir-group')?.value||'auto',
     bg_color:document.getElementById('ct-bg-color-txt')?.value.trim()||'',
     bg_image:document.getElementById('ct-bg-image')?.value.trim()||'',
     name_color:document.getElementById('ct-name-color-txt')?.value.trim()||'',
