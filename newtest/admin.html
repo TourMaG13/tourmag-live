@@ -5363,7 +5363,11 @@ function _bpContentFieldsHtml(s){
         + '<div class="bpe-fld-row" style="margin-top:10px"><div class="bpe-fld"><label>Questionnaire affiché</label><select onchange="_bpSetCt(\'surveyId\',this.value)">'+_optsSv+'</select></div>'
         + '<div class="bpe-fld"><label>Affichage</label><select onchange="_bpSetCt(\'displayMode\',this.value)"><option value="popup"'+(((c.displayMode||'popup')==='popup')?' selected':'')+'>Pop-up (bouton + fenêtre)</option><option value="accordion"'+((c.displayMode==='accordion')?' selected':'')+'>Accordéon (déplier sur la page)</option><option value="inline"'+((c.displayMode==='inline')?' selected':'')+'>Questionnaire complet (toujours affiché)</option></select><div style="font-size:10px;color:var(--text3);margin-top:2px">Pop-up / accordéon = page plus courte.</div></div></div>'
         + '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:10px"><input type="checkbox" '+(c.connectedOnly?'checked':'')+' onchange="_bpSetCt(\'connectedOnly\',this.checked)"> Visible seulement par les personnes connectées</label>'
-        + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, titres) se gèrent dans l\'onglet <strong>« Questionnaires »</strong>. Choisissez ci-dessus lequel afficher dans ce bloc. Les réponses ne sont pas publiques et s\'exportent par questionnaire dans cet onglet.</div>';
+        + '<div class="bpe-cfg-sech" style="margin-top:12px">Carte d\'invitation (modes Pop-up / Accordéon)</div>'
+        + '<div class="bpe-fld"><label>Titre de la carte (facultatif)</label><input value="'+_escAdm(c.ctaTitle||'')+'" placeholder="Votre avis compte" onchange="_bpSetCt(\'ctaTitle\',this.value)"></div>'
+        + '<div class="bpe-fld"><label>Texte de la carte</label><textarea rows="2" placeholder="Votre avis nous intéresse — répondez à notre court questionnaire." onchange="_bpSetCt(\'ctaText\',this.value)">'+_escAdm(c.ctaText||'')+'</textarea></div>'
+        + '<div class="bpe-fld"><label>Texte du bouton</label><input value="'+_escAdm(c.ctaBtn||'')+'" placeholder="Répondre au questionnaire" onchange="_bpSetCt(\'ctaBtn\',this.value)"></div>'
+        + '<div class="bpe-hint" style="padding:6px 0">Les questionnaires (questions, intro, remerciement) se gèrent dans l\'onglet <strong>« Questionnaires »</strong>. Ici : le questionnaire affiché, le mode, et le texte de la carte d\'invitation (pop-up / accordéon). Les réponses s\'exportent par questionnaire dans cet onglet.</div>';
     }
     case 'articles': {
       return _phaseFld
