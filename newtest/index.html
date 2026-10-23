@@ -1091,6 +1091,9 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-hide{display:none !important}
 .ct-dir-scroll .ct-dir-list{max-height:var(--ct-maxh,460px);overflow-y:auto;overscroll-behavior:contain}
 .ct-dir-scroll .ct-dir-group{top:0}
+.ct-dir-extra{display:none;margin-top:8px;max-height:var(--ct-maxh,300px);overflow-y:auto;overscroll-behavior:contain;border:1.5px solid var(--border);border-radius:14px;background:var(--card,#fff)}
+.ct-dir.ct-open .ct-dir-extra,.ct-dir.ct-searching .ct-dir-extra{display:block}
+.ct-dir.ct-searching .ct-dir-more{display:none}
 @container (max-width:430px){
   .ct-dir-head{gap:8px;padding:8px 8px}
   .ct-dir-detail{padding-left:12px}
@@ -8418,7 +8421,6 @@ window._tmgResizeSettle=function(){
       +'<div id="exc-drop" class="fe-drop"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg><div class="fe-drop-t">Glissez vos photos ici</div><div class="fe-drop-s">ou cliquez pour parcourir</div></div>'
       +'<input id="exc-files" type="file" accept="image/*" multiple style="display:none">'
       +'<div id="exc-prev" class="fe-prev"></div>'
-      +'<label style="'+L+'">Légende (facultatif)</label><input id="exc-cap" type="text" style="'+F+'">'
       +'<div id="exc-err" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
       +'<button id="exc-send" style="'+P+'">Publier mes photos</button>');
     var sel=m.box.querySelector('#exc-sel'), leftEl=m.box.querySelector('#exc-left'), send=m.box.querySelector('#exc-send'), err=m.box.querySelector('#exc-err');
@@ -8444,7 +8446,7 @@ window._tmgResizeSettle=function(){
       if(left<=0){ err.textContent='Limite atteinte pour cette excursion.'; err.style.display='block'; return; }
       if(files.length>left){ err.textContent='Vous ne pouvez ajouter que '+left+' photo(s) ici.'; err.style.display='block'; return; }
       var excName=(exc.filter(function(e){return e.id===excId;})[0]||{}).name||'';
-      var cap=(m.box.querySelector('#exc-cap').value||'').trim();
+      var cap='';
       var wdb=ed()&&ed().db&&ed().db(); if(!wdb){ err.textContent='Service indisponible.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
       var author=(window._myAccountName)||((u.email||'').split('@')[0])||'Participant';
@@ -8552,7 +8554,7 @@ window._tmgResizeSettle=function(){
 })();
 </script>
 <script>
-/* Annuaire compact (bloc contact) — recherche, accordéon à volet unique, « voir plus », copie */
+/* Annuaire compact (bloc contact) — recherche, accordéon, zone « Voir plus » scrollable, copie */
 window._ctDirListHtml=function(people, ctRaw, svg){
   var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
@@ -8560,16 +8562,13 @@ window._ctDirListHtml=function(people, ctRaw, svg){
   var list = (people||[]).filter(function(p){ return p && (p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message); });
   list.sort(function(x,y){ return String(x.name||'').localeCompare(String(y.name||''),'fr',{sensitivity:'base'}); });
   var total = list.length;
-  var cap = parseInt(ctRaw.directoryVisible,10)||20;
+  var cap = parseInt(ctRaw.directoryVisible,10); if(isNaN(cap)||cap<0) cap=20;
   var grp = ctRaw.directoryGroup||'auto';
   var doGroup = (grp==='always') || (grp==='auto' && total>=30);
+  var maxH = parseInt(ctRaw.directoryMaxH,10)||0;
   var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
   var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
-  var rowsHtml='', curL='', rowIdx=0;
-  list.forEach(function(p){
-    if(doGroup){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } }
-    var capped = (!doGroup && rowIdx>=cap);
-    rowIdx++;
+  function rowHtml(p){
     var hay = a([p.name,p.role,p.email,p.phone,p.website_label,p.website].filter(Boolean).join(' ').toLowerCase());
     var av = p.photo_url
       ? '<img class="ct-dir-av" src="'+a(p.photo_url)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'ct-dir-av-ph\\\'>'+a(ini(p.name))+'</div>\'">'
@@ -8583,60 +8582,61 @@ window._ctDirListHtml=function(people, ctRaw, svg){
     if(p.phone) det += '<div class="ct-dir-line">'+svg.phone+'<a href="tel:'+a(p.phone)+'" onclick="event.stopPropagation()">'+a(p.phone)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.phone)+'\',this)">Copier</button></div>';
     if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); var lbl=(p.website_label||'').trim()||w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; det += '<div class="ct-dir-line">'+svg.web+'<a href="'+a(href)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+a(lbl)+'</a></div>'; }
     if(p.booking_url) det += '<div class="ct-dir-line">'+svg.cal+'<a href="'+a(p.booking_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Prendre rendez-vous</a></div>';
-    rowsHtml += '<div class="ct-dir-row'+(capped?' ct-cap ct-hide':'')+'" data-search="'+hay+'" onclick="_ctDirToggle(this)">'
+    return '<div class="ct-dir-row" data-search="'+hay+'" onclick="_ctDirToggle(this)">'
       + '<div class="ct-dir-head">'+av+'<div class="ct-dir-id"><div class="ct-dir-name">'+a(p.name||'\u2014')+'</div>'+(p.role?'<div class="ct-dir-role">'+a(p.role)+'</div>':'')+'</div><div class="ct-dir-quick">'+quick+'</div><span class="ct-dir-caret">\u25BE</span></div>'
       + '<div class="ct-dir-detail">'+(det||'<div class="ct-dir-msg" style="opacity:.7">Pas de coordonnées renseignées.</div>')+'</div>'
       + '</div>';
-  });
-  var moreBtn = (!doGroup && total>cap)
-    ? '<button type="button" class="ct-dir-more" onclick="_ctDirMore(this)">Voir plus ('+(total-cap)+' de plus)</button>'
+  }
+  var searchHtml = '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>';
+  var emptyHtml = '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>';
+  var wrapSty = maxH>0 ? ' style="--ct-maxh:'+maxH+'px"' : '';
+  if(doGroup){
+    var rowsHtml='', curL='';
+    list.forEach(function(p){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } rowsHtml += rowHtml(p); });
+    var wrapCls='ct-dir'+(maxH>0?' ct-dir-scroll':'');
+    return '<div class="'+wrapCls+'"'+wrapSty+'>'+searchHtml+'<div class="ct-dir-list">'+rowsHtml+'</div>'+emptyHtml+'</div>';
+  }
+  var firstHtml='', extraHtml='';
+  list.forEach(function(p,i){ if(i<cap) firstHtml+=rowHtml(p); else extraHtml+=rowHtml(p); });
+  var extraCount=Math.max(0,total-cap);
+  var moreLabel='Voir plus ('+extraCount+' de plus)';
+  var extraBlock = extraCount>0
+    ? '<div class="ct-dir-extra">'+extraHtml+'</div><button type="button" class="ct-dir-more" data-more="'+a(moreLabel)+'" onclick="_ctDirMore(this)">'+a(moreLabel)+'</button>'
     : '';
-  var maxH=parseInt(ctRaw.directoryMaxH,10)||0;
-  var wrapCls='ct-dir'+(maxH>0?' ct-dir-scroll':'');
-  var wrapSty=maxH>0?' style="--ct-maxh:'+maxH+'px"':'';
-  return '<div class="'+wrapCls+'"'+wrapSty+'>'
-    + '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>'
-    + '<div class="ct-dir-list">'+rowsHtml+'</div>'
-    + moreBtn
-    + '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>'
-    + '</div>';
+  return '<div class="ct-dir"'+wrapSty+'>'+searchHtml+'<div class="ct-dir-list">'+firstHtml+'</div>'+extraBlock+emptyHtml+'</div>';
 };
 window._ctDirToggle=function(row){
   if(!row) return;
   var open=row.classList.contains('open');
-  var list=row.closest('.ct-dir-list');
-  if(list) list.querySelectorAll('.ct-dir-row.open').forEach(function(r){ if(r!==row) r.classList.remove('open'); });
+  var wrap=row.closest('.ct-dir');
+  if(wrap) wrap.querySelectorAll('.ct-dir-row.open').forEach(function(r){ if(r!==row) r.classList.remove('open'); });
   row.classList.toggle('open', !open);
   if(!open){ try{ row.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(_){ } }
 };
 window._ctDirFilter=function(inp){
   var wrap=inp.closest('.ct-dir'); if(!wrap) return;
-  var list=wrap.querySelector('.ct-dir-list'); if(!list) return;
   var q=(inp.value||'').trim().toLowerCase();
   var searching=q.length>0;
+  wrap.classList.toggle('ct-searching', searching);
   var shown=0;
-  list.querySelectorAll('.ct-dir-row').forEach(function(r){
+  wrap.querySelectorAll('.ct-dir-row').forEach(function(r){
     var hay=r.getAttribute('data-search')||'';
-    var capped=r.classList.contains('ct-cap');
     var match=!q || hay.indexOf(q)!==-1;
-    var vis = searching ? match : (match && !capped);
-    r.classList.toggle('ct-hide', !vis);
-    if(vis) shown++;
+    r.classList.toggle('ct-hide', !match);
+    if(match) shown++;
   });
-  list.querySelectorAll('.ct-dir-group').forEach(function(h){
+  wrap.querySelectorAll('.ct-dir-group').forEach(function(h){
     var any=false, n=h.nextElementSibling;
     while(n && !n.classList.contains('ct-dir-group')){ if(n.classList.contains('ct-dir-row') && !n.classList.contains('ct-hide')){ any=true; break; } n=n.nextElementSibling; }
     h.classList.toggle('ct-hide', !any);
   });
-  var more=wrap.querySelector('.ct-dir-more'); if(more) more.classList.toggle('ct-hide', searching || list.getAttribute('data-expanded')==='1');
   var empty=wrap.querySelector('.ct-dir-empty'); if(empty) empty.classList.toggle('ct-hide', shown>0);
   var cnt=wrap.querySelector('.ct-dir-count'); if(cnt) cnt.textContent=shown+(shown>1?' contacts':' contact');
 };
 window._ctDirMore=function(btn){
   var wrap=btn.closest('.ct-dir'); if(!wrap) return;
-  var list=wrap.querySelector('.ct-dir-list');
-  if(list){ list.setAttribute('data-expanded','1'); list.querySelectorAll('.ct-cap').forEach(function(r){ r.classList.remove('ct-cap'); r.classList.remove('ct-hide'); }); }
-  btn.classList.add('ct-hide');
+  var open=wrap.classList.toggle('ct-open');
+  btn.textContent = open ? 'Voir moins' : (btn.getAttribute('data-more')||'Voir plus');
 };
 window._ctCopy=function(ev,txt,btn){
   try{ ev.stopPropagation(); }catch(_){ }
