@@ -8008,12 +8008,41 @@ window._tmgResizeSettle=function(){
   function pubDb(){ return window._pubDb||null; }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function device(){ try{ var k='tmg_device',v=localStorage.getItem(k); if(!v){ v='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); } return v; }catch(_){ return ''; } }
-  function doneKey(sid){ return 'tmg_survey_done_'+EVENT_ID+'_'+(sid||'main'); }
+  function _acct(){ try{ var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null; return u?('u_'+(u.uid||u.email||'')):'anon'; }catch(_){ return 'anon'; } }
+  function doneKey(sid){ return 'tmg_survey_done_'+EVENT_ID+'_'+(sid||'main')+'_'+_acct(); }
   function isDone(sid){ try{ return localStorage.getItem(doneKey(sid))==='1'; }catch(_){ return false; } }
   function markDone(sid){ try{ localStorage.setItem(doneKey(sid),'1'); }catch(_){ } }
   function seenKey(sid){ return 'tmg_survey_seen_'+EVENT_ID+'_'+(sid||'main'); }
   function sessionSeen(sid){ try{ return sessionStorage.getItem(seenKey(sid))==='1'; }catch(_){ return false; } }
   function markSeen(sid){ try{ sessionStorage.setItem(seenKey(sid),'1'); }catch(_){ } }
+
+  // Vérifie côté serveur si le COMPTE connecté a déjà répondu (robuste entre
+  // appareils / navigation privée). Lecture via l'app "tmg-editor" : c'est la
+  // seule qui porte l'identité e-mail du client (pubDb est en auth anonyme).
+  var _svChecked={};
+  function _verifyDoneServer(sid){
+    try{
+      var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
+      if(!u) return;                                  // uniquement pour un compte connecté
+      var email=u.email||''; if(!email) return;
+      if(isDone(sid)) return;                         // déjà connu localement
+      var edb=(ed.db)?ed.db():null; if(!edb) return;
+      var ck=(sid||'main')+'|'+_acct();
+      if(_svChecked[ck]) return;                      // évite de requêter en boucle
+      _svChecked[ck]=true;
+      edb.collection('surveyResponses')
+        .where('eventId','==',EVENT_ID)
+        .where('surveyId','==',(sid||'main'))
+        .where('account','==',email)
+        .limit(1).get()
+        .then(function(snap){
+          if(snap && !snap.empty){ markDone(sid); if(window._surveyAfterSubmit) window._surveyAfterSubmit(); }
+        })
+        .catch(function(){ _svChecked[ck]=false; });   // (ex: règles) -> on garde le repli local
+    }catch(_){ }
+  }
+  // Au changement de compte (connexion / déconnexion), on réévalue tout.
+  try{ if(window._tmgEditor && window._tmgEditor.onAuth){ window._tmgEditor.onAuth(function(){ _svChecked={}; if(window._surveyAfterSubmit) window._surveyAfterSubmit(); if(window._surveyRefresh) setTimeout(window._surveyRefresh,0); }); } }catch(_){ }
 
   var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
   var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
@@ -8157,6 +8186,7 @@ window._tmgResizeSettle=function(){
       var surv=sid?surveyById(sid):popupSurvey();
       if(!surv || !(surv.questions||[]).length){ host.innerHTML=''; return; }
       if(isDone(surv.id)){ host.innerHTML=_satThanksHtml(surv); return; }
+      _verifyDoneServer(surv.id);
       if(mode==='inline'){ window._surveyInline(host, exp, surv); return; }
       // popup / accordion → carte d'appel à l'action personnalisable
       var n=(surv.questions||[]).length;
@@ -8177,6 +8207,7 @@ window._tmgResizeSettle=function(){
   window._surveyRefresh=function(){
     var s=sv();
     ensureBtn();
+    _verifyDoneServer(s.id);
     if(window._surveyInlineFill) setTimeout(window._surveyInlineFill,0);
     if(s.enabled && s.autoOpen && !autoScheduled && !isDone(s.id) && !sessionSeen(s.id)){
       autoScheduled=true;
