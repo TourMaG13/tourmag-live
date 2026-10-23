@@ -159,6 +159,9 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .cp-video.cp-video-short{aspect-ratio:auto;max-width:min(340px,80vw);height:auto;margin:0 auto}
 .cp-video.cp-video-short iframe{position:static;width:100%;aspect-ratio:9/16;height:auto;display:block}
 .cp-video iframe,.cp-video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cp-video-poster{background-size:cover;background-position:center;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cp-video-poster .cp-play{width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;transition:background .15s;padding-left:3px}
+.cp-video-poster:hover .cp-play{background:rgba(0,0,0,.72)}
 .cp-btns{display:flex;gap:12px;flex-wrap:wrap}
 .cp-btns-center{justify-content:center}.cp-btns-right{justify-content:flex-end}
 .cp-btn{display:inline-block;padding:12px 26px;background:var(--acc,#0C6CA1);color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;transition:filter .15s}
@@ -1060,13 +1063,13 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-group{position:sticky;top:54px;z-index:2;background:var(--bg,#f1f5f9);color:var(--text3);font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 16px;border-top:1px solid var(--border)}
 .ct-dir-row{border-top:1px solid var(--border)}
 .ct-dir-row:first-child{border-top:0}
-.ct-dir-head{display:flex;align-items:center;gap:12px;padding:9px 14px;cursor:pointer}
+.ct-dir-head{display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer}
 .ct-dir-head:hover{background:color-mix(in srgb,var(--acc,#E8842C) 6%,transparent)}
 .ct-dir-av{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#E2E8F0}
 .ct-dir-av-ph{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#E2E8F0;color:#64748B;font:700 12px 'Josefin Sans',sans-serif}
 .ct-dir-id{flex:1;min-width:0}
-.ct-dir-name{font-size:14px;font-weight:600;color:var(--pri,#111);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ct-dir-role{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-dir-name{font-size:14px;font-weight:600;color:var(--pri,#111);line-height:1.25;overflow-wrap:anywhere}
+.ct-dir-role{font-size:11px;color:var(--text3);line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ct-dir-quick{display:flex;gap:6px;flex-shrink:0}
 .ct-dir-ic{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);color:var(--acc,#E8842C);background:transparent;text-decoration:none}
 .ct-dir-ic:hover{background:var(--acc,#E8842C);color:#fff}
@@ -1086,11 +1089,16 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-more:hover{background:var(--bg,#f1f5f9)}
 .ct-dir-empty{padding:18px;text-align:center;color:var(--text3);font-size:13px}
 .ct-hide{display:none !important}
+.ct-dir-scroll .ct-dir-list{max-height:var(--ct-maxh,460px);overflow-y:auto;overscroll-behavior:contain}
+.ct-dir-scroll .ct-dir-group{top:0}
 @container (max-width:430px){
-  .ct-dir-detail{padding-left:14px}
+  .ct-dir-head{gap:8px;padding:8px 8px}
+  .ct-dir-detail{padding-left:12px}
   .ct-dir-ic{width:28px;height:28px}
+  .ct-dir-quick{gap:4px}
   .ct-dir-group{top:52px}
 }
+.ct-dir-scroll.ct-dir .ct-dir-group{top:0}
 @media(max-width:640px){.contact-card{flex-direction:column;text-align:center;padding:20px 16px;gap:14px}.contact-card-actions{justify-content:center}.contact-btn{justify-content:center}}
 .bn-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s;text-decoration:none;display:block;color:inherit}
 .bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
@@ -5611,18 +5619,35 @@ function _buildTabList(phases, contentPages, tabOrder, builderPages, hideLegacy)
   return out;
 }
 // ==================== RENDU DES PAGES LIBRES ====================
-function _cpVideoEmbed(url){
+function _cpPlay(el){
+  try{
+    var h=decodeURIComponent(el.getAttribute('data-embed')||'');
+    el.classList.remove('cp-video-poster');
+    el.innerHTML=h;
+    var f=el.querySelector('iframe');
+    if(f){ var s=f.getAttribute('src')||''; if(s && s.indexOf('autoplay=1')===-1){ f.setAttribute('src', s+(s.indexOf('?')>-1?'&':'?')+'autoplay=1'); } }
+    var v=el.querySelector('video'); if(v){ try{ v.play(); }catch(_){ } }
+  }catch(_){ }
+}
+function _cpVideoEmbed(url, poster){
   if(!url) return '';
-  url=url.trim();
-  // Short YouTube (format vertical) : youtube.com/shorts/ID
+  url=String(url).trim();
+  poster=poster?String(poster).trim():'';
+  var shortCls='', inner='';
   var ytShort=url.match(/youtube\.com\/shorts\/([\w-]{11})/);
-  if(ytShort) return '<div class="cp-video cp-video-short"><iframe src="https://www.youtube.com/embed/'+ytShort[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
   var yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
-  if(yt) return '<div class="cp-video"><iframe src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
   var vm=url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if(vm) return '<div class="cp-video"><iframe src="https://player.vimeo.com/video/'+vm[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
-  if(/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return '<div class="cp-video"><video src="'+url+'" controls preload="metadata"></video></div>';
-  return '<div class="cp-video"><iframe src="'+_qEsc(url)+'" frameborder="0" allowfullscreen loading="lazy"></iframe></div>';
+  var isFile=/\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(url);
+  if(ytShort){ shortCls=' cp-video-short'; inner='<iframe src="https://www.youtube.com/embed/'+ytShort[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>'; }
+  else if(yt){ inner='<iframe src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>'; }
+  else if(vm){ inner='<iframe src="https://player.vimeo.com/video/'+vm[1]+'" frameborder="0" allowfullscreen loading="lazy"></iframe>'; }
+  else if(isFile){ inner='<video src="'+_qEsc(url)+'" controls preload="metadata"'+(poster?' poster="'+_qEsc(poster)+'"':'')+'></video>'; }
+  else { inner='<iframe src="'+_qEsc(url)+'" frameborder="0" allowfullscreen loading="lazy"></iframe>'; }
+  // Vignette d'ouverture : pour un fichier, l'attribut poster suffit ; pour un embed, overlay cliquable.
+  if(poster && !isFile){
+    return '<div class="cp-video'+shortCls+' cp-video-poster" style="background-image:url(\''+_qEsc(poster).replace(/'/g,'%27')+'\')" role="button" tabindex="0" aria-label="Lire la vidéo" onclick="_cpPlay(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_cpPlay(this);}" data-embed="'+encodeURIComponent(inner)+'"><span class="cp-play">▶</span></div>';
+  }
+  return '<div class="cp-video'+shortCls+'">'+inner+'</div>';
 }
 function _renderCpHero(hero, color){
   var c = color || '#0C6CA1';
@@ -5977,7 +6002,7 @@ function _renderContentPage(page){
         o += '<div class="cp-block"><div class="cp-gallery"'+galStyle+'>'+imgs.map(function(x){return '<div class="cp-gallery-item"><img src="'+_qEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="cp-gallery-cr">© '+_qEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div></div>';
       }
     } else if(b.type==='video'){
-      o += '<div class="cp-block">'+_cpVideoEmbed(b.url)+'</div>';
+      o += '<div class="cp-block">'+_cpVideoEmbed(b.url, b.poster)+'</div>';
     } else if(b.type==='buttons'){
       var btns=(b.buttons||[]).filter(function(x){return x&&x.url;});
       if(btns.length){ o += '<div class="cp-block cp-btns'+(b.align==='center'?' cp-btns-center':(b.align==='right'?' cp-btns-right':''))+'">'+btns.map(function(x){return '<a class="cp-btn" href="'+_qEsc(x.url)+'" target="_blank" rel="noopener" style="'+(x.color?'background:'+x.color:'')+'">'+_qEsc(x.label||'En savoir plus')+'</a>';}).join('')+'</div>'; }
@@ -6641,7 +6666,7 @@ function _bpRenderContentModule(sec, event, ctx){
       return '<div class="'+_cls+'" style="'+_gridStyle+'">'+imgs.map(function(x){return '<div class="bp-gallery-item"><img src="'+_bpEsc(x.url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'">'+(x.credit?'<span class="bp-gallery-cr">© '+_bpEsc(x.credit)+'</span>':'')+'</div>';}).join('')+'</div>';
     }
     case 'video': {
-      return (typeof _cpVideoEmbed==='function') ? _cpVideoEmbed(ct.url) : '';
+      return (typeof _cpVideoEmbed==='function') ? _cpVideoEmbed(ct.url, ct.poster) : '';
     }
     case 'buttons': {
       const btns=(ct.buttons||[]).filter(function(x){return x&&x.url;});
@@ -8566,7 +8591,10 @@ window._ctDirListHtml=function(people, ctRaw, svg){
   var moreBtn = (!doGroup && total>cap)
     ? '<button type="button" class="ct-dir-more" onclick="_ctDirMore(this)">Voir plus ('+(total-cap)+' de plus)</button>'
     : '';
-  return '<div class="ct-dir">'
+  var maxH=parseInt(ctRaw.directoryMaxH,10)||0;
+  var wrapCls='ct-dir'+(maxH>0?' ct-dir-scroll':'');
+  var wrapSty=maxH>0?' style="--ct-maxh:'+maxH+'px"':'';
+  return '<div class="'+wrapCls+'"'+wrapSty+'>'
     + '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>'
     + '<div class="ct-dir-list">'+rowsHtml+'</div>'
     + moreBtn
