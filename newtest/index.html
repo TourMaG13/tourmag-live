@@ -3248,51 +3248,6 @@ function render(data){
   }
 
   // ===== CONTACT (mode classique) =====
-  function _ctDirListHtml(people, ctRaw, svg){
-    var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-    var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
-    var svgSearch = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
-    var list = (people||[]).filter(function(p){ return p && (p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message); });
-    list.sort(function(x,y){ return String(x.name||'').localeCompare(String(y.name||''),'fr',{sensitivity:'base'}); });
-    var total = list.length;
-    var cap = parseInt(ctRaw.directoryVisible,10)||20;
-    var grp = ctRaw.directoryGroup||'auto';
-    var doGroup = (grp==='always') || (grp==='auto' && total>=30);
-    var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
-    var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
-    var rowsHtml='', curL='', rowIdx=0;
-    list.forEach(function(p){
-      if(doGroup){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } }
-      var capped = (!doGroup && rowIdx>=cap);
-      rowIdx++;
-      var hay = a([p.name,p.role,p.email,p.phone,p.website_label,p.website].filter(Boolean).join(' ').toLowerCase());
-      var av = p.photo_url
-        ? '<img class="ct-dir-av" src="'+a(p.photo_url)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'ct-dir-av-ph\\\'>'+a(ini(p.name))+'</div>\'">'
-        : '<div class="ct-dir-av-ph">'+a(ini(p.name))+'</div>';
-      var quick='';
-      if(p.email) quick += '<a class="ct-dir-ic" href="mailto:'+a(p.email)+'" title="E-mail" onclick="event.stopPropagation()">'+svg.mail+'</a>';
-      if(p.phone) quick += '<a class="ct-dir-ic" href="tel:'+a(p.phone)+'" title="Téléphone" onclick="event.stopPropagation()">'+svg.phone+'</a>';
-      var det='';
-      if(p.message) det += '<div class="ct-dir-msg">'+a(p.message)+'</div>';
-      if(p.email) det += '<div class="ct-dir-line">'+svg.mail+'<a href="mailto:'+a(p.email)+'" onclick="event.stopPropagation()">'+a(p.email)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.email)+'\',this)">Copier</button></div>';
-      if(p.phone) det += '<div class="ct-dir-line">'+svg.phone+'<a href="tel:'+a(p.phone)+'" onclick="event.stopPropagation()">'+a(p.phone)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.phone)+'\',this)">Copier</button></div>';
-      if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); var lbl=(p.website_label||'').trim()||w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; det += '<div class="ct-dir-line">'+svg.web+'<a href="'+a(href)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+a(lbl)+'</a></div>'; }
-      if(p.booking_url) det += '<div class="ct-dir-line">'+svg.cal+'<a href="'+a(p.booking_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Prendre rendez-vous</a></div>';
-      rowsHtml += '<div class="ct-dir-row'+(capped?' ct-cap ct-hide':'')+'" data-search="'+hay+'" onclick="_ctDirToggle(this)">'
-        + '<div class="ct-dir-head">'+av+'<div class="ct-dir-id"><div class="ct-dir-name">'+a(p.name||'\u2014')+'</div>'+(p.role?'<div class="ct-dir-role">'+a(p.role)+'</div>':'')+'</div><div class="ct-dir-quick">'+quick+'</div><span class="ct-dir-caret">\u25BE</span></div>'
-        + '<div class="ct-dir-detail">'+(det||'<div class="ct-dir-msg" style="opacity:.7">Pas de coordonnées renseignées.</div>')+'</div>'
-        + '</div>';
-    });
-    var moreBtn = (!doGroup && total>cap)
-      ? '<button type="button" class="ct-dir-more" onclick="_ctDirMore(this)">Voir plus ('+(total-cap)+' de plus)</button>'
-      : '';
-    return '<div class="ct-dir">'
-      + '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>'
-      + '<div class="ct-dir-list">'+rowsHtml+'</div>'
-      + moreBtn
-      + '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>'
-      + '</div>';
-  }
   function mkContact(){
     const ctRaw = window._contactData;
     if(mod.contact===false) return '';
@@ -3357,7 +3312,7 @@ function render(data){
       : `<p>${_subTxt}</p>`;
     o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div>${_subHtml}</div>`;
     if((ctRaw.displayMode||'cards')==='directory'){
-      o += _ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal});
+      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal});
       if(globalBooking){ o += `<div class="contact-book-global"><a class="contact-btn contact-btn-book" href="${globalBooking}" target="_blank" rel="noopener"${cardStyle?` style="${cardStyle}"`:''}>${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
       o += `</div>`;
       return o;
@@ -4488,6 +4443,12 @@ function renderExpedition(data){
     const _intro=ctRaw.intro;
     if(_intro && (_intro.text||'').trim()){
       o += `<div class="contact-intro" style="${_ctTextStyle(_intro,'var(--exp-grey,#6E6B66)',18)};max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+    }
+    if((ctRaw.displayMode||'cards')==='directory'){
+      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal});
+      if(globalBooking){ o += `<div style="text-align:center;margin-top:18px"><a class="exp-contact-btn" href="${globalBooking}" target="_blank" rel="noopener" style="${cardStyle}display:inline-flex">${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
+      o += `</section>`;
+      return o;
     }
     o += `<div class="exp-contact-list" style="display:flex;flex-direction:column;gap:16px">`;
     people.forEach(p=>{ if(p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message)) o += personCard(p); });
@@ -8518,6 +8479,51 @@ window._tmgResizeSettle=function(){
 </script>
 <script>
 /* Annuaire compact (bloc contact) — recherche, accordéon à volet unique, « voir plus », copie */
+window._ctDirListHtml=function(people, ctRaw, svg){
+  var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
+  var svgSearch = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  var list = (people||[]).filter(function(p){ return p && (p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message); });
+  list.sort(function(x,y){ return String(x.name||'').localeCompare(String(y.name||''),'fr',{sensitivity:'base'}); });
+  var total = list.length;
+  var cap = parseInt(ctRaw.directoryVisible,10)||20;
+  var grp = ctRaw.directoryGroup||'auto';
+  var doGroup = (grp==='always') || (grp==='auto' && total>=30);
+  var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
+  var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
+  var rowsHtml='', curL='', rowIdx=0;
+  list.forEach(function(p){
+    if(doGroup){ var L=firstLetter(p.name); if(L!==curL){ curL=L; rowsHtml += '<div class="ct-dir-group">'+a(L)+'</div>'; } }
+    var capped = (!doGroup && rowIdx>=cap);
+    rowIdx++;
+    var hay = a([p.name,p.role,p.email,p.phone,p.website_label,p.website].filter(Boolean).join(' ').toLowerCase());
+    var av = p.photo_url
+      ? '<img class="ct-dir-av" src="'+a(p.photo_url)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'ct-dir-av-ph\\\'>'+a(ini(p.name))+'</div>\'">'
+      : '<div class="ct-dir-av-ph">'+a(ini(p.name))+'</div>';
+    var quick='';
+    if(p.email) quick += '<a class="ct-dir-ic" href="mailto:'+a(p.email)+'" title="E-mail" onclick="event.stopPropagation()">'+svg.mail+'</a>';
+    if(p.phone) quick += '<a class="ct-dir-ic" href="tel:'+a(p.phone)+'" title="Téléphone" onclick="event.stopPropagation()">'+svg.phone+'</a>';
+    var det='';
+    if(p.message) det += '<div class="ct-dir-msg">'+a(p.message)+'</div>';
+    if(p.email) det += '<div class="ct-dir-line">'+svg.mail+'<a href="mailto:'+a(p.email)+'" onclick="event.stopPropagation()">'+a(p.email)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.email)+'\',this)">Copier</button></div>';
+    if(p.phone) det += '<div class="ct-dir-line">'+svg.phone+'<a href="tel:'+a(p.phone)+'" onclick="event.stopPropagation()">'+a(p.phone)+'</a><button type="button" class="ct-dir-copy" onclick="return _ctCopy(event,\''+j(p.phone)+'\',this)">Copier</button></div>';
+    if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); var lbl=(p.website_label||'').trim()||w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; det += '<div class="ct-dir-line">'+svg.web+'<a href="'+a(href)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+a(lbl)+'</a></div>'; }
+    if(p.booking_url) det += '<div class="ct-dir-line">'+svg.cal+'<a href="'+a(p.booking_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Prendre rendez-vous</a></div>';
+    rowsHtml += '<div class="ct-dir-row'+(capped?' ct-cap ct-hide':'')+'" data-search="'+hay+'" onclick="_ctDirToggle(this)">'
+      + '<div class="ct-dir-head">'+av+'<div class="ct-dir-id"><div class="ct-dir-name">'+a(p.name||'\u2014')+'</div>'+(p.role?'<div class="ct-dir-role">'+a(p.role)+'</div>':'')+'</div><div class="ct-dir-quick">'+quick+'</div><span class="ct-dir-caret">\u25BE</span></div>'
+      + '<div class="ct-dir-detail">'+(det||'<div class="ct-dir-msg" style="opacity:.7">Pas de coordonnées renseignées.</div>')+'</div>'
+      + '</div>';
+  });
+  var moreBtn = (!doGroup && total>cap)
+    ? '<button type="button" class="ct-dir-more" onclick="_ctDirMore(this)">Voir plus ('+(total-cap)+' de plus)</button>'
+    : '';
+  return '<div class="ct-dir">'
+    + '<div class="ct-dir-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctDirFilter(this)" aria-label="Rechercher un contact"><span class="ct-dir-count">'+total+(total>1?' contacts':' contact')+'</span></div>'
+    + '<div class="ct-dir-list">'+rowsHtml+'</div>'
+    + moreBtn
+    + '<div class="ct-dir-empty ct-hide">Aucun résultat.</div>'
+    + '</div>';
+};
 window._ctDirToggle=function(row){
   if(!row) return;
   var open=row.classList.contains('open');
