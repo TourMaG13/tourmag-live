@@ -876,6 +876,18 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .exc-empty{font-size:12px;color:var(--text3,#9CA3AF);padding:4px 0}
 .exc-add{margin-top:6px}
 .exc-add-btn{border:0;cursor:pointer;background:#0EA5A4;color:#fff;font:600 13px system-ui;padding:9px 16px;border-radius:9px}
+/* ---- Zone de dépôt (ajout de photos en front) ---- */
+.fe-drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;color:#64748b;background:#f8fafc;transition:border-color .15s,background .15s;margin-top:6px}
+.fe-drop:hover{border-color:#0EA5A4;background:#f0fdfa}
+.fe-drop.drag{border-color:#0EA5A4;background:#ccfbf1;color:#0f766e}
+.fe-drop svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
+.fe-drop-t{font:600 14px system-ui}
+.fe-drop-s{font-size:12px;margin-top:2px;opacity:.85}
+.fe-prev{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fe-thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;background:#e2e8f0}
+.fe-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.fe-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;background:rgba(15,23,42,.75);color:#fff;font:700 12px/1 system-ui;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.fe-thumb-x:hover{background:#b91c1c}
 .exc-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .exc-login-btn{border:0;background:#0EA5A4;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
 /* ---- Charte « carnet de route » (mode expédition) : commentaires & excursions ---- */
@@ -7722,7 +7734,7 @@ window._tmgResizeSettle=function(){
   window._feCtxAddHtml=function(kind){
     if(!(ev().frontEdit && eUser)) return '';
     if(kind==='video') return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddVideo&&window._feAddVideo()">＋ Ajouter une vidéo</button></div>';
-    return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddPhoto&&window._feAddPhoto()">＋ Ajouter une photo</button></div>';
+    return '<div class="sec-add-ctx"><button class="sec-add-btn" onclick="window._feAddPhoto&&window._feAddPhoto()">＋ Ajouter des photos</button></div>';
   };
   // État « vide » : si contribution activée, on affiche le titre + soit le bouton (connecté),
   // soit une invitation à se connecter (le bouton de connexion est en bas à gauche).
@@ -7827,24 +7839,45 @@ window._tmgResizeSettle=function(){
   }
 
   function openPhoto(){
-    var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Ajouter une photo</h3>'
-      +'<p style="margin:0 0 8px;font-size:12px;color:#64748b">Publiée immédiatement sur la page affichée.</p>'
-      +'<label style="'+_lbl+'">Photo (depuis votre appareil)</label><input id="fe-img" type="file" accept="image/*" style="'+_fi+'">'
-      +'<label style="'+_lbl+'">Légende (optionnel)</label><input id="fe-cap" type="text" placeholder="Ex : Coucher de soleil sur le port" style="'+_fi+'">'
+    var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Ajouter des photos</h3>'
+      +'<p style="margin:0 0 10px;font-size:12px;color:#64748b">Publiées immédiatement sur la page affichée. Vous pouvez en ajouter plusieurs à la fois.</p>'
+      +'<div id="fe-drop" class="fe-drop"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg><div class="fe-drop-t">Glissez vos photos ici</div><div class="fe-drop-s">ou cliquez pour parcourir — plusieurs photos possibles</div></div>'
+      +'<input id="fe-img" type="file" accept="image/*" multiple style="display:none">'
+      +'<div id="fe-prev" class="fe-prev"></div>'
       +'<div id="fe-perr" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
-      +'<button id="fe-pub" style="'+_pbtn+'">Publier la photo</button>');
-    var pub=m.box.querySelector('#fe-pub'),perr=m.box.querySelector('#fe-perr');
+      +'<button id="fe-pub" style="'+_pbtn+'">Publier</button>');
+    var drop=m.box.querySelector('#fe-drop'), inp=m.box.querySelector('#fe-img'), prev=m.box.querySelector('#fe-prev'), pub=m.box.querySelector('#fe-pub'), perr=m.box.querySelector('#fe-perr');
+    var selected=[];
+    function renderPrev(){
+      if(!selected.length){ prev.innerHTML=''; pub.textContent='Publier'; return; }
+      prev.innerHTML=selected.map(function(f,i){ var u=URL.createObjectURL(f); return '<div class="fe-thumb"><img src="'+u+'" alt=""><button type="button" class="fe-thumb-x" data-i="'+i+'" title="Retirer">×</button></div>'; }).join('');
+      pub.textContent='Publier '+selected.length+' photo'+(selected.length>1?'s':'');
+      prev.querySelectorAll('.fe-thumb-x').forEach(function(b){ b.addEventListener('click',function(){ selected.splice(parseInt(b.getAttribute('data-i'),10),1); renderPrev(); }); });
+    }
+    function addFiles(fl){ Array.prototype.slice.call(fl||[]).forEach(function(f){ if(f && /^image\//.test(f.type||'')) selected.push(f); }); renderPrev(); }
+    drop.addEventListener('click',function(){ inp.click(); });
+    inp.addEventListener('change',function(){ addFiles(inp.files); inp.value=''; });
+    ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.add('drag'); }); });
+    ['dragleave','dragend'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); }); });
+    drop.addEventListener('drop',function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); addFiles(e.dataTransfer&&e.dataTransfer.files); });
     pub.onclick=function(){
-      var f=m.box.querySelector('#fe-img').files[0];
-      if(!f){ perr.textContent='Choisissez une photo.'; perr.style.display='block'; return; }
-      if(f.size>10*1024*1024){ perr.textContent='Photo trop lourde (max 10 Mo).'; perr.style.display='block'; return; }
+      if(!selected.length){ perr.textContent='Ajoutez au moins une photo.'; perr.style.display='block'; return; }
       pub.disabled=true; pub.textContent='Envoi…'; perr.style.display='none';
-      var cap=(m.box.querySelector('#fe-cap').value||'').trim();
-      uploadImage(f).then(function(url){
-        var obj={id:'ph_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),url:url,caption:cap,page:pageId(),addedBy:eUser.uid,addedByEmail:eUser.email||''};
-        return eDb.collection('events').doc(EVENT_ID).update({gallery:firebase.firestore.FieldValue.arrayUnion(obj)});
-      }).then(function(){ m.close(); toast('Photo publiée'); })
-      .catch(function(e){ pub.disabled=false; pub.textContent='Publier la photo'; perr.textContent='Erreur : '+(e.message||e); perr.style.display='block'; });
+      var chain=Promise.resolve(), objs=[], ok=0, tot=selected.length;
+      selected.forEach(function(f){
+        chain=chain.then(function(){
+          if(f.size>10*1024*1024) throw new Error((f.name||'Une photo')+' trop lourde (max 10 Mo)');
+          return uploadImage(f).then(function(url){
+            objs.push({id:'ph_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),url:url,caption:'',page:pageId(),addedBy:eUser.uid,addedByEmail:eUser.email||''});
+            ok++; pub.textContent='Envoi… ('+ok+'/'+tot+')';
+          });
+        });
+      });
+      chain.then(function(){
+        if(!objs.length) throw new Error('Aucune photo envoyée');
+        return eDb.collection('events').doc(EVENT_ID).update({gallery:firebase.firestore.FieldValue.arrayUnion.apply(null,objs)});
+      }).then(function(){ m.close(); toast(ok+' photo'+(ok>1?'s':'')+' publiée'+(ok>1?'s':'')); })
+      .catch(function(e){ pub.disabled=false; renderPrev(); perr.textContent='Erreur : '+(e.message||e); perr.style.display='block'; });
     };
   }
 
@@ -8356,16 +8389,32 @@ window._tmgResizeSettle=function(){
       +'<p style="margin:0 0 6px;font-size:12px;color:#64748b">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></p>'
       +'<label style="'+L+'">Votre excursion</label><select id="exc-sel" style="'+F+'">'+opts+'</select>'
       +'<div id="exc-left" style="font-size:12px;color:#0EA5A4;margin-top:4px"></div>'
-      +'<label style="'+L+'">Photos (jusqu\'à '+max+')</label><input id="exc-files" type="file" accept="image/*" multiple style="'+F+'">'
+      +'<label style="'+L+'">Photos (jusqu\'à '+max+')</label>'
+      +'<div id="exc-drop" class="fe-drop"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg><div class="fe-drop-t">Glissez vos photos ici</div><div class="fe-drop-s">ou cliquez pour parcourir</div></div>'
+      +'<input id="exc-files" type="file" accept="image/*" multiple style="display:none">'
+      +'<div id="exc-prev" class="fe-prev"></div>'
       +'<label style="'+L+'">Légende (facultatif)</label><input id="exc-cap" type="text" style="'+F+'">'
       +'<div id="exc-err" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
       +'<button id="exc-send" style="'+P+'">Publier mes photos</button>');
     var sel=m.box.querySelector('#exc-sel'), leftEl=m.box.querySelector('#exc-left'), send=m.box.querySelector('#exc-send'), err=m.box.querySelector('#exc-err');
+    var drop=m.box.querySelector('#exc-drop'), inp=m.box.querySelector('#exc-files'), prev=m.box.querySelector('#exc-prev');
+    var selected=[];
+    function renderPrev(){
+      if(!selected.length){ prev.innerHTML=''; return; }
+      prev.innerHTML=selected.map(function(f,i){ var uu=URL.createObjectURL(f); return '<div class="fe-thumb"><img src="'+uu+'" alt=""><button type="button" class="fe-thumb-x" data-i="'+i+'" title="Retirer">×</button></div>'; }).join('');
+      prev.querySelectorAll('.fe-thumb-x').forEach(function(b){ b.addEventListener('click',function(){ selected.splice(parseInt(b.getAttribute('data-i'),10),1); renderPrev(); }); });
+    }
+    function addFiles(fl){ Array.prototype.slice.call(fl||[]).forEach(function(f){ if(f && /^image\//.test(f.type||'')) selected.push(f); }); renderPrev(); }
+    drop.addEventListener('click',function(){ inp.click(); });
+    inp.addEventListener('change',function(){ addFiles(inp.files); inp.value=''; });
+    ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.add('drag'); }); });
+    ['dragleave','dragend'].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); }); });
+    drop.addEventListener('drop',function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); addFiles(e.dataTransfer&&e.dataTransfer.files); });
     function updLeft(){ var o=sel.options[sel.selectedIndex]; var left=o?parseInt(o.getAttribute('data-left'),10):max; leftEl.textContent = left<=0 ? 'Limite atteinte pour cette excursion.' : ('Il vous reste '+left+' photo'+(left>1?'s':'')+' pour cette excursion.'); }
     sel.onchange=updLeft; updLeft();
     send.onclick=function(){
       var excId=sel.value; var o=sel.options[sel.selectedIndex]; var left=o?parseInt(o.getAttribute('data-left'),10):max;
-      var files=Array.prototype.slice.call(m.box.querySelector('#exc-files').files||[]);
+      var files=selected.slice();
       if(!files.length){ err.textContent='Choisissez au moins une photo.'; err.style.display='block'; return; }
       if(left<=0){ err.textContent='Limite atteinte pour cette excursion.'; err.style.display='block'; return; }
       if(files.length>left){ err.textContent='Vous ne pouvez ajouter que '+left+' photo(s) ici.'; err.style.display='block'; return; }
