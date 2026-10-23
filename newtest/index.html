@@ -925,7 +925,7 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .sat-f{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#cbd5e1);border-radius:8px;font:400 14px system-ui;margin-top:4px}
 .sat-block .sv-grid th{font-weight:600}
 /* Expédition — reprend la charte « carnet de route » du quiz */
-.exp-satisfaction{max-width:1200px;margin:0 auto;padding:0 32px 48px}
+.exp-satisfaction{max-width:100%;margin:0;padding:0 0 48px}
 .sat-exp{max-width:100%}
 .sat-exp .sat-q{background:linear-gradient(180deg,#fffdf9 0%,var(--exp-stone,#f5f3f0) 100%);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:3px;box-shadow:0 6px 22px -12px rgba(60,40,20,.35),0 1px 2px rgba(60,40,20,.06);padding:24px 26px;margin-bottom:22px}
 .sat-exp .sat-q::after{font-family:'Libre Caslon Display',serif;font-size:82px;color:var(--exp-accent);opacity:.06}
@@ -8049,13 +8049,14 @@ window._tmgResizeSettle=function(){
     return ans;
   }
 
-  function openSurvey(){
-    var s=sv(); if(!s.enabled) return; var qs=s.questions||[];
+  function openSurvey(survey){
+    var s=survey||sv(); if(!s || s.enabled===false || !(s.questions||[]).length) return; var qs=s.questions||[];
+    try{ markSeen(popupSurvey().id); }catch(_){}   // neutralise la pop-up automatique
     var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
     var idBlock = u
       ? '<div style="font-size:12px;color:#475569;margin-bottom:4px">Connecté·e en tant que <strong>'+esc(u.email||'')+'</strong></div>'
       : '<label style="'+L+'">Votre nom</label><input id="sv-name" style="'+F+'" placeholder="Prénom / nom"><label style="'+L+'">Votre e-mail (facultatif)</label><input id="sv-email" type="email" style="'+F+'">';
-    var qHtml=qs.map(function(q,i){ return '<div style="margin-top:14px"><label style="'+L+';font-weight:700;color:#0f172a">'+esc(q.label||('Question '+(i+1)))+'</label>'+qField(q)+'</div>'; }).join('');
+    var qHtml=qs.map(function(q,i){ return '<div style="margin-top:14px"><div class="sv-qtitle">'+esc(q.label||('Question '+(i+1)))+'</div>'+qField(q)+'</div>'; }).join('');
     var m=modal('<h3 style="margin:0 0 4px;font-size:18px">'+esc(s.title||'Votre avis')+'</h3>'
       +(s.intro?'<p style="margin:0 0 10px;font-size:13px;color:#64748b">'+esc(s.intro)+'</p>':'')
       +idBlock+qHtml
@@ -8074,7 +8075,7 @@ window._tmgResizeSettle=function(){
       wdb.collection('surveyResponses').add({
         eventId:EVENT_ID, surveyId:(s.id||'main'), surveyTitle:(s.title||''), source:'popup', answers:ans, name:name, email:email, account:account, deviceId:device(),
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){ markDone(s.id); var th=(s.thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; m.box.innerHTML='<div style="text-align:center;padding:14px 4px"><div style="font-size:40px;line-height:1;margin-bottom:10px">✓</div><div style="font-size:15px;color:#0f172a;white-space:pre-wrap">'+esc(th)+'</div><button id="sv-ok" style="margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:10px 26px;border-radius:9px">Fermer</button></div>'; var ok=m.box.querySelector('#sv-ok'); if(ok) ok.onclick=m.close; })
+      }).then(function(){ markDone(s.id); if(window._surveyAfterSubmit) window._surveyAfterSubmit(); var th=(s.thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.'; m.box.innerHTML='<div style="text-align:center;padding:14px 4px"><div style="font-size:40px;line-height:1;margin-bottom:10px">✓</div><div style="font-size:15px;color:#0f172a;white-space:pre-wrap">'+esc(th)+'</div><button id="sv-ok" style="margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:10px 26px;border-radius:9px">Fermer</button></div>'; var ok=m.box.querySelector('#sv-ok'); if(ok) ok.onclick=m.close; })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
     };
   }
@@ -8106,13 +8107,35 @@ window._tmgResizeSettle=function(){
       var wdb=pubDb(); if(!wdb){ err.textContent='Service indisponible, réessayez.'; err.style.display='block'; return; }
       send.disabled=true; send.textContent='Envoi…'; err.style.display='none';
       wdb.collection('surveyResponses').add({ eventId:EVENT_ID, surveyId:(s.id||'main'), surveyTitle:(s.title||''), answers:ans, name:name, email:email, account:account, deviceId:device(), source:'inline', createdAt:firebase.firestore.FieldValue.serverTimestamp() })
-        .then(function(){ markDone(s.id); thanks(); })
+        .then(function(){ markDone(s.id); thanks(); if(window._surveyAfterSubmit) setTimeout(window._surveyAfterSubmit,0); })
         .catch(function(e){ send.disabled=false; send.textContent='Envoyer mes réponses'; err.textContent='Erreur : '+(e.message||e); err.style.display='block'; });
     };
   };
+  function _satThanksHtml(surv){ return '<div class="sat-done">✓ '+esc((surv.thanks||'').trim()||'Merci, vos réponses ont bien été enregistrées.')+'</div>'; }
   window._surveyInlineFill=function(){
-    document.querySelectorAll('.sat-host').forEach(function(host){ if(host.getAttribute('data-filled')==='1') return; host.setAttribute('data-filled','1'); var sid=host.getAttribute('data-survey-id')||''; var surv=sid?surveyById(sid):popupSurvey(); window._surveyInline(host, host.getAttribute('data-exp')==='1', surv); });
+    document.querySelectorAll('.sat-host').forEach(function(host){
+      if(host.getAttribute('data-filled')==='1') return;
+      host.setAttribute('data-filled','1');
+      var exp=host.getAttribute('data-exp')==='1';
+      var sid=host.getAttribute('data-survey-id')||'';
+      var mode=host.getAttribute('data-mode')||'inline';
+      var surv=sid?surveyById(sid):popupSurvey();
+      if(!surv || !(surv.questions||[]).length){ host.innerHTML=''; return; }
+      if(isDone(surv.id)){ host.innerHTML=_satThanksHtml(surv); return; }
+      if(mode==='inline'){ window._surveyInline(host, exp, surv); return; }
+      // popup / accordion → carte d'appel à l'action
+      var n=(surv.questions||[]).length;
+      var info=(surv.intro?esc(surv.intro)+' · ':'')+n+' question'+(n>1?'s':'');
+      var label=(mode==='accordion')?'Répondre au questionnaire':'Répondre au questionnaire';
+      var arrow=(mode==='accordion')?'<span class="sat-arrow sat-arrow-down">▾</span>':'<span class="sat-arrow">→</span>';
+      host.innerHTML='<div class="sat-cta'+(exp?' sat-cta-exp':'')+'"><div class="sat-cta-info">'+info+'</div><button class="sat-cta-btn" type="button">'+label+' '+arrow+'</button></div>';
+      var btn=host.querySelector('.sat-cta-btn');
+      if(mode==='popup'){ btn.onclick=function(){ openSurvey(surv); }; }
+      else { btn.onclick=function(){ window._surveyInline(host, exp, surv); }; }
+    });
   };
+  // Après un envoi (pop-up ou inline), on rafraîchit tous les blocs pour afficher le remerciement.
+  window._surveyAfterSubmit=function(){ document.querySelectorAll('.sat-host').forEach(function(h){ h.removeAttribute('data-filled'); }); if(window._surveyInlineFill) window._surveyInlineFill(); };
   window._surveyRefresh=function(){
     var s=sv();
     ensureBtn();
