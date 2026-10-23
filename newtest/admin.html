@@ -12399,9 +12399,12 @@ function _galCard(p, gi, o){
   const by=(p&&typeof p==='object'?(p.addedBy||''):'');
   const bymail=(p&&typeof p==='object'?(p.addedByEmail||''):'');
   const dis=o.locked?' disabled':'';
-  let pageSel='';
-  if(o.pages && o.pages.length){
+  let pageSel='', pageHidden='';
+  if(o.pages && o.pages.length>1){
     pageSel='<select class="form-input" data-gal-page="'+gi+'"'+dis+'><option value="">Toutes les pages</option>'+o.pages.map(pg=>'<option value="'+pg.id+'"'+(ph_pg===pg.id?' selected':'')+'>'+_escAdm(pg.name||'(page)')+'</option>').join('')+'</select>';
+  } else {
+    // 0 ou 1 page : aucun choix pertinent, mais on conserve l'affectation existante de la photo
+    pageHidden='<input type="hidden" data-gal-page="'+gi+'" value="'+esc(ph_pg)+'">';
   }
   let phaseSel='';
   if(o.phases && o.phases.length){
@@ -12429,7 +12432,7 @@ function _galCard(p, gi, o){
       +'<div class="gal-ph-field full"><label>Lien de la photo (URL)</label><input class="form-input" value="'+esc(url)+'" placeholder="https://…" data-gal-url="'+gi+'" oninput="var i=this.closest(\'.gal-ph-card\').querySelector(\'img\');if(i){i.src=this.value;i.style.visibility=\'visible\';}"'+dis+'></div>'
       +'<div class="gal-ph-field"><label>Légende (sous la photo)</label><input class="form-input" value="'+esc(cap)+'" placeholder="Ex : Vue du port au coucher du soleil" data-gal-cap="'+gi+'"'+dis+'></div>'
       +'<div class="gal-ph-field"><label>Crédit (© auteur de la photo)</label><input class="form-input" value="'+esc(cr)+'" placeholder="Ex : © Jean Dupont" data-gal-cr="'+gi+'"'+dis+'></div>'
-      +(pageSel?('<div class="gal-ph-field"><label>Page du dashboard</label>'+pageSel+'</div>'):'')
+      +(pageSel?('<div class="gal-ph-field"><label>Page du dashboard</label>'+pageSel+'</div>'):'')+pageHidden
       +(phaseSel?('<div class="gal-ph-field"><label>Temps fort / phase</label>'+phaseSel+'</div>'):'')
       +sizeFields
     +'</div>'
@@ -12713,7 +12716,8 @@ function renderGallery(el){
   el.innerHTML=h;
 }
 let _gpPage=0, _gpSearch='', _gpSort='newest';
-function pickGalleryFromMedia(){
+async function pickGalleryFromMedia(){
+  if(!_loadedCols['media']){ try{ await _loadColOnce('media','mediaData',{silent:true}); }catch(_){ } }
   if(!mediaData.length){toast('Aucune image dans la médiathèque. Ajoutez-en d\'abord dans l\'onglet Médiathèque.','error');return;}
   _gpPage=0;_gpSearch='';
   _renderGalPicker();
