@@ -5358,6 +5358,7 @@ function _bpContentFieldsHtml(s){
     case 'comments': {
       return _phaseFld
         + _bpTitleFields('Commentaires','Échangez et réagissez')
+        + '<div class="bpe-fld"><label>Mention sous le champ d\'écriture (facultatif)</label><input value="'+_escAdm(c.cmtHint||'')+'" placeholder="Visible par le groupe · soyez bienveillant·e" onchange="_bpSetCt(\'cmtHint\',this.value)"></div>'
         + '<div class="bpe-hint" style="padding:4px 0">Chaque bloc a sa propre discussion (indépendante par page, et plusieurs blocs possibles par page). <strong>La participation nécessite d\'être connecté</strong> (chaque message est signé du vrai nom). Commentaires, réponses et réactions 👍 en temps réel, publiés immédiatement. La lecture reste ouverte à tous.</div>';
     }
     case 'satisfaction': {
