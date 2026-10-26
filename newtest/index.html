@@ -844,24 +844,39 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 @media(max-width:768px){.gal-carousel-full .gal-carousel-track{padding:2px 12px}}
 /* ==================== COMMENTAIRES (discussion par bloc) ==================== */
 .cmt-block{max-width:100%}
-.cmt-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
-.cmt-empty{color:var(--text3,#9CA3AF);font-size:13px;padding:8px 0}
-.cmt-item{background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 14px}
-.cmt-reply{margin-left:22px;border-style:dashed}
-.cmt-replies{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.cmt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.cmt-list{display:flex;flex-direction:column;gap:4px;margin-bottom:16px}
+.cmt-activity{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border,#e5e7eb)}
+.cmt-activity-avs{display:flex}
+.cmt-activity-avs .cmt-av{margin-left:-8px;border:2px solid var(--card,#fff)}
+.cmt-activity-avs .cmt-av:first-child{margin-left:0}
+.cmt-activity-txt{font-size:12px;color:var(--text3,#9CA3AF);font-weight:600}
+.cmt-empty{text-align:center;padding:22px 14px;color:var(--text3,#9CA3AF)}
+.cmt-empty-ic{font-size:30px;line-height:1;margin-bottom:8px}
+.cmt-empty-t{font-size:14px;font-weight:700;color:var(--text2,#4b5563)}
+.cmt-empty-s{font-size:12.5px;margin-top:3px;line-height:1.5}
+.cmt-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font:700 13px/1 system-ui;letter-spacing:.02em;box-sizing:border-box}
+.cmt-av-sm{width:26px;height:26px;font-size:11px}
+.cmt-item{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.cmt-body{flex:1;min-width:0}
+.cmt-reply .cmt-av{width:28px;height:28px;font-size:11px}
+.cmt-replies{display:flex;flex-direction:column;gap:4px;margin-top:6px;margin-left:46px}
+.cmt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
 .cmt-author{font-weight:700;font-size:13px;color:var(--text,#111)}
 .cmt-time{font-size:11px;color:var(--text3,#9CA3AF)}
 .cmt-text{font-size:14px;line-height:1.5;color:var(--text,#111);white-space:pre-wrap;word-break:break-word}
-.cmt-actions{display:flex;gap:14px;margin-top:8px}
+.cmt-actions{display:flex;gap:14px;margin-top:6px}
 .cmt-actions button{border:0;background:none;cursor:pointer;font-size:12px;color:var(--text2,#4b5563);padding:2px 0}
 .cmt-like.on{color:#6366F1;font-weight:700}
-.cmt-reply-btn:hover,.cmt-like:hover{text-decoration:underline}
+.cmt-reply-btn:hover,.cmt-like:hover{opacity:.72}
 .cmt-replybox{margin-top:4px}
-.cmt-form{display:flex;flex-direction:column;gap:10px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:16px}
+.cmt-form{background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:12px}
+.cmt-form-reply{background:transparent;border:1px dashed var(--border,#e5e7eb);border-radius:10px;padding:10px}
+.cmt-form-row{display:flex;gap:10px;align-items:flex-start}
+.cmt-form-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;flex-wrap:wrap}
+.cmt-form-hint{font-size:11px;color:var(--text3,#9CA3AF)}
 .cmt-name{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
-.cmt-ta{border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:11px 13px;font:inherit;font-size:15px;resize:vertical;min-height:96px;line-height:1.5}
-.cmt-send-btn{align-self:flex-end;border:0;background:#6366F1;color:#fff;font-weight:600;font-size:14px;padding:10px 24px;border-radius:9px;cursor:pointer}
+.cmt-ta{flex:1;width:100%;box-sizing:border-box;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;resize:vertical;min-height:46px;line-height:1.5}
+.cmt-send-btn{border:0;background:#6366F1;color:#fff;font-weight:600;font-size:14px;padding:9px 20px;border-radius:9px;cursor:pointer}
 .cmt-send-btn:disabled{opacity:.6;cursor:default}
 .cmt-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .cmt-login-btn{border:0;background:#6366F1;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
@@ -898,17 +913,27 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .exc-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .exc-login-btn{border:0;background:#0EA5A4;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
 /* ---- Charte « carnet de route » (mode expédition) : commentaires & excursions ---- */
-.cmt-exp .cmt-item{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0}
-.cmt-exp .cmt-reply{background:transparent;border:none;border-left:2px solid var(--exp-line)}
-.cmt-exp .cmt-author{font-family:'Libre Caslon Text',serif;color:var(--exp-ink);font-weight:700}
-.cmt-exp .cmt-time{color:var(--exp-grey)}
+.cmt-exp .cmt-av{font-family:'Archivo',sans-serif}
+.cmt-exp .cmt-body{background:var(--exp-stone);border:1px solid var(--exp-line);border-left:3px solid var(--exp-accent);border-radius:0;padding:11px 14px}
+.cmt-exp .cmt-author{font-family:'Libre Caslon Text',serif;color:var(--exp-ink);font-weight:700;font-size:14px}
+.cmt-exp .cmt-time{color:var(--exp-grey);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em}
 .cmt-exp .cmt-text{color:var(--exp-ink)}
-.cmt-exp .cmt-actions button{color:var(--exp-grey)}
+.cmt-exp .cmt-actions button{color:var(--exp-grey);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
 .cmt-exp .cmt-like.on{color:var(--exp-accent)}
+.cmt-exp .cmt-replies{margin-left:40px;border-left:1px solid var(--exp-line);padding-left:14px}
+.cmt-exp .cmt-reply .cmt-body{background:transparent;border:1px solid var(--exp-line);border-left:1px solid var(--exp-line)}
+.cmt-exp .cmt-activity{border-bottom:1px solid var(--exp-line)}
+.cmt-exp .cmt-activity-avs .cmt-av{border-color:#fff}
+.cmt-exp .cmt-activity-txt{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey);text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.cmt-exp .cmt-empty-t{font-family:'Libre Caslon Display',serif;color:var(--exp-ink);font-weight:400;font-size:17px}
+.cmt-exp .cmt-empty-s{color:var(--exp-grey)}
 .cmt-exp .cmt-form{background:var(--exp-stone);border:1px solid var(--exp-line);border-radius:0}
-.cmt-exp .cmt-ta,.cmt-exp .cmt-name{border-color:var(--exp-line);border-radius:0;background:var(--exp-paper)}
-.cmt-exp .cmt-send-btn{background:var(--exp-accent);border-radius:0}
-.cmt-exp .cmt-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0}
+.cmt-exp .cmt-form-reply{background:transparent}
+.cmt-exp .cmt-form-hint{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey);font-size:10px}
+.cmt-exp .cmt-ta,.cmt-exp .cmt-name{border-color:var(--exp-line);border-radius:0;background:#fff;color:var(--exp-ink)}
+.cmt-exp .cmt-send-btn{background:var(--exp-ink);border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:11px 22px}
+.cmt-exp .cmt-send-btn:hover{background:var(--exp-accent)}
+.cmt-exp .cmt-login{background:var(--exp-stone);border:1px dashed var(--exp-line);border-radius:0;color:var(--exp-ink)}
 .cmt-exp .cmt-login-btn{background:var(--exp-accent);border-radius:0}
 .exc-exp .exc-grp-title{font-family:var(--exc-name-font,'Libre Caslon Display',serif);font-weight:var(--exc-name-weight,400);font-size:var(--exc-name-size,21px);color:var(--exp-ink)}
 .exc-exp .exc-grp-count{color:var(--exp-grey)}
@@ -7832,12 +7857,13 @@ window._tmgResizeSettle=function(){
       // Déconnecté : pas d'entourage sombre, juste le bouton.
       pill.style.background='transparent'; pill.style.padding='0'; pill.style.boxShadow='none';
       var _isMob=(window.matchMedia&&window.matchMedia('(max-width:768px)').matches)||window.innerWidth<=768;
-      var _lbl=_isMob?'🔒 Se connecter':((ev().loginLabel||'').trim()||'🔐 Se connecter');
+      var _lock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
       var _lc=(ev().loginBtnColor||'').trim()||'#2563eb';
       var _lsz=ev().loginBtnSize||'m';
       var _lpad=_lsz==='l'?'12px 22px':_lsz==='s'?'6px 11px':'8px 15px';
       var _lfs=_lsz==='l'?'16px':_lsz==='s'?'12px':'13px';
-      pill.innerHTML='<span data-fe="in"><button type="button" style="border:0;cursor:pointer;background:'+_lc+';color:#fff;border-radius:999px;font-weight:600;font-family:system-ui,sans-serif;padding:'+_lpad+';font-size:'+_lfs+'">'+esc(_lbl)+'</button></span>';
+      var _inner=_isMob?(_lock+'<span>Se connecter</span>'):esc((ev().loginLabel||'').trim()||'🔐 Se connecter');
+      pill.innerHTML='<span data-fe="in"><button type="button" style="border:0;cursor:pointer;background:'+_lc+';color:#fff;border-radius:999px;font-weight:600;font-family:system-ui,sans-serif;padding:'+_lpad+';font-size:'+_lfs+';display:inline-flex;align-items:center;gap:6px">'+_inner+'</button></span>';
       pill.querySelector('[data-fe="in"] button').onclick=function(){ initAuth(); openLogin(); };
     }
   }
@@ -8045,13 +8071,27 @@ window._tmgResizeSettle=function(){
 
   function myUid(mode){ return mode==='A' ? (edUser()?edUser().uid:'') : anonUid(); }
 
+  function _cmtInitials(nm){ return String(nm||'').trim().split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase()||'·'; }
+  function _cmtColor(seed){ var s=String(seed||''),h=0; for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return 'hsl('+(h%360)+',42%,46%)'; }
+  function _cmtAvatar(nm,seed,cls){ return '<div class="cmt-av'+(cls?' '+cls:'')+'" style="background:'+_cmtColor(seed||nm)+'">'+esc(_cmtInitials(nm))+'</div>'; }
+  function _cmtActivity(t){
+    var all=(t&&t.data)||[]; var total=all.length;
+    var seen={}, parts=[];
+    all.slice().sort(function(a,b){return tsNum(b.createdAt)-tsNum(a.createdAt);}).forEach(function(c){ var k=c.authorUid||c.author; if(k&&!seen[k]){ seen[k]=1; parts.push({nm:c.author||'?',id:c.authorUid||c.author}); } });
+    var avs=parts.slice(0,5).map(function(p){ return _cmtAvatar(p.nm,p.id,'cmt-av-sm'); }).join('');
+    return '<div class="cmt-activity"><div class="cmt-activity-avs">'+avs+'</div>'
+      +'<div class="cmt-activity-txt">'+total+' message'+(total>1?'s':'')+' · '+parts.length+' participant'+(parts.length>1?'s':'')+'</div></div>';
+  }
   function cmtHtml(c,isReply,mu){
-    var liked=(c.likedBy||[]).indexOf(mu)>=0, n=c.likes||0;
+    var liked=(c.likedBy||[]).indexOf(mu)>=0, n=c.likes||0; var nm=c.author||'Anonyme';
     return '<div class="cmt-item'+(isReply?' cmt-reply':'')+'" data-id="'+esc(c.id)+'">'
-      +'<div class="cmt-head"><span class="cmt-author">'+esc(c.author||'Anonyme')+'</span><span class="cmt-time">'+fmtTime(c.createdAt)+'</span></div>'
-      +'<div class="cmt-text">'+esc(c.text||'')+'</div>'
-      +'<div class="cmt-actions"><button class="cmt-like'+(liked?' on':'')+'" data-id="'+esc(c.id)+'">👍 <span>'+n+'</span></button>'
-      +(isReply?'':'<button class="cmt-reply-btn" data-id="'+esc(c.id)+'">Répondre</button>')+'</div></div>';
+      +_cmtAvatar(nm,c.authorUid||nm)
+      +'<div class="cmt-body">'
+        +'<div class="cmt-head"><span class="cmt-author">'+esc(nm)+'</span><span class="cmt-time">'+fmtTime(c.createdAt)+'</span></div>'
+        +'<div class="cmt-text">'+esc(c.text||'')+'</div>'
+        +'<div class="cmt-actions"><button class="cmt-like'+(liked?' on':'')+'" data-id="'+esc(c.id)+'">👍 <span>'+n+'</span></button>'
+        +(isReply?'':'<button class="cmt-reply-btn" data-id="'+esc(c.id)+'">↩ Répondre</button>')+'</div>'
+      +'</div></div>';
   }
 
   function renderList(tid){
@@ -8059,9 +8099,9 @@ window._tmgResizeSettle=function(){
     var t=threads[tid]; var listEl=block.querySelector('.cmt-list'); if(!listEl) return;
     var mu=edUser()?edUser().uid:'';
     var top=t.data.filter(function(c){return !c.parent;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
-    if(!top.length){ listEl.innerHTML='<div class="cmt-empty">Aucun commentaire pour l\'instant. Lancez la discussion !</div>'; }
+    if(!top.length){ listEl.innerHTML='<div class="cmt-empty"><div class="cmt-empty-ic">💬</div><div class="cmt-empty-t">Personne n\'a encore pris la parole</div><div class="cmt-empty-s">Lancez la discussion — les autres pourront vous répondre et réagir.</div></div>'; }
     else {
-      listEl.innerHTML=top.map(function(c){
+      listEl.innerHTML=_cmtActivity(t)+top.map(function(c){
         var reps=t.data.filter(function(r){return r.parent===c.id;}).sort(function(a,b){return tsNum(a.createdAt)-tsNum(b.createdAt);});
         return cmtHtml(c,false,mu)+'<div class="cmt-replies">'+reps.map(function(r){return cmtHtml(r,true,mu);}).join('')+'<div class="cmt-replybox" data-parent="'+esc(c.id)+'"></div></div>';
       }).join('');
@@ -8070,8 +8110,12 @@ window._tmgResizeSettle=function(){
     }
   }
 
-  function formHtml(ph){
-    return '<div class="cmt-form"><textarea class="cmt-ta" rows="2" placeholder="'+ph+'"></textarea><button class="cmt-send-btn">Publier</button></div>';
+  function formHtml(ph, me){
+    var av = me ? _cmtAvatar(me.nm, me.id, 'cmt-av-me') : '';
+    return '<div class="cmt-form'+(me?' cmt-form-main':' cmt-form-reply')+'">'
+      +'<div class="cmt-form-row">'+av+'<textarea class="cmt-ta" rows="'+(me?'1':'2')+'" placeholder="'+ph+'"></textarea></div>'
+      +'<div class="cmt-form-foot">'+(me?'<span class="cmt-form-hint">Visible par le groupe · soyez bienveillant·e</span>':'<span></span>')+'<button class="cmt-send-btn">'+(me?'Publier':'Répondre')+'</button></div>'
+    +'</div>';
   }
   function wireForm(container, tid, parentId){
     var send=container.querySelector('.cmt-send-btn'); if(!send) return;
@@ -8087,10 +8131,11 @@ window._tmgResizeSettle=function(){
     var block=blockOf(tid); if(!block) return;
     var el=block.querySelector('.cmt-compose'); if(!el) return;
     if(!edUser()){
-      el.innerHTML='<div class="cmt-login"><span>🔒 Connectez-vous pour écrire un commentaire (bouton en bas à gauche).</span></div>';
+      el.innerHTML='<div class="cmt-login"><span>Connectez-vous pour rejoindre la discussion et répondre aux autres (bouton en bas à gauche).</span></div>';
       return;
     }
-    el.innerHTML=formHtml('Votre commentaire…');
+    var u=edUser(); var nm=(window._myAccountName)||((u.email||'').split('@')[0])||'Vous';
+    el.innerHTML=formHtml('Partagez quelque chose avec le groupe…', {nm:nm, id:u.uid||nm});
     wireForm(el, tid, '');
   }
   function openReply(tid,pid){
