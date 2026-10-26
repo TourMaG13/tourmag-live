@@ -1068,8 +1068,8 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-av{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#E2E8F0}
 .ct-dir-av-ph{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#E2E8F0;color:#64748B;font:700 12px 'Josefin Sans',sans-serif}
 .ct-dir-id{flex:1;min-width:0}
-.ct-dir-name{font-size:14px;font-weight:600;color:var(--pri,#111);line-height:1.25;overflow-wrap:anywhere}
-.ct-dir-role{font-size:11px;color:var(--text3);line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ct-dir-name{font-family:var(--ct-name-font,inherit);font-size:14px;font-weight:var(--ct-name-weight,600);color:var(--_ct-name-color,var(--pri,#111));line-height:1.25;overflow-wrap:anywhere}
+.ct-dir-role{font-family:var(--ct-role-font,inherit);font-size:11px;font-weight:var(--ct-role-weight,400);color:var(--_ct-role-color,var(--text3));line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ct-dir-quick{display:flex;gap:6px;flex-shrink:0}
 .ct-dir-ic{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);color:var(--acc,#E8842C);background:transparent;text-decoration:none}
 .ct-dir-ic:hover{background:var(--acc,#E8842C);color:#fff}
@@ -1107,9 +1107,9 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 }
 .ct-dir-scroll.ct-dir .ct-dir-group{top:0}
 /* Annuaire — alignement largeur en mode expédition (comme les blocs pleine largeur) */
-.exp-contact-dir{max-width:100%;margin:0;padding-left:0;padding-right:0}
+.exp-contact.exp-contact-dir{max-width:100%;margin:0;padding-left:0;padding-right:0}
 /* Annuaire — charte « expédition » */
-.ct-dir-exp{max-width:none}
+.ct-dir.ct-dir-exp{max-width:none}
 .ct-dir-exp .ct-dir-search{border-radius:0;border-color:var(--exp-line);background:#fff}
 .ct-dir-exp .ct-dir-search svg{stroke:var(--exp-grey)}
 .ct-dir-exp .ct-dir-search input{color:var(--exp-ink);font-family:'Archivo',sans-serif}
@@ -1119,8 +1119,8 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-exp .ct-dir-head:hover{background:var(--exp-stone)}
 .ct-dir-exp .ct-dir-av{border:1.5px solid var(--exp-line)}
 .ct-dir-exp .ct-dir-av-ph{background:var(--exp-line);color:var(--exp-grey);font-family:'Archivo',sans-serif}
-.ct-dir-exp .ct-dir-name{font-family:'Libre Caslon Display',serif;font-weight:400;font-size:16px;color:var(--exp-ink)}
-.ct-dir-exp .ct-dir-role{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.1em;font-size:9.5px;opacity:.7;color:var(--exp-grey)}
+.ct-dir-exp .ct-dir-name{font-family:var(--ct-name-font,'Libre Caslon Display',serif);font-weight:var(--ct-name-weight,400);font-size:16px;color:var(--_ct-name-color,var(--exp-ink))}
+.ct-dir-exp .ct-dir-role{font-family:var(--ct-role-font,'IBM Plex Mono',monospace);font-weight:var(--ct-role-weight,400);text-transform:uppercase;letter-spacing:.1em;font-size:9.5px;opacity:.7;color:var(--_ct-role-color,var(--exp-grey))}
 .ct-dir-exp .ct-dir-ic{border-radius:0;border-color:var(--exp-line);color:var(--exp-accent)}
 .ct-dir-exp .ct-dir-ic:hover{background:var(--exp-accent);color:#fff;border-color:var(--exp-accent)}
 .ct-dir-exp .ct-dir-caret{color:var(--exp-grey)}
@@ -3364,7 +3364,8 @@ function render(data){
       : `<p>${_subTxt}</p>`;
     o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div>${_subHtml}</div>`;
     if((ctRaw.displayMode||'cards')==='directory'){
-      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal});
+      var _dv=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
+      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, '', _dv);
       if(globalBooking){ o += `<div class="contact-book-global"><a class="contact-btn contact-btn-book" href="${globalBooking}" target="_blank" rel="noopener"${cardStyle?` style="${cardStyle}"`:''}>${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
       o += `</div>`;
       return o;
@@ -4497,7 +4498,8 @@ function renderExpedition(data){
       o += `<div class="contact-intro" style="${_ctTextStyle(_intro,'var(--exp-grey,#6E6B66)',18)};max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
     }
     if((ctRaw.displayMode||'cards')==='directory'){
-      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, 'exp');
+      var _dv=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
+      o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, 'exp', _dv);
       if(globalBooking){ o += `<div style="text-align:center;margin-top:18px"><a class="exp-contact-btn" href="${globalBooking}" target="_blank" rel="noopener" style="${cardStyle}display:inline-flex">${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
       o += `</section>`;
       return o;
@@ -8584,7 +8586,7 @@ window._tmgResizeSettle=function(){
 </script>
 <script>
 /* Annuaire compact (bloc contact) — recherche, accordéon, « Voir plus » OU bloc à hauteur fixe, copie */
-window._ctDirListHtml=function(people, ctRaw, svg, variant){
+window._ctDirListHtml=function(people, ctRaw, svg, variant, styleVars){
   var a = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   var j = function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3C'); };
   var svgSearch = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
@@ -8597,6 +8599,7 @@ window._ctDirListHtml=function(people, ctRaw, svg, variant){
   var maxH = parseInt(ctRaw.directoryMaxH,10)||0;
   var mode = (ctRaw.directoryScrollMode==='block') ? 'block' : 'more';
   var vx = (variant==='exp') ? ' ct-dir-exp' : '';
+  var sv = styleVars||'';
   var ini = function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase() || '\u00B7'; };
   var firstLetter = function(nm){ var c=String(nm||'').trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c)?c:'#'; };
   function rowHtml(p){
@@ -8628,11 +8631,11 @@ window._ctDirListHtml=function(people, ctRaw, svg, variant){
   // MODE « BLOC À HAUTEUR FIXE » : tout le bloc est à la hauteur voulue, ascenseur interne.
   if(mode==='block'){
     var hb = maxH>0 ? maxH : 420;
-    return '<div class="ct-dir ct-dir-fixed'+vx+'" style="--ct-blockh:'+hb+'px">'+searchHtml+'<div class="ct-dir-list">'+allRows()+'</div>'+emptyHtml+'</div>';
+    return '<div class="ct-dir ct-dir-fixed'+vx+'" style="'+sv+'--ct-blockh:'+hb+'px">'+searchHtml+'<div class="ct-dir-list">'+allRows()+'</div>'+emptyHtml+'</div>';
   }
 
   // MODE « VOIR PLUS » (défaut)
-  var wrapSty = maxH>0 ? ' style="--ct-maxh:'+maxH+'px"' : '';
+  var wrapSty = (sv||maxH>0) ? (' style="'+sv+(maxH>0?('--ct-maxh:'+maxH+'px'):'')+'"') : '';
   if(doGroup){
     var wrapCls='ct-dir'+(maxH>0?' ct-dir-scroll':'');
     return '<div class="'+wrapCls+vx+'"'+wrapSty+'>'+searchHtml+'<div class="ct-dir-list">'+allRows()+'</div>'+emptyHtml+'</div>';
