@@ -5359,6 +5359,13 @@ function _bpContentFieldsHtml(s){
       return _phaseFld
         + _bpTitleFields('Commentaires','Échangez et réagissez')
         + '<div class="bpe-fld"><label>Mention sous le champ d\'écriture (facultatif)</label><input value="'+_escAdm(c.cmtHint||'')+'" placeholder="Visible par le groupe · soyez bienveillant·e" onchange="_bpSetCt(\'cmtHint\',this.value)"></div>'
+        + '<div class="bpe-fld"><label>Taille des avatars (px)</label><input type="number" min="24" max="80" value="'+_escAdm(c.cmtAvatarSize||'')+'" placeholder="36" style="width:110px" onchange="_bpSetCt(\'cmtAvatarSize\',this.value)"></div>'
+        + '<div class="bpe-cfg-sech" style="margin-top:12px">Message quand la discussion est vide</div>'
+        + '<div class="bpe-fld"><label>Titre</label><input value="'+_escAdm(c.emptyTitle||'')+'" placeholder="Personne n\'a encore pris la parole" onchange="_bpSetCt(\'emptyTitle\',this.value)"></div>'
+        + '<div class="bpe-fld"><label>Sous-titre</label><input value="'+_escAdm(c.emptySub||'')+'" placeholder="Lancez la discussion — les autres pourront vous répondre et réagir." onchange="_bpSetCt(\'emptySub\',this.value)"></div>'
+        + '<div class="bpe-fld-row"><div class="bpe-fld"><label>Police</label><select onchange="_bpSetCt(\'emptyFont\',this.value)">'+_fontOpts(c.emptyFont||'')+'</select></div>'
+        + '<div class="bpe-fld"><label>Graisse titre</label><select onchange="_bpSetCt(\'emptyTitleWeight\',this.value)">'+_bpWeightOpts(c.emptyTitleWeight)+'</select></div>'
+        + '<div class="bpe-fld"><label>Graisse sous-titre</label><select onchange="_bpSetCt(\'emptySubWeight\',this.value)">'+_bpWeightOpts(c.emptySubWeight)+'</select></div></div>'
         + '<div class="bpe-hint" style="padding:4px 0">Chaque bloc a sa propre discussion (indépendante par page, et plusieurs blocs possibles par page). <strong>La participation nécessite d\'être connecté</strong> (chaque message est signé du vrai nom). Commentaires, réponses et réactions 👍 en temps réel, publiés immédiatement. La lecture reste ouverte à tous.</div>';
     }
     case 'satisfaction': {
