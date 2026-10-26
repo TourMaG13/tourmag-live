@@ -891,6 +891,10 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .fe-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .fe-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;background:rgba(15,23,42,.75);color:#fff;font:700 12px/1 system-ui;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .fe-thumb-x:hover{background:#b91c1c}
+.fe-vpick{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;border:1px solid var(--border,#e5e7eb);border-radius:8px;background:#f8fafc;font-size:13px}
+.fe-vpick-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155}
+.fe-vpick-x{border:0;background:transparent;color:#64748b;cursor:pointer;font-size:14px;line-height:1;padding:0 4px}
+.fe-vpick-x:hover{color:#b91c1c}
 .exc-login{font-size:13px;color:var(--text2,#4b5563);background:var(--card,#fff);border:1px dashed var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .exc-login-btn{border:0;background:#0EA5A4;color:#fff;font-weight:600;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer}
 /* ---- Charte « carnet de route » (mode expédition) : commentaires & excursions ---- */
@@ -7947,40 +7951,40 @@ window._tmgResizeSettle=function(){
   }
   function openVideo(){
     var m=modal('<h3 style="margin:0 0 4px;font-size:17px">Ajouter une vidéo</h3>'
-      +'<p style="margin:0 0 8px;font-size:12px;color:#64748b">Collez un lien YouTube, ou importez un fichier (AVI/MP4, 125 Mo max — conversion automatique de quelques minutes).</p>'
+      +'<p style="margin:0 0 10px;font-size:12px;color:#64748b">Importez un fichier (AVI/MP4, 125 Mo max — conversion automatique de quelques minutes) ou collez un lien YouTube.</p>'
+      +'<label style="'+_lbl+'">Importer un fichier (AVI/MP4)</label>'
+      +'<div id="fe-vdrop" class="fe-drop"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg><div class="fe-drop-t">Glissez votre vidéo ici</div><div class="fe-drop-s">ou cliquez pour parcourir</div></div>'
+      +'<input id="fe-vfile" type="file" accept=".mp4,.avi,video/mp4,video/x-msvideo" style="display:none">'
+      +'<div id="fe-vpick" class="fe-vpick" style="display:none"></div>'
+      +'<div style="text-align:center;color:#94a3b8;font-size:12px;margin:12px 0">— ou —</div>'
       +'<label style="'+_lbl+'">Lien YouTube</label><input id="fe-vurl" type="text" placeholder="https://www.youtube.com/watch?v=…" style="'+_fi+'">'
-      +'<div style="text-align:center;color:#94a3b8;font-size:12px;margin:10px 0">— ou —</div>'
-      +'<label style="'+_lbl+'">Importer un fichier (AVI/MP4)</label><input id="fe-vfile" type="file" accept=".mp4,.avi,video/mp4,video/x-msvideo" style="'+_fi+'">'
-      +'<label style="'+_lbl+'">Format</label><div style="display:flex;gap:8px;margin-top:4px"><label style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:13px"><input type="radio" name="fe-fmt" value="video" checked> ▭ Horizontale</label><label style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:8px;text-align:center;cursor:pointer;font-size:13px"><input type="radio" name="fe-fmt" value="short"> ▯ Short</label></div>'
-      +'<label style="'+_lbl+'">Légende (optionnel)</label><input id="fe-vcap" type="text" style="'+_fi+'">'
       +'<div id="fe-verr" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>'
       +'<button id="fe-vpub" style="'+_pbtn+'">Publier la vidéo</button>');
     var pub=m.box.querySelector('#fe-vpub'),verr=m.box.querySelector('#fe-verr');
-    function fmt(){ var r=m.box.querySelector('input[name="fe-fmt"]:checked'); return (r&&r.value==='short')?'short':'video'; }
-    function setFmt(v){ var r=m.box.querySelector('input[name="fe-fmt"][value="'+(v==='short'?'short':'video')+'"]'); if(r) r.checked=true; }
-    // Détection auto de l'orientation à l'import d'un fichier (lecture des dimensions réelles).
-    var vf=m.box.querySelector('#fe-vfile');
-    if(vf) vf.onchange=function(){
-      var file=vf.files[0]; if(!file) return;
-      try{
-        var tmp=document.createElement('video'); tmp.preload='metadata';
-        var u=URL.createObjectURL(file);
-        tmp.onloadedmetadata=function(){ if(tmp.videoWidth&&tmp.videoHeight){ setFmt(tmp.videoHeight>tmp.videoWidth?'short':'video'); } URL.revokeObjectURL(u); };
-        tmp.onerror=function(){ URL.revokeObjectURL(u); };
-        tmp.src=u;
-      }catch(_){}
-    };
-    // Détection auto depuis un lien YouTube (Shorts = vertical).
-    var vu=m.box.querySelector('#fe-vurl');
-    if(vu) vu.oninput=function(){ var s=vu.value||''; if(/youtube\.com\/shorts\//i.test(s)) setFmt('short'); else if(/youtu/i.test(s)) setFmt('video'); };
+    var drop=m.box.querySelector('#fe-vdrop'),vf=m.box.querySelector('#fe-vfile'),pick=m.box.querySelector('#fe-vpick'),vu=m.box.querySelector('#fe-vurl');
+    var selectedFile=null, detectedFmt='video';
+    function detectOrient(file){ try{ var tmp=document.createElement('video'); tmp.preload='metadata'; var u=URL.createObjectURL(file); tmp.onloadedmetadata=function(){ if(tmp.videoWidth&&tmp.videoHeight){ detectedFmt=(tmp.videoHeight>tmp.videoWidth)?'short':'video'; } URL.revokeObjectURL(u); }; tmp.onerror=function(){ URL.revokeObjectURL(u); }; tmp.src=u; }catch(_){ } }
+    function renderPick(){
+      if(!selectedFile){ pick.style.display='none'; pick.innerHTML=''; return; }
+      pick.style.display='flex';
+      pick.innerHTML='<span class="fe-vpick-name">'+String(selectedFile.name||'vidéo').replace(/</g,'&lt;')+'</span><button type="button" class="fe-vpick-x" title="Retirer">✕</button>';
+      var x=pick.querySelector('.fe-vpick-x'); if(x) x.addEventListener('click',function(){ selectedFile=null; vf.value=''; renderPick(); });
+    }
+    function setFile(file){ if(!file) return; if(!/\.(mp4|avi)$/i.test(file.name||'') && !/^video\//.test(file.type||'')){ verr.textContent='Fichier : AVI ou MP4 uniquement.'; verr.style.display='block'; return; } verr.style.display='none'; selectedFile=file; detectOrient(file); renderPick(); }
+    drop.addEventListener('click',function(){ vf.click(); });
+    vf.addEventListener('change',function(){ setFile(vf.files[0]); });
+    ['dragenter','dragover'].forEach(function(e2){ drop.addEventListener(e2,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.add('drag'); }); });
+    ['dragleave','dragend'].forEach(function(e2){ drop.addEventListener(e2,function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); }); });
+    drop.addEventListener('drop',function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); var fs=e.dataTransfer&&e.dataTransfer.files; if(fs&&fs[0]) setFile(fs[0]); });
+    if(vu) vu.oninput=function(){ var s=vu.value||''; if(/youtube\.com\/shorts\//i.test(s)) detectedFmt='short'; else if(/youtu/i.test(s)) detectedFmt='video'; };
     pub.onclick=function(){
-      var urlv=(m.box.querySelector('#fe-vurl').value||'').trim();
-      var f=m.box.querySelector('#fe-vfile').files[0];
-      if(!urlv && !f){ verr.textContent='Collez un lien YouTube ou choisissez un fichier.'; verr.style.display='block'; return; }
+      var urlv=(vu.value||'').trim();
+      var f=selectedFile;
+      if(!urlv && !f){ verr.textContent='Importez un fichier ou collez un lien YouTube.'; verr.style.display='block'; return; }
       if(f && !/\.(mp4|avi)$/i.test(f.name||'')){ verr.textContent='Fichier : AVI ou MP4 uniquement.'; verr.style.display='block'; return; }
       if(f && f.size>125*1024*1024){ verr.textContent='Vidéo trop lourde (max 125 Mo).'; verr.style.display='block'; return; }
       pub.disabled=true; verr.style.display='none';
-      var cap=(m.box.querySelector('#fe-vcap').value||'').trim(), chosen=fmt();
+      var cap='', chosen=detectedFmt;
       var sec=(ev().videoSections&&ev().videoSections[0]&&ev().videoSections[0].id)||'default';
       var order=((window._rtState&&window._rtState.videos)||[]).filter(function(v){return v.section===sec;}).length;
       function build(base){
@@ -7990,11 +7994,7 @@ window._tmgResizeSettle=function(){
       }
       var go;
       if(f){ pub.textContent='Envoi + conversion…'; go=uploadVideoFile(f).then(function(url){ return build({platform:'file',url:url}); }); }
-      else {
-        var yt=parseYT(urlv);
-        if(!yt){ pub.disabled=false; pub.textContent='Publier la vidéo'; verr.textContent='Lien YouTube non reconnu.'; verr.style.display='block'; return; }
-        pub.textContent='Publication…'; go=build({platform:'youtube',url:yt.url,ytId:yt.ytId,embedUrl:yt.embedUrl});
-      }
+      else { var yt=parseYT(urlv); if(!yt){ pub.disabled=false; pub.textContent='Publier la vidéo'; verr.textContent='Lien YouTube non reconnu.'; verr.style.display='block'; return; } pub.textContent='Publication…'; go=build({platform:'youtube',url:yt.url,ytId:yt.ytId,embedUrl:yt.embedUrl}); }
       go.then(function(){ m.close(); toast('Vidéo publiée'); })
         .catch(function(e){ pub.disabled=false; pub.textContent='Publier la vidéo'; verr.textContent='Erreur : '+(e.message||e); verr.style.display='block'; });
     };
