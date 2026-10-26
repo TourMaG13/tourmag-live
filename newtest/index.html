@@ -7845,6 +7845,7 @@ window._tmgResizeSettle=function(){
   var _pbtn='width:100%;margin-top:16px;border:0;cursor:pointer;background:#2563eb;color:#fff;padding:11px;border-radius:9px;font:600 14px system-ui';
   function modal(inner){
     var ov=document.createElement('div');
+    ov.className='tmg-modal-ov';
     ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
     var box=document.createElement('div');
     box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:420px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif';
@@ -8192,7 +8193,7 @@ window._tmgResizeSettle=function(){
   var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
   var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
   var P='width:100%;margin-top:18px;border:0;cursor:pointer;background:#6366F1;color:#fff;font:600 14px system-ui;padding:11px;border-radius:9px';
-  function modal(inner,w){ var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:'+(w||440)+'px;width:100%;max-height:90vh;overflow:auto;padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
+  function modal(inner,w){ var ov=document.createElement('div'); ov.className='tmg-modal-ov'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:'+(w||440)+'px;width:100%;max-height:90vh;overflow:auto;padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
   function toast(msg){ var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:100001;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font:500 13px system-ui'; document.body.appendChild(t); setTimeout(function(){t.remove();},2600); }
 
   function ensureBtn(){
@@ -8349,6 +8350,24 @@ window._tmgResizeSettle=function(){
   };
   // Après un envoi (pop-up ou inline), on rafraîchit tous les blocs pour afficher le remerciement.
   window._surveyAfterSubmit=function(){ document.querySelectorAll('.sat-host').forEach(function(h){ h.removeAttribute('data-filled'); }); if(window._surveyInlineFill) window._surveyInlineFill(); };
+  // Garde-fous : on n'ouvre jamais la pop-up à un mauvais moment — on diffère et on réessaie.
+  function _anyModalOpen(){ try{ return !!document.querySelector('.tmg-modal-ov'); }catch(_){ return false; } }
+  function _autoBlocked(){
+    try{
+      if(document.hidden) return true;                 // onglet en arrière-plan
+      if(_anyModalOpen()) return true;                 // une autre fenêtre est ouverte (connexion, ajout photo/vidéo, commentaire…)
+      var ae=document.activeElement;                   // saisie en cours (champ, zone de texte, recherche…)
+      if(ae && (ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'||ae.isContentEditable)) return true;
+    }catch(_){ }
+    return false;
+  }
+  var _autoTries=0;
+  function _tryAutoOpen(){
+    var p=sv();
+    if(isDone(p.id) || sessionSeen(p.id) || !p.enabled || !p.autoOpen) return;  // plus valable
+    if(_autoBlocked()){ if(_autoTries++ < 80){ setTimeout(_tryAutoOpen, 1500); } return; }  // contexte défavorable : on réessaie quand la voie est libre
+    markSeen(p.id); openSurvey();
+  }
   window._surveyRefresh=function(){
     var s=sv();
     ensureBtn();
@@ -8356,7 +8375,7 @@ window._tmgResizeSettle=function(){
     if(window._surveyInlineFill) setTimeout(window._surveyInlineFill,0);
     if(s.enabled && s.autoOpen && !autoScheduled && !isDone(s.id) && !sessionSeen(s.id)){
       autoScheduled=true;
-      setTimeout(function(){ var p=sv(); if(!isDone(p.id) && !sessionSeen(p.id) && p.enabled && p.autoOpen){ markSeen(p.id); openSurvey(); } }, Math.max(0,(s.autoDelay||0))*1000);
+      setTimeout(_tryAutoOpen, Math.max(0,(s.autoDelay||0))*1000);
     }
   };
   setTimeout(function(){ if(window._surveyRefresh) window._surveyRefresh(); }, 1600);
@@ -8433,7 +8452,7 @@ window._tmgResizeSettle=function(){
   var L='display:block;font:600 12px system-ui;color:#475569;margin-top:12px';
   var F='width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px system-ui;margin-top:4px';
   var P='width:100%;margin-top:18px;border:0;cursor:pointer;background:#0EA5A4;color:#fff;font:600 14px system-ui;padding:11px;border-radius:9px';
-  function modal(inner){ var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:440px;width:100%;max-height:90vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
+  function modal(inner){ var ov=document.createElement('div'); ov.className='tmg-modal-ov'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px'; var box=document.createElement('div'); box.style.cssText='background:#fff;color:#0f172a;border-radius:14px;max-width:440px;width:100%;max-height:90vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 14px/1.5 system-ui,sans-serif'; box.innerHTML=inner; ov.appendChild(box); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); }); document.body.appendChild(ov); return {box:box, close:function(){ov.remove();}}; }
   function toast(msg){ var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:100001;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font:500 13px system-ui'; document.body.appendChild(t); setTimeout(function(){t.remove();},2600); }
   function uploadImage(file){ var url=uploadUrl(); if(!url) return Promise.reject(new Error("URL d'upload non configurée")); var fd=new FormData(); fd.append('image',file); return fetch(url,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){ if(d.error) throw new Error(d.error); if(!d.url) throw new Error('Réponse serveur invalide'); return d.url; }); }
 
