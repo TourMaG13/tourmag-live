@@ -7809,6 +7809,7 @@ window._tmgResizeSettle=function(){
   };
 
   function ensurePill(){
+    if(!window._fePillHook){ window._fePillHook=1; try{ window.addEventListener('resize', function(){ try{ paintPill(); }catch(_){ } }); }catch(_){ } }
     if(pill) return;
     pill=document.createElement('div');
     pill.id='fe-pill';
@@ -7830,7 +7831,8 @@ window._tmgResizeSettle=function(){
     } else {
       // Déconnecté : pas d'entourage sombre, juste le bouton.
       pill.style.background='transparent'; pill.style.padding='0'; pill.style.boxShadow='none';
-      var _lbl=(ev().loginLabel||'').trim()||'🔐 Se connecter';
+      var _isMob=(window.matchMedia&&window.matchMedia('(max-width:768px)').matches)||window.innerWidth<=768;
+      var _lbl=_isMob?'🔒 Se connecter':((ev().loginLabel||'').trim()||'🔐 Se connecter');
       var _lc=(ev().loginBtnColor||'').trim()||'#2563eb';
       var _lsz=ev().loginBtnSize||'m';
       var _lpad=_lsz==='l'?'12px 22px':_lsz==='s'?'6px 11px':'8px 15px';
@@ -8198,7 +8200,9 @@ window._tmgResizeSettle=function(){
 
   function ensureBtn(){
     var s=sv();
-    if(!s.enabled || s.showButton===false){ if(btn){btn.remove();btn=null;} return; }
+    if(!window._svFabHook){ window._svFabHook=1; try{ window.addEventListener('resize', function(){ try{ ensureBtn(); }catch(_){ } }); }catch(_){ } }
+    var _mob=(window.matchMedia&&window.matchMedia('(max-width:768px)').matches)||window.innerWidth<=768;
+    if(!s.enabled || s.showButton===false || (s.hideButtonMobile && _mob)){ if(btn){btn.remove();btn=null;} return; }
     var color=(s.btnColor||'').trim()||'#6366F1';
     var size=s.btnSize||'m';
     var pad=size==='l'?'16px 26px':size==='s'?'9px 14px':'12px 18px';
