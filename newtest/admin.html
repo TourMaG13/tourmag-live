@@ -8751,6 +8751,7 @@ function _svReadCurrentInto(){
   s.intro=(g('sv-intro').value||'').trim();
   s.thanks=(g('sv-thanks').value||'').trim();
   s.showButton=g('sv-showbtn').checked;
+  s.hideButtonMobile=g('sv-hidebtnmobile')?g('sv-hidebtnmobile').checked:false;
   s.buttonLabel=(g('sv-btnlabel').value||'').trim()||'Donner mon avis';
   s.btnColor=(g('sv-btncolor')?g('sv-btncolor').value:'')||'#6366F1';
   s.btnSize=(g('sv-btnsize')?g('sv-btnsize').value:'')||'m';
@@ -8809,6 +8810,7 @@ function renderSurvey(el){
     <div class="form-row" style="max-width:520px"><label class="form-label">Message de remerciement (après envoi)</label><textarea class="form-input" id="sv-thanks" rows="2" placeholder="Merci, vos réponses ont bien été enregistrées.">${_escAdm(sv.thanks||'')}</textarea></div>
     <div class="form-row-inline">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-showbtn" ${sv.showButton!==false?'checked':''}> Afficher le bouton « Donner mon avis »</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="sv-hidebtnmobile" ${sv.hideButtonMobile?'checked':''}> Masquer ce bouton sur mobile (la carte d'invitation dans la page suffit)</label>
       <div class="form-row" style="max-width:260px"><label class="form-label">Libellé du bouton</label><input class="form-input" id="sv-btnlabel" value="${_escAdm(sv.buttonLabel||'Donner mon avis')}"></div>
     </div>
     <div class="form-row-inline">
