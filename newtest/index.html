@@ -8240,6 +8240,7 @@ window._tmgResizeSettle=function(){
   function doneKey(sid){ return 'tmg_survey_done_'+EVENT_ID+'_'+(sid||'main')+'_'+_acct(); }
   function isDone(sid){ try{ return localStorage.getItem(doneKey(sid))==='1'; }catch(_){ return false; } }
   function markDone(sid){ try{ localStorage.setItem(doneKey(sid),'1'); }catch(_){ } }
+  function clearDone(sid){ try{ localStorage.removeItem(doneKey(sid)); }catch(_){ } }
   function seenKey(sid){ return 'tmg_survey_seen_'+EVENT_ID+'_'+(sid||'main'); }
   function sessionSeen(sid){ try{ return sessionStorage.getItem(seenKey(sid))==='1'; }catch(_){ return false; } }
   function markSeen(sid){ try{ sessionStorage.setItem(seenKey(sid),'1'); }catch(_){ } }
@@ -8253,10 +8254,9 @@ window._tmgResizeSettle=function(){
       var ed=window._tmgEditor, u=(ed&&ed.user)?ed.user():null;
       if(!u) return;                                  // uniquement pour un compte connecté
       var email=u.email||''; if(!email) return;
-      if(isDone(sid)) return;                         // déjà connu localement
       var edb=(ed.db)?ed.db():null; if(!edb) return;
       var ck=(sid||'main')+'|'+_acct();
-      if(_svChecked[ck]) return;                      // évite de requêter en boucle
+      if(_svChecked[ck]) return;                      // une seule vérif par session / compte / questionnaire
       _svChecked[ck]=true;
       edb.collection('surveyResponses')
         .where('eventId','==',EVENT_ID)
@@ -8264,9 +8264,12 @@ window._tmgResizeSettle=function(){
         .where('account','==',email)
         .limit(1).get()
         .then(function(snap){
-          if(snap && !snap.empty){ markDone(sid); if(window._surveyAfterSubmit) window._surveyAfterSubmit(); }
+          var has = !!(snap && !snap.empty);           // le serveur fait foi
+          var was = isDone(sid);
+          if(has && !was){ markDone(sid); if(window._surveyAfterSubmit) window._surveyAfterSubmit(); }       // déjà répondu (autre appareil) -> on bloque
+          else if(!has && was){ clearDone(sid); if(window._surveyAfterSubmit) window._surveyAfterSubmit(); }  // réponses effacées en back-office -> on rouvre
         })
-        .catch(function(){ _svChecked[ck]=false; });   // (ex: règles) -> on garde le repli local
+        .catch(function(e){ _svChecked[ck]=false; try{ console.warn('[Enquête] Impossible de vérifier les réponses côté serveur — règles Firestore à déployer ? La réouverture après suppression en back-office ne fonctionnera pas tant que la lecture est refusée.', e&&(e.code||e.message||e)); }catch(_){ } });
     }catch(_){ }
   }
   // Au changement de compte (connexion / déconnexion), on réévalue tout.
@@ -8415,8 +8418,8 @@ window._tmgResizeSettle=function(){
       var mode=host.getAttribute('data-mode')||'inline';
       var surv=sid?surveyById(sid):popupSurvey();
       if(!surv || !(surv.questions||[]).length){ host.innerHTML=''; return; }
-      if(isDone(surv.id)){ host.innerHTML=_satThanksHtml(surv); return; }
       _verifyDoneServer(surv.id);
+      if(isDone(surv.id)){ host.innerHTML=_satThanksHtml(surv); return; }
       if(mode==='inline'){ window._surveyInline(host, exp, surv); return; }
       // popup / accordion → carte d'appel à l'action personnalisable
       var n=(surv.questions||[]).length;
