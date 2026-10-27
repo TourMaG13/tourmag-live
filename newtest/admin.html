@@ -5355,6 +5355,11 @@ function _bpContentFieldsHtml(s){
         + '</div>'
         + '<div class="bpe-hint" style="padding:4px 0">Les participants <strong>connectés</strong> choisissent leur excursion et déposent leurs photos (limite ci-dessus). Affichage groupé par excursion, avec le nom de l\'auteur. Chaque bloc = sa propre liste (donc propre à la page/jour).</div>';
     }
+    case 'contact': {
+      return _phaseFld
+        + '<div class="bpe-fld"><label>Hauteur de l\'annuaire sur cette page (px)</label><input type="number" min="120" max="2000" value="'+_escAdm(c.dirMaxH||'')+'" placeholder="(défaut global)" style="width:170px" onchange="_bpSetCt(\'dirMaxH\',this.value)"></div>'
+        + '<div class="bpe-hint" style="padding:4px 0">S\'applique au mode « Annuaire compact » sur <strong>cette page</strong>. Laisse vide pour reprendre la hauteur définie globalement dans l\'onglet <strong>Contact</strong>. Le mode d\'affichage, le regroupement et le type de défilement restent globaux.</div>';
+    }
     case 'comments': {
       return _phaseFld
         + _bpTitleFields('Commentaires','Échangez et réagissez')
