@@ -11351,8 +11351,9 @@ function _renderContactUI(el, raw){
   <div class="admin-card"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg> Affichage de l'annuaire</h3>
     <div class="form-group"><label class="form-label">Mode d'affichage</label>
       <select class="form-input" id="ct-display-mode" style="max-width:340px">
-        <option value="cards"${(ct.displayMode||'cards')!=='directory'?' selected':''}>Fiches (cartes détaillées)</option>
+        <option value="cards"${(ct.displayMode||'cards')==='cards'?' selected':''}>Fiches (cartes détaillées)</option>
         <option value="directory"${ct.displayMode==='directory'?' selected':''}>Annuaire compact (recherche + accordéon)</option>
+        <option value="carousel"${ct.displayMode==='carousel'?' selected':''}>Carrousel (cartes défilantes)</option>
       </select>
       <div style="font-size:10px;color:var(--text3);margin-top:4px">« Fiches » : une carte par personne (idéal pour quelques contacts). « Annuaire compact » : liste cherchable d'une ligne par personne, coordonnées au clic — idéal quand il y a beaucoup de contacts ou pour une colonne étroite.</div>
     </div>
@@ -11363,6 +11364,7 @@ function _renderContactUI(el, raw){
       <div class="form-group"><label class="form-label">Hauteur (px)</label><input type="number" class="form-input" id="ct-dir-maxh" value="${ct.directoryMaxH||300}" min="120" max="2000" style="width:140px"></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:2px">Ces réglages ne concernent que le mode « Annuaire compact ». <b>Zone « Voir plus »</b> : les « Lignes avant Voir plus » restent toujours affichées et « Voir plus » ouvre en dessous une zone de la hauteur choisie qui défile (repliable par « Voir moins »). <b>Bloc à hauteur fixe</b> : tout l'annuaire tient dans la hauteur choisie, avec un ascenseur interne (la recherche reste en tête).</div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">Taille de la photo (mode Carrousel, px)</label><input type="number" class="form-input" id="ct-carou-ph" value="${ct.carouselPhotoSize||120}" min="60" max="320" style="width:140px"><div style="font-size:10px;color:var(--text3);margin-top:4px">Ne concerne que le mode « Carrousel » : diamètre de la photo ronde sur chaque carte.</div></div>
   </div>
   <div class="admin-card"><h3>Typographie des éléments</h3><div style="font-size:11px;color:var(--text3);margin-bottom:12px">Police, taille (px) et graisse de chaque élément de la carte contact. Laisser « par défaut » pour garder le style du thème.</div>
     ${_ctStyRow('Nom','name',((ev.contactStyles||(raw&&raw.styles)||{}).name))}
@@ -11498,7 +11500,8 @@ async function saveContact(){
     title:document.getElementById('ct-title').value.trim()||'Contact',
     bookingUrl:document.getElementById('ct-booking-global')?.value.trim()||'',
     people,
-    displayMode:(document.getElementById('ct-display-mode')?.value==='directory')?'directory':'cards',
+    displayMode:(function(){var v=document.getElementById('ct-display-mode')?.value;return (v==='directory'||v==='carousel')?v:'cards';})(),
+    carouselPhotoSize:parseInt(document.getElementById('ct-carou-ph')?.value,10)||120,
     directoryVisible:parseInt(document.getElementById('ct-dir-visible')?.value,10)||20,
     directoryGroup:document.getElementById('ct-dir-group')?.value||'auto',
     directoryMaxH:parseInt(document.getElementById('ct-dir-maxh')?.value,10)||0,
