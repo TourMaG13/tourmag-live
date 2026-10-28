@@ -1164,6 +1164,32 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-exp .ct-dir-copy{border-radius:0;border-color:var(--exp-line);color:var(--exp-grey)}
 .ct-dir-exp .ct-dir-more{border-radius:0;border-color:var(--exp-line);color:var(--exp-ink);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .ct-dir-exp .ct-dir-more:hover{background:var(--exp-stone)}
+/* ---- Annuaire — carrousel de cartes ---- */
+.ct-carou-wrap{position:relative;max-width:100%;margin:0 auto;--ct-carou-ph:120px}
+.ct-carou{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:4px 2px 14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.ct-carou::-webkit-scrollbar{height:8px}
+.ct-carou::-webkit-scrollbar-thumb{background:var(--border,#cbd5e1);border-radius:4px}
+.ct-carou-card{scroll-snap-align:start;flex:0 0 auto;width:calc(var(--ct-carou-ph,120px) + 76px);min-width:160px;max-width:300px;box-sizing:border-box;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:18px 16px;text-align:center;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.ct-carou-photo{width:var(--ct-carou-ph,120px);height:var(--ct-carou-ph,120px);border-radius:50%;margin:0 auto 12px;background-size:cover;background-position:center;background-color:#E2E8F0}
+.ct-carou-photo-ph{display:flex;align-items:center;justify-content:center;color:#64748B;font:700 calc(var(--ct-carou-ph,120px) * .34)/1 'Josefin Sans',sans-serif}
+.ct-carou-name{font-size:15px;font-weight:700;color:var(--_ct-name-color,var(--pri,#111));line-height:1.25;overflow-wrap:anywhere}
+.ct-carou-role{font-size:12px;color:var(--_ct-role-color,var(--text3,#9CA3AF));margin-top:3px;line-height:1.35;overflow-wrap:anywhere}
+.ct-carou-msg{font-size:12.5px;color:var(--text2,#4b5563);margin-top:10px;line-height:1.5}
+.ct-carou-actions{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.ct-carou-nav{position:absolute;top:calc(var(--ct-carou-ph,120px) / 2 + 22px);transform:translateY(-50%);z-index:3;width:36px;height:36px;border-radius:50%;border:1px solid var(--border,#e5e7eb);background:var(--card,#fff);color:var(--text2,#334155);font-size:22px;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;padding:0}
+.ct-carou-nav:hover{background:var(--bg,#f1f5f9)}
+.ct-carou-prev{left:-8px}
+.ct-carou-next{right:-8px}
+@media(max-width:640px){.ct-carou-nav{display:none}}
+.ct-carou-exp .ct-carou-card{background:var(--exp-stone);border:1px solid var(--exp-line);border-top:3px solid var(--exp-accent);border-radius:0;box-shadow:none}
+.ct-carou-exp .ct-carou-photo{border:2px solid var(--exp-line)}
+.ct-carou-exp .ct-carou-photo-ph{background:var(--exp-line);color:var(--exp-grey);font-family:'Archivo',sans-serif}
+.ct-carou-exp .ct-carou-name{font-family:'Libre Caslon Display',serif;font-weight:400;color:var(--_ct-name-color,var(--exp-ink))}
+.ct-carou-exp .ct-carou-role{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--_ct-role-color,var(--exp-grey))}
+.ct-carou-exp .ct-carou-msg{font-family:'Libre Caslon Text',serif;font-style:italic;color:var(--exp-ink)}
+.ct-carou-exp .ct-carou-nav{border-radius:0;border-color:var(--exp-line);color:var(--exp-ink);box-shadow:none}
+.ct-carou-exp .ct-dir-ic{border-radius:0;border-color:var(--exp-line);color:var(--exp-accent)}
+.ct-carou-exp .ct-dir-ic:hover{background:var(--exp-accent);color:#fff;border-color:var(--exp-accent)}
 @media(max-width:640px){.contact-card{flex-direction:column;text-align:center;padding:20px 16px;gap:14px}.contact-card-actions{justify-content:center}.contact-btn{justify-content:center}}
 .bn-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s;text-decoration:none;display:block;color:inherit}
 .bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
@@ -3396,6 +3422,13 @@ function render(data){
       ? `<p style="${_ctTextStyle(_subSt,'var(--text3)',13)}">${_subTxt}</p>`
       : `<p>${_subTxt}</p>`;
     o += `<div class="sec-title sec-title-contact"><div class="sec-title-icon" style="background:rgba(232,132,44,.08);color:var(--acc)">${svgMail.replace('viewBox','width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" viewBox')}</div><h2>${ctRaw.title||'Contact'}</h2><div class="sec-title-line"></div>${_subHtml}</div>`;
+    if((ctRaw.displayMode||'cards')==='carousel'){
+      var _dvc=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
+      o += window._ctCarouselHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, '', _dvc);
+      if(globalBooking){ o += `<div class="contact-book-global"><a class="contact-btn contact-btn-book" href="${globalBooking}" target="_blank" rel="noopener"${cardStyle?` style="${cardStyle}"`:''}>${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
+      o += `</div>`;
+      return o;
+    }
     if((ctRaw.displayMode||'cards')==='directory'){
       var _dv=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
       o += window._ctDirListHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, '', _dv, (opts&&opts.dirMaxH)||'');
@@ -4517,7 +4550,7 @@ function renderExpedition(data){
       return c;
     }
 
-    let o = `<section class="exp-contact${(ctRaw.displayMode||'cards')==='directory'?' exp-contact-dir':''}"><div class="exp-section-head exp-sec-contact"><h2>` +
+    let o = `<section class="exp-contact${((ctRaw.displayMode||'cards')==='directory'||(ctRaw.displayMode||'cards')==='carousel')?' exp-contact-dir':''}"><div class="exp-section-head exp-sec-contact"><h2>` +
       `${ctRaw.title||'Contact'}</h2><div class="rule"></div></div>`;
     // Sous-titre du bloc (expédition)
     const _subTxt=(ctRaw.subtitle!==undefined&&ctRaw.subtitle!=='')?ctRaw.subtitle:'';
@@ -4532,6 +4565,13 @@ function renderExpedition(data){
     const _intro=ctRaw.intro;
     if(_intro && (_intro.text||'').trim()){
       o += `<div class="contact-intro" style="${_ctTextStyle(_intro,'var(--exp-grey,#6E6B66)',18)};max-width:760px;margin:0 auto 22px">${_intro.text.replace(/\n/g,'<br>')}</div>`;
+    }
+    if((ctRaw.displayMode||'cards')==='carousel'){
+      var _dvc=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
+      o += window._ctCarouselHtml(people, ctRaw, {mail:svgMail,phone:svgPhone,web:svgWeb,cal:svgCal}, 'exp', _dvc);
+      if(globalBooking){ o += `<div style="text-align:center;margin-top:18px"><a class="exp-contact-btn" href="${globalBooking}" target="_blank" rel="noopener" style="${cardStyle}display:inline-flex">${svgCal}<span>Prendre rendez-vous</span></a></div>`; }
+      o += `</section>`;
+      return o;
     }
     if((ctRaw.displayMode||'cards')==='directory'){
       var _dv=(nameC?('--_ct-name-color:'+nameC+';'):'')+(roleC?('--_ct-role-color:'+roleC+';'):'')+(window._ctStyleVars?window._ctStyleVars((window._rtState&&window._rtState.event&&window._rtState.event.contactStyles)||ctRaw.styles):'');
@@ -8787,6 +8827,42 @@ window._ctDirMore=function(btn){
   var wrap=btn.closest('.ct-dir'); if(!wrap) return;
   var open=wrap.classList.toggle('ct-open');
   btn.textContent = open ? 'Voir moins' : (btn.getAttribute('data-more')||'Voir plus');
+};
+window._ctCarouselHtml=function(people, ctRaw, svg, variant, styleVars){
+  var a=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  var ini=function(nm){ return String(nm||'').split(/\s+/).map(function(w){return w?w[0]:'';}).join('').slice(0,2).toUpperCase()||'\u00B7'; };
+  var list=(people||[]).filter(function(p){ return p&&(p.name||p.role||p.email||p.phone||p.website||p.booking_url||p.message||p.photo_url); });
+  var vx=(variant==='exp')?' ct-carou-exp':'';
+  var ph=parseInt(ctRaw.carouselPhotoSize,10)||120;
+  var cards=list.map(function(p){
+    var nm=p.name||'';
+    var photo=p.photo_url
+      ? '<div class="ct-carou-photo" style="background-image:url(\''+a(p.photo_url).replace(/'/g,'%27')+'\')"></div>'
+      : '<div class="ct-carou-photo ct-carou-photo-ph">'+a(ini(nm))+'</div>';
+    var acts='';
+    if(p.email) acts+='<a class="ct-dir-ic" href="mailto:'+a(p.email)+'" title="E-mail">'+svg.mail+'</a>';
+    if(p.phone) acts+='<a class="ct-dir-ic" href="tel:'+a(p.phone)+'" title="Téléphone">'+svg.phone+'</a>';
+    if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); acts+='<a class="ct-dir-ic" href="'+a(href)+'" target="_blank" rel="noopener" title="Site">'+svg.web+'</a>'; }
+    if(p.booking_url) acts+='<a class="ct-dir-ic" href="'+a(p.booking_url)+'" target="_blank" rel="noopener" title="Rendez-vous">'+svg.cal+'</a>';
+    return '<div class="ct-carou-card">'+photo
+      +'<div class="ct-carou-name">'+a(nm||'\u2014')+'</div>'
+      +(p.role?'<div class="ct-carou-role">'+a(p.role)+'</div>':'')
+      +(p.message?'<div class="ct-carou-msg">'+a(p.message)+'</div>':'')
+      +(acts?'<div class="ct-carou-actions">'+acts+'</div>':'')
+      +'</div>';
+  }).join('');
+  var sv=styleVars||'';
+  return '<div class="ct-carou-wrap'+vx+'" style="'+sv+'--ct-carou-ph:'+ph+'px">'
+    +'<button type="button" class="ct-carou-nav ct-carou-prev" aria-label="Précédent" onclick="_ctCarouNav(this,-1)">\u2039</button>'
+    +'<div class="ct-carou">'+(cards||'<div class="ct-dir-empty">Aucun contact.</div>')+'</div>'
+    +'<button type="button" class="ct-carou-nav ct-carou-next" aria-label="Suivant" onclick="_ctCarouNav(this,1)">\u203a</button>'
+    +'</div>';
+};
+window._ctCarouNav=function(btn,dir){
+  try{ var wrap=btn.closest('.ct-carou-wrap'); var sc=wrap&&wrap.querySelector('.ct-carou'); if(!sc) return;
+    var card=sc.querySelector('.ct-carou-card'); var step=card?(card.getBoundingClientRect().width+14):240;
+    sc.scrollBy({left:dir*step,behavior:'smooth'});
+  }catch(_){ }
 };
 window._ctCopy=function(ev,txt,btn){
   try{ ev.stopPropagation(); }catch(_){ }
