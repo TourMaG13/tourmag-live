@@ -1165,11 +1165,17 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-dir-exp .ct-dir-more{border-radius:0;border-color:var(--exp-line);color:var(--exp-ink);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .ct-dir-exp .ct-dir-more:hover{background:var(--exp-stone)}
 /* ---- Annuaire — carrousel de cartes ---- */
-.ct-carou-wrap{position:relative;max-width:100%;margin:0 auto;--ct-carou-ph:120px}
+.ct-carou-outer{max-width:100%;margin:0 auto;--ct-carou-ph:120px}
+.ct-carou-wrap{position:relative;max-width:100%}
+.ct-carou-search{display:flex;align-items:center;gap:8px;max-width:420px;margin:0 auto 14px;background:var(--card,#fff);border:1.5px solid var(--border);border-radius:100px;padding:8px 14px;box-shadow:var(--shadow)}
+.ct-carou-search svg{width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0}
+.ct-carou-search input{flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:14px;color:var(--text,#111);min-width:0}
+.ct-carou-count{font-size:11px;color:var(--text3);white-space:nowrap}
+.ct-carou-empty{text-align:center;color:var(--text3);font-size:13px;padding:14px}
 .ct-carou{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:4px 2px 14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .ct-carou::-webkit-scrollbar{height:8px}
 .ct-carou::-webkit-scrollbar-thumb{background:var(--border,#cbd5e1);border-radius:4px}
-.ct-carou-card{scroll-snap-align:start;flex:0 0 auto;width:calc(var(--ct-carou-ph,120px) + 76px);min-width:160px;max-width:300px;box-sizing:border-box;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:18px 16px;text-align:center;box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.ct-carou-card{scroll-snap-align:start;flex:0 0 auto;width:var(--ct-carou-w,calc(var(--ct-carou-ph,120px) + 76px));min-width:140px;max-width:none;box-sizing:border-box;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:18px 16px;text-align:center;box-shadow:0 2px 14px rgba(0,0,0,.05)}
 .ct-carou-photo{width:var(--ct-carou-ph,120px);height:var(--ct-carou-ph,120px);border-radius:50%;margin:0 auto 12px;background-size:cover;background-position:center;background-color:#E2E8F0}
 .ct-carou-photo-ph{display:flex;align-items:center;justify-content:center;color:#64748B;font:700 calc(var(--ct-carou-ph,120px) * .34)/1 'Josefin Sans',sans-serif}
 .ct-carou-name{font-family:var(--ct-name-font,inherit);font-size:var(--ct-name-size,15px);font-weight:var(--ct-name-weight,700);color:var(--_ct-name-color,var(--pri,#111));line-height:1.25;overflow-wrap:anywhere}
@@ -1197,6 +1203,10 @@ body.mode-expedition .sec-add-empty{font-family:'Libre Caslon Text',serif;color:
 .ct-carou-exp .ct-carou-line svg{stroke:var(--exp-grey)}
 .ct-carou-exp .ct-carou-line:hover{color:var(--exp-accent)}
 .ct-carou-exp .ct-carou-line:hover svg{stroke:var(--exp-accent)}
+.ct-carou-exp .ct-carou-search{border-radius:0;border-color:var(--exp-line);background:#fff}
+.ct-carou-exp .ct-carou-search svg{stroke:var(--exp-grey)}
+.ct-carou-exp .ct-carou-search input{color:var(--exp-ink)}
+.ct-carou-exp .ct-carou-count{font-family:'IBM Plex Mono',monospace;color:var(--exp-grey)}
 @media(max-width:640px){.contact-card{flex-direction:column;text-align:center;padding:20px 16px;gap:14px}.contact-card-actions{justify-content:center}.contact-btn{justify-content:center}}
 .bn-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s;text-decoration:none;display:block;color:inherit}
 .bn-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
@@ -8843,6 +8853,7 @@ window._ctCarouselHtml=function(people, ctRaw, svg, variant, styleVars){
   var ph=parseInt(ctRaw.carouselPhotoSize,10)||120;
   var cards=list.map(function(p){
     var nm=p.name||'';
+    var hay=a([p.name,p.role,p.email,p.phone,p.website_label,p.website].filter(Boolean).join(' ').toLowerCase());
     var photo=p.photo_url
       ? '<div class="ct-carou-photo" style="background-image:url(\''+a(p.photo_url).replace(/'/g,'%27')+'\')"></div>'
       : '<div class="ct-carou-photo ct-carou-photo-ph">'+a(ini(nm))+'</div>';
@@ -8851,7 +8862,7 @@ window._ctCarouselHtml=function(people, ctRaw, svg, variant, styleVars){
     if(p.phone) det+='<a class="ct-carou-line" href="tel:'+a(p.phone)+'" title="'+a(p.phone)+'">'+svg.phone+'<span>'+a(p.phone)+'</span></a>';
     if(p.website){ var w=String(p.website).trim(); var href=/^https?:\/\//i.test(w)?w:('https://'+w); var lbl=(p.website_label||'').trim()||w.replace(/^https?:\/\//i,'').replace(/^www\./,'').split('/')[0]; det+='<a class="ct-carou-line" href="'+a(href)+'" target="_blank" rel="noopener" title="'+a(lbl)+'">'+svg.web+'<span>'+a(lbl)+'</span></a>'; }
     if(p.booking_url) det+='<a class="ct-carou-line" href="'+a(p.booking_url)+'" target="_blank" rel="noopener">'+svg.cal+'<span>Prendre rendez-vous</span></a>';
-    return '<div class="ct-carou-card">'+photo
+    return '<div class="ct-carou-card" data-search="'+hay+'">'+photo
       +'<div class="ct-carou-name">'+a(nm||'\u2014')+'</div>'
       +(p.role?'<div class="ct-carou-role">'+a(p.role)+'</div>':'')
       +(p.message?'<div class="ct-carou-msg">'+a(p.message)+'</div>':'')
@@ -8859,17 +8870,35 @@ window._ctCarouselHtml=function(people, ctRaw, svg, variant, styleVars){
       +'</div>';
   }).join('');
   var sv=styleVars||'';
-  return '<div class="ct-carou-wrap'+vx+'" style="'+sv+'--ct-carou-ph:'+ph+'px">'
-    +'<button type="button" class="ct-carou-nav ct-carou-prev" aria-label="Précédent" onclick="_ctCarouNav(this,-1)">\u2039</button>'
-    +'<div class="ct-carou">'+(cards||'<div class="ct-dir-empty">Aucun contact.</div>')+'</div>'
-    +'<button type="button" class="ct-carou-nav ct-carou-next" aria-label="Suivant" onclick="_ctCarouNav(this,1)">\u203a</button>'
+  var cw=parseInt(ctRaw.carouselCardWidth,10)||0;
+  var svgSearch='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  var cnt=list.length;
+  return '<div class="ct-carou-outer'+vx+'" style="'+sv+'--ct-carou-ph:'+ph+'px'+(cw?(';--ct-carou-w:'+cw+'px'):'')+'">'
+    +'<div class="ct-carou-search">'+svgSearch+'<input type="search" placeholder="Rechercher un nom, un rôle…" oninput="_ctCarouFilter(this)" aria-label="Rechercher un contact"><span class="ct-carou-count">'+cnt+(cnt>1?' contacts':' contact')+'</span></div>'
+    +'<div class="ct-carou-wrap">'
+      +'<button type="button" class="ct-carou-nav ct-carou-prev" aria-label="Précédent" onclick="_ctCarouNav(this,-1)">\u2039</button>'
+      +'<div class="ct-carou">'+(cards||'<div class="ct-dir-empty">Aucun contact.</div>')+'</div>'
+      +'<button type="button" class="ct-carou-nav ct-carou-next" aria-label="Suivant" onclick="_ctCarouNav(this,1)">\u203a</button>'
+    +'</div>'
+    +'<div class="ct-carou-empty ct-hide">Aucun résultat.</div>'
     +'</div>';
 };
 window._ctCarouNav=function(btn,dir){
   try{ var wrap=btn.closest('.ct-carou-wrap'); var sc=wrap&&wrap.querySelector('.ct-carou'); if(!sc) return;
-    var card=sc.querySelector('.ct-carou-card'); var step=card?(card.getBoundingClientRect().width+14):240;
+    var card=sc.querySelector('.ct-carou-card:not(.ct-hide)'); var step=card?(card.getBoundingClientRect().width+14):240;
     sc.scrollBy({left:dir*step,behavior:'smooth'});
   }catch(_){ }
+};
+window._ctCarouFilter=function(inp){
+  var outer=inp.closest('.ct-carou-outer'); if(!outer) return;
+  var q=(inp.value||'').trim().toLowerCase(), shown=0;
+  outer.querySelectorAll('.ct-carou-card').forEach(function(c){
+    var m=!q||((c.getAttribute('data-search')||'').indexOf(q)!==-1);
+    c.classList.toggle('ct-hide', !m); if(m) shown++;
+  });
+  var empty=outer.querySelector('.ct-carou-empty'); if(empty) empty.classList.toggle('ct-hide', shown>0);
+  var cnt=outer.querySelector('.ct-carou-count'); if(cnt) cnt.textContent=shown+(shown>1?' contacts':' contact');
+  var sc=outer.querySelector('.ct-carou'); if(sc){ try{ sc.scrollTo({left:0,behavior:'smooth'}); }catch(_){ } }
 };
 window._ctCopy=function(ev,txt,btn){
   try{ ev.stopPropagation(); }catch(_){ }
