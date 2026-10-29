@@ -11295,29 +11295,38 @@ function _normalizeContact(raw){
 }
 function _ctPersonRow(p, i){
   p=p||{};
-  return `<div class="admin-card ct-person" data-ct-idx="${i}" style="margin:0 0 12px;background:var(--bg);border:1px solid var(--border)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <strong style="font-size:13px">👤 Contact ${i+1}</strong>
-      <div style="display:flex;gap:4px">
+  const esc=s=>String(s==null?'':s).replace(/"/g,'&quot;');
+  const ph=(p.photo_url||'');
+  const ini=(String(p.name||'').trim().split(/\s+/).map(w=>w?w[0]:'').join('').slice(0,2).toUpperCase())||'👤';
+  const av = ph
+    ? `<div class="ct-p-av" style="background-image:url('${esc(ph).replace(/'/g,'%27')}')"></div>`
+    : `<div class="ct-p-av ct-p-av-ph">${ini}</div>`;
+  return `<div class="admin-card ct-person" data-ct-idx="${i}" style="margin:0 0 8px;background:var(--bg);border:1px solid var(--border);padding:8px 10px">
+    <div class="ct-p-head">
+      ${av}
+      <div class="ct-p-id">
+        <input class="form-input ct-p-name" data-ctp="name" value="${esc(p.name||'')}" placeholder="Nom (ex. Jean Dupont)">
+        <input class="form-input ct-p-role" data-ctp="role" value="${esc(p.role||'')}" placeholder="Rôle / titre">
+      </div>
+      <button type="button" class="btn btn-ghost btn-xs ct-p-toggle" title="Afficher/masquer les détails" onclick="this.closest('.ct-person').classList.toggle('open')">Modifier</button>
+      <div class="ct-p-move">
         <button class="btn btn-ghost btn-xs" onclick="moveContact(${i},-1)" title="Monter">▲</button>
         <button class="btn btn-ghost btn-xs" onclick="moveContact(${i},1)" title="Descendre">▼</button>
         <button class="btn btn-danger btn-xs" onclick="removeContactPerson(${i})" title="Supprimer">✕</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="form-group" style="margin:0"><label class="form-label">Nom</label><input class="form-input" data-ctp="name" value="${(p.name||'').replace(/"/g,'&quot;')}" placeholder="Jean Dupont"></div>
-      <div class="form-group" style="margin:0"><label class="form-label">Rôle / titre</label><input class="form-input" data-ctp="role" value="${(p.role||'').replace(/"/g,'&quot;')}" placeholder="Photographe · Reporter"></div>
-    </div>
-    <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-ctp="photo_url" id="ctp-photo-${i}" value="${(p.photo_url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ctp-photo-'+i)}${mkUploadBtn('ctp-photo-'+i)}</div></div>
-    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" data-ctp="message" rows="2" placeholder="Pour obtenir les photos, contactez-moi directement.">${(p.message||'').replace(/</g,'&lt;')}</textarea></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="form-group" style="margin:0"><label class="form-label">Email</label><input class="form-input" data-ctp="email" value="${(p.email||'').replace(/"/g,'&quot;')}" placeholder="john@example.com"></div>
-      <div class="form-group" style="margin:0"><label class="form-label">Téléphone</label><input class="form-input" data-ctp="phone" value="${(p.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6 12 34 56 78"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="form-group" style="margin:0"><label class="form-label">Site web (URL)</label><input class="form-input" data-ctp="website" value="${(p.website||'').replace(/"/g,'&quot;')}" placeholder="https://www.example.com"></div>
-      <div class="form-group" style="margin:0"><label class="form-label">Texte affiché (optionnel)</label><input class="form-input" data-ctp="website_label" value="${(p.website_label||'').replace(/"/g,'&quot;')}" placeholder="Ex : Voir le profil, Notre site…"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = le domaine s'affiche automatiquement.</div></div>
-      <div class="form-group" style="margin:0"><label class="form-label">📅 Lien de prise de RDV</label><input class="form-input" data-ctp="booking_url" value="${(p.booking_url||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/..."></div>
+    <div class="ct-p-more">
+      <div class="form-group"><label class="form-label">Photo</label><div style="display:flex;gap:6px;align-items:flex-end"><input class="form-input" data-ctp="photo_url" id="ctp-photo-${i}" value="${esc(p.photo_url||'')}" placeholder="https://..." style="flex:1">${mkMediaPickerBtn('ctp-photo-'+i)}${mkUploadBtn('ctp-photo-'+i)}</div></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" data-ctp="message" rows="2" placeholder="Pour obtenir les photos, contactez-moi directement.">${(p.message||'').replace(/</g,'&lt;')}</textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group" style="margin:0"><label class="form-label">Email</label><input class="form-input" data-ctp="email" value="${esc(p.email||'')}" placeholder="john@example.com"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Téléphone</label><input class="form-input" data-ctp="phone" value="${esc(p.phone||'')}" placeholder="+33 6 12 34 56 78"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group" style="margin:0"><label class="form-label">Site web (URL)</label><input class="form-input" data-ctp="website" value="${esc(p.website||'')}" placeholder="https://www.example.com"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Texte affiché (optionnel)</label><input class="form-input" data-ctp="website_label" value="${esc(p.website_label||'')}" placeholder="Ex : Voir le profil…"><div style="font-size:10px;color:var(--text3);margin-top:2px">Vide = le domaine s'affiche automatiquement.</div></div>
+        <div class="form-group" style="margin:0"><label class="form-label">📅 Lien de prise de RDV</label><input class="form-input" data-ctp="booking_url" value="${esc(p.booking_url||'')}" placeholder="https://calendly.com/..."></div>
+      </div>
     </div>
   </div>`;
 }
@@ -11378,7 +11387,7 @@ function _renderContactUI(el, raw){
     <div class="form-group"><label class="form-label">📅 Lien de prise de RDV global (optionnel)</label><input class="form-input" id="ct-booking-global" value="${(ct.bookingUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendly.com/votre-equipe"><div style="font-size:10px;color:var(--text3);margin-top:3px">Bouton « Prendre rendez-vous » affiché une fois pour tout le bloc, en plus des liens propres à chaque contact.</div></div>
     <div id="ct-people-list" style="margin-top:10px">${peopleHtml}</div>
     <div style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="addContactPerson()">＋ Ajouter un contact</button></div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les contacts</button></div>
+    
   </div>
   ${(function(){ const it=ct.intro||{}; const su=ct.subtitleStyle||{}; const alignOpts=(a)=>`<option value="left"${a==='left'?' selected':''}>Gauche</option><option value="center"${(a||'center')==='center'?' selected':''}>Centré</option><option value="right"${a==='right'?' selected':''}>Droite</option><option value="justify"${a==='justify'?' selected':''}>Justifié</option>`; return `<div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-contact"/></svg> Sous-titre &amp; texte libre du bloc contact</h3>
     <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">Sous-titre (sous le titre « Contact »)</div>
@@ -11398,7 +11407,7 @@ function _renderContactUI(el, raw){
       <div class="form-group"><label class="form-label">Alignement</label><select class="form-input" id="ct-intro-align">${alignOpts(it.align)}</select></div>
       <div class="form-group"><label class="form-label">Couleur</label><div style="display:flex;gap:6px"><input type="color" id="ct-intro-color" value="${it.color||'#475569'}" style="width:36px;height:30px;border:1px solid #ddd;border-radius:4px;cursor:pointer;padding:2px"><input class="form-input" id="ct-intro-color-txt" value="${(it.color||'').replace(/"/g,'&quot;')}" placeholder="#475569" style="flex:1;font-size:12px"></div></div>
     </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>
+    
   </div>`; })()}
   <div class="admin-card" style="margin-top:16px"><h3><svg class="h3-ic" viewBox="0 0 24 24"><use href="#ti-apparence"/></svg> Personnalisation visuelle</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -11413,9 +11422,10 @@ function _renderContactUI(el, raw){
     <div id="ct-preview" style="margin-top:12px;padding:20px 24px;border-radius:8px;border:1px solid #e5e5e5;min-height:60px;background:${ct.bg_color||'#F5F4F2'};font-family:sans-serif;font-size:14px;${ct.bg_image?`background-image:url('${ct.bg_image}');background-size:cover;background-position:center;`:''}" >
       <strong style="color:${ct.name_color||'#111'}">Nom Prénom</strong> · <span style="color:${ct.role_color||'#6E6B66'}">Fonction</span> · <span style="border:1px solid ${ct.btn_color||'#111'};padding:2px 8px;color:${ct.btn_color||'#111'};font-size:13px">Bouton</span>
     </div>
-    <div style="margin-top:14px"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer</button></div>
+    
   </div>`;
   h += moduleConfigBlock('contact');
+  h += '<div class="ct-savebar"><button class="btn btn-primary" onclick="saveContact()"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-save"/></svg> Enregistrer les contacts</button><button class="btn btn-ghost btn-sm" onclick="addContactPerson()">＋ Ajouter un contact</button><span style="margin-left:auto;font-size:11px;color:var(--text3)">Tout l\'onglet est enregistré d\'un coup</span></div>';
   el.innerHTML=h;
   // Sync color pickers ↔ text inputs
   ['bg','name','role','btn'].forEach(k=>{
@@ -12738,6 +12748,17 @@ function renderGallery(el){
     .gal-ph-field input,.gal-ph-field select{width:100%}
     .gal-ph-actions{display:flex;flex-direction:row;gap:4px;align-items:center;flex-shrink:0}
     @media(max-width:640px){.gal-ph-card.open .gal-ph-more{grid-template-columns:1fr}}
+    .ct-p-head{display:flex;align-items:center;gap:10px}
+    .ct-p-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;background-size:cover;background-position:center;background-color:#E2E8F0}
+    .ct-p-av-ph{display:flex;align-items:center;justify-content:center;color:#64748B;font:700 13px system-ui;background:#E2E8F0}
+    .ct-p-id{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .ct-p-id input{width:100%}
+    .ct-p-toggle{flex-shrink:0}
+    .ct-p-move{display:flex;gap:4px;flex-shrink:0}
+    .ct-p-more{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+    .ct-person.open .ct-p-more{display:block}
+    .ct-savebar{position:sticky;bottom:0;z-index:20;background:var(--card,#fff);border-top:1px solid var(--border);padding:12px 2px;margin-top:18px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+    @media(max-width:640px){.ct-p-id{grid-template-columns:1fr}}
   </style>`;
   // Réglages avancés (masqués pour les clients en mode simplifié)
   if(!simple) h+=moduleConfigBlock('gallery');
