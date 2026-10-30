@@ -1744,6 +1744,18 @@ body.mode-expedition .social-float{display:none}
 </style>
 </head>
 <body>
+<script>
+/* ===================================================================
+   CONFIG HÉBERGEMENT — Événement / page par défaut
+   À laisser VIDE pour un déploiement multi-événements piloté par l'URL
+   (GitHub Pages avec ?event=... & ?bpage=...).
+   À renseigner pour un hébergement à URL fixe (ex. la version de Quentin)
+   où la page doit TOUJOURS charger le même événement, sans paramètre d'URL.
+   Le paramètre d'URL, s'il est présent, reste prioritaire.
+   =================================================================== */
+window.TMG_DEFAULT_EVENT = '';   // ex. 'GzWjIWuCmXmS2sHZDAap'
+window.TMG_DEFAULT_BPAGE = '';   // ex. 'pmvhv35p7eje7'
+</script>
 <script async src="//www.instagram.com/embed.js"></script>
 <!-- (barre de navigation sticky retirée) -->
 <div class="upd-bar" id="upd-bar"></div>
@@ -3655,7 +3667,7 @@ function render(data){
   (function _builderRouting(){
     if(!_builderPages.length) return; // aucun builder → legacy inchangé
     const _q = new URLSearchParams(window.location.search);
-    const _bpRaw = _q.get('bpage') || '';
+    const _bpRaw = _q.get('bpage') || window.TMG_DEFAULT_BPAGE || '';
     // page-builder par défaut si event.defaultTab pointe dessus (tok "builder:ID")
     let _defBp = '';
     if(!_bpRaw && event.defaultTab && event.defaultTab.indexOf('builder:')===0){ _defBp = event.defaultTab.slice(8); }
@@ -4740,7 +4752,7 @@ function renderExpedition(data){
   (function(){
     if(!_bpPagesExp.length) return;
     const _q = new URLSearchParams(window.location.search);
-    const _bpRaw = _q.get('bpage') || '';
+    const _bpRaw = _q.get('bpage') || window.TMG_DEFAULT_BPAGE || '';
     let _defBp='';
     if(!_bpRaw && event.defaultTab && event.defaultTab.indexOf('builder:')===0){ _defBp=event.defaultTab.slice(8); }
     let _homeBp='';
@@ -7261,6 +7273,8 @@ function _trackVisit(eventId){
   try{ isNew = !localStorage.getItem(firstKey); }catch(_){}
   var src = _refSource();
   var dom = _refDomain();
+  var _fromWidget = false;
+  try{ _fromWidget = ((new URLSearchParams(location.search).get('source')||'').toLowerCase()==='widget'); }catch(_){ }
   var _interacted = false;              // l'internaute a-t-il interagi (scroll/clic/clavier) ?
   window._statsInteracted = function(){ _interacted = true; };
 
@@ -7270,6 +7284,7 @@ function _trackVisit(eventId){
     upd['ref_'+src] = FV.increment(1);
     if(dom) upd['dom_'+dom] = FV.increment(1); // détail par domaine référent
     if(isUnique){ upd.uniques = FV.increment(1); try{ localStorage.setItem(uniqueKey, '1'); }catch(_){} }
+    if(_fromWidget){ upd.widgetViews = FV.increment(1); if(isUnique) upd.widgetUniques = FV.increment(1); }  // arrivé via le widget
     // Nouveau vs récurrent (sur toute la durée de vie de l'appareil, pas juste le jour)
     if(isNew){ upd.newVisitors = FV.increment(1); try{ localStorage.setItem(firstKey, '1'); }catch(_){} }
     else { upd.returningVisitors = FV.increment(1); }
@@ -7461,7 +7476,7 @@ function _initPreviewMode(){
 
 async function init(){
   const _qs = new URLSearchParams(window.location.search);
-  const eventId = _qs.get('event');
+  const eventId = _qs.get('event') || window.TMG_DEFAULT_EVENT || '';
 
   // ============================================================
   // MODE APERÇU (piloté par l'admin via postMessage)
@@ -7825,7 +7840,7 @@ window._tmgResizeSettle=function(){
 (function(){
   var _qs=new URLSearchParams(location.search);
   if(_qs.get('preview')==='1') return;             // pas d'édition dans l'aperçu admin (iframe)
-  var EVENT_ID=_qs.get('event')||'';
+  var EVENT_ID=_qs.get('event')||window.TMG_DEFAULT_EVENT||'';
   if(!EVENT_ID) return;
 
   var eApp=null,eAuth=null,eDb=null,eUser=null,authInit=false,pill=null,_authCbs=[];
@@ -8114,7 +8129,7 @@ window._tmgResizeSettle=function(){
 (function(){
   var _qs=new URLSearchParams(location.search);
   if(_qs.get('preview')==='1') return;
-  var EVENT_ID=_qs.get('event')||'';
+  var EVENT_ID=_qs.get('event')||window.TMG_DEFAULT_EVENT||'';
   if(!EVENT_ID) return;
 
   var threads={};   // tid -> {data:[], mode, unsub, authHooked}
@@ -8283,7 +8298,7 @@ window._tmgResizeSettle=function(){
 (function(){
   var _qs=new URLSearchParams(location.search);
   if(_qs.get('preview')==='1') return;
-  var EVENT_ID=_qs.get('event')||'';
+  var EVENT_ID=_qs.get('event')||window.TMG_DEFAULT_EVENT||'';
   if(!EVENT_ID) return;
   var btn=null, autoScheduled=false;
   function allSurveys(){ var e=(window._rtState&&window._rtState.event)||{}; if(Array.isArray(e.surveys)&&e.surveys.length) return e.surveys; return e.survey?[Object.assign({id:'main',isPopup:true},e.survey)]:[]; }
@@ -8534,7 +8549,7 @@ window._tmgResizeSettle=function(){
 (function(){
   var _qs=new URLSearchParams(location.search);
   if(_qs.get('preview')==='1') return;
-  var EVENT_ID=_qs.get('event')||'';
+  var EVENT_ID=_qs.get('event')||window.TMG_DEFAULT_EVENT||'';
   if(!EVENT_ID) return;
   var reg={};
   function pubDb(){ return window._pubDb||null; }
@@ -8689,7 +8704,7 @@ window._tmgResizeSettle=function(){
 (function(){
   var _qs=new URLSearchParams(location.search);
   if(_qs.get('preview')==='1') return;
-  var EVENT_ID=_qs.get('event')||'';
+  var EVENT_ID=_qs.get('event')||window.TMG_DEFAULT_EVENT||'';
   if(!EVENT_ID) return;
   window._contactLocked=false;
   function pubDb(){ return window._pubDb||null; }
