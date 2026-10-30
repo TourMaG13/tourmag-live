@@ -498,6 +498,10 @@ body.mod-settings-open .mod-settings-scrim{opacity:1;visibility:visible}
 .ct-person.open .ct-p-more{display:block}
 .ct-savebar{position:sticky;bottom:0;z-index:20;background:var(--card,#fff);border-top:1px solid var(--border);padding:12px 2px;margin-top:18px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
 @media(max-width:640px){.ct-p-id{grid-template-columns:1fr}}
+.acc-more{display:none}
+.acc-row.open .acc-more{display:block}
+.acc-badge{font-size:10px;background:var(--card);border:1px solid var(--border);padding:3px 9px;border-radius:20px;color:var(--text2);white-space:nowrap;font-weight:600;flex-shrink:0}
+.acc-badge-all{background:#EEF2FF;color:#6366F1;border-color:#C7D2FE}
 .h3-ic{width:18px;height:18px;stroke:var(--acc2,#D4731D);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .modal-box h3 .h3-ic{width:19px;height:19px}
 .form-row{margin-bottom:14px}
@@ -10389,6 +10393,11 @@ function renderAccess(el){
     const initials=(displayName||a.id).split(/[\s@.]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
     const isFull=a.accessProfile==='full';
     const seesAll=isFull||a.seesAllEvents===true;
+    const _realEmail=(a.email||'').toLowerCase();
+    const _allowedCount=_realEmail?eventsData.filter(ev=>(ev.allowedUsers||[]).some(e=>(e||'').toLowerCase()===_realEmail)).length:0;
+    const _accessBadge = seesAll
+      ? '<span class="acc-badge acc-badge-all">Tous les événements</span>'
+      : `<span class="acc-badge">${_allowedCount}/${eventsData.length} évén.</span>`;
     const _srch=((a.name||'')+' '+(a.email||'')+' '+(a.id||'')).toLowerCase().replace(/[<>"]/g,'');
     let profOpts=`<option value="full"${isFull?' selected':''}>Accès complet</option>`;
     accessPresetsData.forEach(p=>{ profOpts+=`<option value="preset:${p.id}"${a.accessProfile==='preset:'+p.id?' selected':''}>${(p.name||'Sans nom').replace(/</g,'&lt;')}</option>`; });
@@ -10402,17 +10411,19 @@ function renderAccess(el){
               : `<div style="font-size:13px;font-weight:600;color:var(--text3)">Sans nom</div><div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono'">${a.id}</div>`}
             <button class="btn btn-ghost btn-xs" style="margin-top:3px;font-size:10px" onclick="renameAccount('${a.id}')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-edit2"/></svg> ${hasName?'Renommer':'Donner un nom'}</button>
           </div>
+          ${_accessBadge}
           <select class="form-input" style="width:180px;font-size:12px;height:32px;padding:2px 8px" onchange="setAccountProfile('${a.id}',this.value)" title="Profil d'accès">${profOpts}</select>
+          <button type="button" class="btn btn-ghost btn-xs" title="Configurer l'accès aux événements" onclick="this.closest('.acc-row').classList.toggle('open')">⚙ Accès</button>
           ${isMe?'<span style="font-size:8px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:2px 6px;border-radius:3px">vous</span>'
             :`<button class="btn btn-danger btn-xs" onclick="confirmRemoveAccount('${a.id}','${(a.email||a.id).replace(/'/g,"\\'")}')" title="Supprimer">✕</button>`}
         </div>
-        <div style="padding:0 12px 10px 56px">
+        <div class="acc-more" style="padding:0 12px 10px 56px">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;${isFull?'opacity:.5;pointer-events:none':''}">
             <input type="checkbox" ${seesAll?'checked':''} ${isFull?'disabled':''} onchange="setAccountSeesAll('${a.id}',this.checked)" style="width:16px;height:16px;cursor:pointer">
             <span>Voit tous les événements${isFull?' (inclus dans l’accès complet)':''}</span>
           </label>
           ${(!isFull && !seesAll)?`<details style="margin-top:8px">
-            <summary style="cursor:pointer;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:6px 0;user-select:none">Événements autorisés (${(a.allowedEvents||[]).length}/${eventsData.length}) — afficher/masquer</summary>
+            <summary style="cursor:pointer;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:6px 0;user-select:none">Événements autorisés (${_allowedCount}/${eventsData.length}) — afficher/masquer</summary>
             <div style="margin-top:8px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px">
             ${_mkEventCheckboxes(a)}
           </div></details>`:''}
