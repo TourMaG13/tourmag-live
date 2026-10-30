@@ -300,7 +300,7 @@ function renderEncart(data, forceRender){
     const _p=event.widgetPresets.find(p=>p && p.id===presetId);
     if(_p && _p.config) cfg=_p.config;
   }
-  const ctaUrl=(cfg.ctaUrl)||event.widgetCtaUrl||paramCta||('index.html?event='+eventId);
+  const ctaUrl=(function(u){ try{ if(!u||/[?&]source=/.test(u)) return u; return u+(u.indexOf('?')>=0?'&':'?')+'source=widget'; }catch(_){ return u; } })((cfg.ctaUrl)||event.widgetCtaUrl||paramCta||('index.html?event='+eventId));
   const liveUrl=ctaUrl;
   const erEl=document.querySelector('.er')||document.getElementById('encart');
   // Applique les variables d'apparence sur le conteneur racine
