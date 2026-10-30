@@ -10695,15 +10695,23 @@ async function executeRemoveAccount(uid,email){
 // ==================== GUIDE ====================
 // ==================== STATISTIQUES ====================
 var _statsRange = 30;
+var _statsCustomFrom = '';
+var _statsCustomTo = '';
 var _statsCache = null;
 function renderStats(el){
   const ev = eventsData.find(e=>e.id===currentEventId);
   let h = `<div class="page-title"><svg class="pt-ic" viewBox="0 0 24 24"><use href="#ti-kpis"/></svg>Statistiques de consultation</div>
     <div class="page-desc">Fréquentation du dashboard « ${(ev&&ev.name)||''} ». Les robots sont exclus des mesures.</div>`;
+  const _custom = !!(_statsCustomFrom && _statsCustomTo);
   h += `<div class="admin-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:13px;color:var(--text2)">Période :</span>
-    <button class="btn ${(_statsRange===1?'btn-primary':'btn-ghost')}" onclick="setStatsRange(1)">Aujourd'hui</button>
-    ${[7,30,90].map(d=>`<button class="btn ${(_statsRange===d?'btn-primary':'btn-ghost')}" onclick="setStatsRange(${d})">${d} jours</button>`).join('')}
+    <button class="btn ${(!_custom&&_statsRange===1?'btn-primary':'btn-ghost')}" onclick="setStatsRange(1)">Aujourd'hui</button>
+    ${[7,30,90].map(d=>`<button class="btn ${(!_custom&&_statsRange===d?'btn-primary':'btn-ghost')}" onclick="setStatsRange(${d})">${d} jours</button>`).join('')}
+    <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);border-left:1px solid var(--border);padding-left:10px">
+      du <input type="date" id="stats-from" value="${_statsCustomFrom}" style="font:inherit;padding:4px 6px">
+      au <input type="date" id="stats-to" value="${_statsCustomTo}" style="font:inherit;padding:4px 6px">
+      <button class="btn ${_custom?'btn-primary':'btn-ghost'} btn-sm" onclick="setStatsCustom()">Appliquer</button>
+    </span>
     <button class="btn btn-ghost" style="margin-left:auto" onclick="loadStats(true)">↻ Actualiser</button>
     <button class="btn btn-danger" onclick="resetStats()">🗑 Réinitialiser</button>
   </div>`;
@@ -10711,7 +10719,14 @@ function renderStats(el){
   el.innerHTML = h;
   loadStats();
 }
-function setStatsRange(d){ _statsRange=d; _statsCache=null; renderTab(); }
+function setStatsRange(d){ _statsRange=d; _statsCustomFrom=''; _statsCustomTo=''; _statsCache=null; renderTab(); }
+function setStatsCustom(){
+  var f=document.getElementById('stats-from'), t=document.getElementById('stats-to');
+  var fv=f&&f.value, tv=t&&t.value;
+  if(!fv||!tv){ toast('Choisissez une date de début et une date de fin','error'); return; }
+  if(fv>tv){ var x=fv; fv=tv; tv=x; }
+  _statsCustomFrom=fv; _statsCustomTo=tv; _statsCache=null; renderTab();
+}
 
 async function resetStats(){
   if(!currentEventId) return;
@@ -10741,14 +10756,14 @@ async function loadStats(force){
   if(!body) return;
   if(!currentEventId){ body.innerHTML='<div class="empty"><div class="text">Aucun événement sélectionné</div></div>'; return; }
   try{
-    // Fenêtre de dates
-    const days = [];
-    const today = new Date();
-    for(let i=0;i<_statsRange;i++){
-      const d = new Date(today); d.setDate(today.getDate()-i);
-      days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
-    }
-    days.reverse();
+    // Fenêtre de dates (plage personnalisée « du…au », sinon plage prédéfinie)
+    const fmtD=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    let fromStr, toStr;
+    if(_statsCustomFrom && _statsCustomTo){ fromStr=_statsCustomFrom; toStr=_statsCustomTo; }
+    else { const today=new Date(); toStr=fmtD(today); const f=new Date(today); f.setDate(today.getDate()-(_statsRange-1)); fromStr=fmtD(f); }
+    const days=[];
+    { let cur=new Date(fromStr+'T00:00:00'); const end=new Date(toStr+'T00:00:00'); let guard=0;
+      while(cur<=end && guard<1200){ days.push(fmtD(cur)); cur.setDate(cur.getDate()+1); guard++; } }
     const snap = await db.collection('events').doc(currentEventId).collection('stats').get();
     const byDay = {};
     snap.forEach(doc=>{ byDay[doc.id] = doc.data()||{}; });
@@ -10762,7 +10777,7 @@ async function loadStats(force){
       .map(e=>({label:(e.title||e.text||'(sans titre)').replace(/<[^>]+>/g,'').slice(0,60), val:e.likeCount||0}));
 
     // Agrégation
-    let totViews=0, totUniques=0, totNew=0, totReturning=0;
+    let totViews=0, totUniques=0, totNew=0, totReturning=0, totWidget=0, totWidgetU=0;
     let dwellTotal=0, dwellCount=0, bounces=0, engaged=0;
     let sc25=0, sc50=0, sc75=0, sc100=0;
     const refs={}, clicks={}, domains={}; const series=[];
@@ -10770,18 +10785,19 @@ async function loadStats(force){
       const d = byDay[day] || {};
       const v = d.views||0, u = d.uniques||0;
       totViews += v; totUniques += u;
+      totWidget += d.widgetViews||0; totWidgetU += d.widgetUniques||0;
       totNew += d.newVisitors||0; totReturning += d.returningVisitors||0;
       dwellTotal += d.dwellTotal||0; dwellCount += d.dwellCount||0;
       bounces += d.bounces||0; engaged += d.engaged||0;
       sc25 += d.scroll25||0; sc50 += d.scroll50||0; sc75 += d.scroll75||0; sc100 += d.scroll100||0;
-      series.push({day, v});
+      series.push({day, v, u, w:d.widgetViews||0});
       Object.keys(d).forEach(k=>{
         if(k.indexOf('ref_')===0) refs[k.slice(4)] = (refs[k.slice(4)]||0) + d[k];
         else if(k.indexOf('clk_')===0) clicks[k.slice(4)] = (clicks[k.slice(4)]||0) + d[k];
         else if(k.indexOf('dom_')===0){ const host=k.slice(4).replace(/_/g,'.'); domains[host]=(domains[host]||0)+d[k]; }
       });
     });
-    _renderStatsBody(body, {totViews, totUniques, refs, clicks, domains, series,
+    _renderStatsBody(body, {totViews, totUniques, totWidget, totWidgetU, refs, clicks, domains, series,
       totNew, totReturning, dwellTotal, dwellCount, bounces, engaged, sc25, sc50, sc75, sc100,
       topLikes});
   }catch(e){
@@ -10798,10 +10814,12 @@ function _renderStatsBody(body, s){
   const refLabels = {direct:'Accès direct', recherche:'Moteurs de recherche', social:'Réseaux sociaux', referral:'Sites référents', interne:'Navigation interne'};
   const zoneLabels = {live:'Fil live', quiz:'Quiz / Sondage', citations:'Citations', essentiel:'Essentiel', videos:'Vidéos', galerie:'Galerie', interviews:'Interviews', programme:'Programme', articles:'Articles', carte:'Carte', lien:'Liens externes'};
   // Cartes chiffres
+  const _wPct = s.totViews ? Math.round((s.totWidget||0)/s.totViews*100) : 0;
   let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px">
     ${_statCard('Vues totales', _statNum(s.totViews), '#2563EB')}
     ${_statCard('Visiteurs uniques', _statNum(s.totUniques), '#059669')}
     ${_statCard('Vues / visiteur', s.totUniques?(s.totViews/s.totUniques).toFixed(1):'—', '#7C3AED')}
+    ${_statCard('Via le widget', _statNum(s.totWidget||0)+(s.totViews?(' · '+_wPct+' %'):''), '#EA580C')}
   </div>`;
 
   // Engagement
@@ -10832,6 +10850,8 @@ function _renderStatsBody(body, s){
 
   // Graphique d'évolution (barres SVG légères)
   h += `<div class="admin-card"><h3>Évolution des vues</h3>${_statChart(s.series)}</div>`;
+  // Détail jour par jour
+  h += `<div class="admin-card"><h3>Détail jour par jour</h3>${_statDayTable(s.series)}</div>`;
   // Provenance
   const refRows = Object.keys(s.refs).sort((a,b)=>s.refs[b]-s.refs[a]);
   h += `<div class="admin-card"><h3>Provenance des visiteurs</h3>${refRows.length?_statBars(refRows.map(k=>({label:refLabels[k]||k, val:s.refs[k]}))):'<div class="empty"><div class="text">Aucune donnée de provenance</div></div>'}</div>`;
@@ -10877,6 +10897,26 @@ function _statChart(series){
   });
   return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="min-width:${Math.min(W,600)}px">${bars}</svg></div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px"><span>${series[0]?series[0].day.slice(5):''}</span><span>${series.length?series[series.length-1].day.slice(5):''}</span></div>`;
+}
+function _statDayLabel(day){
+  try{ const d=new Date(day+'T00:00:00'); return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'}); }catch(_){ return day; }
+}
+function _statDayTable(series){
+  if(!series || !series.length) return '<div class="empty"><div class="text">Aucune donnée</div></div>';
+  const th='padding:8px 10px;text-align:right;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px';
+  const rows = series.slice().reverse().map(function(p){
+    const wpct = p.v ? Math.round((p.w||0)/p.v*100) : 0;
+    return '<tr style="border-top:1px solid var(--border)"><td style="padding:6px 10px;white-space:nowrap;text-transform:capitalize">'+_statDayLabel(p.day)+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums">'+_statNum(p.v)+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums">'+_statNum(p.u||0)+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums;color:#EA580C">'+((p.w||0)?(_statNum(p.w)+' · '+wpct+' %'):'—')+'</td></tr>';
+  }).join('');
+  return '<div style="max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:8px">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="position:sticky;top:0;background:var(--bg);z-index:1">'
+    +'<th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">Jour</th>'
+    +'<th style="'+th+'">Vues</th><th style="'+th+'">Uniques</th><th style="'+th+'">Dont widget</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function _fmtDuration(secs){
   secs = secs||0;
