@@ -18,6 +18,7 @@ import sys
 import json
 import time
 import re
+import unicodedata
 from datetime import datetime
 
 import requests
@@ -100,6 +101,58 @@ def parse_json_response(text):
         return None
 
 # ============================================================
+# PARSING DE DATES (champ texte « date » des articles / jalons)
+# ============================================================
+# Table mois FR + EN. Clé = token normalisé (minuscule, sans accent, sans point).
+_MONTHS = {}
+for _names, _num in [
+    (["janv", "jan", "janvier", "january"], 1),
+    (["fevr", "fev", "fevrier", "feb", "february"], 2),
+    (["mars", "mar", "march"], 3),
+    (["avr", "avril", "apr", "april"], 4),
+    (["mai", "may"], 5),
+    (["juin", "jun", "june"], 6),           # juin ≠ juillet : on garde les tokens entiers
+    (["juil", "juillet", "jul", "july"], 7),
+    (["aout", "aou", "aug", "august"], 8),
+    (["sept", "sep", "septembre", "september"], 9),
+    (["oct", "octobre", "october"], 10),
+    (["nov", "novembre", "november"], 11),
+    (["dec", "decembre", "december"], 12),
+]:
+    for _n in _names:
+        _MONTHS[_n] = _num
+
+def _norm_token(s):
+    s = unicodedata.normalize("NFKD", s or "")
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return s.lower().strip().strip(".")
+
+def parse_fr_date(s):
+    """Parse une date texte type « 27 nov. 2025 » (FR ou EN) → datetime, ou None.
+    Sert au tri chronologique quand le champ Firestore created_at est absent."""
+    if not s:
+        return None
+    m = re.search(r"(\d{1,2})\s+([^\s\d]+)\.?\s+(\d{4})", str(s))
+    if not m:
+        return None
+    day = int(m.group(1))
+    year = int(m.group(3))
+    tok = _norm_token(m.group(2))
+    num = _MONTHS.get(tok)
+    if num is None:
+        # repli : préfixe exact (évite l'ambiguïté juin/juil car ces tokens sont entiers)
+        for k, v in _MONTHS.items():
+            if tok == k:
+                num = v
+                break
+    if num is None:
+        return None
+    try:
+        return datetime(year, num, day)
+    except Exception:
+        return None
+
+# ============================================================
 # COLLECTE DE DONNÉES CONTEXTUELLES
 # ============================================================
 def collect_context(db, event_ref, event_data):
@@ -136,13 +189,20 @@ def collect_context(db, event_ref, event_data):
     # article ajouté/importé par une ancienne version ou touché à la main deviendrait
     # alors invisible pour la timeline, alors qu'il s'affiche dans le dashboard).
     def _art_ts(doc):
-        ca = doc.to_dict().get("created_at")
+        d = doc.to_dict()
+        ca = d.get("created_at")
         try:
-            return ca.timestamp() if hasattr(ca, "timestamp") else 0.0
+            if hasattr(ca, "timestamp"):
+                return ca.timestamp()
         except Exception:
-            return 0.0
+            pass
+        # Pas de created_at exploitable → on retombe sur le champ texte « date »
+        pd = parse_fr_date(d.get("date", ""))
+        if pd:
+            return pd.timestamp()
+        return 0.0
     all_art = list(event_ref.collection("articles").stream())
-    all_art.sort(key=_art_ts, reverse=True)       # plus récent d'abord
+    all_art.sort(key=_art_ts, reverse=True)       # plus récent d'abord (date réelle)
     art_docs = all_art[:10][::-1]                  # 10 plus récents, remis en ordre croissant
     ctx["article_count"] = len(all_art)            # total réel, pour le diagnostic
     for doc in art_docs:
@@ -285,6 +345,13 @@ Réponds UNIQUEMENT en JSON, sans backticks, classés du plus ancien au plus ré
     if not jalons or not isinstance(jalons, list):
         print("  ❌ Pas de jalons générés", flush=True)
         return 0
+
+    # Tri chronologique de sécurité : si TOUTES les dates des jalons sont lisibles,
+    # on réordonne du plus ancien au plus récent. L'IA peut se tromper d'ordre ;
+    # ça garantit un affichage chronologique et un « 6 plus récents » correct.
+    _parsed = [parse_fr_date(j.get("date", "")) for j in jalons]
+    if jalons and all(_parsed):
+        jalons = [j for _, j in sorted(zip(_parsed, jalons), key=lambda p: p[0])]
 
     # Garantir exactement 6 jalons : tronquer aux 6 plus récents si trop,
     # avertir si moins (l'IA n'a pas suivi l'instruction)
