@@ -110,6 +110,7 @@ def collect_context(db, event_ref, event_data):
         "dates": event_data.get("dates", ""),
         "live_texts": [],
         "article_titles": [],
+        "article_count": 0,
         "essential_texts": [],
         "timeline_texts": []
     }
@@ -129,13 +130,21 @@ def collect_context(db, event_ref, event_data):
                 pass
         ctx["live_texts"].append(f"[{ts}] {text}")
 
-    # Articles liés : on récupère les 10 plus récents (DESC + limit),
-    # puis on les passe à l'IA en ordre chronologique CROISSANT (ancien → récent).
-    # 10 suffit puisque la timeline ne retient que les jalons récents.
-    art_docs = list(event_ref.collection("articles")
-                    .order_by("created_at", direction=firestore.Query.DESCENDING)
-                    .limit(10).stream())
-    art_docs.reverse()  # remettre en ordre chronologique croissant
+    # Articles liés : on récupère TOUS les articles puis on les trie côté Python par
+    # created_at décroissant. On évite order_by("created_at") côté Firestore car cette
+    # requête EXCLUT silencieusement les documents dépourvus du champ created_at (un
+    # article ajouté/importé par une ancienne version ou touché à la main deviendrait
+    # alors invisible pour la timeline, alors qu'il s'affiche dans le dashboard).
+    def _art_ts(doc):
+        ca = doc.to_dict().get("created_at")
+        try:
+            return ca.timestamp() if hasattr(ca, "timestamp") else 0.0
+        except Exception:
+            return 0.0
+    all_art = list(event_ref.collection("articles").stream())
+    all_art.sort(key=_art_ts, reverse=True)       # plus récent d'abord
+    art_docs = all_art[:10][::-1]                  # 10 plus récents, remis en ordre croissant
+    ctx["article_count"] = len(all_art)            # total réel, pour le diagnostic
     for doc in art_docs:
         d = doc.to_dict()
         ctx["article_titles"].append(f"- {d.get('title', '')} ({d.get('date', '')})")
@@ -507,7 +516,7 @@ def main():
             if ctx["article_titles"]:
                 generate_timeline(db, event_ref, event_data, ctx)
             else:
-                print("  ⏭ Aucun article pour la timeline", flush=True)
+                print(f"  ⏭ Aucun article pour la timeline (0 article dans la collection 'articles' de cet événement ; total vu = {ctx.get('article_count', 0)})", flush=True)
         else:
             print("  ⏭ IA Timeline désactivée", flush=True)
 
