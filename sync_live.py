@@ -470,8 +470,10 @@ def main():
 
     for event_id, event_data in event_list:
         has_rss = bool(event_data.get("rssFeeds"))
-        has_ia_ess = event_data.get("iaEssential") not in [False, "false", 0, "0", None]
-        has_ia_tl = event_data.get("iaTimeline") not in [False, "false", 0, "0", None]
+        # Champ absent (None) = activé par défaut, comme l'admin (ev.iaX !== false).
+        # Seule une valeur explicitement "fausse" désactive la génération.
+        has_ia_ess = event_data.get("iaEssential") not in [False, "false", 0, "0"]
+        has_ia_tl = event_data.get("iaTimeline") not in [False, "false", 0, "0"]
 
         # Skip events with nothing to do
         if not has_rss and not has_ia_ess and not has_ia_tl:
