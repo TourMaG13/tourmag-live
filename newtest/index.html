@@ -2958,20 +2958,25 @@ function render(data){
     const link = a.link ? ` onclick="window.open('${a.link}','_blank')"` : '';
     return `<div class="art-card${featured?' featured':''}"${link}>${img}<div class="art-card-body"><span class="art-card-tag">${a.tag||fmtDateFr(a.date)||''}</span><div class="art-card-title">${a.title}</div>${a.excerpt?`<div class="art-card-excerpt">${a.excerpt}</div>`:''}<div class="art-card-byline"><div class="art-card-byline-avatar">${initials||'TM'}</div>${a.author||''} · ${fmtDateFr(a.date)}</div>${featured&&a.link?'<div class="art-card-cta">Lire l\'article →</div>':''}</div></div>`;
   }
-  function mkArticles(){
+  function mkArticles(opts){
+    opts = opts || {};
     if(mod.articles===false || !articles || !articles.length) return '';
     const artTitle = event.articlesTitle || 'Nos articles';
     const artSub = event.articlesSubtitle || "L'événement vu par la rédaction";
     const inSide = (typeof getZone==='function') && getZone('articles')==='side';
+    // Réglages par bloc (builder classique) prioritaires sur les réglages globaux de l'événement.
+    const _optVis  = (opts.visibleCount!=null && opts.visibleCount!=='' && !isNaN(parseInt(opts.visibleCount,10))) ? parseInt(opts.visibleCount,10) : null;
+    const _optAcc  = (opts.accCount!=null && opts.accCount!=='' && !isNaN(parseInt(opts.accCount,10))) ? parseInt(opts.accCount,10) : null;
+    const _optAccH = (opts.scrollH!=null && opts.scrollH!=='' && !isNaN(parseInt(opts.scrollH,10))) ? parseInt(opts.scrollH,10) : null;
     let o = `<div id="section-articles">${event.articlesShowTitle!==false?`<div class="sec-title sec-title-articles fi"><div class="sec-title-icon" style="background:rgba(12,108,161,.08);color:#0C6CA1">${ICO.fileText}</div><h2>${artTitle}</h2><div class="sec-title-line"></div><p>${artSub}</p></div>`:""}</div>`;
 
     if(inSide){
       // Colonne étroite : accordéon à hauteur limitée + scroll interne (évite le vide sur la colonne principale)
-      const vis = parseInt(event.articlesVisibleCount)||ART_VISIBLE_DEFAULT;   // visibles avant l'accordéon
-      const maxAcc = parseInt(event.articlesAccordionMax)||20;                 // total max dans l'accordéon
-      const accH = parseInt(event.articlesAccordionHeight)||400;               // hauteur zone scroll (px)
+      const vis = (_optVis!=null) ? _optVis : (parseInt(event.articlesVisibleCount)||ART_VISIBLE_DEFAULT);   // visibles avant l'accordéon
+      const maxAcc = (_optAcc!=null) ? _optAcc : (parseInt(event.articlesAccordionMax)||20);                 // total max dans l'accordéon (0 = tous)
+      const accH = (_optAccH!=null) ? _optAccH : (parseInt(event.articlesAccordionHeight)||400);             // hauteur zone scroll (px)
       const va = articles.slice(0, vis);
-      const ea = articles.slice(vis, vis+maxAcc);
+      const ea = (maxAcc>0) ? articles.slice(vis, vis+maxAcc) : articles.slice(vis);
       o += `<div class="art-bento fi">`;
       va.forEach((a,i) => { o += mkArticle(a, i===0); });
       o += `</div>`;
@@ -2984,8 +2989,10 @@ function render(data){
     }
 
     // Colonne large : comportement classique (déploiement complet)
-    const va = articles.slice(0, ART_VIS);
-    const ea = articles.slice(ART_VIS);
+    const _wideVis = (_optVis!=null) ? _optVis : ART_VIS;
+    const va = articles.slice(0, _wideVis);
+    let ea = articles.slice(_wideVis);
+    if(_optAcc!=null && _optAcc>0) ea = ea.slice(0, _optAcc);   // limite « articles max » du bloc builder
     o += `<div class="art-bento fi">`;
     va.forEach((a,i) => { o += mkArticle(a, i===0); });
     o += `</div>`;
