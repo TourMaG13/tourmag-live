@@ -6400,7 +6400,7 @@ function _bpRenderSection(sec, event, ctx){
           inner = inner.replace(/<div class="exp-card-label">[\s\S]*?<\/div>/, '');
           inner = inner.replace(/<div class="hd">[\s\S]*?<\/div>/, '');
         } else {
-          var _tszStyle = (ct.titleSize? ' style="font-size:'+parseInt(ct.titleSize)+'px"':'');
+          var _tszStyle = (ct.titleSize? ' style="font-size:'+parseInt(ct.titleSize)+'px !important"':'');
           if(ct.title){
             var _t=_bpEsc(ct.title), _done=false;
             inner = inner.replace(/(<div class="exp-section-head[^"]*">\s*<h2)(>)([\s\S]*?)(<\/h2>)/, function(m,a,g,b,c){ _done=true; return a+_tszStyle+g+_t+c; });
@@ -6411,7 +6411,7 @@ function _bpRenderSection(sec, event, ctx){
             inner = inner.replace(/(<h2)(\b[^>]*)(>)/, '$1'+_tszStyle+'$2$3');
           }
           // Sous-titre : remplace le <p> de la barre de titre s'il existe
-          var _ssz = (ct.subtitleSize? ' style="font-size:'+parseInt(ct.subtitleSize)+'px"':'');
+          var _ssz = (ct.subtitleSize? ' style="font-size:'+parseInt(ct.subtitleSize)+'px !important"':'');
           if(ct.subtitle){
             var _s=_bpEsc(ct.subtitle), _sdone=false;
             inner = inner.replace(/(<div class="sec-title-line"><\/div>\s*<p)(>)([\s\S]*?)(<\/p>)/, function(m,a,g,b,c){ _sdone=true; return a+_ssz+g+_s+c; });
