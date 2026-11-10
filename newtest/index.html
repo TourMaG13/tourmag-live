@@ -2997,9 +2997,18 @@ function render(data){
     va.forEach((a,i) => { o += mkArticle(a, i===0); });
     o += `</div>`;
     if(ea.length){
-      o += `<div class="expand-wrap" id="art-expand"><div class="art-bento" style="margin-top:14px">`;
-      ea.forEach(a => { o += mkArticle(a, false); });
-      o += `</div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir les ${ea.length} autres articles')">Voir les ${ea.length} autres articles ${_chevSvg}</button></div>`;
+      if(_optAccH!=null){
+        // Hauteur de zone déroulante définie sur le bloc → même zone à scroll interne
+        // qu'en colonne étroite (le déploiement ouvre une zone scrollable de hauteur fixe).
+        o += `<div class="expand-wrap" id="art-expand"><div class="art-acc-wrap"><div class="art-acc-scroll" style="max-height:${_optAccH}px" onscroll="_artAccScroll(this)"><div class="art-bento" style="margin-top:14px">`;
+        ea.forEach(a => { o += mkArticle(a, false); });
+        o += `</div></div><button class="art-acc-pill" onclick="_artAccStep(this)"><span class="art-acc-pill-arrow">↓</span> <span class="art-acc-pill-n">${ea.length}</span> autres</button></div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir les ${ea.length} autres articles')">Voir les ${ea.length} autres articles ${_chevSvg}</button></div>`;
+      } else {
+        // Pas de hauteur définie → déploiement complet classique (comportement d'origine).
+        o += `<div class="expand-wrap" id="art-expand"><div class="art-bento" style="margin-top:14px">`;
+        ea.forEach(a => { o += mkArticle(a, false); });
+        o += `</div></div><div style="text-align:center"><button class="voir-plus-btn" id="art-btn" onclick="toggleExpand('art-expand','art-btn',${ea.length},'Réduire','Voir les ${ea.length} autres articles')">Voir les ${ea.length} autres articles ${_chevSvg}</button></div>`;
+      }
     }
     return o;
   }
