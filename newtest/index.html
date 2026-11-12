@@ -4794,7 +4794,7 @@ function renderExpedition(data){
     if(typeof _applyDecor==='function'){ try{ _applyDecor(event, (event.modules||{})); }catch(e){} }
     // Si la page-builder contient une carte (module "etapes"), on initialise Leaflet
     // exactement comme dans le flux expédition normal (init JS post-rendu).
-    var _mapSec = (_bp.sections||[]).filter(function(s){ return s.type==='etapes'; })[0];
+    var _mapSec = (_bp.sections||[]).filter(function(s){ return s.type==='etapes' && !s.hidden; })[0];
     if(_mapSec){
       var _mapEtapes = _etapesFor({phaseFilter: (_mapSec.content&&_mapSec.content.phaseFilter)});
       setTimeout(function(){ try{ _initExpMap(_mapEtapes, event, mod, accent); }catch(e){ console.warn('[builder] init carte échouée', e); } }, 60);
@@ -6345,6 +6345,8 @@ function _bpSectionStyle(ap){
 
 // Rend UNE section. Les modules "live" délèguent aux renderers legacy (ctx).
 function _bpRenderSection(sec, event, ctx){
+  // Bloc masqué depuis l'admin → non rendu sur le front (tous modes/zones).
+  if(sec && sec.hidden) return '';
   const ap = sec.appearance||{};
   const ct = sec.content||{};
   const type = sec.type;
@@ -6848,7 +6850,9 @@ function _bpRenderContentModule(sec, event, ctx){
 function _renderBuilderPage(page, event, ctx){
   ctx = ctx || {};
   ctx._pageId = (page && page.id) || '';
-  const sections = Array.isArray(page.sections) ? page.sections : [];
+  // On retire les blocs masqués (section.hidden===true) AVANT tout calcul de layout,
+  // pour éviter une colonne latérale vide ou une détection foireuse du bloc d'en-tête.
+  const sections = (Array.isArray(page.sections) ? page.sections : []).filter(s => !s || !s.hidden);
   const zoneOf = s => (s.zone || (s.appearance&&s.appearance.zone) || 'full');
   const _isExp = (page.mode==='expedition') || (event && event.mode==='expedition');
   const CL = _isExp
@@ -6945,6 +6949,7 @@ function _renderBuilderPage(page, event, ctx){
       var agg='';
       _allPages.forEach(function(pg){
         (pg.sections||[]).forEach(function(sx){
+          if(sx && sx.hidden) return; // bloc masqué depuis l'admin → absent des vues thématiques
           if(sx && sx.content && sx.content.theme===th.id){
             // Forcer pleine largeur ET masquer le titre/sous-titre du bloc (le titre du thème
             // s'affiche une seule fois en haut de la vue).
