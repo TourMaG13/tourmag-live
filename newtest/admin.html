@@ -152,6 +152,11 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);-we
 .bpe-sec.bpe-dragging{opacity:.4}
 .bpe-sec.bpe-over-top{box-shadow:0 -3px 0 var(--acc)}
 .bpe-sec.bpe-over-bot{box-shadow:0 3px 0 var(--acc)}
+.bpe-sec.bpe-sec-hidden{opacity:.55;background:repeating-linear-gradient(45deg,#fff,#fff 10px,#F8FAFC 10px,#F8FAFC 20px)}
+.bpe-sec.bpe-sec-hidden .bpe-sec-body{filter:grayscale(.6)}
+.bpe-sec-hidden-badge{font-size:10px;font-weight:700;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px}
+.bpe-sec-btn.on{background:#FEF3C7;color:#92400E}
+.bpe-sec-btn.on:hover{background:#FDE68A;color:#78350F}
 .bpe-sec-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--bg);border-radius:var(--r-md) var(--r-md) 0 0;font-size:12px}
 .bpe-handle{cursor:grab;color:var(--text3);font-size:14px;line-height:1}
 .bpe-handle:active{cursor:grabbing}
@@ -740,6 +745,7 @@ select.form-input{cursor:pointer}
 <g id="ti-edit2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></g>
 <g id="ti-tv"><rect x="2" y="7" width="20" height="13" rx="2"/><polyline points="8 3 12 7 16 3"/></g>
 <g id="ti-eye"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></g>
+<g id="ti-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-6.5 0-10-7-10-7a17.37 17.37 0 0 1 4.06-4.94"/><path d="M9.9 4.24A10.4 10.4 0 0 1 12 4c6.5 0 10 7 10 7a17.3 17.3 0 0 1-2.16 3.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></g>
 <g id="ti-mobile"><rect x="7" y="2" width="10" height="20" rx="2.5"/><line x1="11" y1="18" x2="13" y2="18"/></g>
 <g id="ti-updown"><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></g>
 <g id="ti-robot"><rect x="4" y="8" width="16" height="12" rx="2"/><line x1="12" y1="4" x2="12" y2="8"/><circle cx="12" cy="4" r="1"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></g>
@@ -4733,7 +4739,12 @@ function _bpSectionCardHtml(s,i,total){
   const meta=BP_TYPE[s.type]||{name:s.type,icon:'ti-modules'};
   const zone=s.zone||'full';
   const sel=(s.id===_bpSelSection)?' selected':'';
-  return '<div class="bpe-sec'+sel+'" style="'+_bpCatColorVars(s.type)+'" data-idx="'+i+'" data-id="'+s.id+'"'
+  const hid=s.hidden?' bpe-sec-hidden':'';
+  const eyeIcon=s.hidden?'ti-eye-off':'ti-eye';
+  const eyeTitle=s.hidden?'Réafficher ce bloc sur le front':'Masquer ce bloc sur le front';
+  const eyeOn=s.hidden?' on':'';
+  const hidBadge=s.hidden?'<span class="bpe-sec-hidden-badge" title="Ce bloc est masqué sur le site public"><svg class="btn-ic" viewBox="0 0 24 24" style="width:11px;height:11px"><use href="#ti-eye-off"/></svg> Masqué</span>':'';
+  return '<div class="bpe-sec'+sel+hid+'" style="'+_bpCatColorVars(s.type)+'" data-idx="'+i+'" data-id="'+s.id+'"'
     +' ondragover="_bpSecDragOver(event,'+i+')" ondrop="_bpSecDrop(event,'+i+')" ondragleave="_bpSecDragLeave(event)"'
     +' onclick="_bpSelect(\''+s.id+'\')">'
     +'<div class="bpe-sec-bar">'
@@ -4741,7 +4752,9 @@ function _bpSectionCardHtml(s,i,total){
     +'<span class="bpe-sec-ico"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#'+meta.icon+'"/></svg></span>'
     +'<span class="bpe-sec-name">'+_escAdm(meta.name)+'</span>'
     +'<span class="bpe-sec-zone">'+(BP_ZONE_LABELS[zone]||zone)+'</span>'
+    +hidBadge
     +'<div class="bpe-sec-acts">'
+    +'<button class="bpe-sec-btn'+eyeOn+'" title="'+eyeTitle+'" onclick="event.stopPropagation();_bpToggleHidden(\''+s.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#'+eyeIcon+'"/></svg></button>'
     +'<button class="bpe-sec-btn" title="Dupliquer" onclick="event.stopPropagation();_bpDupSection(\''+s.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-copy"/></svg></button>'
     +'<button class="bpe-sec-btn del" title="Supprimer" onclick="event.stopPropagation();_bpDelSection(\''+s.id+'\')"><svg class="btn-ic" viewBox="0 0 24 24"><use href="#ti-trash"/></svg></button>'
     +'</div></div>'
@@ -4830,6 +4843,14 @@ async function _bpDelSection(id){
   await _bpSavePage();
   _renderBuilderEditor(document.getElementById('admin-main'));
   toast('Module supprimé');
+}
+async function _bpToggleHidden(id){
+  const p=_bpCurrentPage(); if(!p) return;
+  const s=(p.sections||[]).find(x=>x.id===id); if(!s) return;
+  s.hidden=!s.hidden;
+  await _bpSavePage();
+  _renderBuilderEditor(document.getElementById('admin-main'));
+  toast(s.hidden?'Bloc masqué sur le front':'Bloc réaffiché sur le front');
 }
 async function _bpMoveSectionTo(fromIdx, toIdx){
   const p=_bpCurrentPage(); if(!p) return;
