@@ -2857,7 +2857,10 @@ function render(data){
       const tlStyle = tlBg ? `style="background:${tlBg}"` : '';
       const _tlHide = (Array.isArray(event.mobileHidden) && event.mobileHidden.indexOf('timeline')!==-1) ? ' blk-mob-hidden' : '';
       o += `<div class="hero-tl${_tlHide}" ${tlStyle}><div class="hero-tl-inner"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
-      timeline.slice(0,6).forEach(t => {
+      // Affichage chronologique : plus ancien à gauche, plus récent à droite.
+      // On garde les 6 premiers jalons (order le plus bas) puis on inverse pour l'affichage.
+      // slice() crée une copie, donc reverse() ne mute pas le tableau d'origine.
+      timeline.slice(0,6).reverse().forEach(t => {
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer"` : '';
         o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDateC}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
