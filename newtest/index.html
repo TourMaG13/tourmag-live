@@ -662,7 +662,7 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .itw-section-hd{text-align:center;margin-bottom:28px}
 .itw-section-hd h2{font-family:'Josefin Sans';font-size:24px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px}
 .itw-section-hd .itw-line{width:60px;height:3px;background:var(--sec-rule,var(--acc));margin:8px auto;border-radius:2px}
-.itw-section-hd p{font-family:var(--itw-sub-font,'Playfair Display');font-style:italic;font-size:var(--itw-sub-size,13px);color:rgba(255,255,255,.4)}
+.itw-section-hd p{font-family:'Playfair Display';font-style:italic;font-size:13px;color:rgba(255,255,255,.4)}
 .itw-card{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:26px 28px;display:flex;align-items:center;gap:24px;margin-bottom:14px;transition:background .15s}
 .itw-card:hover{background:rgba(255,255,255,.09)}.itw-card:last-child{margin-bottom:0}
 .itw-body{flex:1}
@@ -670,8 +670,10 @@ body.hide-subtitles .sec-title p,body.hide-subtitles .exp-section-sub{display:no
 .itw-name{font-family:'Josefin Sans';font-size:17px;font-weight:700;color:#fff;margin-bottom:4px}
 .itw-quote{font-family:'Playfair Display';font-style:italic;font-size:14px;line-height:1.6;color:rgba(255,255,255,.7);margin-bottom:8px}
 .itw-bio{font-size:10px;line-height:1.5;color:rgba(255,255,255,.4);margin-bottom:10px}
-.itw-cta{font-family:var(--itw-cta-font,'Josefin Sans');font-size:var(--itw-cta-tsize,10px);font-weight:700;letter-spacing:.5px;color:var(--itw-cta-color,#fff);padding:var(--itw-cta-pad,5px 14px);border:1.5px solid var(--itw-cta-border,rgba(255,255,255,.3));background:var(--itw-cta-bg,transparent);border-radius:6px;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
-.itw-cta:hover{background:var(--itw-cta-bg-hover,rgba(255,255,255,.1));border-color:var(--itw-cta-border-hover,rgba(255,255,255,.5))}
+.itw-cta{font-family:'Josefin Sans';font-size:10px;font-weight:700;letter-spacing:.5px;color:#fff;padding:5px 14px;border:1.5px solid rgba(255,255,255,.3);border-radius:6px;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.itw-cta:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.5)}
+/* Quand un fond perso est posé via style inline (data-custom-bg), on remplace le feedback hover par une simple surbrillance (le fond inline !important reste en place). */
+.itw-cta[data-custom-bg]:hover{filter:brightness(1.15)}
 .itw-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid rgba(232,132,44,.35);box-shadow:0 4px 20px rgba(0,0,0,.25)}
 @media(max-width:768px){.itw-inner{padding:0 12px}.itw-card{flex-direction:column-reverse;gap:14px;text-align:center;padding:20px 16px}.itw-avatar{width:80px;height:80px}.itw-name{font-size:15px}}
 
@@ -2706,6 +2708,10 @@ function render(data){
   // Couleurs de fond personnalisables (interviews / contact) + trait de titre
   if(event.interviewsBgColor) document.documentElement.style.setProperty('--itw-bg', event.interviewsBgColor);
   if(event.sectionRuleColor)  document.documentElement.style.setProperty('--sec-rule', event.sectionRuleColor);
+  // Personnalisation du bandeau Interviews : sous-titre & bouton CTA
+  // Appliquée via styles inline avec !important dans mkInterviews()
+  // (le moteur typo émet déjà du !important sur font-size/color pour .itw-cta et .itw-section-hd p,
+  // donc des variables CSS ne suffisent pas — un style inline !important sur l'élément gagne).
   // Taille du logo hero (mode classique)
   document.documentElement.style.setProperty('--logo-h', (event.logoSize||56)+'px');
   document.documentElement.style.setProperty('--jr-photo-size', (event.journalistPhotoSize||52)+'px');
@@ -3062,7 +3068,34 @@ function render(data){
     if(mod.interviews===false || !interviews || !interviews.length) return '';
     const itwTitle = event.interviewsTitle || 'Interviews';
     const itwSub = event.interviewsSubtitle || 'Rencontres et visions sur l\'évolution du métier';
-    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner">${event.interviewsShowTitle!==false?`<div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p>${itwSub}</p></div>`:``}`;
+
+    // Styles inline avec !important pour passer devant le moteur typo qui émet déjà
+    // font-size/color/font-weight!important sur .itw-section-hd p (zone dark/text) et
+    // .itw-cta (zone dark/ui). Un style inline !important sur l'élément gagne contre une
+    // règle externe !important de même ou moindre spécificité.
+    const _subStyles = [];
+    if(event.interviewsSubtitleFont) _subStyles.push(`font-family:'${event.interviewsSubtitleFont}',serif !important`);
+    if(event.interviewsSubtitleSize) _subStyles.push(`font-size:${event.interviewsSubtitleSize}px !important`);
+    const _subAttr = _subStyles.length ? ` style="${_subStyles.join(';')}"` : '';
+
+    const _ctaStyles = [];
+    if(event.interviewsCtaFont)     _ctaStyles.push(`font-family:'${event.interviewsCtaFont}',sans-serif !important`);
+    if(event.interviewsCtaTextSize) _ctaStyles.push(`font-size:${event.interviewsCtaTextSize}px !important`);
+    if(event.interviewsCtaColor)    _ctaStyles.push(`color:${event.interviewsCtaColor} !important`);
+    let _ctaHasBg = false;
+    if(event.interviewsCtaBg){
+      _ctaStyles.push(`background:${event.interviewsCtaBg} !important`);
+      _ctaStyles.push(`border-color:${event.interviewsCtaBg} !important`);
+      _ctaHasBg = true;
+    }
+    if(event.interviewsCtaSize){
+      const _pads = {small:'3px 10px', medium:'5px 14px', large:'9px 22px'};
+      _ctaStyles.push(`padding:${_pads[event.interviewsCtaSize]||'5px 14px'} !important`);
+    }
+    const _ctaAttr  = _ctaStyles.length ? ` style="${_ctaStyles.join(';')}"` : '';
+    const _ctaFlag  = _ctaHasBg ? ' data-custom-bg="1"' : '';
+
+    let o = `<div id="section-interviews" class="itw-section fi"><div class="itw-inner">${event.interviewsShowTitle!==false?`<div class="itw-section-hd"><h2>${itwTitle}</h2><div class="itw-line"></div><p${_subAttr}>${itwSub}</p></div>`:``}`;
     interviews.forEach(itw => {
       const avatarHtml = itw.photo_url ? `<img class="itw-avatar" src="${itw.photo_url}" alt="" onerror="this.remove()">` : '';
       o += `<div class="itw-card"><div class="itw-body">`;
@@ -3070,7 +3103,7 @@ function render(data){
       o += `<div class="itw-name">${itw.name||''}</div>`;
       if(itw.quote) o += `<div class="itw-quote">« ${itw.quote} »</div>`;
       if(itw.bio) o += `<div class="itw-bio">${itw.bio}</div>`;
-      if(itw.link) o += `<a class="itw-cta" href="${itw.link}" target="_blank">▸ Lire l'interview</a>`;
+      if(itw.link) o += `<a class="itw-cta" href="${itw.link}" target="_blank"${_ctaFlag}${_ctaAttr}>▸ Lire l'interview</a>`;
       o += `</div>${avatarHtml}</div>`;
     });
     o += `</div></div>`;
