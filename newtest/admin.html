@@ -3089,6 +3089,16 @@ function _fontOpts(selected){
 // Helpers typo GLOBAUX (réutilisés par l'onglet Apparence ET par chaque onglet
 // module, pour que les réglages fins vivent dans l'onglet de leur module).
 // ============================================================================
+// Réinitialise un color picker de la typo : vide data-set et pose data-reset='1' pour que
+// _readRoleBlock renvoie Color:null, puis saveModule supprime effectivement le champ stocké.
+function _resetTypoColor(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.dataset.set = '';
+  el.dataset.reset = '1';
+  el.value = '#ffffff';
+  el.style.opacity = '.4';
+}
 function _typoRoleBlock(idBase, roleLabel, vals){
   var v = vals || {};
   var fontSel = '<select class="form-input" id="'+idBase+'-font">'+_fontOpts(v.Font||'')+'</select>';
@@ -3096,7 +3106,18 @@ function _typoRoleBlock(idBase, roleLabel, vals){
   var lhVal = (v.LH!=null&&v.LH!=='')?v.LH:'';
   var color = v.Color||'#000000';
   var isHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
-  var colorInput = '<input type="color" class="form-input" id="'+idBase+'-color" value="'+(isHex?color:'#ffffff')+'" data-init="'+(isHex?color:'')+'" data-set="'+(v.Color?'1':'')+'" oninput="this.dataset.set=\'1\'" style="height:34px;width:46px;padding:3px">';
+  var _hasColor = !!v.Color;
+  // Le bouton × réinitialise la couleur (supprime le champ à la prochaine sauvegarde, au lieu de
+  // simplement en choisir une nouvelle). Sans ça, une couleur blanche ou transparente stockée
+  // une fois reste collée et rend le texte invisible sur fond clair.
+  var colorInput = '<div style="display:inline-flex;align-items:center;gap:4px">'
+    + '<input type="color" class="form-input" id="'+idBase+'-color" value="'+(isHex?color:'#ffffff')+'"'
+    + ' data-init="'+(isHex?color:'')+'" data-set="'+(_hasColor?'1':'')+'"'
+    + ' oninput="this.dataset.set=\'1\';this.dataset.reset=\'\';this.style.opacity=\'1\'"'
+    + ' style="height:34px;width:46px;padding:3px'+(_hasColor?'':';opacity:.4')+'">'
+    + '<button type="button" onclick="_resetTypoColor(\''+idBase+'-color\')" title="Réinitialiser cette couleur (revient au défaut)"'
+    + ' style="background:transparent;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:4px 8px">×</button>'
+    + '</div>';
   var wv = (v.Weight!=null&&v.Weight!=='')?(''+v.Weight):'';
   var wOpt = function(val,lab){ return '<option value="'+val+'"'+(wv===val?' selected':'')+'>'+lab+'</option>'; };
   var weightSel = '<select class="form-input" id="'+idBase+'-weight" style="width:120px">'+wOpt('','—')+wOpt('300','Léger')+wOpt('400','Normal')+wOpt('500','Medium')+wOpt('600','Semi-bold')+wOpt('700','Gras')+wOpt('800','Extra-bold')+'</select>';
@@ -3213,9 +3234,12 @@ async function saveModule(tabKey){
           if(document.getElementById(idBase+'-size')!==null || document.getElementById(idBase+'-color')!==null){
             var rb = _readRoleBlock(idBase);
             // Mapper {Font,Size,...} -> secFont/secSize... ou secSubFont/...
+            // Un Color:null signifie « reset » — on injecte null dans mObj pour que
+            // le prune en fin de merge supprime effectivement le champ (sinon la valeur
+            // existante de existingMod survit à Object.assign).
             if(rb.Font!==undefined) mObj[prefixProp+'Font']=rb.Font;
             if(rb.Size!==undefined) mObj[prefixProp+'Size']=rb.Size;
-            if(rb.Color!==undefined) mObj[prefixProp+'Color']=rb.Color;
+            if(rb.Color!==undefined) mObj[prefixProp+'Color']=rb.Color; // null passe aussi
             if(rb.LH!==undefined) mObj[prefixProp+'LH']=rb.LH;
             if(rb.Weight!==undefined) mObj[prefixProp+'Weight']=rb.Weight;
             if(rb.Style!==undefined) mObj[prefixProp+'Style']=rb.Style;
@@ -3230,6 +3254,9 @@ async function saveModule(tabKey){
       }
       // Conserver les clés section existantes si le bloc n'était pas rendu, etc.
       var merged = Object.assign({}, existingMod, mObj);
+      // Prune des resets : un champ passé à null via _resetTypoColor doit être supprimé,
+      // pas écrit comme null. Object.assign conserve les null, donc on nettoie ici.
+      Object.keys(merged).forEach(function(k){ if(merged[k] === null) delete merged[k]; });
       // Nettoyage : si rien d'utile, retirer le module
       var hasContent = merged.enabled;
       var hasSection = Object.keys(merged).some(function(k){ return k.indexOf('sec')===0; });
@@ -3655,7 +3682,12 @@ function _readRoleBlock(idBase){
   if(fEl && fEl.value) out.Font = fEl.value;
   if(sEl && sEl.value!=='') { var s=parseFloat(sEl.value); if(!isNaN(s)) out.Size = s; }
   if(lEl && lEl.value!=='') { var l=parseFloat(lEl.value); if(!isNaN(l)) out.LH = l; }
-  if(cEl && cEl.dataset.set==='1') out.Color = cEl.value;
+  if(cEl){
+    // null = l'utilisateur a cliqué « × » (reset), on veut explicitement supprimer le champ.
+    // '#xxxxxx' = l'utilisateur a choisi une couleur. Absent = pas de choix, on ne touche à rien.
+    if(cEl.dataset.reset === '1') out.Color = null;
+    else if(cEl.dataset.set === '1') out.Color = cEl.value;
+  }
   if(wEl && wEl.value!=='') { var w=parseInt(wEl.value,10); if(!isNaN(w)) out.Weight = w; }
   if(iEl) out.Style = iEl.checked ? 'italic' : 'normal';
   return out;
