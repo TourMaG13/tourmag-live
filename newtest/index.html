@@ -2857,10 +2857,51 @@ function render(data){
       const tlStyle = tlBg ? `style="background:${tlBg}"` : '';
       const _tlHide = (Array.isArray(event.mobileHidden) && event.mobileHidden.indexOf('timeline')!==-1) ? ' blk-mob-hidden' : '';
       o += `<div class="hero-tl${_tlHide}" ${tlStyle}><div class="hero-tl-inner"><div class="hero-tl-track" style="--tl-cols:${tlCount}">`;
-      // Affichage chronologique : plus ancien à gauche, plus récent à droite.
-      // On garde les 6 premiers jalons (order le plus bas) puis on inverse pour l'affichage.
-      // slice() crée une copie, donc reverse() ne mute pas le tableau d'origine.
-      timeline.slice(0,6).reverse().forEach(t => {
+      // Tri chronologique par date (robuste aux re-générations IA qui peuvent
+      // renvoyer les jalons dans n'importe quel sens). On parse la chaîne date,
+      // on trie par clé numérique, puis on prend les 6 plus récents.
+      // Fallback : si une date n'est pas parsable, on retombe sur l'order Firestore.
+      function _tlDateKey(s){
+        if(!s || typeof s !== 'string') return null;
+        const str = s.toLowerCase().trim();
+        // ISO AAAA-MM-JJ
+        let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if(m) return parseInt(m[1],10)*10000 + parseInt(m[2],10)*100 + parseInt(m[3],10);
+        // JJ/MM(/AAAA)
+        m = str.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+        if(m){
+          const y = m[3] ? (m[3].length===2?2000+parseInt(m[3],10):parseInt(m[3],10)) : 2000;
+          return y*10000 + parseInt(m[2],10)*100 + parseInt(m[1],10);
+        }
+        // "28 sept.", "1er oct.", "15 janvier", "30 sept. AM"
+        const monMap = {janv:1,janvier:1,fev:2,fevr:2,fevrier:2,mars:3,avr:4,avril:4,mai:5,juin:6,juil:7,juillet:7,aout:8,sept:9,septembre:9,oct:10,octobre:10,nov:11,novembre:11,dec:12,decembre:12};
+        const strNA = str.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        m = strNA.match(/(\d{1,2})(?:er)?\s+([a-z]+)/i);
+        if(m){
+          const day = parseInt(m[1],10);
+          const monRaw = m[2].replace(/\.$/,'');
+          const keys = Object.keys(monMap).sort((a,b)=>b.length-a.length);
+          for(const k of keys){
+            if(monRaw===k || monRaw.startsWith(k)){
+              let sub = 0;
+              if(/\bpm\b|apres[\s-]?midi/i.test(strNA)) sub = 0.33;
+              else if(/soir/i.test(strNA)) sub = 0.66;
+              return monMap[k]*100 + day + sub;
+            }
+          }
+        }
+        return null;
+      }
+      const _tlIndexed = timeline.map((t,i)=>({t,i,k:_tlDateKey(t.date)}));
+      const _tlAllParsable = _tlIndexed.every(x=>x.k!==null);
+      if(_tlAllParsable){
+        _tlIndexed.sort((a,b)=>a.k-b.k); // tri chronologique ascendant
+      } else {
+        _tlIndexed.sort((a,b)=>a.i-b.i); // fallback : ordre Firestore (order croissant)
+      }
+      // On garde les 6 plus récents puis on affiche de gauche (plus ancien) à droite (plus récent).
+      _tlIndexed.slice(-6).forEach(x => {
+        const t = x.t;
         const link = t.link ? ` onclick="window.open('${t.link}','_blank')" style="cursor:pointer"` : '';
         o += `<div class="hero-tl-item"${link}><div class="hero-tl-dot" style="background:${tlDot};box-shadow:0 0 0 1.5px ${tlDot}"></div><div class="hero-tl-date" style="color:${tlDateC}">${t.date}</div><div class="hero-tl-ev">${t.text}</div></div>`;
       });
