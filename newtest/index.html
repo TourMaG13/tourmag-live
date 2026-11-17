@@ -6766,6 +6766,11 @@ function _bpModuleOverrideCss(secId, ap){
     rules.push(sel+' .prog-title, '+sel+' .prog-day, '+sel+' .hd, '+sel+' .exp-card-label {'+titleDecl.join(';')+'}');
   }
   // Labels / petits éléments (badges, dates, tags, mentions, byline, rôles…)
+  // ATTENTION : on ne met PAS .sec-title p ni .exp-section-sub ici — ce sont des sous-titres
+  // de section, pas des labels. Ils ont leur propre voie de personnalisation via le panneau
+  // de typographie du module (Titre de section → Sous-titre). Les mélanger ici forçait le
+  // sous-titre à prendre la couleur des labels, et obligeait à bidouiller la couleur des
+  // labels pour rendre le sous-titre visible (ce qui affectait aussi les badges, dates, tags).
   const lb=ap.label||{};
   let labelDecl=[];
   if(lb.font)   labelDecl.push("font-family:'"+lb.font+"',sans-serif !important");
@@ -6774,7 +6779,7 @@ function _bpModuleOverrideCss(secId, ap){
   if(lb.weight) labelDecl.push('font-weight:'+lb.weight+' !important');
   if(lb.style)  labelDecl.push('font-style:'+lb.style+' !important');
   if(labelDecl.length){
-    rules.push(sel+' .art-card-tag, '+sel+' .art-card-byline, '+sel+' .live-tag, '+sel+' .live-entry-time, '+sel+' .cit-role, '+sel+' .exp-verbatim-role, '+sel+' .exp-art-date, '+sel+' .vid-date, '+sel+' .sec-title p, '+sel+' .exp-section-sub, '+sel+' .kpi-label, '+sel+' .prog-time, '+sel+' .badge, '+sel+' .tag, '+sel+' .er-mod-label {'+labelDecl.join(';')+'}');
+    rules.push(sel+' .art-card-tag, '+sel+' .art-card-byline, '+sel+' .live-tag, '+sel+' .live-entry-time, '+sel+' .cit-role, '+sel+' .exp-verbatim-role, '+sel+' .exp-art-date, '+sel+' .vid-date, '+sel+' .kpi-label, '+sel+' .prog-time, '+sel+' .badge, '+sel+' .tag, '+sel+' .er-mod-label {'+labelDecl.join(';')+'}');
   }
   // Espacement au-dessus / en dessous : forcé en CSS scopé (le style inline du wrapper
   // peut être neutralisé par les marges propres du module).
