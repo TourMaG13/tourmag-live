@@ -3296,6 +3296,17 @@ function moduleSettingsPanel(type, ev){
   if(type==='interviews'){
     var s=_tss('app-st-itw', ev.interviewsTitle, ev.interviewsSubtitle, ev.interviewsShowTitle, 'Interviews', 'Rencontres et visions');
     s+='<div class="form-row-inline" style="margin-top:10px"><div class="form-row" style="max-width:200px"><label class="form-label">Visibles avant accordéon</label><input type="number" class="form-input" id="app-acc-itw-count" value="'+(ev.itwVisibleCount||4)+'" min="1" max="20" style="width:70px"></div></div>';
+    // ===== Personnalisation du sous-titre du bandeau =====
+    s+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Sous-titre du bandeau</div>';
+    s+='<div class="form-row-inline"><div class="form-row"><label class="form-label">Police</label><select class="form-input" id="app-st-itw-sub-font" style="width:220px">'+_fontOpts(ev.interviewsSubtitleFont||'')+'</select></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille (px)</label><input type="number" class="form-input" id="app-st-itw-sub-size" value="'+(ev.interviewsSubtitleSize||'')+'" min="8" max="32" placeholder="13" style="width:80px"></div></div>';
+    s+='<div style="font-size:10px;color:var(--text3);margin-top:4px">Vide = valeurs par défaut (Playfair Display 13 px).</div></div>';
+    // ===== Personnalisation du bouton « Lire l'interview » =====
+    var _ctaBgOn=!!ev.interviewsCtaBg;
+    var _ctaColorOn=!!ev.interviewsCtaColor;
+    s+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Bouton « Lire l\'interview »</div>';
+    s+='<div class="form-row-inline"><div class="form-row"><label class="form-label">Police</label><select class="form-input" id="app-st-itw-cta-font" style="width:220px">'+_fontOpts(ev.interviewsCtaFont||'')+'</select></div><div class="form-row" style="max-width:150px"><label class="form-label">Taille texte (px)</label><input type="number" class="form-input" id="app-st-itw-cta-tsize" value="'+(ev.interviewsCtaTextSize||'')+'" min="8" max="24" placeholder="10" style="width:80px"></div><div class="form-row" style="max-width:170px"><label class="form-label">Taille du bouton</label><select class="form-input" id="app-st-itw-cta-size" style="width:140px"><option value=""'+(!ev.interviewsCtaSize?' selected':'')+'>Par défaut</option><option value="small"'+(ev.interviewsCtaSize==='small'?' selected':'')+'>Petit</option><option value="medium"'+(ev.interviewsCtaSize==='medium'?' selected':'')+'>Moyen</option><option value="large"'+(ev.interviewsCtaSize==='large'?' selected':'')+'>Grand</option></select></div></div>';
+    s+='<div class="form-row-inline" style="margin-top:6px"><div class="form-row"><label class="form-label">Couleur fond bouton</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="app-st-itw-cta-bg-on" '+(_ctaBgOn?'checked':'')+' onchange="document.getElementById(\'app-st-itw-cta-bg\').disabled=!this.checked"><input type="color" id="app-st-itw-cta-bg" value="'+(ev.interviewsCtaBg||'#E8842C')+'" '+(_ctaBgOn?'':'disabled')+' style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div><div class="form-row"><label class="form-label">Couleur texte bouton</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="app-st-itw-cta-color-on" '+(_ctaColorOn?'checked':'')+' onchange="document.getElementById(\'app-st-itw-cta-color\').disabled=!this.checked"><input type="color" id="app-st-itw-cta-color" value="'+(ev.interviewsCtaColor||'#ffffff')+'" '+(_ctaColorOn?'':'disabled')+' style="width:34px;height:30px;border:none;cursor:pointer;border-radius:4px"></div></div></div>';
+    s+='<div style="font-size:10px;color:var(--text3);margin-top:4px">Décoché = valeurs par défaut (bouton transparent à bordure claire, texte blanc).</div></div>';
     return s;
   }
   if(type==='gallery'){
@@ -3947,6 +3958,15 @@ async function _collectModuleSettings(type){
   } else if(type==='interviews'){
     ud.interviewsTitle=_v('app-st-itw-title');ud.interviewsSubtitle=_v('app-st-itw-sub');ud.interviewsShowTitle=_c('app-st-itw-show');
     ud.itwVisibleCount=_n('app-acc-itw-count',4);
+    // Sous-titre du bandeau : police + taille (vide = défaut)
+    ud.interviewsSubtitleFont=_v('app-st-itw-sub-font');
+    var _subSz=parseInt(document.getElementById('app-st-itw-sub-size')?.value); ud.interviewsSubtitleSize=(_subSz>0)?_subSz:'';
+    // Bouton « Lire l'interview »
+    ud.interviewsCtaFont=_v('app-st-itw-cta-font');
+    var _ctaSz=parseInt(document.getElementById('app-st-itw-cta-tsize')?.value); ud.interviewsCtaTextSize=(_ctaSz>0)?_ctaSz:'';
+    ud.interviewsCtaSize=_v('app-st-itw-cta-size'); // '', 'small', 'medium', 'large'
+    ud.interviewsCtaBg=document.getElementById('app-st-itw-cta-bg-on')?.checked?(document.getElementById('app-st-itw-cta-bg')?.value||''):'';
+    ud.interviewsCtaColor=document.getElementById('app-st-itw-cta-color-on')?.checked?(document.getElementById('app-st-itw-cta-color')?.value||''):'';
   } else if(type==='gallery'){
     ud.galleryTitle=_v('app-st-gal-title');ud.gallerySubtitle=_v('app-st-gal-sub');ud.galleryShowTitle=_c('app-st-gal-show');
     ud.galleryHeight=_n('app-acc-gal-height',260);ud.galleryVisibleCount=_n('app-acc-gal-vis',9);
